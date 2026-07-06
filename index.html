@@ -242,6 +242,14 @@
     flex-shrink:0;transition:.15s;
   }
   .post-del-btn:hover{background:var(--bg);color:var(--mode-video);}
+  .follow-btn{
+    margin-left:6px;background:var(--accent-soft);color:var(--accent);font-size:12.5px;font-weight:700;
+    padding:6px 12px;border-radius:20px;flex-shrink:0;transition:.15s;white-space:nowrap;
+  }
+  .follow-btn:hover{background:var(--accent);color:#fff;}
+  .follow-btn.following{background:transparent;color:var(--text-dim);border:1px solid var(--line);}
+  .follow-btn.following:hover{background:var(--mode-video);color:#fff;border-color:var(--mode-video);}
+  .post-head .follow-btn{margin-left:auto;}
   .post-text{font-size:14.5px;line-height:1.5;margin-bottom:12px;}
   .post-img{
     width:100%;border-radius:12px;margin-bottom:12px;height:220px;
@@ -842,6 +850,14 @@
               <textarea id="post-text" placeholder="Čo sa deje?" oninput="handlePostTextInput()"></textarea>
             </div>
             <div class="img-preview-grid" id="post-img-preview"></div>
+            <div class="post-video-preview" id="post-video-preview" style="display:none;position:relative;margin-bottom:10px;">
+              <video id="post-video-preview-el" controls playsinline style="width:100%;border-radius:12px;max-height:320px;background:#000;display:block;"></video>
+              <div class="remove-x" onclick="removePostVideo()" style="position:absolute;top:8px;right:8px;">✕</div>
+            </div>
+            <div class="upload-progress" id="post-video-progress">
+              <div class="upload-progress-bar"><div class="upload-progress-fill" id="post-video-progress-fill"></div></div>
+              <div class="upload-progress-label" id="post-video-progress-label">Nahrávam video... 0 %</div>
+            </div>
             <div class="link-input-row" id="post-link-row">
               <input type="text" id="post-link-input" placeholder="Vlož odkaz na webstránku (napr. https://...)" oninput="handlePostLinkInputChange()">
               <div class="remove-x" onclick="removePostLink()">✕</div>
@@ -849,6 +865,7 @@
             <div class="link-preview" id="post-link-preview-box"></div>
             <div class="composer-tools">
               <label class="file-btn">📷 Fotky<input type="file" accept="image/*" multiple onchange="handlePostImage(event)"></label>
+              <label class="file-btn">🎬 Video<input type="file" accept="video/*" id="post-video-input" onchange="handlePostVideo(event)"></label>
               <button class="file-btn" onclick="toggleLinkInput()">🔗 Odkaz</button>
             </div>
             <div class="composer-actions"><button onclick="addPost()">Uverejniť</button></div>
@@ -960,6 +977,7 @@
             <div>
               <div class="profile-name-row">
                 <div class="profile-name" id="profile-name">Používateľ</div>
+                <button class="follow-btn" id="profile-follow-btn" onclick="toggleFollowFromProfile()" style="display:none;">+ Sledovať</button>
                 <button class="msg-icon-btn" id="profile-message-btn" onclick="openChatWithProfileUser()" title="Napísať správu" style="display:none;">
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>
                 </button>
@@ -1339,6 +1357,56 @@ function openProfileAvatarLightbox(){
 
 let viewedProfileUser = null; // null = moj vlastny profil; inak {uid,name,photoURL} iného používateľa
 
+/* ---------------- SLEDOVANIE (FOLLOW) ---------------- */
+let followingSet = new Set(); // uid-čka používateľov, ktorých aktuálne prihlásený sleduje
+
+async function loadFollowing(){
+  followingSet = new Set();
+  if(!FIREBASE_CONFIGURED || !db || !currentUser) return;
+  try{
+    const doc = await db.collection('profiles').doc(currentUser.uid).get();
+    const list = (doc.exists && doc.data().following) || [];
+    followingSet = new Set(list);
+  }catch(e){ console.error("Nepodarilo sa načítať sledovaných:", e); }
+}
+
+function followBtnHtml(authorId){
+  if(!authorId || !currentUser || authorId === currentUser.uid) return '';
+  const isFollowing = followingSet.has(authorId);
+  return `<button class="follow-btn ${isFollowing?'following':''}" onclick="event.preventDefault();event.stopPropagation();toggleFollow('${authorId}')">${isFollowing?'✓ Sledované':'+ Sledovať'}</button>`;
+}
+
+async function toggleFollow(uid){
+  if(!uid || !currentUser || uid === currentUser.uid) return;
+  const wasFollowing = followingSet.has(uid);
+  if(wasFollowing) followingSet.delete(uid); else followingSet.add(uid);
+
+  renderPosts();
+  const profileView = document.getElementById('view-profile');
+  if(profileView && profileView.classList.contains('active')) renderProfile();
+
+  if(FIREBASE_CONFIGURED && db){
+    try{
+      await db.collection('profiles').doc(currentUser.uid).set({
+        following: wasFollowing
+          ? firebase.firestore.FieldValue.arrayRemove(uid)
+          : firebase.firestore.FieldValue.arrayUnion(uid)
+      }, {merge:true});
+    }catch(e){
+      console.error("Nepodarilo sa uložiť sledovanie:", e);
+      // vrátime zmenu späť, ak sa uloženie nepodarilo
+      if(wasFollowing) followingSet.add(uid); else followingSet.delete(uid);
+      renderPosts();
+      if(profileView && profileView.classList.contains('active')) renderProfile();
+    }
+  }
+}
+
+function toggleFollowFromProfile(){
+  if(!viewedProfileUser || !viewedProfileUser.uid) return;
+  toggleFollow(viewedProfileUser.uid);
+}
+
 function openProfile(){
   viewedProfileUser = null;
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
@@ -1383,6 +1451,18 @@ function renderProfile(){
 
   const msgBtn = document.getElementById('profile-message-btn');
   if(msgBtn) msgBtn.style.display = isOwnProfile ? 'none' : 'flex';
+
+  const followBtn = document.getElementById('profile-follow-btn');
+  if(followBtn){
+    if(isOwnProfile || !profileUser.uid){
+      followBtn.style.display = 'none';
+    }else{
+      followBtn.style.display = 'inline-block';
+      const isFollowing = followingSet.has(profileUser.uid);
+      followBtn.classList.toggle('following', isFollowing);
+      followBtn.textContent = isFollowing ? '✓ Sledované' : '+ Sledovať';
+    }
+  }
 
   const grid = document.getElementById('profile-photos-grid');
   grid.innerHTML = allPhotos.length
@@ -1575,6 +1655,7 @@ function enterApp(){
   renderAllAvatars();
   document.getElementById('sidebar-username').textContent = currentUser.name;
   loadViewedVideoIds();
+  loadFollowing().then(renderPosts);
   renderPosts();
   renderCategories();
   renderProducts();
@@ -1954,9 +2035,11 @@ function buildPostCard(p, opts={}){
       <div class="post-head">
         ${avatarHtml(p.name, getAuthorPhoto(p))}
         <div><div class="name">${p.name}</div><div class="time" data-ts="${p.createdAt || p.id}" title="${formatFullDate(p.createdAt || p.id)}">${formatPostTime(p.createdAt || p.id)}</div></div>
+        ${followBtnHtml(p.authorId)}
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="Vymazať príspevok">🗑️</button>` : ''}
       </div>
       <div class="post-text">${p.text}</div>
+      ${p.video ? `<video class="post-video" src="${p.video}" controls playsinline preload="metadata" style="width:100%;border-radius:12px;margin-bottom:12px;max-height:480px;background:#000;display:block;"></video>` : ''}
       ${getPostPhotos(p).length ? buildPostImgGrid(getPostPhotos(p)) : (p.img ? `<div class="post-img" style="background:var(--accent-soft);">${p.img}</div>` : '')}
       ${p.link ? (p.linkImage ? `
       <a class="link-card link-card-media" href="${p.link}" target="_blank" rel="noopener noreferrer">
@@ -2005,6 +2088,7 @@ function renderPosts(){
 }
 
 let pendingPostImages = []; // pole dataURL reťazcov (viacero fotiek k jednému príspevku)
+let pendingPostVideo = null; // URL nahratého videa (Cloudinary) pripojeného k pripravovanému príspevku
 let pendingPostLink = null; // {url, title, image}
 let postTextDebounceTimer = null;
 let postLinkInputDebounceTimer = null;
@@ -2223,20 +2307,85 @@ function buildPostImgGrid(photos){
   </div>`;
 }
 
+async function handlePostVideo(event){
+  const file = event.target.files[0];
+  if(!file) return;
+
+  if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){
+    alert('Nahrávanie videí zatiaľ nie je nastavené.');
+    event.target.value = '';
+    return;
+  }
+
+  const progressBox = document.getElementById('post-video-progress');
+  const fill = document.getElementById('post-video-progress-fill');
+  const label = document.getElementById('post-video-progress-label');
+  progressBox.classList.add('show');
+  fill.style.width = '0%';
+  label.textContent = 'Nahrávam video... 0 %';
+
+  try{
+    const url = await new Promise((resolve, reject)=>{
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/video/upload`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY.uploadPreset);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', uploadUrl);
+      xhr.upload.onprogress = (e)=>{
+        if(e.lengthComputable){
+          const pct = Math.round((e.loaded/e.total)*100);
+          fill.style.width = pct+'%';
+          label.textContent = `Nahrávam video... ${pct} %`;
+        }
+      };
+      xhr.onload = ()=>{
+        if(xhr.status>=200 && xhr.status<300) resolve(JSON.parse(xhr.responseText).secure_url);
+        else reject(new Error('Cloudinary chyba: '+xhr.status));
+      };
+      xhr.onerror = ()=>reject(new Error('Sieťová chyba pri nahrávaní'));
+      xhr.send(formData);
+    });
+    pendingPostVideo = url;
+    progressBox.classList.remove('show');
+    const preview = document.getElementById('post-video-preview');
+    const previewEl = document.getElementById('post-video-preview-el');
+    previewEl.src = url;
+    preview.style.display = 'block';
+  }catch(e){
+    console.error('Nahrávanie videa zlyhalo:', e);
+    alert('Nahrávanie videa zlyhalo. Skús to znova.');
+    progressBox.classList.remove('show');
+  }
+  event.target.value = '';
+}
+
+function removePostVideo(){
+  pendingPostVideo = null;
+  const preview = document.getElementById('post-video-preview');
+  const previewEl = document.getElementById('post-video-preview-el');
+  previewEl.pause();
+  previewEl.removeAttribute('src');
+  previewEl.load();
+  preview.style.display = 'none';
+  document.getElementById('post-video-input').value = '';
+}
+
 function addPost(){
   const text = document.getElementById('post-text').value.trim();
   const linkVal = normalizeUrl(document.getElementById('post-link-input').value);
-  if(!text && !pendingPostImages.length && !linkVal) return;
+  if(!text && !pendingPostImages.length && !linkVal && !pendingPostVideo) return;
   const hasMatchingPreview = pendingPostLink && pendingPostLink.url === linkVal;
   posts.push({
     id:Date.now(), name:currentUser.name, authorId:currentUser.uid, createdAt: Date.now(),
-    text, photos:pendingPostImages.slice(), link:linkVal,
+    text, photos:pendingPostImages.slice(), video: pendingPostVideo, link:linkVal,
     linkTitle: hasMatchingPreview ? pendingPostLink.title : '',
     linkImage: hasMatchingPreview ? pendingPostLink.image : null,
-    img: pendingPostImages.length ? null : '✨', likes:0, liked:false, comments:[], open:false
+    img: (pendingPostImages.length || pendingPostVideo) ? null : '✨', likes:0, liked:false, comments:[], open:false
   });
   document.getElementById('post-text').value = '';
   removePostImage();
+  removePostVideo();
   removePostLink();
   saveState();
   renderPosts();
