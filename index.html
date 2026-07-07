@@ -902,14 +902,14 @@
     .mode-dock button{flex:1;min-width:0;padding:7px 2px;font-size:10.5px;gap:3px;white-space:nowrap;justify-content:center;overflow:hidden;text-overflow:ellipsis;}
     .mode-dock button .ind{display:none;}
     .mobile-quick-links{
-      order:4;width:100%;display:flex;gap:6px;overflow-x:auto;padding:2px 0 2px;
+      order:4;width:100%;display:flex;gap:4px;overflow-x:auto;padding:2px 0 2px;
     }
     .mobile-quick-links button{
-      flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--bg);
-      border:1px solid var(--line);border-radius:20px;padding:7px 12px;font-size:12px;
-      font-weight:600;color:var(--text);white-space:nowrap;
+      flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--bg);
+      border:1px solid var(--line);border-radius:20px;padding:6px 4px;font-size:10.5px;
+      font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     }
-    .mobile-quick-links button .avatar{width:18px;height:18px;font-size:9px;}
+    .mobile-quick-links button .avatar{width:15px;height:15px;font-size:8px;flex-shrink:0;}
   }
 
   @media(max-width:360px){
