@@ -757,6 +757,11 @@
     display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:.15s;
   }
   .msg-icon-btn:hover{background:#1FAE5C;color:#fff;}
+  .delete-account-btn{
+    margin:20px 0 0;padding:10px 16px;border-radius:12px;background:#FDEBEB;color:#D63C3C;
+    font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;
+  }
+  .delete-account-btn:hover{background:#D63C3C;color:#fff;}
 
   .chat-modal, .conv-modal{
     display:none;position:fixed;inset:0;z-index:600;background:rgba(10,10,14,.55);
@@ -1153,6 +1158,8 @@
 
           <div class="profile-section-title">📝 Príspevky</div>
           <div id="profile-posts-list"></div>
+
+          <button class="delete-account-btn" id="delete-account-btn" onclick="deleteMyAccount()" style="display:none;">🗑️ Zrušiť účet v Connect8</button>
         </section>
 
         <!-- POUŽÍVATELIA -->
@@ -1508,6 +1515,63 @@ function doLogout(){
   document.getElementById('login-pass').value = '';
 }
 
+async function deleteMyAccount(){
+  if(!currentUser) return;
+  if(!confirm('Naozaj chceš natrvalo vymazať svoj profil? Zmažú sa tvoje príspevky, inzeráty aj videá. Táto akcia sa nedá vrátiť späť.')) return;
+  if(!confirm('Si si úplne istý? Po vymazaní sa nebudeš môcť prihlásiť späť pod týmto účtom.')) return;
+
+  const uid = currentUser.uid;
+
+  try{
+    // 1) odstráň vlastný obsah zo zdieľaného stavu (príspevky, inzeráty, videá)
+    posts = posts.filter(p=> p.authorId ? p.authorId!==uid : p.name!==currentUser.name);
+    products = products.filter(pr=> pr.authorId ? pr.authorId!==uid : pr.seller!==currentUser.name);
+    videos = videos.filter(v=> v.authorId ? v.authorId!==uid : v.name!==currentUser.name);
+    if(FIREBASE_CONFIGURED && db){
+      await APP_DATA_DOC().set(getStateSnapshot());
+    }
+
+    // 2) zmaž profil a "online" stav
+    if(FIREBASE_CONFIGURED && db){
+      await db.collection('profiles').doc(uid).delete().catch(e=>console.error('Profil sa nepodarilo zmazať:', e));
+    }
+    if(FIREBASE_CONFIGURED && rtdb){
+      await rtdb.ref('status/' + uid).remove().catch(()=>{});
+    }
+
+    // 3) zmaž samotný prihlasovací účet (Firebase Auth)
+    if(FIREBASE_CONFIGURED && auth && auth.currentUser){
+      try{
+        await auth.currentUser.delete();
+      }catch(e){
+        if(e && e.code === 'auth/requires-recent-login'){
+          const pass = prompt('Z bezpečnostných dôvodov potvrď svoje heslo pre dokončenie vymazania účtu:');
+          if(!pass){ alert('Vymazanie účtu bolo zrušené — heslo nebolo zadané.'); return; }
+          const cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, pass);
+          await auth.currentUser.reauthenticateWithCredential(cred);
+          await auth.currentUser.delete();
+        } else {
+          throw e;
+        }
+      }
+    }
+
+    alert('Tvoj profil bol vymazaný.');
+    if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; }
+    if(conversationsUnsub){ conversationsUnsub(); conversationsUnsub = null; }
+    if(incomingCallsUnsub){ incomingCallsUnsub(); incomingCallsUnsub = null; }
+    if(pc || currentCallDocId) endCall();
+    currentUser = null;
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-pass').value = '';
+  }catch(e){
+    console.error('Vymazanie účtu zlyhalo:', e);
+    alert('Vymazanie účtu sa nepodarilo. Skús to znova, prípadne sa najprv znova prihlás a skús to hneď potom.');
+  }
+}
+
 function initials(name){
   return name.split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
 }
@@ -1760,6 +1824,9 @@ function renderProfile(){
 
   const uploadBtn = document.getElementById('avatar-upload-btn');
   if(uploadBtn) uploadBtn.style.display = isOwnProfile ? '' : 'none';
+
+  const deleteBtn = document.getElementById('delete-account-btn');
+  if(deleteBtn) deleteBtn.style.display = isOwnProfile ? 'inline-flex' : 'none';
 
   const backBtn = document.getElementById('profile-back-btn');
   if(backBtn) backBtn.textContent = isOwnProfile ? '← Späť do Feedu' : '← Späť na Používateľov';
@@ -3794,6 +3861,39 @@ let remoteCandidatesUnsub = null;
 let incomingCallsUnsub = null;
 let micMuted = false;
 let camOff = false;
+let ringAudioCtx = null;
+let ringInterval = null;
+
+function playRingBeep(){
+  if(!ringAudioCtx) return;
+  const now = ringAudioCtx.currentTime;
+  [880, 660].forEach((freq, i)=>{
+    const osc = ringAudioCtx.createOscillator();
+    const gain = ringAudioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, now + i*0.35);
+    gain.gain.linearRampToValueAtTime(0.25, now + i*0.35 + 0.03);
+    gain.gain.linearRampToValueAtTime(0, now + i*0.35 + 0.3);
+    osc.connect(gain).connect(ringAudioCtx.destination);
+    osc.start(now + i*0.35);
+    osc.stop(now + i*0.35 + 0.32);
+  });
+}
+
+function startRingtone(){
+  try{
+    if(!ringAudioCtx) ringAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(ringAudioCtx.state === 'suspended') ringAudioCtx.resume().catch(()=>{});
+  }catch(e){ return; }
+  stopRingtone();
+  playRingBeep();
+  ringInterval = setInterval(playRingBeep, 1500);
+}
+
+function stopRingtone(){
+  if(ringInterval){ clearInterval(ringInterval); ringInterval = null; }
+}
 
 function callDocRef(id){ return db.collection('calls').doc(id); }
 
@@ -3822,6 +3922,7 @@ function showIncomingCall(callId, data){
   document.getElementById('incoming-call-type').textContent = (currentCallType === 'video' ? 'Videohovor' : 'Hovor') + ' — prichádzajúci...';
   applyProfileAvatar(document.getElementById('incoming-call-avatar'), currentCallPeer);
   document.getElementById('incoming-call-modal').classList.add('show');
+  startRingtone();
 
   // ak druhá strana zavesí skôr než stihneme zdvihnúť
   callDocUnsub = callDocRef(callId).onSnapshot(doc=>{
@@ -3836,6 +3937,7 @@ function showIncomingCall(callId, data){
 
 function dismissIncomingCallUI(){
   document.getElementById('incoming-call-modal').classList.remove('show');
+  stopRingtone();
   if(callDocUnsub){ callDocUnsub(); callDocUnsub = null; }
   if(!pc){ currentCallDocId = null; currentCallPeer = null; currentCallRole = null; }
 }
@@ -3925,6 +4027,7 @@ async function acceptIncomingCall(){
   const callId = currentCallDocId;
   if(!callId) return;
   document.getElementById('incoming-call-modal').classList.remove('show');
+  stopRingtone();
   if(callDocUnsub){ callDocUnsub(); callDocUnsub = null; }
 
   try{
@@ -4039,6 +4142,7 @@ function toggleCallCamera(){
 }
 
 async function endCall(remoteEnded){
+  stopRingtone();
   const callId = currentCallDocId;
   if(callId && !remoteEnded){
     callDocRef(callId).update({ status:'ended' }).catch(()=>{});
@@ -4082,8 +4186,23 @@ async function init(){
       el.textContent = formatPostTime(ts);
     });
   }, 30000);
+
+  // Prehliadače blokujú prehrávanie zvuku, kým sa na stránke nestane aspoň
+  // jedna reálna interakcia používateľa. Zvonenie pri prichádzajúcom hovore
+  // sa spúšťa automaticky (nie kliknutím), preto si zvuk "odomkneme" vopred
+  // pri úplne prvom dotyku/kliknutí/stlačení klávesu kdekoľvek na stránke.
+  const unlockRingtoneAudio = ()=>{
+    try{
+      if(!ringAudioCtx) ringAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if(ringAudioCtx.state === 'suspended') ringAudioCtx.resume().catch(()=>{});
+    }catch(e){ /* ticho ignorujeme, skúsime to znova pri ďalšej interakcii */ }
+  };
+  ['click','touchstart','keydown'].forEach(evt=>{
+    document.addEventListener(evt, unlockRingtoneAudio, {passive:true});
+  });
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
+
 </body>
 </html>
