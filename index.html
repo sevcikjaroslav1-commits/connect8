@@ -192,6 +192,7 @@
   .content-area{flex:1;display:flex;justify-content:center;min-width:0;}
   main{max-width:640px;width:100%;min-width:0;margin:0 auto;padding:20px 16px 40px;}
   img{max-width:100%;}
+  .mobile-quick-links{display:none;}
 
   @media(max-width:900px){
     .left-sidebar{display:none;}
@@ -897,8 +898,22 @@
     .market-grid{grid-template-columns:1fr 1fr;}
     .topbar{flex-wrap:wrap;row-gap:10px;}
     .user-stats{display:none;}
-    .mode-dock{order:3;width:100%;justify-content:center;}
-    .mode-dock button{padding:8px 12px;font-size:12px;}
+    .mode-dock{order:3;width:100%;justify-content:stretch;padding:4px;gap:2px;}
+    .mode-dock button{flex:1;min-width:0;padding:7px 2px;font-size:10.5px;gap:3px;white-space:nowrap;justify-content:center;overflow:hidden;text-overflow:ellipsis;}
+    .mode-dock button .ind{display:none;}
+    .mobile-quick-links{
+      order:4;width:100%;display:flex;gap:6px;overflow-x:auto;padding:2px 0 2px;
+    }
+    .mobile-quick-links button{
+      flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--bg);
+      border:1px solid var(--line);border-radius:20px;padding:7px 12px;font-size:12px;
+      font-weight:600;color:var(--text);white-space:nowrap;
+    }
+    .mobile-quick-links button .avatar{width:18px;height:18px;font-size:9px;}
+  }
+
+  @media(max-width:360px){
+    .mode-dock button{font-size:9.5px;padding:6px 1px;}
   }
 </style>
 </head>
@@ -963,6 +978,12 @@
       <button data-mode="video" onclick="switchMode('video')"><span class="ind"></span>Videá</button>
       <button data-mode="market" onclick="switchMode('market')"><span class="ind"></span>Marketplace</button>
       <button data-mode="news" onclick="switchMode('news')"><span class="ind"></span>Správy</button>
+    </div>
+
+    <div class="mobile-quick-links">
+      <button onclick="openProfile()"><span class="avatar" id="mobile-quick-avatar">?</span>Môj profil</button>
+      <button onclick="openFriendsList()">👥 Priatelia</button>
+      <button onclick="openUsersList()">🧑‍🤝‍🧑 Používatelia</button>
     </div>
 
     <div class="topbar-right">
@@ -1608,6 +1629,7 @@ function renderAllAvatars(){
   applyAvatar(document.getElementById('composer-avatar'), photo);
   applyAvatar(document.getElementById('sidebar-avatar'), photo);
   applyAvatar(document.getElementById('profile-avatar'), photo);
+  applyAvatar(document.getElementById('mobile-quick-avatar'), photo);
 }
 
 async function handleAvatarUpload(event){
