@@ -375,6 +375,35 @@
     white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   }
 
+  .post-file-preview{
+    display:none;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;
+    padding:11px 12px;margin-top:10px;position:relative;background:var(--bg);
+  }
+  .post-file-preview.show{display:flex;}
+  .post-file-preview .file-icon{
+    width:36px;height:36px;border-radius:9px;background:var(--accent-soft);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
+  }
+  .post-file-preview .file-info{min-width:0;flex:1;}
+  .post-file-preview .file-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .post-file-preview .file-size{font-size:11.5px;color:var(--text-dim);margin-top:2px;}
+  .post-file-preview .remove-x{position:static;flex-shrink:0;}
+
+  .post-file-card{
+    display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;
+    padding:11px 12px;margin-bottom:12px;text-decoration:none;color:inherit;transition:.15s;position:relative;
+  }
+  .post-file-card:hover{background:var(--bg);}
+  .post-file-card .file-icon{
+    width:36px;height:36px;border-radius:9px;background:var(--accent-soft);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
+  }
+  .post-file-card .file-info{min-width:0;flex:1;}
+  .post-file-card .file-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .post-file-card .file-size{font-size:11.5px;color:var(--text-dim);margin-top:2px;}
+  .post-file-card .file-download-arrow{color:var(--text-dim);font-size:15px;flex-shrink:0;}
+  .post-file-card .remove-x{top:6px;right:6px;}
+
   .link-preview{
     display:none;margin-top:10px;border:1px solid var(--line);border-radius:12px;
     overflow:hidden;background:var(--bg);position:relative;
@@ -629,12 +658,12 @@
   }
 
   /* ---------- VIDEO ---------- */
-  #view-video{background:var(--mode-video-soft);margin:-20px -16px -40px;padding:0;min-height:calc(100vh - 58px);position:relative;}
+  #view-video{background:var(--mode-video-soft);margin:-20px -16px -40px;padding:0;min-height:calc(100vh - 58px);min-height:calc(100dvh - 58px);position:relative;}
   .video-scroller{
-    height:calc(100vh - 58px);overflow-y:auto;scroll-snap-type:y mandatory;
+    height:calc(100vh - 58px);height:calc(100dvh - 58px);overflow-y:auto;scroll-snap-type:y mandatory;
   }
   .video-card{
-    height:calc(100vh - 58px);scroll-snap-align:start;position:relative;
+    height:calc(100vh - 58px);height:calc(100dvh - 58px);scroll-snap-align:start;position:relative;
     display:flex;align-items:flex-end;
     background:linear-gradient(160deg, var(--vc1,#3a1030), var(--vc2,#160a14));
     color:#fff;
@@ -1039,9 +1068,22 @@
               <div class="remove-x" onclick="removePostLink()">✕</div>
             </div>
             <div class="link-preview" id="post-link-preview-box"></div>
+            <div class="post-file-preview" id="post-file-preview">
+              <div class="file-icon">📎</div>
+              <div class="file-info">
+                <div class="file-name" id="post-file-preview-name"></div>
+                <div class="file-size" id="post-file-preview-size"></div>
+              </div>
+              <div class="remove-x" onclick="removePostFile()">✕</div>
+            </div>
+            <div class="upload-progress" id="post-file-progress">
+              <div class="upload-progress-bar"><div class="upload-progress-fill" id="post-file-progress-fill"></div></div>
+              <div class="upload-progress-label" id="post-file-progress-label">Nahrávam súbor... 0 %</div>
+            </div>
             <div class="composer-tools">
               <label class="file-btn">📷 Fotky<input type="file" accept="image/*" multiple onchange="handlePostImage(event)"></label>
               <label class="file-btn">🎬 Video<input type="file" accept="video/*" id="post-video-input" onchange="handlePostVideo(event)"></label>
+              <label class="file-btn">📎 Súbor<input type="file" id="post-file-input" onchange="handlePostFile(event)"></label>
               <button class="file-btn" onclick="toggleLinkInput()">🔗 Odkaz</button>
             </div>
             <div class="composer-actions"><button onclick="addPost()">Uverejniť</button></div>
@@ -2763,6 +2805,16 @@ function buildPostCard(p, opts={}){
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
       </div>` : ''}
       ${getPostPhotos(p).length ? buildPostImgGrid(getPostPhotos(p)) : (p.img ? `<div class="post-img" style="background:var(--accent-soft);">${p.img}</div>` : '')}
+      ${p.file ? `
+      <a class="post-file-card" href="${p.file.url}" target="_blank" rel="noopener noreferrer" download="${p.file.name}">
+        <div class="file-icon">📎</div>
+        <div class="file-info">
+          <div class="file-name">${p.file.name}</div>
+          <div class="file-size">${formatFileSize(p.file.size)}</div>
+        </div>
+        <div class="file-download-arrow">⬇</div>
+        ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostFile(${p.id})">✕</div>` : ''}
+      </a>` : ''}
       ${p.link ? (p.linkImage ? `
       <a class="link-card link-card-media" href="${p.link}" target="_blank" rel="noopener noreferrer">
         <div class="link-card-img"><img src="${p.linkImage}" loading="lazy" onerror="handleLinkImgError(this)"></div>
@@ -2811,6 +2863,7 @@ function renderPosts(){
 
 let pendingPostImages = []; // pole dataURL reťazcov (viacero fotiek k jednému príspevku)
 let pendingPostVideo = null; // URL nahratého videa (Cloudinary) pripojeného k pripravovanému príspevku
+let pendingPostFile = null; // {url, name, size} nahratého súboru (Cloudinary raw) pripojeného k príspevku
 let pendingPostLink = null; // {url, title, image}
 let postTextDebounceTimer = null;
 let postLinkInputDebounceTimer = null;
@@ -3124,21 +3177,88 @@ function removePostVideo(){
   document.getElementById('post-video-input').value = '';
 }
 
+function formatFileSize(bytes){
+  if(!bytes && bytes !== 0) return '';
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1).replace(/\.0$/,'') + ' KB';
+  return (bytes/(1024*1024)).toFixed(1).replace(/\.0$/,'') + ' MB';
+}
+
+async function handlePostFile(event){
+  const file = event.target.files[0];
+  if(!file) return;
+
+  if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){
+    alert('Nahrávanie súborov zatiaľ nie je nastavené.');
+    event.target.value = '';
+    return;
+  }
+
+  const progressBox = document.getElementById('post-file-progress');
+  const fill = document.getElementById('post-file-progress-fill');
+  const label = document.getElementById('post-file-progress-label');
+  progressBox.classList.add('show');
+  fill.style.width = '0%';
+  label.textContent = 'Nahrávam súbor... 0 %';
+
+  try{
+    const url = await new Promise((resolve, reject)=>{
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/raw/upload`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY.uploadPreset);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', uploadUrl);
+      xhr.upload.onprogress = (e)=>{
+        if(e.lengthComputable){
+          const pct = Math.round((e.loaded/e.total)*100);
+          fill.style.width = pct+'%';
+          label.textContent = `Nahrávam súbor... ${pct} %`;
+        }
+      };
+      xhr.onload = ()=>{
+        if(xhr.status>=200 && xhr.status<300) resolve(JSON.parse(xhr.responseText).secure_url);
+        else reject(new Error('Cloudinary chyba: '+xhr.status));
+      };
+      xhr.onerror = ()=>reject(new Error('Sieťová chyba pri nahrávaní'));
+      xhr.send(formData);
+    });
+    pendingPostFile = { url, name: file.name, size: file.size };
+    progressBox.classList.remove('show');
+    document.getElementById('post-file-preview-name').textContent = file.name;
+    document.getElementById('post-file-preview-size').textContent = formatFileSize(file.size);
+    document.getElementById('post-file-preview').classList.add('show');
+  }catch(e){
+    console.error('Nahrávanie súboru zlyhalo:', e);
+    alert('Nahrávanie súboru zlyhalo. Skús to znova.');
+    progressBox.classList.remove('show');
+  }
+  event.target.value = '';
+}
+
+function removePostFile(){
+  pendingPostFile = null;
+  document.getElementById('post-file-preview').classList.remove('show');
+  document.getElementById('post-file-input').value = '';
+}
+
 function addPost(){
   const text = document.getElementById('post-text').value.trim();
   const linkVal = normalizeUrl(document.getElementById('post-link-input').value);
-  if(!text && !pendingPostImages.length && !linkVal && !pendingPostVideo) return;
+  if(!text && !pendingPostImages.length && !linkVal && !pendingPostVideo && !pendingPostFile) return;
   const hasMatchingPreview = pendingPostLink && pendingPostLink.url === linkVal;
   posts.push({
     id:Date.now(), name:currentUser.name, authorId:currentUser.uid, createdAt: Date.now(),
     text, photos:pendingPostImages.slice(), video: pendingPostVideo, link:linkVal,
     linkTitle: hasMatchingPreview ? pendingPostLink.title : '',
     linkImage: hasMatchingPreview ? pendingPostLink.image : null,
-    img: (pendingPostImages.length || pendingPostVideo) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
+    file: pendingPostFile ? {...pendingPostFile} : null,
+    img: (pendingPostImages.length || pendingPostVideo || pendingPostFile) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
   });
   document.getElementById('post-text').value = '';
   removePostImage();
   removePostVideo();
+  removePostFile();
   removePostLink();
   saveState();
   renderPosts();
@@ -3177,6 +3297,14 @@ function deletePostLink(id){
   const p = posts.find(p=>p.id===id);
   if(!p) return;
   p.link = null;
+  saveState();
+  refreshPostViews();
+}
+
+function deletePostFile(id){
+  const p = posts.find(p=>p.id===id);
+  if(!p) return;
+  p.file = null;
   saveState();
   refreshPostViews();
 }
