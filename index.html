@@ -658,12 +658,12 @@
   }
 
   /* ---------- VIDEO ---------- */
-  #view-video{background:var(--mode-video-soft);margin:-20px -16px -40px;padding:0;min-height:calc(100vh - 58px);min-height:calc(100dvh - 58px);position:relative;}
+  #view-video{background:var(--mode-video-soft);margin:-20px -16px -40px;padding:0;min-height:calc(100vh - var(--topbar-h, 58px));min-height:calc(100dvh - var(--topbar-h, 58px));position:relative;}
   .video-scroller{
-    height:calc(100vh - 58px);height:calc(100dvh - 58px);overflow-y:auto;scroll-snap-type:y mandatory;
+    height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));overflow-y:auto;scroll-snap-type:y mandatory;
   }
   .video-card{
-    height:calc(100vh - 58px);height:calc(100dvh - 58px);scroll-snap-align:start;position:relative;
+    height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));scroll-snap-align:start;position:relative;
     display:flex;align-items:flex-end;
     background:linear-gradient(160deg, var(--vc1,#3a1030), var(--vc2,#160a14));
     color:#fff;
@@ -2239,6 +2239,8 @@ document.addEventListener('click', function(e){
 function enterApp(){
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  updateTopbarHeightVar();
+  setTimeout(updateTopbarHeightVar, 300);
   renderAllAvatars();
   document.getElementById('sidebar-username').textContent = currentUser.name;
   loadViewedVideoIds();
@@ -2579,6 +2581,27 @@ function startPresenceHeartbeat(){
     .catch(e=>console.error("Nepodarilo sa spočítať používateľov:", e));
 }
 
+/* ---------------- DYNAMICKÁ VÝŠKA TOPBARU (pre sekciu Videá) ----------------
+   Na mobile sa topbar zalamuje do viacerých riadkov (mode-dock + riadok
+   Môj profil/Priatelia/Používatelia), takže jeho reálna výška NIE JE
+   pevných 58px ako na počítači. Keby sme to nechali natvrdo, karta videa
+   by bola vyššia než skutočný voľný priestor pod topbarom a spodné ikonky
+   (koš, počet zhliadnutí, kto pridal, zdieľanie) by boli mimo obrazovky. */
+function updateTopbarHeightVar(){
+  const topbar = document.querySelector('.topbar');
+  if(!topbar) return;
+  const h = topbar.getBoundingClientRect().height;
+  if(h > 0){
+    document.documentElement.style.setProperty('--topbar-h', h + 'px');
+  }
+}
+window.addEventListener('load', updateTopbarHeightVar);
+window.addEventListener('resize', updateTopbarHeightVar);
+window.addEventListener('orientationchange', ()=>setTimeout(updateTopbarHeightVar, 200));
+// pre istotu prepočítať aj tesne po tom, čo sa layout ustáli (fonty/obrázky)
+setTimeout(updateTopbarHeightVar, 300);
+setTimeout(updateTopbarHeightVar, 1000);
+
 /* ---------------- MODE SWITCH ---------------- */
 function switchMode(mode){
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
@@ -2586,6 +2609,7 @@ function switchMode(mode){
   document.getElementById('view-'+mode).classList.add('active');
 
   if(mode === 'video'){
+    updateTopbarHeightVar(); // prepočítať reálnu výšku topbaru (mobil = viac riadkov)
     setupVideoObserver(); // sekcia je teraz viditeľná, pripoj sledovanie zhliadnutí
   } else if(videoObserver){
     videoObserver.disconnect(); // sekcia Videá nie je viditeľná, nesleduj zhliadnutia na pozadí
