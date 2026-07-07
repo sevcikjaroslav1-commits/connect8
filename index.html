@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#F2F3F5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Connect</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
@@ -1635,12 +1638,20 @@ function renderAllAvatars(){
 async function handleAvatarUpload(event){
   const file = event.target.files[0];
   if(!file) return;
-  const dataUrl = await compressImage(file, 320, 0.82);
-  currentUser.photoURL = dataUrl;
+  let url;
+  try{
+    url = await processImageFile(file, 320, 0.82);
+  }catch(e){
+    console.error("Profilovku sa nepodarilo spracovať:", e);
+    alert('Profilovku sa nepodarilo nahrať. Skús to prosím znova.');
+    event.target.value = '';
+    return;
+  }
+  currentUser.photoURL = url;
   renderAllAvatars();
   if(FIREBASE_CONFIGURED && db && currentUser.uid){
     try{
-      await db.collection('profiles').doc(currentUser.uid).set({avatarPhoto: dataUrl}, {merge:true});
+      await db.collection('profiles').doc(currentUser.uid).set({avatarPhoto: url}, {merge:true});
     }catch(e){
       console.error("Nepodarilo sa uložiť profilovku:", e);
     }
@@ -2950,18 +2961,49 @@ function compressImage(file, maxDim, quality){
   });
 }
 
+// Nahrá obrázok na Cloudinary (rovnaký princíp ako pri videách) a vráti
+// krátky verejný odkaz namiesto veľkého base64 reťazca. Vďaka tomu sa
+// zdieľaný dokument vo Firebase nikdy nepriblíži k 1 MB limitu.
+function uploadImageToCloudinary(fileOrBlob){
+  return new Promise((resolve, reject)=>{
+    const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/image/upload`;
+    const formData = new FormData();
+    formData.append('file', fileOrBlob);
+    formData.append('upload_preset', CLOUDINARY.uploadPreset);
+    fetch(url, {method:'POST', body:formData})
+      .then(r=>r.json())
+      .then(data=>{
+        if(data.secure_url) resolve(data.secure_url);
+        else reject(new Error((data.error && data.error.message) || 'Cloudinary chyba'));
+      })
+      .catch(reject);
+  });
+}
+
+// Skomprimuje fotku a nahrá ju na Cloudinary; ak Cloudinary nie je nastavený,
+// vráti aspoň lokálny (base64) náhľad ako núdzové riešenie.
+async function processImageFile(file, maxDim, quality){
+  const compressedDataUrl = await compressImage(file, maxDim, quality);
+  if(CLOUDINARY.cloudName && CLOUDINARY.uploadPreset){
+    const blob = await (await fetch(compressedDataUrl)).blob();
+    return await uploadImageToCloudinary(blob);
+  }
+  return compressedDataUrl; // núdzové riešenie bez Cloudinary (funguje len obmedzene)
+}
+
 async function handlePostImage(event){
   const files = Array.from(event.target.files || []);
   if(!files.length) return;
   for(const file of files){
     try{
-      const dataUrl = await compressImage(file, 900, 0.75);
-      pendingPostImages.push(dataUrl);
+      const url = await processImageFile(file, 1280, 0.8);
+      pendingPostImages.push(url);
+      renderPostImagePreview(); // priebežne ukáž náhľad, nech je vidieť postup
     }catch(e){
       console.error('Fotku sa nepodarilo spracovať:', e);
+      alert('Jednu z fotiek sa nepodarilo nahrať. Skús to prosím znova.');
     }
   }
-  renderPostImagePreview();
   event.target.value = ''; // umožní znova pridať tie isté súbory nabudúce
 }
 
@@ -3385,13 +3427,14 @@ async function handleProdImage(event){
       break;
     }
     try{
-      const dataUrl = await compressImage(file, 900, 0.75);
-      pendingProdImages.push(dataUrl);
+      const url = await processImageFile(file, 1280, 0.8);
+      pendingProdImages.push(url);
+      renderProdImagePreview(); // priebežne ukáž náhľad, nech je vidieť postup
     }catch(e){
       console.error('Fotku sa nepodarilo spracovať:', e);
+      alert('Jednu z fotiek sa nepodarilo nahrať. Skús to prosím znova.');
     }
   }
-  renderProdImagePreview();
   event.target.value = ''; // umožní znova pridať tie isté súbory nabudúce
 }
 
