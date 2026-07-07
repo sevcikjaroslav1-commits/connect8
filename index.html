@@ -22,6 +22,8 @@
     --mode-market-soft: #FBF0DD;
     --mode-video: #FF3C78;
     --mode-video-soft: #2A0F1A;
+    --mode-news: #1AA672;
+    --mode-news-soft: #E4F7EE;
 
     --accent: var(--mode-feed);
     --accent-soft: var(--mode-feed-soft);
@@ -211,6 +213,43 @@
   .mode-dock button[data-mode="feed"].active{background:var(--mode-feed);}
   .mode-dock button[data-mode="market"].active{background:var(--mode-market);}
   .mode-dock button[data-mode="video"].active{background:var(--mode-video);}
+  .mode-dock button[data-mode="news"].active{background:var(--mode-news);}
+
+  /* ---------- SPRÁVY (news pexeso) ---------- */
+  .news-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+  .news-head h2{margin:0;font-size:20px;}
+  .news-refresh-btn{background:var(--mode-news-soft);color:var(--mode-news);padding:8px 14px;border-radius:999px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
+  .news-refresh-btn:disabled{opacity:.5;}
+  .news-sources-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+  .news-source-chip{font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--text-dim);}
+  .news-status{font-size:13px;color:var(--text-dim);padding:20px 4px;}
+  .news-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  @media(max-width:700px){.news-grid{grid-template-columns:repeat(2,1fr);}}
+  .news-card{
+    position:relative;border-radius:var(--radius);overflow:hidden;background:var(--surface);
+    border:1px solid var(--line);cursor:pointer;aspect-ratio:3/4;perspective:1000px;
+  }
+  .news-card-inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d;}
+  .news-card.flipped .news-card-inner{transform:rotateY(180deg);}
+  .news-card-face{position:absolute;inset:0;backface-visibility:hidden;display:flex;flex-direction:column;}
+  .news-card-front{background:var(--bg);}
+  .news-card-front img{width:100%;height:100%;object-fit:cover;display:block;}
+  .news-card-front .news-noimg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:var(--mode-news-soft);}
+  .news-card-badge{
+    position:absolute;top:6px;left:6px;background:rgba(20,20,26,.72);color:#fff;font-size:8px;font-weight:700;
+    padding:3px 7px;border-radius:999px;letter-spacing:.02em;max-width:calc(100% - 12px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .news-card-title-strip{
+    position:absolute;bottom:0;left:0;right:0;padding:6px 7px 6px;
+    background:linear-gradient(to top, rgba(0,0,0,.85), transparent);color:#fff;font-size:10px;font-weight:600;line-height:1.25;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .news-card-back{background:var(--surface);transform:rotateY(180deg);padding:10px;overflow-y:auto;}
+  .news-card-back .news-card-badge{position:static;display:inline-block;margin-bottom:6px;background:var(--mode-news-soft);color:var(--mode-news);font-size:9px;}
+  .news-card-back h4{margin:0 0 6px;font-size:11px;line-height:1.3;}
+  .news-card-back p{margin:0 0 8px;font-size:10px;color:var(--text-dim);line-height:1.4;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;}
+  .news-card-back a{font-size:10px;font-weight:700;color:var(--mode-news);}
+  .news-card-back time{display:block;font-size:9px;color:var(--text-dim);margin-bottom:2px;}
 
   .view{display:none;}
   .view.active{display:block;}
@@ -356,6 +395,36 @@
   }
   .lightbox-close:hover{background:rgba(255,255,255,.22);}
 
+  .share-modal{
+    display:none;position:fixed;inset:0;z-index:600;background:rgba(10,10,14,.6);
+    align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);
+  }
+  .share-modal.open{display:flex;}
+  .share-card{
+    background:var(--surface);border-radius:16px;padding:22px;width:100%;max-width:320px;
+    box-shadow:0 20px 60px rgba(0,0,0,.4);position:relative;
+  }
+  .share-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:16px;text-align:center;}
+  .share-card-close{
+    position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;
+    background:var(--bg);color:var(--text-dim);font-size:15px;display:flex;align-items:center;justify-content:center;
+  }
+  .share-card-close:hover{background:var(--line);}
+  .share-options{display:flex;flex-direction:column;gap:10px;}
+  .share-option{
+    display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;background:var(--bg);
+    font-size:14px;font-weight:600;color:var(--text);transition:.15s;
+  }
+  .share-option:hover{background:var(--accent-soft);}
+  .share-option .share-icon{
+    width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:16px;flex-shrink:0;color:#fff;
+  }
+  .share-icon.fb{background:#1877F2;}
+  .share-icon.ig{background:radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);}
+  .share-icon.tt{background:#000;}
+  .share-copy-note{font-size:12px;color:var(--text-dim);text-align:center;margin-top:14px;line-height:1.4;}
+
   /* ---------- PROFIL ---------- */
   .profile-back-btn{
     background:var(--bg);color:var(--text-dim);padding:8px 14px;border-radius:8px;
@@ -419,6 +488,12 @@
   .user-card:hover{background:var(--surface);}
   .user-card .avatar{width:64px;height:64px;font-size:22px;}
   .user-card-name{font-size:12.5px;font-weight:600;color:var(--text);word-break:break-word;line-height:1.25;}
+  .user-card-avatar-wrap{position:relative;display:inline-block;}
+  .status-dot{
+    position:absolute;right:2px;bottom:2px;width:14px;height:14px;border-radius:50%;
+    border:2px solid var(--surface);background:#e74c3c;
+  }
+  .status-dot.online{background:#2ecc71;}
   .product{
     background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;
     position:relative;cursor:pointer;
@@ -565,6 +640,11 @@
   .video-user .avatar{width:26px;height:26px;font-size:11px;}
   .video-time{font-weight:500;font-size:12px;opacity:.75;}
   .video-views{font-weight:500;font-size:12px;opacity:.75;padding-left:8px;border-left:1px solid rgba(255,255,255,.35);}
+  .post-video-wrap{position:relative;margin-bottom:12px;}
+  .post-video-views-badge{
+    position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;font-weight:600;
+    padding:4px 10px;border-radius:20px;pointer-events:none;
+  }
   .video-caption{font-size:13.5px;line-height:1.4;opacity:.92;}
   .video-side{
     position:absolute;right:8px;bottom:34px;display:flex;flex-direction:column;gap:18px;align-items:center;
@@ -698,6 +778,72 @@
     display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:.15s;
   }
   .chat-close-btn:hover, .conv-header button:hover{background:var(--accent-soft);color:var(--accent);}
+  .call-btn{
+    width:30px;height:30px;border-radius:50%;background:var(--bg);color:var(--text-dim);
+    display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:.15s;
+  }
+  .call-btn:hover{background:var(--accent-soft);color:var(--accent);}
+
+  /* ---------- USER/FRIEND CARD CALL BUTTONS ---------- */
+  .user-card-call-row{display:flex;gap:6px;margin-top:6px;justify-content:center;}
+  .user-card-call-btn{
+    width:26px;height:26px;border-radius:50%;background:var(--bg);color:var(--text-dim);
+    display:flex;align-items:center;justify-content:center;font-size:12px;transition:.15s;
+  }
+  .user-card-call-btn:hover{background:var(--accent-soft);color:var(--accent);}
+  .user-card-call-btn:disabled{opacity:.35;cursor:default;}
+
+  /* ---------- PRICHÁDZAJÚCI HOVOR ---------- */
+  .incoming-call-modal{
+    display:none;position:fixed;inset:0;background:rgba(20,20,26,.6);z-index:700;
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .incoming-call-modal.show{display:flex;}
+  .incoming-call-card{
+    background:var(--surface);border-radius:22px;padding:32px 28px;max-width:320px;width:100%;
+    text-align:center;box-shadow:0 30px 80px rgba(20,20,26,.3);
+  }
+  .call-avatar{
+    width:76px;height:76px;border-radius:50%;margin:0 auto 14px;font-size:26px;
+    display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent);
+    background-size:cover;background-position:center;
+  }
+  .incoming-call-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;margin-bottom:4px;}
+  .incoming-call-type{color:var(--text-dim);font-size:13px;margin-bottom:22px;animation:pulse-fade 1.4s infinite;}
+  @keyframes pulse-fade{0%,100%{opacity:.5;}50%{opacity:1;}}
+  .incoming-call-actions{display:flex;gap:10px;}
+  .call-action-btn{flex:1;padding:12px;border-radius:14px;font-weight:700;font-size:14px;}
+  .call-action-btn.accept{background:#2ecc71;color:#fff;}
+  .call-action-btn.decline{background:#eb4d4d;color:#fff;}
+
+  /* ---------- AKTÍVNY HOVOR ---------- */
+  .call-modal{
+    display:none;position:fixed;inset:0;background:#101014;z-index:750;
+    align-items:center;justify-content:center;
+  }
+  .call-modal.show{display:flex;}
+  .call-screen{position:relative;width:100%;height:100%;}
+  #call-remote-video{width:100%;height:100%;object-fit:cover;background:#101014;}
+  .call-remote-audio-avatar{
+    position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  }
+  .call-remote-audio-avatar.show{display:flex;}
+  .call-remote-audio-avatar .call-avatar{width:110px;height:110px;font-size:36px;}
+  .call-peer-name{color:#fff;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;}
+  .call-status{color:rgba(255,255,255,.65);font-size:13px;}
+  #call-local-video{
+    position:absolute;bottom:100px;right:16px;width:110px;height:150px;object-fit:cover;
+    border-radius:14px;border:2px solid rgba(255,255,255,.25);background:#000;
+  }
+  .call-controls{
+    position:absolute;bottom:24px;left:0;right:0;display:flex;justify-content:center;gap:14px;
+  }
+  .call-ctrl-btn{
+    width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:20px;
+    display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);
+  }
+  .call-ctrl-btn.active-off{background:#eb4d4d;}
+  .call-ctrl-btn.hangup{background:#eb4d4d;}
   .chat-messages{
     flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;min-height:200px;
   }
@@ -811,6 +957,7 @@
       <button class="active" data-mode="feed" onclick="switchMode('feed')"><span class="ind"></span>Feed</button>
       <button data-mode="video" onclick="switchMode('video')"><span class="ind"></span>Videá</button>
       <button data-mode="market" onclick="switchMode('market')"><span class="ind"></span>Marketplace</button>
+      <button data-mode="news" onclick="switchMode('news')"><span class="ind"></span>Správy</button>
     </div>
 
     <div class="topbar-right">
@@ -830,7 +977,7 @@
         <span id="sidebar-username">Používateľ</span>
       </div>
       <div class="sidebar-divider"></div>
-      <div class="sidebar-item" onclick="alert('Zoznam priateľov pridáme v ďalšej verzii 🙂')">
+      <div class="sidebar-item" onclick="openFriendsList()">
         <span class="sidebar-icon">👥</span>
         <span class="label">Priatelia</span>
       </div>
@@ -964,6 +1111,18 @@
           <div class="video-scroller" id="video-scroller"></div>
         </section>
 
+        <!-- SPRÁVY (pexeso z iných portálov) -->
+        <section class="view" id="view-news">
+          <div class="news-head">
+            <h2>📰 Správy</h2>
+            <button class="news-refresh-btn" id="news-refresh-btn" onclick="loadNewsFeed(true)">⟳ Obnoviť</button>
+          </div>
+          <div class="news-sources-row" id="news-sources-row"></div>
+          <div class="news-grid" id="news-grid">
+            <div class="news-status">Načítavam správy zo zdrojov...</div>
+          </div>
+        </section>
+
         <!-- PROFIL -->
         <section class="view" id="view-profile">
           <button class="profile-back-btn" id="profile-back-btn" onclick="profileBack()">← Späť do Feedu</button>
@@ -1003,6 +1162,13 @@
           <div class="users-grid" id="users-grid"></div>
         </section>
 
+        <!-- PRIATELIA (SLEDOVANÍ POUŽÍVATELIA) -->
+        <section class="view" id="view-friends">
+          <button class="profile-back-btn" onclick="switchMode('feed')">← Späť do Feedu</button>
+          <div class="profile-section-title">👥 Priatelia</div>
+          <div class="users-grid" id="friends-grid"></div>
+        </section>
+
         <!-- DETAIL INZERÁTU -->
         <section class="view" id="view-product-detail">
           <button class="profile-back-btn" onclick="closeProductDetail()">← Späť do Marketplace</button>
@@ -1015,6 +1181,26 @@
   <div class="lightbox" id="lightbox" onclick="closeLightbox()">
     <button class="lightbox-close" onclick="closeLightbox()">✕</button>
     <img id="lightbox-img" src="">
+  </div>
+
+  <!-- ============ ZDIEĽAŤ PRÍSPEVOK ============ -->
+  <div class="share-modal" id="share-modal" onclick="if(event.target===this) closeShareModal()">
+    <div class="share-card">
+      <button class="share-card-close" onclick="closeShareModal()">✕</button>
+      <div class="share-card-title">Zdieľať</div>
+      <div class="share-options">
+        <a class="share-option" id="share-fb-link" href="#" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
+          <span class="share-icon fb">f</span> Facebook
+        </a>
+        <button class="share-option" onclick="shareToInstagram()">
+          <span class="share-icon ig">📷</span> Instagram
+        </button>
+        <button class="share-option" onclick="shareToTikTok()">
+          <span class="share-icon tt">♪</span> TikTok
+        </button>
+      </div>
+      <div class="share-copy-note">Instagram a TikTok neumožňujú priame vloženie odkazu — odkaz na príspevok sa skopíruje do schránky a otvorí sa aplikácia, kde ho môžeš vložiť.</div>
+    </div>
   </div>
 
   <!-- ============ ZOZNAM KONVERZÁCIÍ ============ -->
@@ -1034,12 +1220,45 @@
       <div class="chat-header">
         <div class="avatar" id="chat-header-avatar">?</div>
         <div class="chat-header-name" id="chat-header-name">Používateľ</div>
+        <button class="call-btn" onclick="startCall(currentChatUser, 'audio')" title="Zavolať">📞</button>
+        <button class="call-btn" onclick="startCall(currentChatUser, 'video')" title="Videohovor">🎥</button>
         <button class="chat-close-btn" onclick="closeChatModal()">✕</button>
       </div>
       <div class="chat-messages" id="chat-messages"></div>
       <div class="chat-input-row">
         <input type="text" id="chat-input" placeholder="Napíš správu..." onkeydown="if(event.key==='Enter'){sendChatMessage();}">
         <button onclick="sendChatMessage()" title="Odoslať">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PRICHÁDZAJÚCI HOVOR ============ -->
+  <div class="incoming-call-modal" id="incoming-call-modal">
+    <div class="incoming-call-card">
+      <div class="avatar call-avatar" id="incoming-call-avatar">?</div>
+      <div class="incoming-call-name" id="incoming-call-name">Používateľ</div>
+      <div class="incoming-call-type" id="incoming-call-type">volá ti...</div>
+      <div class="incoming-call-actions">
+        <button class="call-action-btn decline" onclick="declineIncomingCall()">✕ Odmietnuť</button>
+        <button class="call-action-btn accept" onclick="acceptIncomingCall()">📞 Prijať</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ AKTÍVNY HOVOR ============ -->
+  <div class="call-modal" id="call-modal">
+    <div class="call-screen">
+      <video id="call-remote-video" autoplay playsinline></video>
+      <div class="call-remote-audio-avatar" id="call-remote-audio-avatar">
+        <div class="avatar call-avatar" id="call-avatar-big">?</div>
+        <div class="call-peer-name" id="call-peer-name">Používateľ</div>
+        <div class="call-status" id="call-status">Vytáčam...</div>
+      </div>
+      <video id="call-local-video" autoplay playsinline muted></video>
+      <div class="call-controls">
+        <button class="call-ctrl-btn" id="call-mute-btn" onclick="toggleCallMute()" title="Stlmiť mikrofón">🎙️</button>
+        <button class="call-ctrl-btn" id="call-cam-btn" onclick="toggleCallCamera()" title="Vypnúť kameru">📷</button>
+        <button class="call-ctrl-btn hangup" onclick="endCall()" title="Zavesiť">✕</button>
       </div>
     </div>
   </div>
@@ -1277,6 +1496,8 @@ function doLogout(){
   setPresenceOffline();
   if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; }
   if(conversationsUnsub){ conversationsUnsub(); conversationsUnsub = null; }
+  if(incomingCallsUnsub){ incomingCallsUnsub(); incomingCallsUnsub = null; }
+  if(pc || currentCallDocId) endCall();
   closeChatModal();
   closeConvModal();
   if(FIREBASE_CONFIGURED && auth) auth.signOut();
@@ -1350,6 +1571,97 @@ function closeLightbox(){
   document.getElementById('lightbox-img').src = '';
 }
 
+/* ---------------- ZDIEĽANIE PRÍSPEVKOV A VIDEÍ ---------------- */
+let sharePostId = null;
+let shareItemType = 'post'; // 'post' (Feed) alebo 'video' (sekcia Videá)
+
+function getShareItem(){
+  if(shareItemType === 'video') return videos.find(x=>x.id===sharePostId);
+  return posts.find(x=>x.id===sharePostId);
+}
+
+function buildShareText(item){
+  if(!item) return '';
+  const txt = ((shareItemType === 'video' ? item.caption : item.text) || '').trim();
+  if(shareItemType === 'video'){
+    return txt ? `${item.name} na Connect: ${txt}` : `Pozri si video od ${item.name} na Connect`;
+  }
+  return txt ? `${item.name} na Connect: ${txt}` : `Pozri si príspevok od ${item.name} na Connect`;
+}
+
+const DEPLOYED_APP_URL = 'https://connect8.eu/';
+
+function getShareableUrl(){
+  // Facebook vyžaduje reálnu, verejne dostupnú https adresu, ktorú si vie stiahnuť a overiť.
+  // Ak appku niekto otvára lokálne (file://) alebo z iného neverejného zdroja, pošleme radšej
+  // ostrú nasadenú adresu - inak Facebook zdieľanie zlyhá s chybou "Sorry, something went wrong".
+  return (location.protocol === 'http:' || location.protocol === 'https:')
+    ? location.href.split('#')[0]
+    : DEPLOYED_APP_URL;
+}
+
+function openShareModal(postId){
+  shareItemType = 'post';
+  sharePostId = postId;
+  const item = getShareItem();
+  const pageUrl = getShareableUrl();
+  const text = buildShareText(item);
+
+  const fbLink = document.getElementById('share-fb-link');
+  fbLink.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}&quote=${encodeURIComponent(text)}`;
+
+  document.getElementById('share-modal').classList.add('open');
+}
+
+function openVideoShareModal(videoId){
+  shareItemType = 'video';
+  sharePostId = videoId;
+  const item = getShareItem();
+  const pageUrl = getShareableUrl();
+  const text = buildShareText(item);
+
+  const fbLink = document.getElementById('share-fb-link');
+  fbLink.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}&quote=${encodeURIComponent(text)}`;
+
+  document.getElementById('share-modal').classList.add('open');
+}
+
+function closeShareModal(){
+  document.getElementById('share-modal').classList.remove('open');
+  sharePostId = null;
+}
+
+async function copyShareLinkToClipboard(){
+  const item = getShareItem();
+  const pageUrl = getShareableUrl();
+  const text = `${buildShareText(item)}\n${pageUrl}`;
+  try{
+    await navigator.clipboard.writeText(text);
+    return true;
+  }catch(e){
+    console.error('Nepodarilo sa skopírovať odkaz:', e);
+    return false;
+  }
+}
+
+async function shareToInstagram(){
+  const copied = await copyShareLinkToClipboard();
+  alert(copied
+    ? 'Odkaz bol skopírovaný 📋 — teraz sa otvorí Instagram, kde ho môžeš vložiť napr. do Stories alebo správy.'
+    : 'Nepodarilo sa skopírovať odkaz, ale Instagram sa aj tak otvorí.');
+  window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+  closeShareModal();
+}
+
+async function shareToTikTok(){
+  const copied = await copyShareLinkToClipboard();
+  alert(copied
+    ? 'Odkaz bol skopírovaný 📋 — teraz sa otvorí TikTok, kde ho môžeš vložiť napr. do popisu videa alebo správy.'
+    : 'Nepodarilo sa skopírovať odkaz, ale TikTok sa aj tak otvorí.');
+  window.open('https://www.tiktok.com/upload', '_blank', 'noopener,noreferrer');
+  closeShareModal();
+}
+
 function openProfileAvatarLightbox(){
   const profileUser = viewedProfileUser || currentUser;
   if(profileUser && profileUser.photoURL) openLightbox(profileUser.photoURL);
@@ -1384,6 +1696,8 @@ async function toggleFollow(uid){
   renderPosts();
   const profileView = document.getElementById('view-profile');
   if(profileView && profileView.classList.contains('active')) renderProfile();
+  const friendsView = document.getElementById('view-friends');
+  if(friendsView && friendsView.classList.contains('active')) renderFriendsList();
 
   if(FIREBASE_CONFIGURED && db){
     try{
@@ -1398,6 +1712,7 @@ async function toggleFollow(uid){
       if(wasFollowing) followingSet.add(uid); else followingSet.delete(uid);
       renderPosts();
       if(profileView && profileView.classList.contains('active')) renderProfile();
+      if(friendsView && friendsView.classList.contains('active')) renderFriendsList();
     }
   }
 }
@@ -1495,6 +1810,32 @@ function renderProfile(){
     : `<div class="profile-empty">Zatiaľ žiadne príspevky.</div>`;
 }
 
+function buildCallButtonRow(u){
+  const row = document.createElement('div');
+  row.className = 'user-card-call-row';
+  const online = isUserOnline(u.id);
+
+  const audioBtn = document.createElement('button');
+  audioBtn.className = 'user-card-call-btn';
+  audioBtn.dataset.calluid = u.id;
+  audioBtn.textContent = '📞';
+  audioBtn.title = online ? 'Zavolať' : 'Používateľ je offline';
+  audioBtn.disabled = !online;
+  audioBtn.onclick = (e)=>{ e.stopPropagation(); startCall({ uid:u.id, name:u.name, photoURL:u.photo }, 'audio'); };
+
+  const videoBtn = document.createElement('button');
+  videoBtn.className = 'user-card-call-btn';
+  videoBtn.dataset.calluid = u.id;
+  videoBtn.textContent = '🎥';
+  videoBtn.title = online ? 'Videohovor' : 'Používateľ je offline';
+  videoBtn.disabled = !online;
+  videoBtn.onclick = (e)=>{ e.stopPropagation(); startCall({ uid:u.id, name:u.name, photoURL:u.photo }, 'video'); };
+
+  row.appendChild(audioBtn);
+  row.appendChild(videoBtn);
+  return row;
+}
+
 function openUsersList(){
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -1544,6 +1885,9 @@ async function renderUsersList(){
       card.className = 'user-card';
       card.onclick = ()=>openUserProfile({ uid: u.id, name: u.name, photoURL: u.photo });
 
+      const avWrap = document.createElement('div');
+      avWrap.className = 'user-card-avatar-wrap';
+
       const av = document.createElement('div');
       av.className = 'avatar';
       if(u.photo){
@@ -1554,12 +1898,21 @@ async function renderUsersList(){
         av.textContent = initials(u.name);
       }
 
+      const dot = document.createElement('div');
+      dot.className = 'status-dot';
+      dot.id = 'status-dot-' + u.id;
+      dot.classList.toggle('online', isUserOnline(u.id));
+
+      avWrap.appendChild(av);
+      avWrap.appendChild(dot);
+
       const name = document.createElement('span');
       name.className = 'user-card-name';
       name.textContent = u.name;
 
-      card.appendChild(av);
+      card.appendChild(avWrap);
       card.appendChild(name);
+      card.appendChild(buildCallButtonRow(u));
       grid.appendChild(card);
     });
   }catch(e){
@@ -1570,6 +1923,98 @@ async function renderUsersList(){
     err.textContent = 'Nepodarilo sa načítať zoznam používateľov.';
     grid.appendChild(err);
   }
+}
+
+function openFriendsList(){
+  document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-friends').classList.add('active');
+  renderFriendsList();
+}
+
+async function renderFriendsList(){
+  const grid = document.getElementById('friends-grid');
+  grid.innerHTML = '';
+  const loading = document.createElement('div');
+  loading.className = 'profile-empty';
+  loading.textContent = 'Načítavam priateľov...';
+  grid.appendChild(loading);
+
+  if(!FIREBASE_CONFIGURED || !db){
+    grid.innerHTML = '';
+    const msg = document.createElement('div');
+    msg.className = 'profile-empty';
+    msg.textContent = 'Zoznam priateľov je dostupný len s pripojenou databázou.';
+    grid.appendChild(msg);
+    return;
+  }
+
+  const uids = [...followingSet];
+  grid.innerHTML = '';
+  if(!uids.length){
+    const empty = document.createElement('div');
+    empty.className = 'profile-empty';
+    empty.textContent = 'Zatiaľ nikoho nesleduješ. Skús niekoho vyhľadať v sekcii Používatelia 🙂';
+    grid.appendChild(empty);
+    return;
+  }
+
+  let users = [];
+  try{
+    const docs = await Promise.all(uids.map(uid=>db.collection('profiles').doc(uid).get()));
+    users = docs.map((doc, i)=>{
+      const data = (doc.exists && doc.data()) || {};
+      return { id: uids[i], name: data.name || 'Používateľ', photo: data.avatarPhoto || null };
+    });
+    users.sort((a,b)=> a.name.localeCompare(b.name, 'sk'));
+  }catch(e){
+    console.error("Nepodarilo sa načítať priateľov:", e);
+    grid.innerHTML = '';
+    const err = document.createElement('div');
+    err.className = 'profile-empty';
+    err.textContent = 'Priateľov sa nepodarilo načítať. Skús to znova.';
+    grid.appendChild(err);
+    return;
+  }
+
+  grid.innerHTML = '';
+  users.forEach(u=>{
+    cacheProfile(u.id, u.name, u.photo);
+
+    const card = document.createElement('div');
+    card.className = 'user-card';
+    card.onclick = ()=>openUserProfile({ uid: u.id, name: u.name, photoURL: u.photo });
+
+    const avWrap = document.createElement('div');
+    avWrap.className = 'user-card-avatar-wrap';
+
+    const av = document.createElement('div');
+    av.className = 'avatar';
+    if(u.photo){
+      av.style.backgroundImage = `url(${u.photo})`;
+      av.style.backgroundSize = 'cover';
+      av.style.backgroundPosition = 'center';
+    } else {
+      av.textContent = initials(u.name);
+    }
+
+    const dot = document.createElement('div');
+    dot.className = 'status-dot';
+    dot.id = 'status-dot-' + u.id;
+    dot.classList.toggle('online', isUserOnline(u.id));
+
+    avWrap.appendChild(av);
+    avWrap.appendChild(dot);
+
+    const name = document.createElement('span');
+    name.className = 'user-card-name';
+    name.textContent = u.name;
+
+    card.appendChild(avWrap);
+    card.appendChild(name);
+    card.appendChild(buildCallButtonRow(u));
+    grid.appendChild(card);
+  });
 }
 
 /* ---------------- TOP SEARCH (vyhľadávanie používateľov podľa mena) ---------------- */
@@ -1655,6 +2100,7 @@ function enterApp(){
   renderAllAvatars();
   document.getElementById('sidebar-username').textContent = currentUser.name;
   loadViewedVideoIds();
+  loadViewedFeedVideoIds();
   loadFollowing().then(renderPosts);
   renderPosts();
   renderCategories();
@@ -1663,6 +2109,7 @@ function enterApp(){
   switchMode('feed');
   startPresenceHeartbeat();
   subscribeConversations();
+  listenForIncomingCalls();
   warmProfilePhotosCache();
 }
 
@@ -1928,12 +2375,29 @@ if(FIREBASE_CONFIGURED){
    takže "online počítadlo" je naozaj živé a presné pre všetkých naraz. */
 let totalUsersCount = 0;
 let onlineUsersCount = 0;
+let presenceStatus = {}; // uid -> {state:'online'|'offline', name, last_changed}
 
 function updateUserStats(){
   const totalEl = document.getElementById('total-users-count');
   const onlineEl = document.getElementById('online-users-count');
   if(totalEl) totalEl.textContent = totalUsersCount || '–';
   if(onlineEl) onlineEl.textContent = onlineUsersCount;
+}
+
+function isUserOnline(uid){
+  return !!(presenceStatus[uid] && presenceStatus[uid].state === 'online');
+}
+
+function updateStatusDots(){
+  document.querySelectorAll('[id^="status-dot-"]').forEach(dot=>{
+    const uid = dot.id.slice('status-dot-'.length);
+    dot.classList.toggle('online', isUserOnline(uid));
+  });
+  document.querySelectorAll('[data-calluid]').forEach(btn=>{
+    const online = isUserOnline(btn.dataset.calluid);
+    btn.disabled = !online;
+    btn.title = btn.textContent === '📞' ? (online ? 'Zavolať' : 'Používateľ je offline') : (online ? 'Videohovor' : 'Používateľ je offline');
+  });
 }
 
 function setPresenceOffline(){
@@ -1958,8 +2422,14 @@ function startPresenceHeartbeat(){
 
   rtdb.ref('status').on('value', (snap)=>{
     const val = snap.val() || {};
+    presenceStatus = val;
     onlineUsersCount = Object.values(val).filter(v=>v.state==='online').length;
     updateUserStats();
+
+    const usersView = document.getElementById('view-users');
+    if(usersView && usersView.classList.contains('active')) updateStatusDots();
+    const friendsView = document.getElementById('view-friends');
+    if(friendsView && friendsView.classList.contains('active')) updateStatusDots();
   });
 
   db.collection('profiles').get()
@@ -1980,10 +2450,159 @@ function switchMode(mode){
     videoObserver = null;
   }
 
+  if(mode === 'news'){
+    loadNewsFeed(false); // prvé otvorenie sekcie natiahne správy (ďalej sa už len cachuje)
+  }
+
   const root = document.documentElement.style;
-  const map = {feed:['--mode-feed','--mode-feed-soft'], market:['--mode-market','--mode-market-soft'], video:['--mode-video','--mode-video-soft']};
+  const map = {feed:['--mode-feed','--mode-feed-soft'], market:['--mode-market','--mode-market-soft'], video:['--mode-video','--mode-video-soft'], news:['--mode-news','--mode-news-soft']};
   root.setProperty('--accent', getComputedStyle(document.documentElement).getPropertyValue(map[mode][0]));
   root.setProperty('--accent-soft', getComputedStyle(document.documentElement).getPropertyValue(map[mode][1]));
+}
+
+/* ---------------- SPRÁVY (pexeso z iných portálov) ---------------- */
+const NEWS_SOURCES = [
+  { id:'hlavnespravy', name:'Hlavné správy', urls:['https://www.hlavnespravy.sk/feed/'] },
+  { id:'postoj',       name:'Postoj',        urls:['https://www.postoj.sk/rss','https://www.postoj.sk/feed'] },
+  { id:'info',         name:'Info.sk',       urls:['https://www.info.sk/feed/','https://www.info.sk/rss'] },
+  { id:'sita',         name:'SITA',          urls:['https://sita.sk/rss/clanky-img/1/','https://sita.sk/spravy/feed/'] }
+];
+const NEWS_REFRESH_MS = 15 * 60 * 1000; // 15 minút
+let newsCache = { items: [], ts: 0 };
+let newsLoading = false;
+
+function newsProxyUrl(targetUrl){
+  return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl);
+}
+
+function stripHtml(html){
+  const d = document.createElement('div');
+  d.innerHTML = html || '';
+  return (d.textContent || d.innerText || '').trim();
+}
+
+function extractImageFromItem(itemEl, rawXml){
+  const media = itemEl.getElementsByTagName('media:content')[0] || itemEl.getElementsByTagName('media:thumbnail')[0];
+  if(media && media.getAttribute('url')) return media.getAttribute('url');
+  const enclosure = itemEl.getElementsByTagName('enclosure')[0];
+  if(enclosure && enclosure.getAttribute('type') && enclosure.getAttribute('type').startsWith('image') && enclosure.getAttribute('url')) return enclosure.getAttribute('url');
+  if(enclosure && enclosure.getAttribute('url')) return enclosure.getAttribute('url');
+  const contentEncoded = itemEl.getElementsByTagName('content:encoded')[0];
+  const desc = itemEl.getElementsByTagName('description')[0];
+  const html = (contentEncoded && contentEncoded.textContent) || (desc && desc.textContent) || '';
+  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m ? m[1] : null;
+}
+
+async function fetchOneSource(source){
+  for(const url of source.urls){
+    try{
+      const res = await fetch(newsProxyUrl(url));
+      if(!res.ok) continue;
+      const text = await res.text();
+      const xml = new DOMParser().parseFromString(text, 'text/xml');
+      if(xml.querySelector('parsererror')) continue;
+      let items = Array.from(xml.getElementsByTagName('item'));
+      if(items.length === 0) items = Array.from(xml.getElementsByTagName('entry'));
+      if(items.length === 0) continue;
+      return items.slice(0, 16).map(it=>{
+        const title = (it.getElementsByTagName('title')[0]?.textContent || '').trim();
+        let link = it.getElementsByTagName('link')[0]?.textContent || '';
+        if(!link){ const linkEl = it.getElementsByTagName('link')[0]; link = linkEl ? linkEl.getAttribute('href') : ''; }
+        const pubDate = it.getElementsByTagName('pubDate')[0]?.textContent || it.getElementsByTagName('published')[0]?.textContent || '';
+        const descRaw = it.getElementsByTagName('description')[0]?.textContent || it.getElementsByTagName('summary')[0]?.textContent || '';
+        return {
+          title: title || 'Bez názvu',
+          link: link.trim(),
+          desc: stripHtml(descRaw).slice(0, 220),
+          image: extractImageFromItem(it),
+          pubDate,
+          sourceId: source.id,
+          sourceName: source.name
+        };
+      }).filter(it=>it.title && it.link);
+    }catch(e){ /* skús ďalší kandidátny link zdroja */ }
+  }
+  return [];
+}
+
+function shuffleArray(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function formatNewsDate(pubDate){
+  if(!pubDate) return '';
+  const d = new Date(pubDate);
+  if(isNaN(d.getTime())) return '';
+  return d.toLocaleString('sk-SK', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+async function loadNewsFeed(forceRefresh){
+  const grid = document.getElementById('news-grid');
+  const chipsRow = document.getElementById('news-sources-row');
+  const refreshBtn = document.getElementById('news-refresh-btn');
+  if(!grid) return;
+
+  if(!forceRefresh && newsCache.items.length && (Date.now() - newsCache.ts) < NEWS_REFRESH_MS){
+    renderNewsGrid(newsCache.items);
+    return;
+  }
+  if(newsLoading) return;
+  newsLoading = true;
+  if(refreshBtn){ refreshBtn.disabled = true; refreshBtn.textContent = '⟳ Načítavam...'; }
+  grid.innerHTML = '<div class="news-status">Načítavam správy zo zdrojov...</div>';
+  chipsRow.innerHTML = NEWS_SOURCES.map(s=>`<span class="news-source-chip">${s.name}</span>`).join('');
+
+  try{
+    const results = await Promise.all(NEWS_SOURCES.map(s=>fetchOneSource(s)));
+    let all = [].concat(...results);
+    if(all.length === 0){
+      grid.innerHTML = '<div class="news-status">Správy sa nepodarilo načítať (zdroje momentálne neodpovedajú). Skús obnoviť o chvíľu.</div>';
+      return;
+    }
+    all = shuffleArray(all).slice(0, 32);
+    newsCache = { items: all, ts: Date.now() };
+    renderNewsGrid(all);
+  }catch(e){
+    grid.innerHTML = '<div class="news-status">Nastala chyba pri načítaní správ. Skús to znova.</div>';
+  }finally{
+    newsLoading = false;
+    if(refreshBtn){ refreshBtn.disabled = false; refreshBtn.textContent = '⟳ Obnoviť'; }
+  }
+}
+
+function renderNewsGrid(items){
+  const grid = document.getElementById('news-grid');
+  if(!grid) return;
+  window.__newsItems = items;
+  grid.innerHTML = items.map((it, idx)=>`
+    <div class="news-card" id="news-card-${idx}" onclick="toggleNewsCard(${idx})">
+      <div class="news-card-inner">
+        <div class="news-card-face news-card-front">
+          ${it.image ? `<img src="${it.image}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
+          <div class="news-noimg" style="${it.image ? 'display:none;' : ''}">📰</div>
+          <span class="news-card-badge">${it.sourceName}</span>
+          <div class="news-card-title-strip">${it.title}</div>
+        </div>
+        <div class="news-card-face news-card-back">
+          <span class="news-card-badge">${it.sourceName}</span>
+          <time>${formatNewsDate(it.pubDate)}</time>
+          <h4>${it.title}</h4>
+          <p>${it.desc || 'Bez popisu.'}</p>
+          <a href="${it.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Čítať celý článok →</a>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleNewsCard(idx){
+  const el = document.getElementById('news-card-' + idx);
+  if(el) el.classList.toggle('flipped');
 }
 
 /* ---------------- FEED ---------------- */
@@ -2039,7 +2658,10 @@ function buildPostCard(p, opts={}){
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="Vymazať príspevok">🗑️</button>` : ''}
       </div>
       <div class="post-text">${p.text}</div>
-      ${p.video ? `<video class="post-video" src="${p.video}" controls playsinline preload="metadata" style="width:100%;border-radius:12px;margin-bottom:12px;max-height:480px;background:#000;display:block;"></video>` : ''}
+      ${p.video ? `<div class="post-video-wrap">
+        <video class="post-video" id="post-video-${p.id}" src="${p.video}" controls playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
+        <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
+      </div>` : ''}
       ${getPostPhotos(p).length ? buildPostImgGrid(getPostPhotos(p)) : (p.img ? `<div class="post-img" style="background:var(--accent-soft);">${p.img}</div>` : '')}
       ${p.link ? (p.linkImage ? `
       <a class="link-card link-card-media" href="${p.link}" target="_blank" rel="noopener noreferrer">
@@ -2064,7 +2686,7 @@ function buildPostCard(p, opts={}){
         ${showComments
           ? `<button onclick="toggleComments(${p.id})">💬 Komentovať (${p.comments.length})</button>`
           : `<button style="opacity:.65;cursor:default;" onclick="switchMode('feed')">💬 ${p.comments.length} komentárov</button>`}
-        <button>↗ Zdieľať</button>
+        <button onclick="openShareModal(${p.id})">↗ Zdieľať</button>
       </div>
       ${showComments ? `<div class="comments ${p.open?'open':''}" id="comments-${p.id}">
         ${p.comments.map((c,ci)=>`<div class="comment"><span class="comment-text"><b>${c.name}:</b> ${c.text}</span><button class="comment-like-btn ${c.liked?'liked':''}" onclick="toggleCommentLike(${p.id},${ci})">👍${c.likes?' '+c.likes:''}</button></div>`).join('')}
@@ -2381,7 +3003,7 @@ function addPost(){
     text, photos:pendingPostImages.slice(), video: pendingPostVideo, link:linkVal,
     linkTitle: hasMatchingPreview ? pendingPostLink.title : '',
     linkImage: hasMatchingPreview ? pendingPostLink.image : null,
-    img: (pendingPostImages.length || pendingPostVideo) ? null : '✨', likes:0, liked:false, comments:[], open:false
+    img: (pendingPostImages.length || pendingPostVideo) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
   });
   document.getElementById('post-text').value = '';
   removePostImage();
@@ -2843,7 +3465,7 @@ function renderVideos(){
         <div><button id="mute-btn-${v.id}" onclick="toggleMute(${v.id})">${isMuted?'🔇':'🔊'}</button><div class="count">Zvuk</div></div>
         <div><button class="${v.liked?'liked':''}" onclick="toggleVideoLike(${v.id})">❤️</button><div class="count">${v.likes}</div></div>
         <div><button onclick="openVideoComments(${v.id})">💬</button><div class="count" id="chat-count-${v.id}">${(v.comments && v.comments.length) || 0}</div></div>
-        <div><button>↗</button><div class="count">Zdieľať</div></div>
+        <div><button onclick="openVideoShareModal(${v.id})">↗</button><div class="count">Zdieľať</div></div>
         ${(v.authorId ? v.authorId===currentUser.uid : v.name===currentUser.name) ? `<div><button onclick="deleteVideo(${v.id})">🗑️</button><div class="count">Zmazať</div></div>` : ''}
       </div>
     `;
@@ -2872,6 +3494,41 @@ function persistViewedVideoIds(){
   try{
     localStorage.setItem(viewedVideosStorageKey(), JSON.stringify([...viewedVideoIds]));
   }catch(e){ /* ignoruj, nie je kritické */ }
+}
+
+/* ---- zhliadnutia videí PRIAMO vo Feede (na nástenke) - samostatná evidencia od sekcie Videá ---- */
+let viewedFeedVideoIds = new Set();
+
+function viewedFeedVideosStorageKey(){
+  return 'connect_viewed_feed_videos_' + (currentUser ? currentUser.uid : 'anon');
+}
+
+function loadViewedFeedVideoIds(){
+  try{
+    const raw = localStorage.getItem(viewedFeedVideosStorageKey());
+    viewedFeedVideoIds = new Set(raw ? JSON.parse(raw) : []);
+  }catch(e){
+    viewedFeedVideoIds = new Set();
+  }
+}
+
+function persistViewedFeedVideoIds(){
+  try{
+    localStorage.setItem(viewedFeedVideosStorageKey(), JSON.stringify([...viewedFeedVideoIds]));
+  }catch(e){ /* ignoruj, nie je kritické */ }
+}
+
+function registerFeedVideoView(postId){
+  const numId = Number(postId);
+  if(viewedFeedVideoIds.has(numId)) return;
+  const p = posts.find(p=>p.id===numId);
+  if(!p) return;
+  viewedFeedVideoIds.add(numId);
+  persistViewedFeedVideoIds();
+  p.views = (p.views||0) + 1;
+  const el = document.getElementById('post-video-views-'+numId);
+  if(el) el.textContent = `👁 ${formatViewCount(p.views)}`;
+  saveState();
 }
 
 function registerVideoView(id){
@@ -3119,7 +3776,291 @@ function addVideo(){
   renderVideos();
 }
 
-/* ---------------- ŠTART APLIKÁCIE ---------------- */
+/* ================================================================
+   HOVORY (audio/video) — WebRTC + Firestore signalizácia
+   Vyžaduje HTTPS hosting (napr. GitHub Pages) — lokálny file:// súbor
+   nedovolí prístup k mikrofónu/kamere.
+================================================================== */
+const RTC_CONFIG = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }] };
+
+let pc = null;                 // RTCPeerConnection aktívneho hovoru
+let localStream = null;
+let currentCallDocId = null;
+let currentCallPeer = null;    // {uid, name, photoURL}
+let currentCallType = 'audio'; // 'audio' | 'video'
+let currentCallRole = null;    // 'caller' | 'callee'
+let callDocUnsub = null;
+let remoteCandidatesUnsub = null;
+let incomingCallsUnsub = null;
+let micMuted = false;
+let camOff = false;
+
+function callDocRef(id){ return db.collection('calls').doc(id); }
+
+function listenForIncomingCalls(){
+  if(!FIREBASE_CONFIGURED || !db || !currentUser) return;
+  if(incomingCallsUnsub) incomingCallsUnsub();
+  incomingCallsUnsub = db.collection('calls')
+    .where('calleeId', '==', currentUser.uid)
+    .where('status', '==', 'ringing')
+    .onSnapshot(qs=>{
+      qs.docChanges().forEach(change=>{
+        if(change.type === 'added' && !currentCallDocId){
+          showIncomingCall(change.doc.id, change.doc.data());
+        }
+      });
+    }, e=>console.error('Hovory: chyba pri sledovaní prichádzajúcich hovorov', e));
+}
+
+function showIncomingCall(callId, data){
+  currentCallDocId = callId;
+  currentCallPeer = { uid: data.callerId, name: data.callerName || 'Používateľ', photoURL: data.callerPhoto || null };
+  currentCallType = data.type || 'audio';
+  currentCallRole = 'callee';
+
+  document.getElementById('incoming-call-name').textContent = currentCallPeer.name;
+  document.getElementById('incoming-call-type').textContent = (currentCallType === 'video' ? 'Videohovor' : 'Hovor') + ' — prichádzajúci...';
+  applyProfileAvatar(document.getElementById('incoming-call-avatar'), currentCallPeer);
+  document.getElementById('incoming-call-modal').classList.add('show');
+
+  // ak druhá strana zavesí skôr než stihneme zdvihnúť
+  callDocUnsub = callDocRef(callId).onSnapshot(doc=>{
+    const d = doc.data();
+    if(!d || d.status === 'ended' || d.status === 'declined'){
+      if(document.getElementById('incoming-call-modal').classList.contains('show')){
+        dismissIncomingCallUI();
+      }
+    }
+  });
+}
+
+function dismissIncomingCallUI(){
+  document.getElementById('incoming-call-modal').classList.remove('show');
+  if(callDocUnsub){ callDocUnsub(); callDocUnsub = null; }
+  if(!pc){ currentCallDocId = null; currentCallPeer = null; currentCallRole = null; }
+}
+
+async function declineIncomingCall(){
+  if(currentCallDocId){
+    try{ await callDocRef(currentCallDocId).update({ status:'declined' }); }catch(e){}
+  }
+  dismissIncomingCallUI();
+  currentCallDocId = null; currentCallPeer = null; currentCallRole = null;
+}
+
+async function startCall(user, type){
+  if(!FIREBASE_CONFIGURED || !db){ alert('Hovory sú dostupné len s pripojenou databázou.'); return; }
+  if(!user || !user.uid || user.uid === currentUser.uid) return;
+  if(location.protocol !== 'https:' && location.hostname !== 'localhost'){
+    alert('Hovory fungujú len cez HTTPS (napr. na tvojej doméne cez GitHub Pages), nie z lokálneho súboru.');
+    return;
+  }
+  if(currentCallDocId || pc){ alert('Práve prebieha iný hovor.'); return; }
+
+  currentCallPeer = { uid: user.uid, name: user.name, photoURL: user.photoURL || null };
+  currentCallType = type;
+  currentCallRole = 'caller';
+
+  try{
+    localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video: type==='video' });
+  }catch(e){
+    alert('Nepodarilo sa získať prístup k mikrofónu/kamere. Skontroluj povolenia v prehliadači.');
+    currentCallPeer = null; currentCallRole = null;
+    return;
+  }
+
+  openCallScreen('Vytáčam...');
+
+  pc = new RTCPeerConnection(RTC_CONFIG);
+  localStream.getTracks().forEach(track=>pc.addTrack(track, localStream));
+  setupPeerConnectionEvents();
+
+  const callDoc = callDocRef(cryptoRandomId());
+  currentCallDocId = callDoc.id;
+
+  pc.onicecandidate = (e)=>{
+    if(e.candidate) callDoc.collection('callerCandidates').add(e.candidate.toJSON());
+  };
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  await callDoc.set({
+    callerId: currentUser.uid,
+    callerName: currentUser.name,
+    callerPhoto: currentUser.photoURL || null,
+    calleeId: user.uid,
+    type,
+    status: 'ringing',
+    offer: { type: offer.type, sdp: offer.sdp },
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  callDocUnsub = callDoc.onSnapshot(async doc=>{
+    const d = doc.data();
+    if(!d) return;
+    if(d.status === 'accepted' && d.answer && pc && !pc.currentRemoteDescription){
+      await pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+      document.getElementById('call-status').textContent = 'Pripájam...';
+    }
+    if(d.status === 'declined'){
+      document.getElementById('call-status').textContent = 'Hovor odmietnutý';
+      setTimeout(endCall, 1200);
+    }
+    if(d.status === 'ended'){
+      endCall(true);
+    }
+  });
+
+  remoteCandidatesUnsub = callDoc.collection('calleeCandidates').onSnapshot(qs=>{
+    qs.docChanges().forEach(change=>{
+      if(change.type === 'added' && pc){
+        pc.addIceCandidate(new RTCIceCandidate(change.doc.data())).catch(()=>{});
+      }
+    });
+  });
+}
+
+async function acceptIncomingCall(){
+  const callId = currentCallDocId;
+  if(!callId) return;
+  document.getElementById('incoming-call-modal').classList.remove('show');
+  if(callDocUnsub){ callDocUnsub(); callDocUnsub = null; }
+
+  try{
+    localStream = await navigator.mediaDevices.getUserMedia({ audio:true, video: currentCallType==='video' });
+  }catch(e){
+    alert('Nepodarilo sa získať prístup k mikrofónu/kamere. Skontroluj povolenia v prehliadači.');
+    await callDocRef(callId).update({ status:'declined' }).catch(()=>{});
+    currentCallDocId = null; currentCallPeer = null; currentCallRole = null;
+    return;
+  }
+
+  openCallScreen('Pripájam...');
+
+  pc = new RTCPeerConnection(RTC_CONFIG);
+  localStream.getTracks().forEach(track=>pc.addTrack(track, localStream));
+  setupPeerConnectionEvents();
+
+  const callDoc = callDocRef(callId);
+  pc.onicecandidate = (e)=>{
+    if(e.candidate) callDoc.collection('calleeCandidates').add(e.candidate.toJSON());
+  };
+
+  const snap = await callDoc.get();
+  const d = snap.data();
+  await pc.setRemoteDescription(new RTCSessionDescription(d.offer));
+
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+
+  await callDoc.update({
+    status: 'accepted',
+    answer: { type: answer.type, sdp: answer.sdp }
+  });
+
+  callDocUnsub = callDoc.onSnapshot(doc=>{
+    const dd = doc.data();
+    if(!dd) return;
+    if(dd.status === 'ended') endCall(true);
+  });
+
+  remoteCandidatesUnsub = callDoc.collection('callerCandidates').onSnapshot(qs=>{
+    qs.docChanges().forEach(change=>{
+      if(change.type === 'added' && pc){
+        pc.addIceCandidate(new RTCIceCandidate(change.doc.data())).catch(()=>{});
+      }
+    });
+  });
+}
+
+function setupPeerConnectionEvents(){
+  const remoteVideo = document.getElementById('call-remote-video');
+  const remoteAudioAvatar = document.getElementById('call-remote-audio-avatar');
+  pc.ontrack = (e)=>{
+    remoteVideo.srcObject = e.streams[0];
+    document.getElementById('call-status').textContent = '';
+    if(currentCallType === 'video'){
+      remoteVideo.style.display = 'block';
+      remoteAudioAvatar.classList.remove('show');
+    } else {
+      remoteVideo.style.display = 'none';
+      remoteAudioAvatar.classList.add('show');
+    }
+  };
+  pc.onconnectionstatechange = ()=>{
+    if(pc && (pc.connectionState === 'disconnected' || pc.connectionState === 'failed')){
+      endCall(true);
+    }
+  };
+}
+
+function openCallScreen(statusText){
+  document.getElementById('call-peer-name').textContent = currentCallPeer.name;
+  document.getElementById('call-status').textContent = statusText;
+  applyProfileAvatar(document.getElementById('call-avatar-big'), currentCallPeer);
+
+  const localVideo = document.getElementById('call-local-video');
+  const remoteVideo = document.getElementById('call-remote-video');
+  const remoteAudioAvatar = document.getElementById('call-remote-audio-avatar');
+  localVideo.srcObject = localStream;
+  remoteVideo.srcObject = null;
+
+  if(currentCallType === 'video'){
+    localVideo.style.display = 'block';
+    remoteVideo.style.display = 'block';
+    remoteAudioAvatar.classList.remove('show');
+  } else {
+    localVideo.style.display = 'none';
+    remoteVideo.style.display = 'none';
+    remoteAudioAvatar.classList.add('show');
+  }
+
+  micMuted = false; camOff = false;
+  document.getElementById('call-mute-btn').classList.remove('active-off');
+  document.getElementById('call-cam-btn').classList.remove('active-off');
+  document.getElementById('call-cam-btn').style.display = currentCallType === 'video' ? 'flex' : 'none';
+
+  document.getElementById('call-modal').classList.add('show');
+}
+
+function toggleCallMute(){
+  if(!localStream) return;
+  micMuted = !micMuted;
+  localStream.getAudioTracks().forEach(t=>t.enabled = !micMuted);
+  document.getElementById('call-mute-btn').classList.toggle('active-off', micMuted);
+}
+
+function toggleCallCamera(){
+  if(!localStream) return;
+  camOff = !camOff;
+  localStream.getVideoTracks().forEach(t=>t.enabled = !camOff);
+  document.getElementById('call-cam-btn').classList.toggle('active-off', camOff);
+}
+
+async function endCall(remoteEnded){
+  const callId = currentCallDocId;
+  if(callId && !remoteEnded){
+    callDocRef(callId).update({ status:'ended' }).catch(()=>{});
+  }
+  if(callDocUnsub){ callDocUnsub(); callDocUnsub = null; }
+  if(remoteCandidatesUnsub){ remoteCandidatesUnsub(); remoteCandidatesUnsub = null; }
+  if(pc){ pc.close(); pc = null; }
+  if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream = null; }
+
+  document.getElementById('call-modal').classList.remove('show');
+  document.getElementById('incoming-call-modal').classList.remove('show');
+  document.getElementById('call-remote-video').srcObject = null;
+  document.getElementById('call-local-video').srcObject = null;
+
+  currentCallDocId = null; currentCallPeer = null; currentCallRole = null;
+}
+
+function cryptoRandomId(){
+  return 'call_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10);
+}
+
+
 async function init(){
   await loadState();
   document.getElementById('loading-screen').style.display = 'none';
