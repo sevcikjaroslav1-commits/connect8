@@ -193,6 +193,9 @@
     cursor:pointer;transition:.15s;
   }
   .sidebar-user:hover, .sidebar-item:hover{background:var(--surface);}
+  .sidebar-user.active, .sidebar-item.active{background:var(--accent);}
+  .sidebar-user.active span, .sidebar-item.active span.label, .sidebar-user.active .sidebar-icon, .sidebar-item.active .sidebar-icon{color:#fff;}
+  .mobile-quick-links button.active{background:var(--accent);color:#fff;}
   .sidebar-user span, .sidebar-item span.label{font-size:14px;font-weight:600;color:var(--text);}
   .sidebar-user .avatar{width:34px;height:34px;font-size:13px;}
   .sidebar-icon{
@@ -1059,9 +1062,9 @@
     </div>
 
     <div class="mobile-quick-links">
-      <button onclick="openProfile()"><span class="avatar" id="mobile-quick-avatar">?</span>Môj profil</button>
-      <button onclick="openFriendsList()">👥 Priatelia</button>
-      <button onclick="openUsersList()">🧑‍🤝‍🧑 Používatelia</button>
+      <button id="mobile-nav-profile" onclick="openProfile()"><span class="avatar" id="mobile-quick-avatar">?</span>Môj profil</button>
+      <button id="mobile-nav-friends" onclick="openFriendsList()">👥 Priatelia</button>
+      <button id="mobile-nav-users" onclick="openUsersList()">🧑‍🤝‍🧑 Používatelia</button>
     </div>
 
     <div class="topbar-right">
@@ -1081,16 +1084,16 @@
 
   <div class="app-body">
     <aside class="left-sidebar">
-      <div class="sidebar-user" onclick="openProfile()">
+      <div class="sidebar-user" id="sidebar-nav-profile" onclick="openProfile()">
         <div class="avatar" id="sidebar-avatar">?</div>
         <span id="sidebar-username">Používateľ</span>
       </div>
       <div class="sidebar-divider"></div>
-      <div class="sidebar-item" onclick="openFriendsList()">
+      <div class="sidebar-item" id="sidebar-nav-friends" onclick="openFriendsList()">
         <span class="sidebar-icon">👥</span>
         <span class="label">Priatelia</span>
       </div>
-      <div class="sidebar-item" onclick="openUsersList()">
+      <div class="sidebar-item" id="sidebar-nav-users" onclick="openUsersList()">
         <span class="sidebar-icon">🧑‍🤝‍🧑</span>
         <span class="label">Používatelia</span>
       </div>
@@ -2025,6 +2028,7 @@ function toggleFollowFromProfile(){
 function openProfile(){
   viewedProfileUser = null;
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  setSideNavActive('profile');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-profile').classList.add('active');
   renderProfile();
@@ -2033,6 +2037,7 @@ function openProfile(){
 function openUserProfile(user){
   viewedProfileUser = user;
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  clearSideNavActive();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-profile').classList.add('active');
   renderProfile();
@@ -2148,6 +2153,7 @@ function buildCallButtonRow(u){
 
 function openUsersList(){
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  setSideNavActive('users');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-users').classList.add('active');
   renderUsersList();
@@ -2237,6 +2243,7 @@ async function renderUsersList(){
 
 function openFriendsList(){
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  setSideNavActive('friends');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-friends').classList.add('active');
   renderFriendsList();
@@ -3028,8 +3035,23 @@ setTimeout(updateTopbarHeightVar, 300);
 setTimeout(updateTopbarHeightVar, 1000);
 
 /* ---------------- MODE SWITCH ---------------- */
+function clearSideNavActive(){
+  ['sidebar-nav-profile','sidebar-nav-friends','sidebar-nav-users','mobile-nav-profile','mobile-nav-friends','mobile-nav-users'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
+}
+function setSideNavActive(key){
+  clearSideNavActive();
+  const map = { profile:['sidebar-nav-profile','mobile-nav-profile'], friends:['sidebar-nav-friends','mobile-nav-friends'], users:['sidebar-nav-users','mobile-nav-users'] };
+  (map[key]||[]).forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.add('active');
+  });
+}
 function switchMode(mode){
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
+  clearSideNavActive();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+mode).classList.add('active');
 
@@ -3933,6 +3955,7 @@ let currentProductDetailId = null;
 function openProductDetail(id){
   currentProductDetailId = id;
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  clearSideNavActive();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-product-detail').classList.add('active');
   renderProductDetail();
