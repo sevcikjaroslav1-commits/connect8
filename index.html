@@ -1559,8 +1559,12 @@ async function migrateSharedDocIfNeeded(){
 // Načíta dáta a zároveň si "predplatí" živé zmeny (onSnapshot) na
 // každej kolekcii zvlášť — keď niekto iný niečo pridá, appka sa u teba
 // prekreslí automaticky, bez potreby manuálne dopytovať server.
+let _stateLoadPromise = null; // istota, že sa listenery nastavia len RAZ
+
 function loadState(){
-  return new Promise((resolve)=>{
+  if(_stateLoadPromise) return _stateLoadPromise; // už beží/hotové — nič nové nenastavuj
+
+  _stateLoadPromise = new Promise((resolve)=>{
     if(!FIREBASE_CONFIGURED){
       storageMode = "offline";
       lastStorageError = "V kóde chýba vyplnený firebaseConfig.";
@@ -1616,6 +1620,8 @@ function loadState(){
       });
     });
   });
+
+  return _stateLoadPromise;
 }
 
 
@@ -1700,6 +1706,7 @@ async function doRegister(){
     // meno stihne zapísať do databázy, a použil by dočasne e-mail.
     currentUser = { uid: cred.user.uid, email, name };
     allUsersCache = null; // nový používateľ - nech sa nabudúce znova načíta zoznam pre vyhľadávanie
+    await loadState(); // istota, že posty/produkty/videá sú načítané pred zobrazením appky
     enterApp();
   }catch(e){
     err.textContent = mapAuthError(e);
@@ -3026,6 +3033,11 @@ if(FIREBASE_CONFIGURED){
         if(prof.exists && prof.data().avatarPhoto) photoURL = prof.data().avatarPhoto;
       }catch(e){ console.error("Nepodarilo sa načítať profil:", e); }
       currentUser = { uid:user.uid, email:user.email, name, photoURL };
+      // DÔLEŽITÉ: počkaj, kým appka skutočne stiahne posty/produkty/videá
+      // z databázy, predtým než ich zobrazíš — inak by sa (najmä pri
+      // automatickom prihlásení po obnovení stránky) zobrazili len staré/
+      // predvolené dáta namiesto tých reálnych.
+      await loadState();
       enterApp();
     }
   });
