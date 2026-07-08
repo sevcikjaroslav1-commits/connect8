@@ -170,7 +170,7 @@
   .header-clock-date{font-size:10px;color:var(--text-dim);margin-top:1px;}
   .header-clock-name{font-size:10.5px;color:var(--accent);font-weight:600;margin-top:1px;}
   @media(max-width:700px){
-    .header-clock{min-width:0;padding:2px 4px;}
+    .header-clock{min-width:0;padding:2px 6px;}
     .header-clock-time{font-size:12px;}
     .header-clock-date{font-size:9px;}
     .header-clock-name{font-size:9px;}
@@ -982,8 +982,7 @@
     .search-box{min-width:120px;}
     .topbar-left{gap:8px;}
     .market-grid{grid-template-columns:1fr 1fr;}
-    .topbar{flex-wrap:wrap;row-gap:10px;padding-left:10px;padding-right:10px;}
-    .topbar-right{gap:8px;}
+    .topbar{flex-wrap:wrap;row-gap:10px;}
     .user-stats{display:none;}
     .mode-dock{order:3;width:100%;justify-content:stretch;padding:4px;gap:2px;}
     .mode-dock button{flex:1;min-width:0;padding:7px 2px;font-size:10.5px;gap:3px;white-space:nowrap;justify-content:center;overflow:hidden;text-overflow:ellipsis;}
@@ -1074,17 +1073,17 @@
     </div>
 
     <div class="topbar-right">
+      <div class="header-clock" id="header-clock" title="Aktuálny čas a dátum">
+        <div class="header-clock-time" id="header-clock-time">--:--</div>
+        <div class="header-clock-date" id="header-clock-date">--.--.----</div>
+        <div class="header-clock-name" id="header-clock-name">—</div>
+      </div>
       <button class="messenger-btn" onclick="openConvModal()" title="Správy">
         <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>
         <span class="badge-dot" id="messenger-badge-dot"></span>
       </button>
       <div class="avatar" id="user-avatar">?</div>
       <button class="logout-btn" onclick="doLogout()">Odhlásiť</button>
-      <div class="header-clock" id="header-clock" title="Aktuálny čas a dátum">
-        <div class="header-clock-time" id="header-clock-time">--:--</div>
-        <div class="header-clock-date" id="header-clock-date">--.--.----</div>
-        <div class="header-clock-name" id="header-clock-name">—</div>
-      </div>
     </div>
   </div>
 
