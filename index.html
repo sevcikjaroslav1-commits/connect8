@@ -1489,11 +1489,76 @@ function saveToLocalStorage(){
 }
 
 let lastStorageError = null;
-const APP_DATA_DOC = () => db.collection('app_data').doc('shared');
 
-// Načíta dáta a zároveň si "predplatí" živé zmeny (onSnapshot) —
-// keď niekto iný niečo pridá, appka sa u teba prekreslí automaticky,
-// bez potreby manuálne dopytovať server (na rozdiel od pôvodného JSONBin riešenia).
+/* =================================================================
+   DÁTOVÁ VRSTVA — KAŽDÝ PRÍSPEVOK/PRODUKT/VIDEO JE SVOJ VLASTNÝ
+   DOKUMENT vo Firestore (kolekcie 'posts', 'products', 'videos').
+   Predtým boli všetky spolu v jednom zdieľanom dokumente
+   (app_data/shared) — to bolo riskantné: ak čo i len jedno zariadenie
+   uložilo stav skôr, než sa mu stihli stiahnuť reálne dáta (napr. pri
+   výpadku siete), prepísalo tým OBSAH VŠETKÝCH ostatných naraz.
+   S oddelenými dokumentmi môže úprava/výpadok poškodiť najviac jeden
+   konkrétny záznam, nikdy celý feed/marketplace/videá naraz.
+================================================================== */
+const postDoc    = (id) => db.collection('posts').doc(String(id));
+const productDoc = (id) => db.collection('products').doc(String(id));
+const videoDoc   = (id) => db.collection('videos').doc(String(id));
+
+function saveDoc(ref, data, what){
+  if(storageMode !== "online"){ saveToLocalStorage(); return; }
+  ref.set(data).catch(e=>console.error(`Uloženie (${what}) zlyhalo:`, e));
+}
+function deleteDoc(ref, what){
+  if(storageMode !== "online"){ saveToLocalStorage(); return; }
+  ref.delete().catch(e=>console.error(`Zmazanie (${what}) zlyhalo:`, e));
+}
+function savePost(p){ saveDoc(postDoc(p.id), p, 'príspevok'); }
+function removePostDoc(id){ deleteDoc(postDoc(id), 'príspevok'); }
+function saveProduct(pr){ saveDoc(productDoc(pr.id), pr, 'produkt'); }
+function removeProductDoc(id){ deleteDoc(productDoc(id), 'produkt'); }
+function saveVideo(v){ saveDoc(videoDoc(v.id), v, 'video'); }
+function removeVideoDoc(id){ deleteDoc(videoDoc(id), 'video'); }
+
+function docsToArray(snap){
+  const arr = [];
+  snap.forEach(doc=>{
+    const d = doc.data() || {};
+    if(d.id === undefined || d.id === null) d.id = doc.id;
+    arr.push(d);
+  });
+  return arr;
+}
+
+// Jednorazová migrácia: ak nová kolekcia je ešte prázdna, ale starý
+// zdieľaný dokument (app_data/shared) obsahuje dáta, presunie ich do
+// samostatných dokumentov. Ak niečo z pôvodného obsahu ešte existuje,
+// touto migráciou sa zachová (nič sa nezmaže).
+async function migrateSharedDocIfNeeded(){
+  try{
+    const [postsSnap, productsSnap, videosSnap] = await Promise.all([
+      db.collection('posts').limit(1).get(),
+      db.collection('products').limit(1).get(),
+      db.collection('videos').limit(1).get()
+    ]);
+    if(!postsSnap.empty || !productsSnap.empty || !videosSnap.empty) return; // migrácia už prebehla
+
+    const oldDoc = await db.collection('app_data').doc('shared').get();
+    if(!oldDoc.exists) return;
+    const data = oldDoc.data() || {};
+    const batch = db.batch();
+    let count = 0;
+    (data.posts||[]).forEach(p=>{ if(p && p.id!==undefined){ batch.set(postDoc(p.id), p); count++; } });
+    (data.products||[]).forEach(pr=>{ if(pr && pr.id!==undefined){ batch.set(productDoc(pr.id), pr); count++; } });
+    (data.videos||[]).forEach(v=>{ if(v && v.id!==undefined){ batch.set(videoDoc(v.id), v); count++; } });
+    if(count>0) await batch.commit();
+  }catch(e){
+    console.error('Migrácia starých zdieľaných dát zlyhala:', e);
+  }
+}
+
+// Načíta dáta a zároveň si "predplatí" živé zmeny (onSnapshot) na
+// každej kolekcii zvlášť — keď niekto iný niečo pridá, appka sa u teba
+// prekreslí automaticky, bez potreby manuálne dopytovať server.
 function loadState(){
   return new Promise((resolve)=>{
     if(!FIREBASE_CONFIGURED){
@@ -1503,39 +1568,54 @@ function loadState(){
       resolve();
       return;
     }
-    let firstLoad = true;
-    APP_DATA_DOC().onSnapshot((snap)=>{
-      storageMode = "online";
-      if(snap.exists){
-        applyRemoteState(snap.data());
-      } else {
-        APP_DATA_DOC().set(getStateSnapshot()).catch(e=>console.error("Vytvorenie dokumentu zlyhalo:", e));
-      }
-      // ak appka už beží (nie je to prvé načítanie), prekresli obrazovky so živými dátami
-      if(!firstLoad && document.getElementById('app').style.display === 'block'){
-        renderPosts(); renderProducts(); renderVideos();
-      }
-      if(firstLoad){ firstLoad = false; resolve(); }
-    }, (err)=>{
-      console.error("Firestore chyba, appka beží lokálne:", err);
-      lastStorageError = err && err.message ? err.message : String(err);
-      storageMode = "offline";
-      loadFromLocalStorage();
-      if(firstLoad){ firstLoad = false; resolve(); }
+
+    storageMode = "online";
+    let resolved = false;
+    let loadedCount = 0;
+    const markLoaded = ()=>{
+      loadedCount++;
+      if(loadedCount>=3 && !resolved){ resolved = true; resolve(); }
+    };
+    // poistka: keby Firestore nikdy neodpovedal, po 10s pokračuj ďalej
+    setTimeout(()=>{ if(!resolved){ resolved = true; resolve(); } }, 10000);
+
+    migrateSharedDocIfNeeded().finally(()=>{
+      let firstPosts = true, firstProducts = true, firstVideos = true;
+
+      db.collection('posts').onSnapshot((snap)=>{
+        posts = docsToArray(snap);
+        posts.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); // najstaršie prvé (render ich obráti)
+        if(!firstPosts && document.getElementById('app').style.display === 'block') renderPosts();
+        if(firstPosts){ firstPosts = false; markLoaded(); }
+      }, (err)=>{
+        console.error("Firestore chyba (posts):", err);
+        lastStorageError = err && err.message ? err.message : String(err);
+        if(firstPosts){ firstPosts = false; markLoaded(); }
+      });
+
+      db.collection('products').onSnapshot((snap)=>{
+        products = docsToArray(snap);
+        products.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); // najstaršie prvé (render ich obráti)
+        if(!firstProducts && document.getElementById('app').style.display === 'block') renderProducts();
+        if(firstProducts){ firstProducts = false; markLoaded(); }
+      }, (err)=>{
+        console.error("Firestore chyba (products):", err);
+        lastStorageError = err && err.message ? err.message : String(err);
+        if(firstProducts){ firstProducts = false; markLoaded(); }
+      });
+
+      db.collection('videos').onSnapshot((snap)=>{
+        videos = docsToArray(snap);
+        videos.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); // najnovšie prvé (render ich nechá tak)
+        if(!firstVideos && document.getElementById('app').style.display === 'block') renderVideos();
+        if(firstVideos){ firstVideos = false; markLoaded(); }
+      }, (err)=>{
+        console.error("Firestore chyba (videos):", err);
+        lastStorageError = err && err.message ? err.message : String(err);
+        if(firstVideos){ firstVideos = false; markLoaded(); }
+      });
     });
   });
-}
-
-let saveTimer = null;
-function saveState(){
-  if(storageMode !== "online"){
-    saveToLocalStorage();
-    return;
-  }
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(()=>{
-    APP_DATA_DOC().set(getStateSnapshot()).catch(e=>console.error("Uloženie zlyhalo:", e));
-  }, 400);
 }
 
 
@@ -1652,13 +1732,20 @@ async function deleteMyAccount(){
   const uid = currentUser.uid;
 
   try{
-    // 1) odstráň vlastný obsah zo zdieľaného stavu (príspevky, inzeráty, videá)
+    // 1) odstráň vlastný obsah (príspevky, inzeráty, videá) — každý ako samostatný dokument
+    const ownPosts = posts.filter(p=> p.authorId ? p.authorId===uid : p.name===currentUser.name);
+    const ownProducts = products.filter(pr=> pr.authorId ? pr.authorId===uid : pr.seller===currentUser.name);
+    const ownVideos = videos.filter(v=> v.authorId ? v.authorId===uid : v.name===currentUser.name);
+    if(FIREBASE_CONFIGURED && db){
+      const batch = db.batch();
+      ownPosts.forEach(p=>batch.delete(postDoc(p.id)));
+      ownProducts.forEach(pr=>batch.delete(productDoc(pr.id)));
+      ownVideos.forEach(v=>batch.delete(videoDoc(v.id)));
+      await batch.commit();
+    }
     posts = posts.filter(p=> p.authorId ? p.authorId!==uid : p.name!==currentUser.name);
     products = products.filter(pr=> pr.authorId ? pr.authorId!==uid : pr.seller!==currentUser.name);
     videos = videos.filter(v=> v.authorId ? v.authorId!==uid : v.name!==currentUser.name);
-    if(FIREBASE_CONFIGURED && db){
-      await APP_DATA_DOC().set(getStateSnapshot());
-    }
 
     // 2) zmaž profil a "online" stav
     if(FIREBASE_CONFIGURED && db){
@@ -3718,20 +3805,21 @@ function addPost(){
   const linkVal = normalizeUrl(document.getElementById('post-link-input').value);
   if(!text && !pendingPostImages.length && !linkVal && !pendingPostVideo && !pendingPostFile) return;
   const hasMatchingPreview = pendingPostLink && pendingPostLink.url === linkVal;
-  posts.push({
+  const newPost = {
     id:Date.now(), name:currentUser.name, authorId:currentUser.uid, createdAt: Date.now(),
     text, photos:pendingPostImages.slice(), video: pendingPostVideo, link:linkVal,
     linkTitle: hasMatchingPreview ? pendingPostLink.title : '',
     linkImage: hasMatchingPreview ? pendingPostLink.image : null,
     file: pendingPostFile ? {...pendingPostFile} : null,
     img: (pendingPostImages.length || pendingPostVideo || pendingPostFile) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
-  });
+  };
+  posts.push(newPost);
   document.getElementById('post-text').value = '';
   removePostImage();
   removePostVideo();
   removePostFile();
   removePostLink();
-  saveState();
+  savePost(newPost);
   renderPosts();
 }
 
@@ -3745,7 +3833,7 @@ function toggleLike(id){
   const p = posts.find(p=>p.id===id);
   p.liked = !p.liked;
   p.likes += p.liked ? 1 : -1;
-  saveState();
+  savePost(p);
   refreshPostViews();
 }
 
@@ -3760,7 +3848,7 @@ function deletePost(id){
   if(!p) return;
   if(!confirm('Naozaj chceš vymazať tento príspevok?')) return;
   posts = posts.filter(p=>p.id!==id);
-  saveState();
+  removePostDoc(id);
   refreshPostViews();
 }
 
@@ -3768,7 +3856,7 @@ function deletePostLink(id){
   const p = posts.find(p=>p.id===id);
   if(!p) return;
   p.link = null;
-  saveState();
+  savePost(p);
   refreshPostViews();
 }
 
@@ -3776,7 +3864,7 @@ function deletePostFile(id){
   const p = posts.find(p=>p.id===id);
   if(!p) return;
   p.file = null;
-  saveState();
+  savePost(p);
   refreshPostViews();
 }
 
@@ -3787,7 +3875,7 @@ function toggleCommentLike(postId, commentIndex){
   if(!c) return;
   c.liked = !c.liked;
   c.likes = (c.likes||0) + (c.liked ? 1 : -1);
-  saveState();
+  savePost(p);
   renderPosts();
 }
 
@@ -3798,7 +3886,7 @@ function addComment(id){
   const p = posts.find(p=>p.id===id);
   p.comments.push({name:currentUser.name, text});
   p.open = true;
-  saveState();
+  savePost(p);
   renderPosts();
 }
 
@@ -3945,7 +4033,7 @@ function deleteProduct(id){
   if(!pr) return;
   if(!confirm('Naozaj chceš vymazať tento produkt?')) return;
   products = products.filter(pr=>pr.id!==id);
-  saveState();
+  removeProductDoc(id);
   renderProducts();
   if(document.getElementById('view-product-detail').classList.contains('active')) closeProductDetail();
 }
@@ -4107,7 +4195,7 @@ function addProduct(){
     document.getElementById('prod-desc').value='';
     removeProdImage();
     toggleSellForm();
-    saveState();
+    if(pr) saveProduct(pr);
     renderProducts();
     if(document.getElementById('view-product-detail').classList.contains('active')){
       currentProductDetailId = wasId;
@@ -4116,13 +4204,14 @@ function addProduct(){
     return;
   }
 
-  products.push({id:Date.now(), createdAt: Date.now(), title, price, category, desc, seller:currentUser.name, authorId:currentUser.uid, photos:pendingProdImages.slice(), emoji: cat ? cat.emoji : '📦'});
+  const newProduct = {id:Date.now(), createdAt: Date.now(), title, price, category, desc, seller:currentUser.name, authorId:currentUser.uid, photos:pendingProdImages.slice(), emoji: cat ? cat.emoji : '📦'};
+  products.push(newProduct);
   document.getElementById('prod-title').value='';
   document.getElementById('prod-price').value='';
   document.getElementById('prod-desc').value='';
   removeProdImage();
   toggleSellForm();
-  saveState();
+  saveProduct(newProduct);
   renderProducts();
 }
 
@@ -4260,7 +4349,7 @@ function registerFeedVideoView(postId){
   p.views = (p.views||0) + 1;
   const el = document.getElementById('post-video-views-'+numId);
   if(el) el.textContent = `👁 ${formatViewCount(p.views)}`;
-  saveState();
+  savePost(p);
 }
 
 function registerVideoView(id){
@@ -4277,7 +4366,7 @@ function registerVideoView(id){
   v.views = (v.views||0) + 1;
   const el = document.getElementById('views-'+numId);
   if(el) el.textContent = `👁 ${formatViewCount(v.views)}`;
-  saveState();
+  saveVideo(v);
 }
 
 function playMedia(id){
@@ -4352,7 +4441,7 @@ function toggleVideoLike(id){
   const v = videos.find(v=>v.id===id);
   v.liked = !v.liked;
   v.likes += v.liked ? 1 : -1;
-  saveState();
+  saveVideo(v);
   renderVideos();
 }
 
@@ -4361,7 +4450,7 @@ function deleteVideo(id){
   if(!v) return;
   if(!confirm('Naozaj chceš vymazať toto video?')) return;
   videos = videos.filter(v=>v.id!==id);
-  saveState();
+  removeVideoDoc(id);
   renderVideos();
 }
 
@@ -4398,7 +4487,7 @@ function toggleVideoCommentLike(videoId, commentIndex){
   if(!c) return;
   c.liked = !c.liked;
   c.likes = (c.likes||0) + (c.liked ? 1 : -1);
-  saveState();
+  saveVideo(v);
   renderVideoComments();
 }
 
@@ -4411,7 +4500,7 @@ function submitVideoComment(){
   if(!v.comments) v.comments = [];
   v.comments.push({name: currentUser.name, text});
   input.value = '';
-  saveState();
+  saveVideo(v);
   renderVideoComments();
   const countEl = document.getElementById('chat-count-'+v.id);
   if(countEl) countEl.textContent = v.comments.length;
@@ -4502,9 +4591,10 @@ function addVideo(){
   const url = pendingVideoUpload || manualUrl;
   if(!url){ alert('Nahraj video zo zariadenia, alebo vlož odkaz na video (YouTube/mp4).'); return; }
   const g = randomGradients[Math.floor(Math.random()*randomGradients.length)];
-  videos.unshift({id:Date.now(), name:currentUser.name, authorId:currentUser.uid, createdAt: Date.now(), caption: caption || '', url, likes:0, liked:false, views:0, comments:[], c1:g[0], c2:g[1]});
+  const newVideo = {id:Date.now(), name:currentUser.name, authorId:currentUser.uid, createdAt: Date.now(), caption: caption || '', url, likes:0, liked:false, views:0, comments:[], c1:g[0], c2:g[1]};
+  videos.unshift(newVideo);
   closeVideoModal();
-  saveState();
+  saveVideo(newVideo);
   renderVideos();
 }
 
@@ -4833,7 +4923,12 @@ function cryptoRandomId(){
 async function init(){
   await loadState();
   document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('auth-screen').style.display = 'flex';
+  // Ak medzitým (kým sa načítaval stav) Firebase stihol automaticky prihlásiť
+  // predošlú reláciu a zavolal enterApp(), NEPREPISUJ obrazovku späť na
+  // prihlasovaciu — inak by sa oba obrazovky zobrazili naraz ("spojená stránka").
+  if(!currentUser){
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
   if(storageMode === 'offline'){
     document.getElementById('offline-banner').classList.add('show');
     document.getElementById('storage-note').textContent = 'Beží lokálne — dáta zostávajú uložené v tomto prehliadači aj po zatvorení.';
