@@ -3409,14 +3409,14 @@ function buildPostCard(p, opts={}){
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostLink(${p.id})">✕</div>` : ''}
       </a>`) : ''}
       <div class="post-actions">
-        <button class="${p.liked?'liked':''}" onclick="toggleLike(${p.id})">👍 Páči sa (${p.likes})</button>
+        <button class="${getLikedBy(p).includes(currentUser.uid)?'liked':''}" onclick="toggleLike(${p.id})">👍 Páči sa (${p.likes})</button>
         ${showComments
           ? `<button onclick="toggleComments(${p.id})">💬 Komentovať (${p.comments.length})</button>`
           : `<button style="opacity:.65;cursor:default;" onclick="switchMode('feed')">💬 ${p.comments.length} komentárov</button>`}
         <button onclick="openShareModal(${p.id})">↗ Zdieľať</button>
       </div>
       ${showComments ? `<div class="comments ${p.open?'open':''}" id="comments-${p.id}">
-        ${p.comments.map((c,ci)=>`<div class="comment"><span class="comment-text"><b>${c.name}:</b> ${c.text}</span><button class="comment-like-btn ${c.liked?'liked':''}" onclick="toggleCommentLike(${p.id},${ci})">👍${c.likes?' '+c.likes:''}</button></div>`).join('')}
+        ${p.comments.map((c,ci)=>`<div class="comment"><span class="comment-text"><b>${c.name}:</b> ${c.text}</span><button class="comment-like-btn ${getLikedBy(c).includes(currentUser.uid)?'liked':''}" onclick="toggleCommentLike(${p.id},${ci})">👍${c.likes?' '+c.likes:''}</button></div>`).join('')}
         <div class="comment-input">
           <input type="text" id="cinput-${p.id}" placeholder="Napíš komentár...">
           <button onclick="addComment(${p.id})">Odoslať</button>
@@ -3855,10 +3855,25 @@ function refreshPostViews(){
   if(profileView && profileView.classList.contains('active')) renderProfile();
 }
 
+// Vráti pole uid používateľov, ktorí dali "páči sa" danej veci (príspevok,
+// video, komentár...). Staršie záznamy mali len jeden spoločný boolean
+// 'liked' pre všetkých - tie sa tu berú ako jeden "legacy" lajk, aby sa
+// nestratil zobrazený počet, ale aby sa nedal pomýliť s konkrétnym uid.
+function getLikedBy(obj){
+  if(Array.isArray(obj.likedBy)) return obj.likedBy;
+  return obj.liked ? ['__legacy__'] : [];
+}
+
 function toggleLike(id){
   const p = posts.find(p=>p.id===id);
-  p.liked = !p.liked;
-  p.likes += p.liked ? 1 : -1;
+  if(!p) return;
+  const likedBy = getLikedBy(p);
+  const uid = currentUser.uid;
+  const idx = likedBy.indexOf(uid);
+  if(idx>=0) likedBy.splice(idx,1); else likedBy.push(uid);
+  p.likedBy = likedBy;
+  p.likes = likedBy.length;
+  delete p.liked;
   savePost(p);
   refreshPostViews();
 }
@@ -3899,8 +3914,13 @@ function toggleCommentLike(postId, commentIndex){
   if(!p) return;
   const c = p.comments[commentIndex];
   if(!c) return;
-  c.liked = !c.liked;
-  c.likes = (c.likes||0) + (c.liked ? 1 : -1);
+  const likedBy = getLikedBy(c);
+  const uid = currentUser.uid;
+  const idx = likedBy.indexOf(uid);
+  if(idx>=0) likedBy.splice(idx,1); else likedBy.push(uid);
+  c.likedBy = likedBy;
+  c.likes = likedBy.length;
+  delete c.liked;
   savePost(p);
   renderPosts();
 }
@@ -4310,7 +4330,7 @@ function renderVideos(){
       </div>
       <div class="video-side">
         <div><button id="mute-btn-${v.id}" onclick="toggleMute(${v.id})">${isMuted?'🔇':'🔊'}</button><div class="count">Zvuk</div></div>
-        <div><button class="${v.liked?'liked':''}" onclick="toggleVideoLike(${v.id})">❤️</button><div class="count">${v.likes}</div></div>
+        <div><button class="${getLikedBy(v).includes(currentUser.uid)?'liked':''}" onclick="toggleVideoLike(${v.id})">❤️</button><div class="count">${v.likes}</div></div>
         <div><button onclick="openVideoComments(${v.id})">💬</button><div class="count" id="chat-count-${v.id}">${(v.comments && v.comments.length) || 0}</div></div>
         <div><button onclick="openVideoShareModal(${v.id})">↗</button><div class="count">Zdieľať</div></div>
         ${(v.authorId ? v.authorId===currentUser.uid : v.name===currentUser.name) ? `<div><button onclick="deleteVideo(${v.id})">🗑️</button><div class="count">Zmazať</div></div>` : ''}
@@ -4465,8 +4485,14 @@ function toggleMute(id){
 
 function toggleVideoLike(id){
   const v = videos.find(v=>v.id===id);
-  v.liked = !v.liked;
-  v.likes += v.liked ? 1 : -1;
+  if(!v) return;
+  const likedBy = getLikedBy(v);
+  const uid = currentUser.uid;
+  const idx = likedBy.indexOf(uid);
+  if(idx>=0) likedBy.splice(idx,1); else likedBy.push(uid);
+  v.likedBy = likedBy;
+  v.likes = likedBy.length;
+  delete v.liked;
   saveVideo(v);
   renderVideos();
 }
@@ -4501,7 +4527,7 @@ function renderVideoComments(){
   if(!v){ list.innerHTML=''; return; }
   const comments = v.comments || [];
   list.innerHTML = comments.length
-    ? comments.map((c,ci)=>`<div class="video-comment-item"><span class="video-comment-text"><b>${c.name}:</b> ${c.text}</span><button class="video-comment-like-btn ${c.liked?'liked':''}" onclick="toggleVideoCommentLike(${v.id},${ci})">👍${c.likes?' '+c.likes:''}</button></div>`).join('')
+    ? comments.map((c,ci)=>`<div class="video-comment-item"><span class="video-comment-text"><b>${c.name}:</b> ${c.text}</span><button class="video-comment-like-btn ${getLikedBy(c).includes(currentUser.uid)?'liked':''}" onclick="toggleVideoCommentLike(${v.id},${ci})">👍${c.likes?' '+c.likes:''}</button></div>`).join('')
     : `<div class="video-comments-empty">Zatiaľ žiadne komentáre. Buď prvý! 💬</div>`;
   list.scrollTop = list.scrollHeight;
 }
@@ -4511,8 +4537,13 @@ function toggleVideoCommentLike(videoId, commentIndex){
   if(!v || !v.comments) return;
   const c = v.comments[commentIndex];
   if(!c) return;
-  c.liked = !c.liked;
-  c.likes = (c.likes||0) + (c.liked ? 1 : -1);
+  const likedBy = getLikedBy(c);
+  const uid = currentUser.uid;
+  const idx = likedBy.indexOf(uid);
+  if(idx>=0) likedBy.splice(idx,1); else likedBy.push(uid);
+  c.likedBy = likedBy;
+  c.likes = likedBy.length;
+  delete c.liked;
   saveVideo(v);
   renderVideoComments();
 }
