@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#F2F3F5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Connect</title>
+<title>Connect8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
@@ -162,6 +162,14 @@
     font-size:16px;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;
   }
   .icon-btn:hover{background:var(--accent-soft);}
+  .header-clock{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:5px 10px;line-height:1.15;flex-shrink:0;min-width:78px;
+  }
+  .header-clock-time{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--text);letter-spacing:.3px;}
+  .header-clock-date{font-size:10px;color:var(--text-dim);margin-top:1px;}
+  .header-clock-name{font-size:10.5px;color:var(--accent);font-weight:600;margin-top:1px;}
+  @media(max-width:700px){.header-clock{display:none;}}
   .messenger-btn{
     position:relative;width:38px;height:38px;border-radius:50%;flex-shrink:0;
     background:linear-gradient(135deg,#1FAE5C,#3ECF7A);color:#fff;
@@ -823,13 +831,18 @@
   .call-btn:hover{background:var(--accent-soft);color:var(--accent);}
 
   /* ---------- USER/FRIEND CARD CALL BUTTONS ---------- */
-  .user-card-call-row{display:flex;gap:6px;margin-top:6px;justify-content:center;}
+  .user-card-call-row{display:flex;gap:5px;margin-top:6px;justify-content:center;}
   .user-card-call-btn{
-    width:26px;height:26px;border-radius:50%;background:var(--bg);color:var(--text-dim);
-    display:flex;align-items:center;justify-content:center;font-size:12px;transition:.15s;
+    width:24px;height:24px;border-radius:50%;background:var(--bg);color:var(--text-dim);
+    display:flex;align-items:center;justify-content:center;font-size:11px;transition:.15s;
   }
   .user-card-call-btn:hover{background:var(--accent-soft);color:var(--accent);}
   .user-card-call-btn:disabled{opacity:.35;cursor:default;}
+  .user-card-call-row .user-card-msg-btn{
+    width:24px;height:24px;font-size:11px;
+    background:transparent;color:#1FAE5C;box-shadow:none;
+  }
+  .user-card-call-row .user-card-msg-btn:hover{background:var(--accent-soft);color:#1FAE5C;}
 
   /* ---------- PRICHÁDZAJÚCI HOVOR ---------- */
   .incoming-call-modal{
@@ -904,6 +917,33 @@
     display:flex;align-items:center;justify-content:center;transition:.15s;
   }
   .chat-input-row button:hover{filter:brightness(1.08);}
+  .voice-record-btn{
+    width:38px;height:38px;border-radius:50%;background:var(--bg);color:var(--text-dim);font-size:15px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;transition:.15s;user-select:none;touch-action:none;
+  }
+  .voice-record-btn.recording{background:#eb4d4d;color:#fff;transform:scale(1.12);}
+  .voice-record-bar{
+    display:none;align-items:center;gap:8px;padding:8px 16px;border-top:1px solid var(--line);
+    font-size:13px;color:var(--text-dim);flex-shrink:0;background:var(--bg);
+  }
+  .voice-record-bar.show{display:flex;}
+  .voice-record-dot{width:9px;height:9px;border-radius:50%;background:#eb4d4d;animation:pulse-fade 1s infinite;flex-shrink:0;}
+  #voice-record-time{font-weight:700;color:var(--text);}
+  .voice-record-hint{margin-left:auto;font-size:11.5px;opacity:.7;}
+
+  /* ---------- HLASOVÁ SPRÁVA V CHATE ---------- */
+  .chat-bubble.voice-bubble{
+    display:flex;align-items:center;gap:9px;padding:9px 13px;min-width:170px;
+  }
+  .voice-play-btn{
+    width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.25);color:inherit;font-size:13px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .chat-bubble.theirs .voice-play-btn{background:var(--accent-soft);color:var(--accent);}
+  .voice-wave{flex:1;height:22px;display:flex;align-items:center;gap:2px;}
+  .voice-wave span{width:3px;border-radius:2px;background:currentColor;opacity:.55;}
+  .voice-duration{font-size:11.5px;opacity:.85;flex-shrink:0;}
+  .voice-unread-dot{width:8px;height:8px;border-radius:50%;background:#2ecc71;flex-shrink:0;}
 
   .conv-header{
     display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
@@ -960,7 +1000,7 @@
 <!-- ============ AUTH SCREEN ============ -->
 <div id="auth-screen">
   <div class="auth-card">
-    <div class="auth-logo"><span class="dot"></span><span>Connect</span></div>
+    <div class="auth-logo"><span class="dot"></span><span>Connect8</span></div>
     <p class="auth-tag">Feed. Marketplace. Videá. Jedno miesto.</p>
 
     <div class="offline-banner" id="offline-banner">
@@ -995,7 +1035,7 @@
 <div id="app">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="brand"><span class="dot" id="brand-dot"></span>Connect</div>
+      <div class="brand"><span class="dot" id="brand-dot"></span>Connect8</div>
       <div class="search-box">🔍<input id="user-search-input" placeholder="Hľadať na Connect..." oninput="onUserSearchInput()" onfocus="onUserSearchInput()" autocomplete="off">
         <div class="search-results" id="user-search-results"></div>
       </div>
@@ -1019,6 +1059,11 @@
     </div>
 
     <div class="topbar-right">
+      <div class="header-clock" id="header-clock" title="Aktuálny čas a dátum">
+        <div class="header-clock-time" id="header-clock-time">--:--</div>
+        <div class="header-clock-date" id="header-clock-date">--.--.----</div>
+        <div class="header-clock-name" id="header-clock-name">—</div>
+      </div>
       <button class="messenger-btn" onclick="openConvModal()" title="Správy">
         <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>
         <span class="badge-dot" id="messenger-badge-dot"></span>
@@ -1298,8 +1343,14 @@
         <button class="chat-close-btn" onclick="closeChatModal()">✕</button>
       </div>
       <div class="chat-messages" id="chat-messages"></div>
+      <div class="voice-record-bar" id="voice-record-bar">
+        <div class="voice-record-dot"></div>
+        <span id="voice-record-time">0:00</span>
+        <span class="voice-record-hint">Posunutím nahor zrušíš</span>
+      </div>
       <div class="chat-input-row">
         <input type="text" id="chat-input" placeholder="Napíš správu..." onkeydown="if(event.key==='Enter'){sendChatMessage();}">
+        <button id="voice-record-btn" class="voice-record-btn" title="Podrž a nahraj hlasovú správu">🎤</button>
         <button onclick="sendChatMessage()" title="Odoslať">➤</button>
       </div>
     </div>
@@ -1638,6 +1689,107 @@ async function deleteMyAccount(){
   }
 }
 
+/* =================================================================
+   HLAVIČKOVÉ HODINY — aktuálny čas, dátum a slovenské meniny
+   Aktualizuje sa každú sekundu. Kalendár menín je štandardný
+   slovenský meninový kalendár (Ministerstvo kultúry SR).
+================================================================== */
+const SK_NAMEDAYS = {
+  "01-01":"", "01-02":"Alexandra, Karina", "01-03":"Daniela", "01-04":"Drahoslav", "01-05":"Andrea",
+  "01-06":"Antónia", "01-07":"Bohuslava", "01-08":"Severín", "01-09":"Alexej", "01-10":"Dáša",
+  "01-11":"Malvína", "01-12":"Ernest", "01-13":"Rastislav", "01-14":"Radovan", "01-15":"Dobroslava",
+  "01-16":"Kristína", "01-17":"Nataša", "01-18":"Bohdana", "01-19":"Mário", "01-20":"Dalibor",
+  "01-21":"Vincent", "01-22":"Zora", "01-23":"Miloš", "01-24":"Timotej", "01-25":"Gejza",
+  "01-26":"Tamara", "01-27":"Bohuš", "01-28":"Alfonz", "01-29":"Gašpar", "01-30":"Ema", "01-31":"Emil",
+  "02-01":"Tatiana", "02-02":"Erika, Erik", "02-03":"Blažej", "02-04":"Veronika", "02-05":"Agáta",
+  "02-06":"Dorota", "02-07":"Vanda", "02-08":"Zoja", "02-09":"Zdenko", "02-10":"Gabriela",
+  "02-11":"Dezider", "02-12":"Perla", "02-13":"Arpád", "02-14":"Valentín", "02-15":"Pravoslav",
+  "02-16":"Ida, Liana", "02-17":"Miloslava", "02-18":"Jaromír", "02-19":"Vlasta", "02-20":"Lívia",
+  "02-21":"Eleonóra", "02-22":"Etela", "02-23":"Roman, Romana", "02-24":"Matej", "02-25":"Frederik, Frederika",
+  "02-26":"Viktor", "02-27":"Alexander", "02-28":"Zlatica", "02-29":"Radomír",
+  "03-01":"Albín", "03-02":"Anežka", "03-03":"Bohumil, Bohumila", "03-04":"Kazimír", "03-05":"Fridrich",
+  "03-06":"Radoslav, Radoslava", "03-07":"Tomáš", "03-08":"Alan, Alana", "03-09":"Františka", "03-10":"Branislav, Bruno",
+  "03-11":"Angela, Angelika", "03-12":"Gregor", "03-13":"Vlastimil", "03-14":"Matilda", "03-15":"Svetlana",
+  "03-16":"Benjamín", "03-17":"Ľubica", "03-18":"Eduard", "03-19":"Jozef", "03-20":"Víťazoslav, Klaudius",
+  "03-21":"Blahoslav", "03-22":"Beňadik", "03-23":"Adrián", "03-24":"Gabriel", "03-25":"Marián",
+  "03-26":"Emanuel", "03-27":"Alena", "03-28":"Soňa", "03-29":"Miroslav", "03-30":"Vieroslava", "03-31":"Benjamína",
+  "04-01":"Hugo", "04-02":"Zita", "04-03":"Richard", "04-04":"Izidor", "04-05":"Miroslava",
+  "04-06":"Irena", "04-07":"Zoltán", "04-08":"Albert", "04-09":"Milena", "04-10":"Igor",
+  "04-11":"Július", "04-12":"Estera", "04-13":"Aleš", "04-14":"Justína", "04-15":"Fedor",
+  "04-16":"Dana, Danica", "04-17":"Rudolf", "04-18":"Valér", "04-19":"Jela", "04-20":"Marcel",
+  "04-21":"Ervín", "04-22":"Slavomír", "04-23":"Vojtech", "04-24":"Juraj", "04-25":"Marek",
+  "04-26":"Jaroslava", "04-27":"Jaroslav", "04-28":"Jarmila", "04-29":"Lea", "04-30":"Anastázia",
+  "05-01":"", "05-02":"Žigmund", "05-03":"Galina", "05-04":"Florián", "05-05":"Lesana, Mona",
+  "05-06":"Hermína", "05-07":"Monika", "05-08":"Ingrida", "05-09":"Roland", "05-10":"Viktória",
+  "05-11":"Blažena", "05-12":"Pankrác", "05-13":"Servác", "05-14":"Bonifác", "05-15":"Žofia",
+  "05-16":"Svetozár", "05-17":"Gizela", "05-18":"Viola", "05-19":"Gertrúda", "05-20":"Bernard",
+  "05-21":"Zina", "05-22":"Júlia, Juliana", "05-23":"Želmíra", "05-24":"Ela", "05-25":"Urban",
+  "05-26":"Dušan", "05-27":"Iveta", "05-28":"Viliam", "05-29":"Vilma", "05-30":"Ferdinand", "05-31":"Petronela, Petrana",
+  "06-01":"Žaneta", "06-02":"Xénia, Oxana", "06-03":"Karolína", "06-04":"Lenka", "06-05":"Laura",
+  "06-06":"Norbert", "06-07":"Róbert", "06-08":"Medard", "06-09":"Stanislava", "06-10":"Margaréta",
+  "06-11":"Dobroslava", "06-12":"Zlatko", "06-13":"Anton", "06-14":"Vasil", "06-15":"Vít",
+  "06-16":"Blanka", "06-17":"Adolf", "06-18":"Vratislav", "06-19":"Alfréd", "06-20":"Valéria",
+  "06-21":"Alojz", "06-22":"Paulína", "06-23":"Sidónia", "06-24":"Ján", "06-25":"Tadeáš",
+  "06-26":"Adriana", "06-27":"Ladislav, Ladislava", "06-28":"Beáta", "06-29":"Peter a Pavol", "06-30":"Melánia",
+  "07-01":"Diana", "07-02":"Berta", "07-03":"Miloslav", "07-04":"Prokop", "07-05":"Cyril a Metod",
+  "07-06":"Patrícia, Patrik", "07-07":"Oliver", "07-08":"Ivan", "07-09":"Lujza", "07-10":"Amália",
+  "07-11":"Milota", "07-12":"Nina", "07-13":"Margita", "07-14":"Kamil", "07-15":"Henrich",
+  "07-16":"Drahomír", "07-17":"Bohuslav", "07-18":"Kamila", "07-19":"Dušana", "07-20":"Iľja",
+  "07-21":"Daniel", "07-22":"Magdaléna", "07-23":"Oľga", "07-24":"Vladimír", "07-25":"Jakub",
+  "07-26":"Anna, Hana", "07-27":"Božena", "07-28":"Krištof", "07-29":"Marta", "07-30":"Libuša", "07-31":"Ignác",
+  "08-01":"Božidara", "08-02":"Gustáv", "08-03":"Jerguš", "08-04":"Dominik", "08-05":"Hortenzia",
+  "08-06":"Jozefína", "08-07":"Štefánia", "08-08":"Oskar", "08-09":"Ľubomíra", "08-10":"Vavrinec",
+  "08-11":"Zuzana", "08-12":"Darina", "08-13":"Ľubomír", "08-14":"Mojmír", "08-15":"Marcela",
+  "08-16":"Leonard", "08-17":"Milica", "08-18":"Elena, Helena", "08-19":"Lýdia", "08-20":"Anabela",
+  "08-21":"Jana", "08-22":"Tichomír", "08-23":"Filip", "08-24":"Bartolomej", "08-25":"Ľudovít",
+  "08-26":"Samuel", "08-27":"Silvia", "08-28":"Augustín", "08-29":"Nikola, Nikolaj", "08-30":"Ružena", "08-31":"Nora",
+  "09-01":"Drahoslava", "09-02":"Linda, Rebeka", "09-03":"Belo", "09-04":"Rozália", "09-05":"Regína",
+  "09-06":"Alica", "09-07":"Marianna", "09-08":"Miriama", "09-09":"Martina", "09-10":"Oleg",
+  "09-11":"Bystrík", "09-12":"Mária", "09-13":"Ctibor", "09-14":"Ľudomil", "09-15":"Jolana",
+  "09-16":"Ľudmila", "09-17":"Olympia", "09-18":"Eugénia", "09-19":"Konštantín", "09-20":"Ľuboslav, Ľuboslava",
+  "09-21":"Matúš", "09-22":"Móric", "09-23":"Zdenka", "09-24":"Ľuboš, Ľubor", "09-25":"Vladislav",
+  "09-26":"Edita", "09-27":"Cyprián", "09-28":"Václav", "09-29":"Michal", "09-30":"Jarolím",
+  "10-01":"Arnold", "10-02":"Levoslav", "10-03":"Stela", "10-04":"František", "10-05":"Viera",
+  "10-06":"Natália", "10-07":"Eliška", "10-08":"Brigita", "10-09":"Dionýz", "10-10":"Sláva, Slávka",
+  "10-11":"Valentína", "10-12":"Maximilián", "10-13":"Koloman", "10-14":"Boris", "10-15":"Terézia",
+  "10-16":"Vladimíra", "10-17":"Hedviga", "10-18":"Lukáš", "10-19":"Kristián", "10-20":"Vendelín",
+  "10-21":"Uršuľa", "10-22":"Sergej", "10-23":"Alojzia", "10-24":"Kvetoslava", "10-25":"Aurel",
+  "10-26":"Demeter", "10-27":"Sabína", "10-28":"Dobromila", "10-29":"Klára", "10-30":"Šimon, Simona", "10-31":"Aurélia",
+  "11-01":"Denisa", "11-02":"", "11-03":"Hubert", "11-04":"Karol", "11-05":"Imrich",
+  "11-06":"Renáta", "11-07":"René", "11-08":"Bohumír", "11-09":"Teodor", "11-10":"Tibor",
+  "11-11":"Martin", "11-12":"Svätopluk", "11-13":"Stanislav", "11-14":"Irma", "11-15":"Leopold",
+  "11-16":"Agnesa", "11-17":"Klaudia", "11-18":"Eugen", "11-19":"Alžbeta", "11-20":"Félix",
+  "11-21":"Elvíra", "11-22":"Cecília", "11-23":"Klement", "11-24":"Emília", "11-25":"Katarína",
+  "11-26":"Kornel", "11-27":"Milan", "11-28":"Henrieta", "11-29":"Vratko", "11-30":"Ondrej",
+  "12-01":"Edmund", "12-02":"Bibiána", "12-03":"Oldrich", "12-04":"Barbora", "12-05":"Oto",
+  "12-06":"Mikuláš", "12-07":"Ambróz", "12-08":"Mariana", "12-09":"Izabela", "12-10":"Radúz",
+  "12-11":"Hilda", "12-12":"Otília", "12-13":"Lucia", "12-14":"Branislava, Bronislava", "12-15":"Ivica",
+  "12-16":"Albína", "12-17":"Kornélia", "12-18":"Sláva, Slávka", "12-19":"Judita", "12-20":"Dagmara",
+  "12-21":"Bohdan", "12-22":"Adela", "12-23":"Nadežda", "12-24":"Adam a Eva", "12-25":"",
+  "12-26":"Štefan", "12-27":"Filoména", "12-28":"Ivana, Ivona", "12-29":"Milada", "12-30":"Dávid", "12-31":"Silvester"
+};
+
+function updateHeaderClock(){
+  const timeEl = document.getElementById('header-clock-time');
+  const dateEl = document.getElementById('header-clock-date');
+  const nameEl = document.getElementById('header-clock-name');
+  if(!timeEl || !dateEl || !nameEl) return;
+
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  timeEl.textContent = `${hh}:${mm}`;
+
+  const dd = String(now.getDate()).padStart(2,'0');
+  const monthNum = String(now.getMonth()+1).padStart(2,'0');
+  dateEl.textContent = `${dd}.${now.getMonth()+1}.${now.getFullYear()}`;
+
+  const names = SK_NAMEDAYS[`${monthNum}-${dd}`] || '';
+  nameEl.textContent = names ? names : '—';
+}
+
+setInterval(updateHeaderClock, 1000);
+
 function initials(name){
   return name.split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
 }
@@ -1973,8 +2125,15 @@ function buildCallButtonRow(u){
   videoBtn.disabled = !online;
   videoBtn.onclick = (e)=>{ e.stopPropagation(); startCall({ uid:u.id, name:u.name, photoURL:u.photo }, 'video'); };
 
+  const msgBtn = document.createElement('button');
+  msgBtn.className = 'msg-icon-btn user-card-msg-btn';
+  msgBtn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>';
+  msgBtn.title = 'Napísať správu';
+  msgBtn.onclick = (e)=>{ e.stopPropagation(); openChatWithUser({ uid:u.id, name:u.name, photoURL:u.photo }); };
+
   row.appendChild(audioBtn);
   row.appendChild(videoBtn);
+  row.appendChild(msgBtn);
   return row;
 }
 
@@ -2336,9 +2495,15 @@ function subscribeToChatMessages(){
       }
       snap.forEach(doc=>{
         const m = doc.data();
-        const bubble = document.createElement('div');
-        bubble.className = 'chat-bubble ' + (m.senderId === currentUser.uid ? 'mine' : 'theirs');
-        bubble.textContent = m.text || '';
+        const mine = m.senderId === currentUser.uid;
+        let bubble;
+        if(m.type === 'voice' && m.audioUrl){
+          bubble = buildVoiceBubble(m, mine);
+        } else {
+          bubble = document.createElement('div');
+          bubble.className = 'chat-bubble ' + (mine ? 'mine' : 'theirs');
+          bubble.textContent = m.text || '';
+        }
         container.appendChild(bubble);
       });
       container.scrollTop = container.scrollHeight;
@@ -2387,6 +2552,246 @@ function markChatAsRead(){
   db.collection('chats').doc(currentChatId)
     .update({ ['unread.' + currentUser.uid]: 0 })
     .catch(()=>{}); // ak dokument ešte neexistuje (žiadna správa), jednoducho preskočíme
+}
+
+/* =================================================================
+   HLASOVÉ SPRÁVY V CHATE
+   Princíp: podržíš mikrofón tlačidlo -> nahráva sa cez MediaRecorder
+   (max 60 sekúnd), po pustení sa nahrávka nahrá na Cloudinary (rovnaký
+   spôsob ako video/foto) a uloží sa ako správa typu "voice" do
+   Firestore. Druhá strana si ju vypočuje kedykoľvek nabudúce otvorí
+   chat (aj keď bola v momente odoslania offline) — funguje to úplne
+   rovnako ako u bežnej textovej správy.
+================================================================== */
+const VOICE_MAX_SECONDS = 60;
+let voiceMediaRecorder = null;
+let voiceAudioChunks = [];
+let voiceRecordStartTime = null;
+let voiceRecordTimerInterval = null;
+let voiceRecordCancelled = false;
+let voiceRecordStartY = 0;
+
+function setupVoiceRecordButton(){
+  const btn = document.getElementById('voice-record-btn');
+  if(!btn) return;
+
+  const onStart = (e)=>{
+    e.preventDefault();
+    voiceRecordStartY = (e.touches && e.touches[0]) ? e.touches[0].clientY : (e.clientY || 0);
+    startVoiceRecording();
+  };
+  const onEnd = (e)=>{
+    e.preventDefault();
+    stopVoiceRecording(false);
+  };
+  const onMove = (e)=>{
+    if(!voiceMediaRecorder || voiceMediaRecorder.state !== 'recording') return;
+    const y = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
+    if(typeof y === 'number' && voiceRecordStartY - y > 60){
+      stopVoiceRecording(true); // posunutie prsta/kurzora hore = zrušiť nahrávanie
+    }
+  };
+
+  btn.addEventListener('mousedown', onStart);
+  btn.addEventListener('touchstart', onStart, {passive:false});
+  btn.addEventListener('mouseup', onEnd);
+  btn.addEventListener('touchend', onEnd);
+  btn.addEventListener('mousemove', onMove);
+  btn.addEventListener('touchmove', onMove, {passive:true});
+  btn.addEventListener('mouseleave', ()=>{
+    if(voiceMediaRecorder && voiceMediaRecorder.state === 'recording') stopVoiceRecording(true);
+  });
+}
+
+async function startVoiceRecording(){
+  if(voiceMediaRecorder && voiceMediaRecorder.state === 'recording') return;
+  if(!currentChatUser || !currentChatId){ return; }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    alert('Tvoj prehliadač nepodporuje nahrávanie zvuku.');
+    return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    voiceAudioChunks = [];
+    voiceRecordCancelled = false;
+    voiceMediaRecorder = new MediaRecorder(stream);
+
+    voiceMediaRecorder.ondataavailable = (e)=>{
+      if(e.data && e.data.size > 0) voiceAudioChunks.push(e.data);
+    };
+
+    voiceMediaRecorder.onstop = ()=>{
+      stream.getTracks().forEach(t=>t.stop());
+      clearInterval(voiceRecordTimerInterval);
+      document.getElementById('voice-record-bar').classList.remove('show');
+      document.getElementById('voice-record-btn').classList.remove('recording');
+
+      const elapsedSec = (Date.now() - voiceRecordStartTime) / 1000;
+      if(voiceRecordCancelled || elapsedSec < 1 || voiceAudioChunks.length === 0){
+        voiceAudioChunks = [];
+        return;
+      }
+      const mimeType = voiceMediaRecorder.mimeType || 'audio/webm';
+      const blob = new Blob(voiceAudioChunks, { type: mimeType });
+      sendVoiceMessage(blob, Math.round(elapsedSec));
+    };
+
+    voiceMediaRecorder.start();
+    voiceRecordStartTime = Date.now();
+    document.getElementById('voice-record-btn').classList.add('recording');
+    document.getElementById('voice-record-bar').classList.add('show');
+    document.getElementById('voice-record-time').textContent = '0:00';
+
+    voiceRecordTimerInterval = setInterval(()=>{
+      const secs = Math.floor((Date.now() - voiceRecordStartTime) / 1000);
+      document.getElementById('voice-record-time').textContent = formatVoiceDuration(secs);
+      if(secs >= VOICE_MAX_SECONDS) stopVoiceRecording(false);
+    }, 250);
+  }catch(e){
+    console.error('Chyba pri prístupe k mikrofónu:', e);
+    alert('Nepodarilo sa získať prístup k mikrofónu. Skontroluj povolenia prehliadača.');
+  }
+}
+
+function stopVoiceRecording(cancelled){
+  if(!voiceMediaRecorder || voiceMediaRecorder.state !== 'recording') return;
+  voiceRecordCancelled = cancelled;
+  voiceMediaRecorder.stop();
+}
+
+function uploadAudioBlobToCloudinary(blob){
+  return new Promise((resolve, reject)=>{
+    const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/video/upload`;
+    const formData = new FormData();
+    formData.append('file', blob, 'voice-message.webm');
+    formData.append('upload_preset', CLOUDINARY.uploadPreset);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.onload = ()=>{
+      if(xhr.status >= 200 && xhr.status < 300){
+        const data = JSON.parse(xhr.responseText);
+        resolve(data.secure_url);
+      } else {
+        reject(new Error('Cloudinary chyba: ' + xhr.status));
+      }
+    };
+    xhr.onerror = ()=>reject(new Error('Sieťová chyba pri nahrávaní'));
+    xhr.send(formData);
+  });
+}
+
+async function sendVoiceMessage(blob, durationSeconds){
+  if(!currentChatUser || !currentChatId || !db) return;
+  if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){
+    alert('Hlasové správy zatiaľ nie sú nastavené (chýba Cloudinary konfigurácia).');
+    return;
+  }
+
+  // Dočasná "nahrávam..." bublina, kým sa audio uploadne
+  const container = document.getElementById('chat-messages');
+  const tempBubble = document.createElement('div');
+  tempBubble.className = 'chat-bubble mine voice-bubble';
+  tempBubble.innerHTML = `<div class="voice-play-btn">⏳</div><div class="voice-duration">Odosielam...</div>`;
+  container.appendChild(tempBubble);
+  container.scrollTop = container.scrollHeight;
+
+  const chatRef = db.collection('chats').doc(currentChatId);
+  const otherUid = currentChatUser.uid;
+
+  try{
+    const url = await uploadAudioBlobToCloudinary(blob);
+    tempBubble.remove(); // finálnu bublinu vykreslí live listener zo servera
+
+    await chatRef.collection('messages').add({
+      senderId: currentUser.uid,
+      type: 'voice',
+      audioUrl: url,
+      duration: durationSeconds,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await chatRef.set({
+      participants: [currentUser.uid, otherUid],
+      participantNames: {
+        [currentUser.uid]: currentUser.name,
+        [otherUid]: currentChatUser.name
+      },
+      lastMessage: '🎤 Hlasová správa',
+      lastSenderId: currentUser.uid,
+      lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
+    await chatRef.update({ ['unread.' + otherUid]: firebase.firestore.FieldValue.increment(1) });
+  }catch(e){
+    console.error('Chyba pri odosielaní hlasovej správy:', e);
+    tempBubble.remove();
+    alert('Hlasovú správu sa nepodarilo odoslať.');
+  }
+}
+
+function formatVoiceDuration(totalSeconds){
+  const secs = Math.max(0, Math.round(totalSeconds || 0));
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function buildVoiceBubble(m, mine){
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble voice-bubble ' + (mine ? 'mine' : 'theirs');
+
+  const audio = document.createElement('audio');
+  audio.src = m.audioUrl;
+  audio.preload = 'none';
+  audio.style.display = 'none';
+
+  const playBtn = document.createElement('div');
+  playBtn.className = 'voice-play-btn';
+  playBtn.textContent = '▶';
+
+  const wave = document.createElement('div');
+  wave.className = 'voice-wave';
+  for(let i = 0; i < 16; i++){
+    const bar = document.createElement('span');
+    bar.style.height = (4 + Math.round(Math.random() * 14)) + 'px';
+    wave.appendChild(bar);
+  }
+
+  const totalSecs = m.duration || 0;
+  const durLabel = document.createElement('div');
+  durLabel.className = 'voice-duration';
+  durLabel.textContent = formatVoiceDuration(totalSecs);
+
+  playBtn.onclick = ()=>{
+    if(audio.paused){
+      // zastavíme prípadné iné práve prehrávané hlasové správy v chate
+      document.querySelectorAll('#chat-messages audio').forEach(a=>{
+        if(a !== audio){ a.pause(); a.currentTime = 0; }
+      });
+      document.querySelectorAll('#chat-messages .voice-play-btn').forEach(b=>{
+        if(b !== playBtn) b.textContent = '▶';
+      });
+      audio.play();
+      playBtn.textContent = '⏸';
+    } else {
+      audio.pause();
+      playBtn.textContent = '▶';
+    }
+  };
+  audio.onended = ()=>{
+    playBtn.textContent = '▶';
+    durLabel.textContent = formatVoiceDuration(totalSecs);
+  };
+  audio.ontimeupdate = ()=>{
+    if(!audio.paused && audio.duration){
+      durLabel.textContent = formatVoiceDuration(audio.duration - audio.currentTime);
+    }
+  };
+
+  bubble.appendChild(playBtn);
+  bubble.appendChild(wave);
+  bubble.appendChild(durLabel);
+  bubble.appendChild(audio);
+  return bubble;
 }
 
 function openConvModal(){
@@ -4417,6 +4822,9 @@ async function init(){
   ['click','touchstart','keydown'].forEach(evt=>{
     document.addEventListener(evt, unlockRingtoneAudio, {passive:true});
   });
+
+  setupVoiceRecordButton();
+  updateHeaderClock();
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
