@@ -169,7 +169,12 @@
   .header-clock-time{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--text);letter-spacing:.3px;}
   .header-clock-date{font-size:10px;color:var(--text-dim);margin-top:1px;}
   .header-clock-name{font-size:10.5px;color:var(--accent);font-weight:600;margin-top:1px;}
-  @media(max-width:700px){.header-clock{display:none;}}
+  @media(max-width:700px){
+    .header-clock{min-width:0;padding:2px 6px;}
+    .header-clock-time{font-size:12px;}
+    .header-clock-date{font-size:9px;}
+    .header-clock-name{font-size:9px;}
+  }
   .messenger-btn{
     position:relative;width:38px;height:38px;border-radius:50%;flex-shrink:0;
     background:linear-gradient(135deg,#1FAE5C,#3ECF7A);color:#fff;
