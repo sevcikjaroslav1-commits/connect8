@@ -3369,7 +3369,7 @@ function buildPostCard(p, opts={}){
         ${followBtnHtml(p.authorId)}
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="Vymazať príspevok">🗑️</button>` : ''}
       </div>
-      <div class="post-text">${p.text}</div>
+      ${p.text ? `<div class="post-text">${p.text}</div>` : ''}
       ${p.video ? `<div class="post-video-wrap">
         <video class="post-video" id="post-video-${p.id}" src="${p.video}" controls playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
@@ -3813,10 +3813,19 @@ function removePostFile(){
 }
 
 function addPost(){
-  const text = document.getElementById('post-text').value.trim();
+  let text = document.getElementById('post-text').value.trim();
   const linkVal = normalizeUrl(document.getElementById('post-link-input').value);
   if(!text && !pendingPostImages.length && !linkVal && !pendingPostVideo && !pendingPostFile) return;
   const hasMatchingPreview = pendingPostLink && pendingPostLink.url === linkVal;
+  if(linkVal && hasMatchingPreview){
+    // Ak sme z textu automaticky rozpoznali odkaz (zobrazuje sa nižšie ako
+    // náhľad karty), samotnú surovú adresu z textu vystrihneme, nech sa
+    // nezobrazuje duplicitne aj ako text aj ako karta.
+    const match = text.match(URL_DETECT_REGEX);
+    if(match && normalizeUrl(match[0]) === linkVal){
+      text = (text.slice(0, match.index) + text.slice(match.index + match[0].length)).trim();
+    }
+  }
   const newPost = {
     id:Date.now(), name:currentUser.name, authorId:currentUser.uid, createdAt: Date.now(),
     text, photos:pendingPostImages.slice(), video: pendingPostVideo, link:linkVal,
