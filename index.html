@@ -3306,10 +3306,26 @@ function renderConversationsList(){
 
 // Ak niekto je už prihlásený (napr. po obnovení stránky), Firebase to zistí sám
 // a zavolá enterApp() bez potreby znova zadávať heslo.
+//
+// DÔLEŽITÉ (oprava chyby "Missing or insufficient permissions"): Firebase Auth
+// zisťuje prihlásenie ASYNCHRÓNNE, takže hneď pri načítaní stránky ešte nie je
+// jasné, či je niekto prihlásený. Predtým appka spúšťala loadState() (čítanie
+// z Firestore) HNEĎ pri štarte, nezávisle na tomto - to znamená, že prvý pokus
+// o čítanie posts/products/videos prebehol EŠTE PRED potvrdením prihlásenia,
+// s request.auth == null → Security Rules ho zamietli. Keďže appka si výsledok
+// tohto prvého pokusu interne "zapamätala" (_stateLoadPromise), dáta sa už
+// nikdy nedotiahli, ani keď sa používateľ vzápätí naozaj prihlásil.
+// Riešenie: init() nižšie už loadState() sám nevolá - počká na authReadyPromise,
+// ktorý sa vyrieši AŽ TU, po dokončení celého prihlasovacieho postupu
+// (vrátane samotného loadState()), takže k čítaniu z Firestore dôjde vždy
+// až vtedy, keď je prihlásenie už naozaj potvrdené.
+let authReadyResolve;
+const authReadyPromise = new Promise(res=>{ authReadyResolve = res; });
+
 if(FIREBASE_CONFIGURED){
   auth.onAuthStateChanged(async (user)=>{
     if(user){
-      if(currentUser && currentUser.uid === user.uid) return; // už nastavené (napr. hneď po registrácii)
+      if(currentUser && currentUser.uid === user.uid){ authReadyResolve(); return; } // už nastavené (napr. hneď po registrácii)
       let name = user.displayName || user.email;
       let photoURL = null;
       try{
@@ -3325,7 +3341,10 @@ if(FIREBASE_CONFIGURED){
       await loadState();
       enterApp();
     }
+    authReadyResolve();
   });
+} else {
+  authReadyResolve();
 }
 
 /* ---------------- ONLINE PRÍTOMNOSŤ (Firebase Realtime Database) ----------------
@@ -5272,7 +5291,19 @@ function cryptoRandomId(){
 
 
 async function init(){
-  await loadState();
+  if(FIREBASE_CONFIGURED){
+    // Počkaj, kým Firebase Auth definitívne potvrdí, či je niekto prihlásený
+    // (a ak áno, kým sa dotiahnu aj jeho dáta z Firestore) - loadState() sa
+    // volá výhradne odtiaľto, cez authReadyPromise vyššie, NIKDY skôr,
+    // aby čítanie z Firestore nikdy neprebehlo bez potvrdeného prihlásenia
+    // (viď komentár pri authReadyPromise vyššie).
+    storageMode = "online";
+    await authReadyPromise;
+  } else {
+    storageMode = "offline";
+    lastStorageError = "V kóde chýba vyplnený firebaseConfig.";
+    loadFromLocalStorage();
+  }
   document.getElementById('loading-screen').style.display = 'none';
   // Ak medzitým (kým sa načítaval stav) Firebase stihol automaticky prihlásiť
   // predošlú reláciu a zavolal enterApp(), NEPREPISUJ obrazovku späť na
