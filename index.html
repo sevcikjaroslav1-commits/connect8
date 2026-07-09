@@ -2234,6 +2234,7 @@ async function toggleFollow(uid){
           ? firebase.firestore.FieldValue.arrayRemove(uid)
           : firebase.firestore.FieldValue.arrayUnion(uid)
       }, {merge:true});
+      if(!wasFollowing) createNotification(uid, 'follow', {});
     }catch(e){
       console.error("Nepodarilo sa uložiť sledovanie:", e);
       // vrátime zmenu späť, ak sa uloženie nepodarilo
@@ -2738,6 +2739,7 @@ function notifText(n){
     case 'like_video': return `${name} sa páči tvoje video`;
     case 'comment_post': return `${name} okomentoval(a) tvoj príspevok`;
     case 'comment_video': return `${name} okomentoval(a) tvoje video`;
+    case 'follow': return `${name} ťa začal(a) sledovať`;
     default: return `${name} ťa upozornil(a)`;
   }
 }
@@ -2781,7 +2783,9 @@ function openNotificationTarget(id){
   const n = cachedNotifications.find(x=>x.id===id);
   closeNotifModal();
   if(!n) return;
-  if(n.type === 'like_video' || n.type === 'comment_video'){
+  if(n.type === 'follow'){
+    openUserProfile({uid: n.fromUid, name: n.fromName, photoURL: n.fromPhoto});
+  } else if(n.type === 'like_video' || n.type === 'comment_video'){
     switchMode('video');
   } else {
     switchMode('feed');
