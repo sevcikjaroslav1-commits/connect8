@@ -2693,12 +2693,15 @@ function subscribeNotifications(){
   if(!FIREBASE_CONFIGURED || !db || !currentUser) return;
   if(notificationsUnsub){ notificationsUnsub(); notificationsUnsub = null; }
 
+  // Zámerne bez .orderBy() vo Firestore dotaze — kombinácia where+orderBy na
+  // rôznych poliach by vyžadovala ručne vytvorený zložený index. Zoradíme
+  // si to jednoducho až tu v prehliadači.
   notificationsUnsub = db.collection('notifications')
     .where('toUid', '==', currentUser.uid)
-    .orderBy('createdAt', 'desc')
-    .limit(50)
     .onSnapshot(snap=>{
       cachedNotifications = docsToArray(snap);
+      cachedNotifications.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      if(cachedNotifications.length > 50) cachedNotifications = cachedNotifications.slice(0,50);
       updateNotifBadge();
       renderNotifList();
     }, err=>console.error('Chyba pri načítaní upozornení:', err));
