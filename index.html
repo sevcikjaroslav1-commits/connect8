@@ -1193,7 +1193,7 @@
             <div class="category-grid" id="category-grid"></div>
           </div>
 
-          <div class="market-section-title" id="market-listing-title">Aktuálna ponuka</div>
+          <div class="market-section-title" id="market-listing-title">Najnovšie inzeráty</div>
           <div id="market-filter-chip-holder"></div>
           <div class="market-grid" id="products-list"></div>
         </section>
@@ -1591,7 +1591,7 @@ function loadState(){
     migrateSharedDocIfNeeded().finally(()=>{
       let firstPosts = true, firstProducts = true, firstVideos = true;
 
-      db.collection('posts').onSnapshot((snap)=>{
+      db.collection('posts').orderBy('createdAt','desc').limit(80).onSnapshot((snap)=>{
         posts = docsToArray(snap);
         posts.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); // najstaršie prvé (render ich obráti)
         if(!firstPosts && document.getElementById('app').style.display === 'block') renderPosts();
@@ -1602,7 +1602,7 @@ function loadState(){
         if(firstPosts){ firstPosts = false; markLoaded(); }
       });
 
-      db.collection('products').onSnapshot((snap)=>{
+      db.collection('products').orderBy('createdAt','desc').limit(10).onSnapshot((snap)=>{
         products = docsToArray(snap);
         products.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); // najstaršie prvé (render ich obráti)
         if(!firstProducts && document.getElementById('app').style.display === 'block') renderProducts();
@@ -1613,7 +1613,7 @@ function loadState(){
         if(firstProducts){ firstProducts = false; markLoaded(); }
       });
 
-      db.collection('videos').onSnapshot((snap)=>{
+      db.collection('videos').orderBy('createdAt','desc').limit(80).onSnapshot((snap)=>{
         videos = docsToArray(snap);
         videos.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); // najnovšie prvé (render ich nechá tak)
         if(!firstVideos && document.getElementById('app').style.display === 'block') renderVideos();
@@ -1632,10 +1632,77 @@ function loadState(){
 
 let currentUser = null; // {uid, email, name}
 
+// Kešované KOMPLETNÉ zoznamy vlastných príspevkov jednotlivých používateľov
+// (kľúč = uid). Feed si žive drží len posledných 80 príspevkov od všetkých
+// naraz kvôli šetreniu čítaní, ale vo svojom profile chce mať používateľ
+// úplne všetky svoje príspevky, aj tie staršie ako posledných 80 v celej appke.
+let ownPostsCache = {};
+
+function findPostById(id){
+  let p = posts.find(x=>x.id===id);
+  if(p) return p;
+  for(const uid in ownPostsCache){
+    const found = ownPostsCache[uid].find(x=>x.id===id);
+    if(found) return found;
+  }
+  return null;
+}
+
+function loadOwnPostsIfNeeded(profileUser){
+  if(!profileUser || !profileUser.uid) return;
+  if(ownPostsCache[profileUser.uid]) return; // už načítané
+  if(!FIREBASE_CONFIGURED || !db) return;
+  db.collection('posts').where('authorId','==',profileUser.uid).get().then(snap=>{
+    let arr = docsToArray(snap);
+    // starším príspevkom (ešte bez authorId) sa priradí zhoda podľa mena,
+    // nech sa nestratia zo zobrazenia v profile
+    const byName = posts.filter(p=> !p.authorId && p.name===profileUser.name);
+    byName.forEach(p=>{ if(!arr.some(a=>a.id===p.id)) arr.push(p); });
+    arr.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    ownPostsCache[profileUser.uid] = arr;
+    const currentlyViewed = viewedProfileUser || currentUser;
+    if(currentlyViewed && currentlyViewed.uid === profileUser.uid && document.getElementById('view-profile').classList.contains('active')){
+      renderProfile();
+    }
+  }).catch(err=>{
+    console.error("Firestore chyba (moje príspevky - profil):", err);
+  });
+}
+
 let posts = [
   {id:1,name:"Eva Krátka",createdAt: Date.now() - 2*60*60*1000, text:"Prvý príspevok na Connect! 🎉 Toto bude super kombinácia feedu, marketu a videí.",img:"🌄",likes:4,liked:false,comments:[{name:"Marek",text:"Vyzerá skvele!"}],open:false},
   {id:2,name:"Peter Horák",createdAt: Date.now() - 5*60*60*1000, text:"Predávam starý bicykel, pozrite marketplace 👇",img:"🚲",likes:2,liked:false,comments:[],open:false},
 ];
+
+let allProductsCache = null; // plný zoznam produktov, načíta sa len keď niekto vyhľadáva/filtruje
+let allProductsLoadingPromise = null;
+
+function isMarketFilterActive(){
+  const q = (document.getElementById('market-search-q')?.value || '').trim();
+  const min = document.getElementById('market-search-min')?.value || '';
+  const max = document.getElementById('market-search-max')?.value || '';
+  return !!(activeMarketCategory || q || min || max);
+}
+
+function ensureAllProductsLoaded(){
+  if(allProductsCache) return Promise.resolve(allProductsCache);
+  if(allProductsLoadingPromise) return allProductsLoadingPromise;
+  allProductsLoadingPromise = db.collection('products').orderBy('createdAt','desc').get().then(snap=>{
+    allProductsCache = docsToArray(snap);
+    allProductsCache.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    allProductsLoadingPromise = null;
+    return allProductsCache;
+  }).catch(err=>{
+    console.error("Firestore chyba (products - vyhľadávanie):", err);
+    allProductsLoadingPromise = null;
+    return products;
+  });
+  return allProductsLoadingPromise;
+}
+
+function findProductById(id){
+  return products.find(p=>p.id===id) || (allProductsCache && allProductsCache.find(p=>p.id===id));
+}
 
 let products = [
   {id:1,createdAt: Date.now() - 8*60*60*1000, title:"Horský bicykel",price:"120",seller:"Peter Horák",emoji:"🚲"},
@@ -1745,7 +1812,16 @@ async function deleteMyAccount(){
 
   try{
     // 1) odstráň vlastný obsah (príspevky, inzeráty, videá) — každý ako samostatný dokument
-    const ownPosts = posts.filter(p=> p.authorId ? p.authorId===uid : p.name===currentUser.name);
+    // Príspevky si dotiahneme priamo z Firestore podľa authorId, nech sa zmažú
+    // naozaj VŠETKY (aj tie staršie ako posledných 80 v živom feede).
+    let ownPosts = posts.filter(p=> p.authorId ? p.authorId===uid : p.name===currentUser.name);
+    if(FIREBASE_CONFIGURED && db){
+      try{
+        const ownPostsSnap = await db.collection('posts').where('authorId','==',uid).get();
+        const fromServer = docsToArray(ownPostsSnap);
+        fromServer.forEach(p=>{ if(!ownPosts.some(x=>x.id===p.id)) ownPosts.push(p); });
+      }catch(e){ console.error('Nepodarilo sa dotiahnuť všetky príspevky pred vymazaním účtu:', e); }
+    }
     const ownProducts = products.filter(pr=> pr.authorId ? pr.authorId===uid : pr.seller===currentUser.name);
     const ownVideos = videos.filter(v=> v.authorId ? v.authorId===uid : v.name===currentUser.name);
     if(FIREBASE_CONFIGURED && db){
@@ -1756,6 +1832,7 @@ async function deleteMyAccount(){
       await batch.commit();
     }
     posts = posts.filter(p=> p.authorId ? p.authorId!==uid : p.name!==currentUser.name);
+    delete ownPostsCache[uid];
     products = products.filter(pr=> pr.authorId ? pr.authorId!==uid : pr.seller!==currentUser.name);
     videos = videos.filter(v=> v.authorId ? v.authorId!==uid : v.name!==currentUser.name);
 
@@ -2154,7 +2231,9 @@ function profileBack(){
 function renderProfile(){
   const profileUser = viewedProfileUser || currentUser;
   const isOwnProfile = !viewedProfileUser;
-  const myPosts = posts.filter(p=> p.authorId ? p.authorId===profileUser.uid : p.name===profileUser.name);
+  const postsSource = (profileUser.uid && ownPostsCache[profileUser.uid]) ? ownPostsCache[profileUser.uid] : posts;
+  const myPosts = postsSource.filter(p=> p.authorId ? p.authorId===profileUser.uid : p.name===profileUser.name);
+  loadOwnPostsIfNeeded(profileUser);
   const allPhotos = myPosts.reduce((acc,p)=> acc.concat(getPostPhotos(p)), []);
   const links = myPosts.filter(p=>p.link);
 
@@ -2552,6 +2631,36 @@ let currentChatId = null;
 let chatMessagesUnsub = null;
 let conversationsUnsub = null;
 let cachedConversations = [];
+let conversationsFirstLoad = true;
+let chatLastMsgTimestamps = {};
+let notifAudioCtx = null;
+
+function ensureNotifAudioCtx(){
+  try{
+    if(!notifAudioCtx) notifAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(notifAudioCtx.state === 'suspended') notifAudioCtx.resume().catch(()=>{});
+  }catch(e){ return null; }
+  return notifAudioCtx;
+}
+
+// Krátky dvojtónový "ding", podobný upozorneniu na prijatú SMS
+function playMessageNotificationSound(){
+  const ctx = ensureNotifAudioCtx();
+  if(!ctx) return;
+  const now = ctx.currentTime;
+  [1046.5, 1318.5].forEach((freq, i)=>{
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, now + i*0.12);
+    gain.gain.linearRampToValueAtTime(0.22, now + i*0.12 + 0.02);
+    gain.gain.linearRampToValueAtTime(0, now + i*0.12 + 0.18);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + i*0.12);
+    osc.stop(now + i*0.12 + 0.2);
+  });
+}
 
 function cacheProfile(uid, name, photo){
   if(!uid) return;
@@ -2936,17 +3045,29 @@ function closeConvModal(){
 function subscribeConversations(){
   if(!FIREBASE_CONFIGURED || !db || !currentUser) return;
   if(conversationsUnsub){ conversationsUnsub(); conversationsUnsub = null; }
+  conversationsFirstLoad = true;
+  chatLastMsgTimestamps = {};
 
   conversationsUnsub = db.collection('chats')
     .where('participants', 'array-contains', currentUser.uid)
     .onSnapshot(snap=>{
       const chats = [];
       let anyUnread = false;
+      let shouldPlaySound = false;
       snap.forEach(doc=>{
         const data = doc.data() || {};
         const unreadCount = (data.unread && data.unread[currentUser.uid]) || 0;
         if(unreadCount > 0) anyUnread = true;
         chats.push({ id: doc.id, ...data, unreadCount });
+
+        // Zisti, či ide o novú správu od niekoho iného (nie odo mňa), nech
+        // vieme prehrať upozorňovací zvuk ako pri SMS.
+        const ts = (data.lastTimestamp && data.lastTimestamp.toMillis) ? data.lastTimestamp.toMillis() : 0;
+        const prevTs = chatLastMsgTimestamps[doc.id] || 0;
+        if(!conversationsFirstLoad && ts > prevTs && data.lastSenderId && data.lastSenderId !== currentUser.uid){
+          shouldPlaySound = true;
+        }
+        chatLastMsgTimestamps[doc.id] = ts;
       });
       chats.sort((a,b)=>{
         const ta = (a.lastTimestamp && a.lastTimestamp.toMillis) ? a.lastTimestamp.toMillis() : 0;
@@ -2956,6 +3077,8 @@ function subscribeConversations(){
       cachedConversations = chats;
       updateMessengerBadge(anyUnread);
       renderConversationsList();
+      if(shouldPlaySound) playMessageNotificationSound();
+      conversationsFirstLoad = false;
     }, err=>console.error('Chyba pri načítaní konverzácií:', err));
 }
 
@@ -3840,6 +3963,7 @@ function addPost(){
     img: (pendingPostImages.length || pendingPostVideo || pendingPostFile) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
   };
   posts.push(newPost);
+  if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid].push(newPost);
   document.getElementById('post-text').value = '';
   removePostImage();
   removePostVideo();
@@ -3865,7 +3989,7 @@ function getLikedBy(obj){
 }
 
 function toggleLike(id){
-  const p = posts.find(p=>p.id===id);
+  const p = findPostById(id);
   if(!p) return;
   const likedBy = getLikedBy(p);
   const uid = currentUser.uid;
@@ -3879,22 +4003,23 @@ function toggleLike(id){
 }
 
 function toggleComments(id){
-  const p = posts.find(p=>p.id===id);
+  const p = findPostById(id);
   p.open = !p.open;
   renderPosts();
 }
 
 function deletePost(id){
-  const p = posts.find(p=>p.id===id);
+  const p = findPostById(id);
   if(!p) return;
   if(!confirm('Naozaj chceš vymazať tento príspevok?')) return;
   posts = posts.filter(p=>p.id!==id);
+  for(const uid in ownPostsCache){ ownPostsCache[uid] = ownPostsCache[uid].filter(p=>p.id!==id); }
   removePostDoc(id);
   refreshPostViews();
 }
 
 function deletePostLink(id){
-  const p = posts.find(p=>p.id===id);
+  const p = findPostById(id);
   if(!p) return;
   p.link = null;
   savePost(p);
@@ -3902,7 +4027,7 @@ function deletePostLink(id){
 }
 
 function deletePostFile(id){
-  const p = posts.find(p=>p.id===id);
+  const p = findPostById(id);
   if(!p) return;
   p.file = null;
   savePost(p);
@@ -3910,7 +4035,7 @@ function deletePostFile(id){
 }
 
 function toggleCommentLike(postId, commentIndex){
-  const p = posts.find(p=>p.id===postId);
+  const p = findPostById(postId);
   if(!p) return;
   const c = p.comments[commentIndex];
   if(!c) return;
@@ -3929,7 +4054,7 @@ function addComment(id){
   const input = document.getElementById('cinput-'+id);
   const text = input.value.trim();
   if(!text) return;
-  const p = posts.find(p=>p.id===id);
+  const p = findPostById(id);
   p.comments.push({name:currentUser.name, text});
   p.open = true;
   savePost(p);
@@ -3994,16 +4119,18 @@ function scrollToMarketResults(){
   if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-function selectCategory(name){
+async function selectCategory(name){
   activeMarketCategory = (activeMarketCategory === name) ? '' : name;
   renderCategories();
+  if(isMarketFilterActive()) await ensureAllProductsLoaded();
   renderProducts();
   if(activeMarketCategory) scrollToMarketResults();
 }
 
-function onCategorySelectChange(){
+async function onCategorySelectChange(){
   activeMarketCategory = document.getElementById('market-search-cat').value;
   renderCategories();
+  if(isMarketFilterActive()) await ensureAllProductsLoaded();
   renderProducts();
   if(activeMarketCategory) scrollToMarketResults();
 }
@@ -4018,9 +4145,10 @@ function clearMarketFilters(){
   renderProducts();
 }
 
-function applyMarketFilters(){
+async function applyMarketFilters(){
   activeMarketCategory = document.getElementById('market-search-cat').value;
   renderCategories();
+  if(isMarketFilterActive()) await ensureAllProductsLoaded();
   renderProducts();
   scrollToMarketResults();
 }
@@ -4029,7 +4157,9 @@ function getFilteredProducts(){
   const q = (document.getElementById('market-search-q').value || '').trim().toLowerCase();
   const min = parseFloat(document.getElementById('market-search-min').value);
   const max = parseFloat(document.getElementById('market-search-max').value);
-  return products.filter(pr=>{
+  const filtering = isMarketFilterActive();
+  const source = filtering ? (allProductsCache || products) : products;
+  return source.filter(pr=>{
     if(activeMarketCategory && (pr.category || 'Ostatné') !== activeMarketCategory) return false;
     if(q && !pr.title.toLowerCase().includes(q)) return false;
     const price = parseFloat(pr.price);
@@ -4075,10 +4205,11 @@ function toggleSellForm(){
 }
 
 function deleteProduct(id){
-  const pr = products.find(pr=>pr.id===id);
+  const pr = findProductById(id);
   if(!pr) return;
   if(!confirm('Naozaj chceš vymazať tento produkt?')) return;
   products = products.filter(pr=>pr.id!==id);
+  if(allProductsCache) allProductsCache = allProductsCache.filter(pr=>pr.id!==id);
   removeProductDoc(id);
   renderProducts();
   if(document.getElementById('view-product-detail').classList.contains('active')) closeProductDetail();
@@ -4102,7 +4233,7 @@ function closeProductDetail(){
 }
 
 function renderProductDetail(){
-  const pr = products.find(p=>p.id===currentProductDetailId);
+  const pr = findProductById(currentProductDetailId);
   const box = document.getElementById('product-detail-content');
   if(!pr){
     box.innerHTML = `<div class="profile-empty">Tento inzerát už neexistuje.</div>`;
@@ -4222,7 +4353,7 @@ function addProduct(){
   const cat = MARKET_CATEGORIES.find(c=>c.name===category);
 
   if(editingProductId){
-    const pr = products.find(p=>p.id===editingProductId);
+    const pr = findProductById(editingProductId);
     if(pr){
       pr.title = title;
       pr.price = price;
@@ -4262,7 +4393,7 @@ function addProduct(){
 }
 
 function openEditProduct(id){
-  const pr = products.find(p=>p.id===id);
+  const pr = findProductById(id);
   if(!pr) return;
   editingProductId = id;
 
@@ -4388,7 +4519,7 @@ function persistViewedFeedVideoIds(){
 function registerFeedVideoView(postId){
   const numId = Number(postId);
   if(viewedFeedVideoIds.has(numId)) return;
-  const p = posts.find(p=>p.id===numId);
+  const p = findPostById(numId);
   if(!p) return;
   viewedFeedVideoIds.add(numId);
   persistViewedFeedVideoIds();
