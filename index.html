@@ -188,6 +188,40 @@
   }
   .messenger-btn .badge-dot.show{display:block;}
 
+  .notif-btn{
+    position:relative;width:38px;height:38px;border-radius:50%;flex-shrink:0;
+    background:var(--bg);color:var(--text-dim);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;transition:.15s;
+  }
+  .notif-btn:hover{filter:brightness(1.05);transform:translateY(-1px);color:var(--text);}
+  .notif-btn .badge-count{
+    display:none;position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;
+    background:#FF3C5C;color:#fff;font-size:10.5px;font-weight:700;line-height:17px;text-align:center;
+    border:2px solid var(--surface);box-sizing:border-box;
+  }
+  .notif-btn .badge-count.show{display:block;}
+
+  .notif-modal{display:none;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.35);align-items:flex-start;justify-content:flex-end;}
+  .notif-modal.open{display:flex;}
+  .notif-sheet{
+    background:var(--surface);width:360px;max-width:92vw;max-height:80vh;margin:64px 24px 0 0;border-radius:16px;
+    box-shadow:0 12px 40px rgba(0,0,0,.25);display:flex;flex-direction:column;overflow:hidden;
+  }
+  .notif-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);flex-shrink:0;}
+  .notif-header h3{margin:0;font-size:16px;}
+  .notif-header button{background:transparent;color:var(--text-dim);font-size:18px;}
+  .notif-list{overflow-y:auto;padding:6px 0;}
+  .notif-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;transition:.1s;}
+  .notif-item:hover{background:var(--bg);}
+  .notif-item.unread{background:var(--mode-feed-soft);}
+  .notif-item-text{flex:1;font-size:13.5px;line-height:1.4;}
+  .notif-item-text b{font-weight:700;}
+  .notif-item-time{font-size:11.5px;color:var(--text-dim);white-space:nowrap;flex-shrink:0;}
+  .notif-empty{padding:30px 16px;text-align:center;color:var(--text-dim);font-size:13.5px;}
+  @media(max-width:480px){
+    .notif-sheet{margin:56px 8px 0 0;width:320px;}
+  }
+
   .app-body{display:flex;align-items:flex-start;max-width:1120px;margin:0 auto;}
   .left-sidebar{
     width:250px;flex-shrink:0;padding:18px 10px;position:sticky;top:59px;
@@ -1082,6 +1116,10 @@
         <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>
         <span class="badge-dot" id="messenger-badge-dot"></span>
       </button>
+      <button class="notif-btn" onclick="openNotifModal()" title="Upozornenia">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        <span class="badge-count" id="notif-badge-count">0</span>
+      </button>
       <div class="avatar" id="user-avatar">?</div>
       <button class="logout-btn" onclick="doLogout()">Odhlásiť</button>
     </div>
@@ -1343,6 +1381,17 @@
         <button onclick="closeConvModal()">✕</button>
       </div>
       <div class="conv-list" id="conv-list"></div>
+    </div>
+  </div>
+
+  <!-- ============ NOTIFIKÁCIE ============ -->
+  <div class="notif-modal" id="notif-modal" onclick="if(event.target===this) closeNotifModal()">
+    <div class="notif-sheet">
+      <div class="notif-header">
+        <h3>🔔 Upozornenia</h3>
+        <button onclick="closeNotifModal()">✕</button>
+      </div>
+      <div class="notif-list" id="notif-list"></div>
     </div>
   </div>
 
@@ -2606,6 +2655,7 @@ function enterApp(){
   switchMode('feed');
   startPresenceHeartbeat();
   subscribeConversations();
+  subscribeNotifications();
   listenForIncomingCalls();
   warmProfilePhotosCache();
 }
@@ -2634,6 +2684,106 @@ let cachedConversations = [];
 let conversationsFirstLoad = true;
 let chatLastMsgTimestamps = {};
 let notifAudioCtx = null;
+
+/* ---------------- NOTIFIKÁCIE (lajky a komentáre) ---------------- */
+let notificationsUnsub = null;
+let cachedNotifications = [];
+
+function subscribeNotifications(){
+  if(!FIREBASE_CONFIGURED || !db || !currentUser) return;
+  if(notificationsUnsub){ notificationsUnsub(); notificationsUnsub = null; }
+
+  notificationsUnsub = db.collection('notifications')
+    .where('toUid', '==', currentUser.uid)
+    .orderBy('createdAt', 'desc')
+    .limit(50)
+    .onSnapshot(snap=>{
+      cachedNotifications = docsToArray(snap);
+      updateNotifBadge();
+      renderNotifList();
+    }, err=>console.error('Chyba pri načítaní upozornení:', err));
+}
+
+function updateNotifBadge(){
+  const badge = document.getElementById('notif-badge-count');
+  if(!badge) return;
+  const unread = cachedNotifications.filter(n=>!n.read).length;
+  badge.textContent = unread > 99 ? '99+' : String(unread);
+  badge.classList.toggle('show', unread > 0);
+}
+
+// Zapíše novú notifikáciu danému používateľovi (nikdy sám sebe).
+function createNotification(toUid, type, extra){
+  if(!FIREBASE_CONFIGURED || !db || !currentUser) return;
+  if(!toUid || toUid === currentUser.uid) return;
+  const notif = {
+    toUid, type,
+    fromUid: currentUser.uid,
+    fromName: currentUser.name,
+    fromPhoto: (currentUser.photoURL || null),
+    createdAt: Date.now(),
+    read: false,
+    ...extra
+  };
+  db.collection('notifications').add(notif).catch(err=>console.error('Chyba pri zápise upozornenia:', err));
+}
+
+function notifText(n){
+  const name = `<b>${n.fromName || 'Niekto'}</b>`;
+  switch(n.type){
+    case 'like_post': return `${name} sa páči tvoj príspevok`;
+    case 'like_video': return `${name} sa páči tvoje video`;
+    case 'comment_post': return `${name} okomentoval(a) tvoj príspevok`;
+    case 'comment_video': return `${name} okomentoval(a) tvoje video`;
+    default: return `${name} ťa upozornil(a)`;
+  }
+}
+
+function renderNotifList(){
+  const list = document.getElementById('notif-list');
+  if(!list) return;
+  if(!cachedNotifications.length){
+    list.innerHTML = `<div class="notif-empty">Zatiaľ žiadne upozornenia.</div>`;
+    return;
+  }
+  list.innerHTML = cachedNotifications.map(n=>`
+    <div class="notif-item ${n.read?'':'unread'}" onclick="openNotificationTarget('${n.id}')">
+      ${avatarHtml(n.fromName || 'Niekto', n.fromPhoto)}
+      <div class="notif-item-text">${notifText(n)}</div>
+      <div class="notif-item-time">${formatPostTime(n.createdAt)}</div>
+    </div>
+  `).join('');
+}
+
+function openNotifModal(){
+  document.getElementById('notif-modal').classList.add('open');
+  renderNotifList();
+  markAllNotificationsRead();
+}
+
+function closeNotifModal(){
+  document.getElementById('notif-modal').classList.remove('open');
+}
+
+function markAllNotificationsRead(){
+  if(!FIREBASE_CONFIGURED || !db) return;
+  const unread = cachedNotifications.filter(n=>!n.read);
+  if(!unread.length) return;
+  const batch = db.batch();
+  unread.forEach(n=>batch.update(db.collection('notifications').doc(n.id), {read:true}));
+  batch.commit().catch(err=>console.error('Chyba pri označovaní upozornení ako prečítané:', err));
+}
+
+function openNotificationTarget(id){
+  const n = cachedNotifications.find(x=>x.id===id);
+  closeNotifModal();
+  if(!n) return;
+  if(n.type === 'like_video' || n.type === 'comment_video'){
+    switchMode('video');
+  } else {
+    switchMode('feed');
+  }
+}
 
 function ensureNotifAudioCtx(){
   try{
@@ -3994,11 +4144,13 @@ function toggleLike(id){
   const likedBy = getLikedBy(p);
   const uid = currentUser.uid;
   const idx = likedBy.indexOf(uid);
+  const wasLiked = idx>=0;
   if(idx>=0) likedBy.splice(idx,1); else likedBy.push(uid);
   p.likedBy = likedBy;
   p.likes = likedBy.length;
   delete p.liked;
   savePost(p);
+  if(!wasLiked && p.authorId) createNotification(p.authorId, 'like_post', {postId: p.id});
   refreshPostViews();
 }
 
@@ -4058,6 +4210,7 @@ function addComment(id){
   p.comments.push({name:currentUser.name, text});
   p.open = true;
   savePost(p);
+  if(p.authorId) createNotification(p.authorId, 'comment_post', {postId: p.id});
   renderPosts();
 }
 
@@ -4620,11 +4773,13 @@ function toggleVideoLike(id){
   const likedBy = getLikedBy(v);
   const uid = currentUser.uid;
   const idx = likedBy.indexOf(uid);
+  const wasLiked = idx>=0;
   if(idx>=0) likedBy.splice(idx,1); else likedBy.push(uid);
   v.likedBy = likedBy;
   v.likes = likedBy.length;
   delete v.liked;
   saveVideo(v);
+  if(!wasLiked && v.authorId) createNotification(v.authorId, 'like_video', {videoId: v.id});
   renderVideos();
 }
 
@@ -4689,6 +4844,7 @@ function submitVideoComment(){
   v.comments.push({name: currentUser.name, text});
   input.value = '';
   saveVideo(v);
+  if(v.authorId) createNotification(v.authorId, 'comment_video', {videoId: v.id});
   renderVideoComments();
   const countEl = document.getElementById('chat-count-'+v.id);
   if(countEl) countEl.textContent = v.comments.length;
