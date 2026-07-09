@@ -2917,21 +2917,30 @@ function sendChatMessage(){
   const chatRef = db.collection('chats').doc(currentChatId);
   const otherUid = currentChatUser.uid;
 
-  chatRef.collection('messages').add({
-    senderId: currentUser.uid,
-    text,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>{
-    return chatRef.set({
-      participants: [currentUser.uid, otherUid],
-      participantNames: {
-        [currentUser.uid]: currentUser.name,
-        [otherUid]: currentChatUser.name
-      },
-      lastMessage: text,
-      lastSenderId: currentUser.uid,
-      lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }, {merge:true});
+  // DÔLEŽITÉ: najprv MUSÍME vytvoriť/aktualizovať samotný chat dokument
+  // (s poľom participants), a AŽ POTOM pridať správu do podkolekcie
+  // messages. Bezpečnostné pravidlá totiž pri vytváraní správy overujú
+  // účastníkov cez get() na RODIČOVSKOM chat dokumente — ak by tento
+  // dokument ešte neexistoval (presne to nastane pri úplne PRVEJ správe
+  // medzi dvomi ľuďmi, ktorí si dovtedy iba telefonovali/videohovorili,
+  // čo používa úplne inú kolekciu "calls"), Firestore by zápis správy
+  // zamietol s "Missing or insufficient permissions" - presne to sa
+  // dialo pri prvej správe novému kontaktu.
+  chatRef.set({
+    participants: [currentUser.uid, otherUid],
+    participantNames: {
+      [currentUser.uid]: currentUser.name,
+      [otherUid]: currentChatUser.name
+    },
+    lastMessage: text,
+    lastSenderId: currentUser.uid,
+    lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }, {merge:true}).then(()=>{
+    return chatRef.collection('messages').add({
+      senderId: currentUser.uid,
+      text,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
   }).then(()=>{
     return chatRef.update({ ['unread.' + otherUid]: firebase.firestore.FieldValue.increment(1) });
   }).catch(e=>{
@@ -3096,13 +3105,9 @@ async function sendVoiceMessage(blob, durationSeconds){
     const url = await uploadAudioBlobToCloudinary(blob);
     tempBubble.remove(); // finálnu bublinu vykreslí live listener zo servera
 
-    await chatRef.collection('messages').add({
-      senderId: currentUser.uid,
-      type: 'voice',
-      audioUrl: url,
-      duration: durationSeconds,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    // Rovnaká oprava ako pri textových správach: najprv MUSÍ existovať
+    // samotný chat dokument s poľom participants, až potom môže appka
+    // pridať správu do podkolekcie messages (viď komentár v sendChatMessage).
     await chatRef.set({
       participants: [currentUser.uid, otherUid],
       participantNames: {
@@ -3113,6 +3118,13 @@ async function sendVoiceMessage(blob, durationSeconds){
       lastSenderId: currentUser.uid,
       lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
     }, {merge:true});
+    await chatRef.collection('messages').add({
+      senderId: currentUser.uid,
+      type: 'voice',
+      audioUrl: url,
+      duration: durationSeconds,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
     await chatRef.update({ ['unread.' + otherUid]: firebase.firestore.FieldValue.increment(1) });
   }catch(e){
     console.error('Chyba pri odosielaní hlasovej správy:', e);
