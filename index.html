@@ -472,6 +472,15 @@
     white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   }
 
+  .post-youtube-embed{
+    position:relative;width:100%;padding-top:56.25%;border-radius:12px;overflow:hidden;
+    background:#000;margin-bottom:2px;
+  }
+  .post-youtube-embed iframe{
+    position:absolute;inset:0;width:100%;height:100%;border:0;display:block;
+  }
+  .post-youtube-embed .remove-x{top:8px;right:8px;z-index:2;}
+
   .post-file-preview{
     display:none;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;
     padding:11px 12px;margin-top:10px;position:relative;background:var(--bg);
@@ -4064,7 +4073,11 @@ function buildPostCard(p, opts={}){
         <div class="file-download-arrow">⬇</div>
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostFile(${p.id})">✕</div>` : ''}
       </a>` : ''}
-      ${p.link ? (p.linkImage ? `
+      ${p.link ? (getYouTubeId(p.link) ? `
+      <div class="post-youtube-embed">
+        <iframe src="https://www.youtube.com/embed/${getYouTubeId(p.link)}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostLink(${p.id})">✕</div>` : ''}
+      </div>` : (p.linkImage ? `
       <a class="link-card link-card-media" href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer">
         <div class="link-card-img"><img src="${escapeHtml(p.linkImage)}" loading="lazy" onerror="handleLinkImgError(this)"></div>
         <div class="link-card-media-info">
@@ -4081,7 +4094,7 @@ function buildPostCard(p, opts={}){
         </div>
         <div class="link-arrow">↗</div>
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostLink(${p.id})">✕</div>` : ''}
-      </a>`) : ''}
+      </a>`)) : ''}
       <div class="post-actions">
         <button class="${getLikedBy(p).includes(currentUser.uid)?'liked':''}" onclick="toggleLike(${p.id})">👍 Páči sa (${p.likes})</button>
         ${showComments
