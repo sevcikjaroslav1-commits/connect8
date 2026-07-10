@@ -3845,16 +3845,22 @@ function switchMode(mode){
   if(mode === 'video'){
     updateTopbarHeightVar(); // prepočítať reálnu výšku topbaru (mobil = viac riadkov)
     setupVideoObserver(); // sekcia je teraz viditeľná, pripoj sledovanie zhliadnutí
-  } else if(videoObserver){
-    videoObserver.disconnect(); // sekcia Videá nie je viditeľná, nesleduj zhliadnutia na pozadí
-    videoObserver = null;
+  } else {
+    if(videoObserver){
+      videoObserver.disconnect(); // sekcia Videá nie je viditeľná, nesleduj zhliadnutia na pozadí
+      videoObserver = null;
+    }
+    pauseAllVideoSectionMedia(); // opustili sme sekciu Videá - všetko čo tam hralo sa musí zastaviť
   }
 
   if(mode === 'feed'){
     setupFeedVideoObserver(); // sekcia Feed je teraz viditeľná, videá sa smú autoplay-ovať
-  } else if(feedVideoObserver){
-    feedVideoObserver.disconnect(); // Feed nie je viditeľný, žiadne video na pozadí nesmie hrať
-    feedVideoObserver = null;
+  } else {
+    if(feedVideoObserver){
+      feedVideoObserver.disconnect(); // Feed nie je viditeľný, žiadne video na pozadí nesmie hrať
+      feedVideoObserver = null;
+    }
+    pauseAllFeedMedia(); // opustili sme Feed - zastav akékoľvek video, čo tam ešte hralo
   }
 
   if(mode === 'news'){
@@ -4164,6 +4170,15 @@ function updateFeedActiveVideo(){
       pauseFeedMedia(el);
     }
   });
+}
+
+function pauseAllFeedMedia(){
+  // Zastaví úplne všetky videá/iframe vo Feede, nech je stav observera akýkoľvek.
+  document.querySelectorAll('#posts-list video').forEach(v=>{ if(!v.paused) v.pause(); });
+  document.querySelectorAll('#posts-list iframe').forEach(f=>{
+    try{ f.contentWindow.postMessage(JSON.stringify({event:'command', func:'pauseVideo', args:[]}), '*'); }catch(e){}
+  });
+  feedMediaVisibility = new Map();
 }
 
 function setupFeedVideoObserver(){
@@ -5259,6 +5274,14 @@ function pauseMedia(id){
   } else if(mediaEl.tagName === 'IFRAME'){
     mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'pauseVideo', args:[]}), '*');
   }
+}
+
+function pauseAllVideoSectionMedia(){
+  // Zastaví úplne všetky videá/iframe v sekcii Videá, nech je stav observera akýkoľvek.
+  document.querySelectorAll('#video-scroller video').forEach(v=>{ if(!v.paused) v.pause(); });
+  document.querySelectorAll('#video-scroller iframe').forEach(f=>{
+    try{ f.contentWindow.postMessage(JSON.stringify({event:'command', func:'pauseVideo', args:[]}), '*'); }catch(e){}
+  });
 }
 
 function setupVideoObserver(){
