@@ -1661,19 +1661,77 @@ const productDoc = (id) => db.collection('products').doc(String(id));
 const videoDoc   = (id) => db.collection('videos').doc(String(id));
 
 function saveDoc(ref, data, what){
-  if(storageMode !== "online"){ saveToLocalStorage(); return; }
-  ref.set(data).catch(e=>console.error(`Uloženie (${what}) zlyhalo:`, e));
+  if(storageMode !== "online"){ saveToLocalStorage(); return Promise.resolve(); }
+  return ref.set(data).catch(e=>{ console.error(`Uloženie (${what}) zlyhalo:`, e); throw e; });
 }
 function deleteDoc(ref, what){
-  if(storageMode !== "online"){ saveToLocalStorage(); return; }
-  ref.delete().catch(e=>console.error(`Zmazanie (${what}) zlyhalo:`, e));
+  if(storageMode !== "online"){ saveToLocalStorage(); return Promise.resolve(); }
+  return ref.delete().catch(e=>console.error(`Zmazanie (${what}) zlyhalo:`, e));
 }
-function savePost(p){ saveDoc(postDoc(p.id), p, 'príspevok'); }
+function savePost(p){ return saveDoc(postDoc(p.id), p, 'príspevok'); }
 function removePostDoc(id){ deleteDoc(postDoc(id), 'príspevok'); }
-function saveProduct(pr){ saveDoc(productDoc(pr.id), pr, 'produkt'); }
+function saveProduct(pr){ return saveDoc(productDoc(pr.id), pr, 'produkt'); }
 function removeProductDoc(id){ deleteDoc(productDoc(id), 'produkt'); }
-function saveVideo(v){ saveDoc(videoDoc(v.id), v, 'video'); }
+function saveVideo(v){ return saveDoc(videoDoc(v.id), v, 'video'); }
 function removeVideoDoc(id){ deleteDoc(videoDoc(id), 'video'); }
+
+/* =================================================================
+   RATE LIMITING A ZÁKLADNÝ TEXTOVÝ FILTER
+   Toto je len KLIENTSKA (UX) vrstva — okamžitá spätná väzba pre
+   používateľa. Skutočná ochrana (ktorá sa nedá obísť úpravou kódu v
+   prehliadači) je v Firestore Security Rules — pozri rules súbor.
+================================================================== */
+// Zoznam je len ukážkový — priebežne si ho dopĺňaj podľa toho, čo sa
+// reálne objaví. Rovnaký zoznam (v malých písmenách) treba mať aj
+// v Security Rules, aby klient aj server filtrovali rovnako.
+const BANNED_WORDS = ['kurva','kokot','zmrd','piča','jebem','buzerant','posran'];
+
+function containsBannedContent(text){
+  if(!text) return false;
+  const low = text.toLowerCase();
+  return BANNED_WORDS.some(w=>low.includes(w));
+}
+
+// Vráti null ak je obsah v poriadku, inak text chyby na zobrazenie používateľovi.
+function moderationError(text){
+  if(containsBannedContent(text)) return 'Text obsahuje nevhodné slová. Uprav ho, prosím.';
+  return null;
+}
+
+function rateLimitLabel(field){
+  return field === 'lastPostAt' ? 'príspevok'
+    : field === 'lastCommentAt' ? 'komentár'
+    : field === 'lastProductAt' ? 'inzerát'
+    : field === 'lastVideoAt' ? 'video'
+    : 'akciu';
+}
+
+// Zapíše do vlastného profilu časovú značku poslednej akcie daného typu.
+// Toto Firestore rules použijú na server-side kontrolu rate limitu — teda
+// aj keby niekto tento zápis obišiel/zmenil, samotné rules mu backdatovanie
+// nedovolia (viď isValidBump v rules).
+function bumpRateLimit(field){
+  if(storageMode !== "online" || !FIREBASE_CONFIGURED || !db || !currentUser || !currentUser.uid){
+    return Promise.resolve();
+  }
+  return db.collection('profiles').doc(currentUser.uid)
+    .set({[field]: Date.now()}, {merge:true})
+    .catch(e=>console.error('Rate limit zápis zlyhal:', e));
+}
+
+// Spoločný handler pre "vytvor a ulož" akcie — ak Firestore zápis
+// zamietne (rate limit alebo zakázaný obsah prešiel klientským filtrom),
+// vráti späť lokálnu zmenu a upozorní používateľa namiesto tichého zlyhania.
+function handleCreateRejection(err, rollbackFn, actionLabel, renderFn){
+  console.error(`Vytvorenie (${actionLabel}) zamietnuté:`, err);
+  if(rollbackFn) rollbackFn();
+  if(err && err.code === 'permission-denied'){
+    alert(`Tento(-to) ${actionLabel} sa nepodarilo uverejniť — buď si publikoval(a) príliš rýchlo za sebou, alebo obsah nevyhovel pravidlám. Počkaj chvíľu a skús to znova.`);
+  } else {
+    alert(`Nepodarilo sa uverejniť (${actionLabel}). Skontroluj internetové pripojenie a skús to znova.`);
+  }
+  if(renderFn) renderFn();
+}
 
 function docsToArray(snap){
   const arr = [];
@@ -4335,6 +4393,8 @@ function addPost(){
   let text = document.getElementById('post-text').value.trim();
   const linkVal = normalizeUrl(document.getElementById('post-link-input').value);
   if(!text && !pendingPostImages.length && !linkVal && !pendingPostVideo && !pendingPostFile) return;
+  const modErr = moderationError(text);
+  if(modErr){ alert(modErr); return; }
   const hasMatchingPreview = pendingPostLink && pendingPostLink.url === linkVal;
   if(linkVal && hasMatchingPreview){
     // Ak sme z textu automaticky rozpoznali odkaz (zobrazuje sa nižšie ako
@@ -4360,8 +4420,14 @@ function addPost(){
   removePostVideo();
   removePostFile();
   removePostLink();
-  savePost(newPost);
   renderPosts();
+  savePost(newPost)
+    .then(()=>bumpRateLimit('lastPostAt'))
+    .catch(err=>{
+      posts = posts.filter(p=>p.id!==newPost.id);
+      if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid] = ownPostsCache[currentUser.uid].filter(p=>p.id!==newPost.id);
+      handleCreateRejection(err, null, 'príspevok', renderPosts);
+    });
 }
 
 function refreshPostViews(){
@@ -4447,12 +4513,22 @@ function addComment(id){
   const input = document.getElementById('cinput-'+id);
   const text = input.value.trim();
   if(!text) return;
+  const modErr = moderationError(text);
+  if(modErr){ alert(modErr); return; }
   const p = findPostById(id);
-  p.comments.push({name:currentUser.name, text});
+  const newComment = {name:currentUser.name, text};
+  p.comments.push(newComment);
   p.open = true;
-  savePost(p);
-  if(p.authorId) createNotification(p.authorId, 'comment_post', {postId: p.id});
+  input.value = '';
   renderPosts();
+  savePost(p)
+    .then(()=>bumpRateLimit('lastCommentAt'))
+    .then(()=>{ if(p.authorId) createNotification(p.authorId, 'comment_post', {postId: p.id}); })
+    .catch(err=>{
+      const idx = p.comments.indexOf(newComment);
+      if(idx>=0) p.comments.splice(idx,1);
+      handleCreateRejection(err, null, 'komentár', renderPosts);
+    });
 }
 
 /* ---------------- MARKETPLACE ---------------- */
@@ -4744,6 +4820,8 @@ function addProduct(){
   const category = document.getElementById('prod-category').value;
   const desc = document.getElementById('prod-desc').value.trim();
   if(!title || !price) return;
+  const modErr = moderationError(title) || moderationError(desc);
+  if(modErr){ alert(modErr); return; }
   const cat = MARKET_CATEGORIES.find(c=>c.name===category);
 
   if(editingProductId){
@@ -4782,8 +4860,13 @@ function addProduct(){
   document.getElementById('prod-desc').value='';
   removeProdImage();
   toggleSellForm();
-  saveProduct(newProduct);
   renderProducts();
+  saveProduct(newProduct)
+    .then(()=>bumpRateLimit('lastProductAt'))
+    .catch(err=>{
+      products = products.filter(pr=>pr.id!==newProduct.id);
+      handleCreateRejection(err, null, 'inzerát', renderProducts);
+    });
 }
 
 function openEditProduct(id){
@@ -5079,16 +5162,25 @@ function submitVideoComment(){
   const input = document.getElementById('video-comment-input');
   const text = input.value.trim();
   if(!text || !currentCommentsVideoId) return;
+  const modErr = moderationError(text);
+  if(modErr){ alert(modErr); return; }
   const v = videos.find(v=>v.id===currentCommentsVideoId);
   if(!v) return;
   if(!v.comments) v.comments = [];
-  v.comments.push({name: currentUser.name, text});
+  const newComment = {name: currentUser.name, text};
+  v.comments.push(newComment);
   input.value = '';
-  saveVideo(v);
-  if(v.authorId) createNotification(v.authorId, 'comment_video', {videoId: v.id});
   renderVideoComments();
   const countEl = document.getElementById('chat-count-'+v.id);
   if(countEl) countEl.textContent = v.comments.length;
+  saveVideo(v)
+    .then(()=>bumpRateLimit('lastCommentAt'))
+    .then(()=>{ if(v.authorId) createNotification(v.authorId, 'comment_video', {videoId: v.id}); })
+    .catch(err=>{
+      const idx = v.comments.indexOf(newComment);
+      if(idx>=0) v.comments.splice(idx,1);
+      handleCreateRejection(err, null, 'komentár', ()=>{ renderVideoComments(); if(countEl) countEl.textContent = v.comments.length; });
+    });
 }
 
 function openVideoModal(){
@@ -5175,12 +5267,19 @@ function addVideo(){
   const manualUrl = document.getElementById('video-url').value.trim();
   const url = pendingVideoUpload || manualUrl;
   if(!url){ alert('Nahraj video zo zariadenia, alebo vlož odkaz na video (YouTube/mp4).'); return; }
+  const modErr = moderationError(caption);
+  if(modErr){ alert(modErr); return; }
   const g = randomGradients[Math.floor(Math.random()*randomGradients.length)];
   const newVideo = {id:Date.now(), name:currentUser.name, authorId:currentUser.uid, createdAt: Date.now(), caption: caption || '', url, likes:0, liked:false, views:0, comments:[], c1:g[0], c2:g[1]};
   videos.unshift(newVideo);
   closeVideoModal();
-  saveVideo(newVideo);
   renderVideos();
+  saveVideo(newVideo)
+    .then(()=>bumpRateLimit('lastVideoAt'))
+    .catch(err=>{
+      videos = videos.filter(v=>v.id!==newVideo.id);
+      handleCreateRejection(err, null, 'video', renderVideos);
+    });
 }
 
 /* ================================================================
