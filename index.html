@@ -2537,7 +2537,7 @@ function renderProfile(){
   linksList.innerHTML = links.length
     ? links.slice().reverse().map(p=> p.linkImage ? `
         <a class="link-card link-card-media" href="${p.link}" target="_blank" rel="noopener noreferrer">
-          <div class="link-card-img"><img src="${p.linkImage}" loading="lazy" onerror="handleLinkImgError(this)"></div>
+          <div class="link-card-img"><img src="${p.linkImage}" data-link-url="${p.link}" loading="lazy" onerror="handleLinkImgError(this)"></div>
           <div class="link-card-media-info">
             <div class="link-domain">${getDomain(p.link)}</div>
             <div class="link-url">${p.linkTitle || p.link}</div>
@@ -4092,7 +4092,7 @@ function buildPostCard(p, opts={}){
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostLink(${p.id})">✕</div>` : ''}
       </div>` : (p.linkImage ? `
       <a class="link-card link-card-media" href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer">
-        <div class="link-card-img"><img src="${escapeHtml(p.linkImage)}" loading="lazy" onerror="handleLinkImgError(this)"></div>
+        <div class="link-card-img"><img src="${escapeHtml(p.linkImage)}" data-link-url="${escapeHtml(p.link)}" loading="lazy" onerror="handleLinkImgError(this)"></div>
         <div class="link-card-media-info">
           <div class="link-domain">${escapeHtml(getDomain(p.link))}</div>
           <div class="link-url">${escapeHtml(p.linkTitle || p.link)}</div>
@@ -4256,11 +4256,14 @@ function setPostLink(rawUrl){
   if(!url) return;
   if(pendingPostLink && pendingPostLink.url === url) return; // rovnaký odkaz už máme, netreba nič ďalšie robiť
 
-  // Obrázok berieme priamo cez Microlink "embed" endpoint ako <img src="...">.
+  // Obrázok najprv nastavíme cez Microlink "embed" endpoint ako <img src="...">.
   // To je dôležité najmä vtedy, keď appku otváraš ako lokálny súbor cez
   // file:// — v takom prípade prehliadač bežné fetch()/JSON požiadavky na
   // cudzie API kvôli CORS blokuje, no načítanie obrázka cez <img> tag týmto
-  // obmedzením nepodlieha, takže funguje aj z lokálneho súboru.
+  // obmedzením nepodlieha, takže funguje aj z lokálneho súboru. Hneď potom
+  // sa v fetchLinkMeta() pokúsime nahradiť ho presnejším obrázkom priamo
+  // z metadát stránky (spoľahlivejšie pri stránkach, ktoré embed endpoint
+  // blokuje).
   pendingPostLink = {
     url,
     title: '',
@@ -4269,30 +4272,39 @@ function setPostLink(rawUrl){
   document.getElementById('post-link-input').value = url;
   document.getElementById('post-link-row').classList.add('show');
   renderLinkPreview();
-  fetchLinkTitle(url);
+  fetchLinkMeta(url);
 }
 
-function fetchLinkTitle(url){
-  // Toto je len "bonus" — skúsime doplniť titulok stránky. Ak appku
-  // otváraš cez file://, tento fetch môže prehliadač zablokovať (CORS) —
-  // v tom prípade sa jednoducho zobrazí len doména, samotný obrázok
-  // hore to vôbec neovplyvní, keďže sa načítava nezávisle cez <img>.
+function fetchLinkMeta(url){
+  // Doplní titulok a - ak sa dá - presnejší obrázok stránky (og:image a pod.)
+  // priamo z metadát. Ak appku otváraš cez file://, tento fetch môže
+  // prehliadač zablokovať (CORS) — v tom prípade ostane aspoň obrázok
+  // a doména z embed <img> volania vyššie.
   fetch('https://api.microlink.io/?url=' + encodeURIComponent(url) + '&palette=false')
     .then(r=>r.json())
     .then(data=>{
       if(!pendingPostLink || pendingPostLink.url !== url) return;
-      if(data && data.status === 'success' && data.data && data.data.title){
-        pendingPostLink.title = data.data.title;
+      if(data && data.status === 'success' && data.data){
+        if(data.data.title) pendingPostLink.title = data.data.title;
+        if(data.data.image && data.data.image.url) pendingPostLink.image = data.data.image.url;
         renderLinkPreview();
       }
     })
-    .catch(()=>{ /* nevadí — titulok je len doplnkový údaj */ });
+    .catch(()=>{ /* nevadí — titulok a presný obrázok sú len doplnkové */ });
 }
 
 function handleLinkImgError(imgEl){
-  // Ak sa obrázok k odkazu nepodarí načítať (stránka žiadny nemá), jednoducho
-  // skryjeme miesto pre obrázok — zvyšok karty (doména/titulok) ostane vidno.
+  // Ak sa obrázok k odkazu nepodarí načítať (stránka blokuje embed alebo
+  // žiadny obrázok nemá), skúsime ešte raz - cez screenshot samotnej
+  // stránky, ktorý funguje aj tam, kde bežný og:image zlyhá. Až keď
+  // zlyhá aj to, miesto pre obrázok skryjeme a zostane len doména/titulok.
   const wrap = imgEl.closest('.link-card-img, .link-preview-img');
+  const linkUrl = imgEl.dataset.linkUrl;
+  if(wrap && linkUrl && !imgEl.dataset.fallbackTried){
+    imgEl.dataset.fallbackTried = '1';
+    imgEl.src = 'https://api.microlink.io/?url=' + encodeURIComponent(linkUrl) + '&screenshot=true&meta=false&embed=screenshot.url';
+    return;
+  }
   if(wrap) wrap.style.display = 'none';
 }
 
@@ -4312,7 +4324,8 @@ function renderLinkPreview(){
     imgWrap.className = 'link-preview-img';
     const img = document.createElement('img');
     img.src = pendingPostLink.image;
-    img.onerror = ()=>{ imgWrap.style.display = 'none'; };
+    img.dataset.linkUrl = pendingPostLink.url;
+    img.onerror = ()=>{ handleLinkImgError(img); };
     imgWrap.appendChild(img);
     box.appendChild(imgWrap);
   }
@@ -4615,6 +4628,17 @@ function removePostFile(){
 
 function addPost(){
   let text = document.getElementById('post-text').value.trim();
+  // Ak je v texte odkaz, no automatické rozpoznanie (500ms debounce) ho ešte
+  // nestihlo spracovať - napr. keď užívateľ klikne Uverejniť hneď po vložení
+  // odkazu - dotiahneme náhľad (vrátane obrázka) synchrónne ešte tu, nech
+  // karta v príspevku nechýba obrázok.
+  const autoLinkMatch = text.match(URL_DETECT_REGEX);
+  if(autoLinkMatch){
+    const normalizedAuto = normalizeUrl(autoLinkMatch[0]);
+    if(normalizedAuto && (!pendingPostLink || pendingPostLink.url !== normalizedAuto)){
+      setPostLink(autoLinkMatch[0]);
+    }
+  }
   const linkVal = normalizeUrl(document.getElementById('post-link-input').value);
   if(!text && !pendingPostImages.length && !linkVal && !pendingPostVideo && !pendingPostFile) return;
   const modErr = moderationError(text);
