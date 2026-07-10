@@ -4274,7 +4274,8 @@ function uploadImageToCloudinary(fileOrBlob){
 // priamo v UI, obmedzenie robíme tu v appke - jednoducho a spoľahlivo,
 // nezávisle od Cloudinary plánu.
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;   // 10 MB pre fotky
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024;   // 50 MB pre videá
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024;  // 100 MB pre videá (príspevok aj sekcia Videá)
+const MAX_FILE_SIZE  = 50 * 1024 * 1024;   // 50 MB pre obyčajný súbor pri príspevku (poistka)
 const MAX_VOICE_SIZE = 5  * 1024 * 1024;   // 5 MB pre hlasové správy (poistka, bežne sú oveľa menšie)
 
 function checkFileSizeOk(file, maxBytes, label){
@@ -4442,7 +4443,7 @@ function formatFileSize(bytes){
 async function handlePostFile(event){
   const file = event.target.files[0];
   if(!file) return;
-  if(!checkFileSizeOk(file, MAX_VIDEO_SIZE, 'Súbor')){ event.target.value = ''; return; }
+  if(!checkFileSizeOk(file, MAX_FILE_SIZE, 'Súbor')){ event.target.value = ''; return; }
 
   if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){
     alert('Nahrávanie súborov zatiaľ nie je nastavené.');
