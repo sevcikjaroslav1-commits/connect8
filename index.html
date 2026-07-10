@@ -1091,6 +1091,9 @@
       font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     }
     .mobile-quick-links button .avatar{width:15px;height:15px;font-size:8px;flex-shrink:0;}
+    .chat-input-row textarea{
+      padding-top:6px;padding-bottom:6px;line-height:1.25;font-size:12.5px;min-height:40px;
+    }
   }
 
   @media(max-width:360px){
@@ -2256,6 +2259,7 @@ function renderAllAvatars(){
 async function handleAvatarUpload(event){
   const file = event.target.files[0];
   if(!file) return;
+  if(!checkFileSizeOk(file, MAX_IMAGE_SIZE, 'Fotka')){ event.target.value = ''; return; }
   let url;
   try{
     url = await processImageFile(file, 320, 0.82);
@@ -3183,6 +3187,7 @@ async function handleChatImageSelect(event){
   const file = event.target.files && event.target.files[0];
   event.target.value = '';
   if(!file) return;
+  if(!checkFileSizeOk(file, MAX_IMAGE_SIZE, 'Fotka')) return;
   await sendImageMessage(file);
 }
 
@@ -3428,6 +3433,7 @@ function uploadAudioBlobToCloudinary(blob){
 
 async function sendVoiceMessage(blob, durationSeconds){
   if(!currentChatUser || !currentChatId || !db) return;
+  if(!checkFileSizeOk(blob, MAX_VOICE_SIZE, 'Hlasová správa')) return;
   if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){
     alert('Hlasové správy zatiaľ nie sú nastavené (chýba Cloudinary konfigurácia).');
     return;
@@ -4263,6 +4269,23 @@ function uploadImageToCloudinary(fileOrBlob){
   });
 }
 
+// Centrálna kontrola veľkosti súboru PRED odoslaním na Cloudinary.
+// Keďže na Cloudinary strane (preset jaro88) sa nedá nastaviť "Max file size"
+// priamo v UI, obmedzenie robíme tu v appke - jednoducho a spoľahlivo,
+// nezávisle od Cloudinary plánu.
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;   // 10 MB pre fotky
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024;   // 50 MB pre videá
+const MAX_VOICE_SIZE = 5  * 1024 * 1024;   // 5 MB pre hlasové správy (poistka, bežne sú oveľa menšie)
+
+function checkFileSizeOk(file, maxBytes, label){
+  if(file.size > maxBytes){
+    const maxMb = Math.round(maxBytes / (1024*1024));
+    alert(`${label} je príliš veľký súbor (max ${maxMb} MB). Vyber prosím menší súbor.`);
+    return false;
+  }
+  return true;
+}
+
 // Skomprimuje fotku a nahrá ju na Cloudinary; ak Cloudinary nie je nastavený,
 // vráti aspoň lokálny (base64) náhľad ako núdzové riešenie.
 async function processImageFile(file, maxDim, quality){
@@ -4278,6 +4301,7 @@ async function handlePostImage(event){
   const files = Array.from(event.target.files || []);
   if(!files.length) return;
   for(const file of files){
+    if(!checkFileSizeOk(file, MAX_IMAGE_SIZE, 'Fotka')) continue;
     try{
       const url = await processImageFile(file, 1280, 0.8);
       pendingPostImages.push(url);
@@ -4346,6 +4370,7 @@ function buildPostImgGrid(photos){
 async function handlePostVideo(event){
   const file = event.target.files[0];
   if(!file) return;
+  if(!checkFileSizeOk(file, MAX_VIDEO_SIZE, 'Video')){ event.target.value = ''; return; }
 
   if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){
     alert('Nahrávanie videí zatiaľ nie je nastavené.');
@@ -4417,6 +4442,7 @@ function formatFileSize(bytes){
 async function handlePostFile(event){
   const file = event.target.files[0];
   if(!file) return;
+  if(!checkFileSizeOk(file, MAX_VIDEO_SIZE, 'Súbor')){ event.target.value = ''; return; }
 
   if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){
     alert('Nahrávanie súborov zatiaľ nie je nastavené.');
@@ -4844,6 +4870,7 @@ async function handleProdImage(event){
       alert('Môžeš pridať maximálne 5 fotiek.');
       break;
     }
+    if(!checkFileSizeOk(file, MAX_IMAGE_SIZE, 'Fotka')) continue;
     try{
       const url = await processImageFile(file, 1280, 0.8);
       pendingProdImages.push(url);
@@ -5318,6 +5345,7 @@ function uploadVideoToCloudinary(file){
 async function handleVideoFile(event){
   const file = event.target.files[0];
   if(!file) return;
+  if(!checkFileSizeOk(file, MAX_VIDEO_SIZE, 'Video')){ event.target.value = ''; return; }
 
   if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){
     alert('Nahrávanie súborov zo zariadenia zatiaľ nie je nastavené.\n\nZatiaľ môžeš video pridať cez odkaz nižšie (YouTube alebo priamy .mp4 link).');
