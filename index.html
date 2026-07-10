@@ -472,6 +472,15 @@
     white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   }
 
+  .post-youtube-embed{
+    position:relative;width:100%;padding-top:56.25%;border-radius:12px;overflow:hidden;
+    background:#000;margin-bottom:2px;
+  }
+  .post-youtube-embed iframe{
+    position:absolute;inset:0;width:100%;height:100%;border:0;display:block;
+  }
+  .post-youtube-embed .remove-x{top:8px;right:8px;z-index:2;}
+
   .post-file-preview{
     display:none;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;
     padding:11px 12px;margin-top:10px;position:relative;background:var(--bg);
@@ -1632,6 +1641,19 @@ const CLOUDINARY = {
 };
 let pendingVideoUpload = null; // sem sa uloží URL po úspešnom uploade
 
+// Video sa nahráva a ukladá vždy v pôvodnej kvalite (nič sa nekomprimuje pri uploade).
+// Pri PREHRÁVANÍ ale vieme Cloudinary požiadať, aby video "za behu" poslalo v
+// inteligentne skomprimovanej podobe (q_auto = automatická kvalita, f_auto =
+// automaticky najlepší/najľahší formát pre daný prehliadač). Vizuálne to takmer
+// nepoznať, ale prenesené dáta (a teda aj Cloudinary kredity) klesnú pri každom
+// jednom prehratí - najmä pri 4K videách z telefónu, kde je rozdiel obrovský.
+function optimizeCloudinaryVideoUrl(url){
+  if(!url || typeof url !== 'string') return url;
+  if(!url.includes('res.cloudinary.com') || !url.includes('/video/upload/')) return url; // nie je to Cloudinary video
+  if(/\/upload\/[^/]*q_auto/.test(url)) return url; // transformácia už je nastavená, nepridávaj druhýkrát
+  return url.replace('/video/upload/', '/video/upload/q_auto,f_auto/');
+}
+
 const LOCAL_STORAGE_KEY = "connect_app_state_v1";
 
 function getStateSnapshot(){
@@ -2224,19 +2246,6 @@ function escapeHtml(str){
     .replace(/'/g, '&#39;');
 }
 
-// Vráti Cloudinary URL videa s pridanou automatickou kompresiou (q_auto,f_auto)
-// pri PREHRÁVANÍ — samotný originál na Cloudinary zostáva netknutý (nahrávanie
-// sa nemení), len sa pri zobrazení posiela odľahčená verzia namiesto plnej
-// 4K/originálnej veľkosti. Ak URL nie je z Cloudinary (napr. ručne vložený
-// odkaz na video), vráti ju bez zmeny.
-function cldOptimizedVideoUrl(url){
-  if(!url) return url;
-  const marker = '/video/upload/';
-  const idx = url.indexOf(marker);
-  if(idx === -1) return url;
-  return url.slice(0, idx + marker.length) + 'q_auto,f_auto/' + url.slice(idx + marker.length);
-}
-
 function applyAvatar(el, photoURL){
   if(!el) return;
   if(photoURL){
@@ -2531,7 +2540,7 @@ function renderProfile(){
   linksList.innerHTML = links.length
     ? links.slice().reverse().map(p=> p.linkImage ? `
         <a class="link-card link-card-media" href="${p.link}" target="_blank" rel="noopener noreferrer">
-          <div class="link-card-img"><img src="${p.linkImage}" loading="lazy" onerror="handleLinkImgError(this)"></div>
+          <div class="link-card-img"><img src="${p.linkImage}" data-link-url="${p.link}" loading="lazy" onerror="handleLinkImgError(this)"></div>
           <div class="link-card-media-info">
             <div class="link-domain">${getDomain(p.link)}</div>
             <div class="link-url">${p.linkTitle || p.link}</div>
@@ -3839,9 +3848,22 @@ function switchMode(mode){
   if(mode === 'video'){
     updateTopbarHeightVar(); // prepočítať reálnu výšku topbaru (mobil = viac riadkov)
     setupVideoObserver(); // sekcia je teraz viditeľná, pripoj sledovanie zhliadnutí
-  } else if(videoObserver){
-    videoObserver.disconnect(); // sekcia Videá nie je viditeľná, nesleduj zhliadnutia na pozadí
-    videoObserver = null;
+  } else {
+    if(videoObserver){
+      videoObserver.disconnect(); // sekcia Videá nie je viditeľná, nesleduj zhliadnutia na pozadí
+      videoObserver = null;
+    }
+    pauseAllVideoSectionMedia(); // opustili sme sekciu Videá - všetko čo tam hralo sa musí zastaviť
+  }
+
+  if(mode === 'feed'){
+    setupFeedVideoObserver(); // sekcia Feed je teraz viditeľná, videá sa smú autoplay-ovať
+  } else {
+    if(feedVideoObserver){
+      feedVideoObserver.disconnect(); // Feed nie je viditeľný, žiadne video na pozadí nesmie hrať
+      feedVideoObserver = null;
+    }
+    pauseAllFeedMedia(); // opustili sme Feed - zastav akékoľvek video, čo tam ešte hralo
   }
 
   if(mode === 'news'){
@@ -4053,10 +4075,10 @@ function buildPostCard(p, opts={}){
       </div>
       ${p.text ? `<div class="post-text">${escapeHtml(p.text)}</div>` : ''}
       ${p.video ? `<div class="post-video-wrap">
-        <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(cldOptimizedVideoUrl(p.video))}" controls playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
+        <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" controls playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
       </div>` : ''}
-      ${getPostPhotos(p).length ? buildPostImgGrid(getPostPhotos(p)) : (p.img ? `<div class="post-img" style="background:var(--accent-soft);">${p.img}</div>` : '')}
+      ${getPostPhotos(p).length ? buildPostImgGrid(getPostPhotos(p)) : (p.img && !p.link ? `<div class="post-img" style="background:var(--accent-soft);">${p.img}</div>` : '')}
       ${p.file ? `
       <a class="post-file-card" href="${escapeHtml(p.file.url)}" target="_blank" rel="noopener noreferrer" download="${escapeHtml(p.file.name)}">
         <div class="file-icon">📎</div>
@@ -4067,9 +4089,13 @@ function buildPostCard(p, opts={}){
         <div class="file-download-arrow">⬇</div>
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostFile(${p.id})">✕</div>` : ''}
       </a>` : ''}
-      ${p.link ? (p.linkImage ? `
+      ${p.link ? (getYouTubeId(p.link) ? `
+      <div class="post-youtube-embed">
+        <iframe id="feed-yt-${p.id}" src="https://www.youtube.com/embed/${getYouTubeId(p.link)}?autoplay=0&mute=0&playsinline=1&enablejsapi=1&controls=1" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostLink(${p.id})">✕</div>` : ''}
+      </div>` : (p.linkImage ? `
       <a class="link-card link-card-media" href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer">
-        <div class="link-card-img"><img src="${escapeHtml(p.linkImage)}" loading="lazy" onerror="handleLinkImgError(this)"></div>
+        <div class="link-card-img"><img src="${escapeHtml(p.linkImage)}" data-link-url="${escapeHtml(p.link)}" loading="lazy" onerror="handleLinkImgError(this)"></div>
         <div class="link-card-media-info">
           <div class="link-domain">${escapeHtml(getDomain(p.link))}</div>
           <div class="link-url">${escapeHtml(p.linkTitle || p.link)}</div>
@@ -4084,7 +4110,7 @@ function buildPostCard(p, opts={}){
         </div>
         <div class="link-arrow">↗</div>
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostLink(${p.id})">✕</div>` : ''}
-      </a>`) : ''}
+      </a>`)) : ''}
       <div class="post-actions">
         <button class="${getLikedBy(p).includes(currentUser.uid)?'liked':''}" onclick="toggleLike(${p.id})">👍 Páči sa (${p.likes})</button>
         ${showComments
@@ -4102,6 +4128,81 @@ function buildPostCard(p, opts={}){
     `;
 }
 
+let feedVideoObserver = null;
+let feedMediaVisibility = new Map(); // element (.post-video-wrap / .post-youtube-embed) -> aktuálny pomer viditeľnosti
+
+// Rovnaký princíp ako v sekcii Videá, ALE navyše: nech hrá vždy len JEDNO
+// video naraz - presne to, ktoré je práve najviac v strede/najviac viditeľné
+// počas scrollovania. Všetky ostatné sa pauznú, aj keby boli čiastočne vidieť.
+function playFeedMedia(wrapEl){
+  const video = wrapEl.querySelector('video');
+  if(video){
+    if(!video.paused) return;
+    video.play().catch(()=>{
+      // Prehliadač zablokoval prehrávanie so zvukom bez priamej interakcie -
+      // spusti aspoň stlmené, nech video nezostane zaseknuté.
+      video.muted = true;
+      video.play().catch(()=>{});
+    });
+    return;
+  }
+  const iframe = wrapEl.querySelector('iframe');
+  if(iframe && iframe.contentWindow){
+    try{ iframe.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*'); }catch(e){}
+  }
+}
+
+function pauseFeedMedia(wrapEl){
+  const video = wrapEl.querySelector('video');
+  if(video){ if(!video.paused) video.pause(); return; }
+  const iframe = wrapEl.querySelector('iframe');
+  if(iframe && iframe.contentWindow){
+    try{ iframe.contentWindow.postMessage(JSON.stringify({event:'command', func:'pauseVideo', args:[]}), '*'); }catch(e){}
+  }
+}
+
+function updateFeedActiveVideo(){
+  let bestEl = null, bestRatio = 0;
+  feedMediaVisibility.forEach((ratio, el)=>{
+    if(ratio > bestRatio){ bestRatio = ratio; bestEl = el; }
+  });
+  feedMediaVisibility.forEach((ratio, el)=>{
+    if(el === bestEl && bestRatio >= 0.6){
+      playFeedMedia(el);
+    } else {
+      pauseFeedMedia(el);
+    }
+  });
+}
+
+function pauseAllFeedMedia(){
+  // Zastaví úplne všetky videá/iframe vo Feede, nech je stav observera akýkoľvek.
+  document.querySelectorAll('#posts-list video').forEach(v=>{ if(!v.paused) v.pause(); });
+  document.querySelectorAll('#posts-list iframe').forEach(f=>{
+    try{ f.contentWindow.postMessage(JSON.stringify({event:'command', func:'pauseVideo', args:[]}), '*'); }catch(e){}
+  });
+  feedMediaVisibility = new Map();
+}
+
+function setupFeedVideoObserver(){
+  if(feedVideoObserver) feedVideoObserver.disconnect();
+  feedMediaVisibility = new Map();
+  const feedView = document.getElementById('view-feed');
+  const list = document.getElementById('posts-list');
+  if(!list || !feedView || !feedView.classList.contains('active')) return; // Feed nie je viditeľný, netreba sledovať
+  const steps = Array.from({length:21}, (_,i)=> i/20); // jemnejšie kroky (0, 0.05, 0.10 ... 1) - presnejšie zistí, ktoré video je "najstredovejšie"
+  feedVideoObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      feedMediaVisibility.set(entry.target, entry.intersectionRatio);
+    });
+    updateFeedActiveVideo();
+  }, {threshold: steps}); // root = viewport (Feed sa scrolluje cez celú stránku)
+  list.querySelectorAll('.post-video-wrap, .post-youtube-embed').forEach(el=>{
+    feedMediaVisibility.set(el, 0);
+    feedVideoObserver.observe(el);
+  });
+}
+
 function renderPosts(){
   const list = document.getElementById('posts-list');
   list.innerHTML = '';
@@ -4111,6 +4212,7 @@ function renderPosts(){
     div.innerHTML = buildPostCard(p);
     list.appendChild(div);
   });
+  setupFeedVideoObserver();
 }
 
 let pendingPostImages = []; // pole dataURL reťazcov (viacero fotiek k jednému príspevku)
@@ -4157,11 +4259,14 @@ function setPostLink(rawUrl){
   if(!url) return;
   if(pendingPostLink && pendingPostLink.url === url) return; // rovnaký odkaz už máme, netreba nič ďalšie robiť
 
-  // Obrázok berieme priamo cez Microlink "embed" endpoint ako <img src="...">.
+  // Obrázok najprv nastavíme cez Microlink "embed" endpoint ako <img src="...">.
   // To je dôležité najmä vtedy, keď appku otváraš ako lokálny súbor cez
   // file:// — v takom prípade prehliadač bežné fetch()/JSON požiadavky na
   // cudzie API kvôli CORS blokuje, no načítanie obrázka cez <img> tag týmto
-  // obmedzením nepodlieha, takže funguje aj z lokálneho súboru.
+  // obmedzením nepodlieha, takže funguje aj z lokálneho súboru. Hneď potom
+  // sa v fetchLinkMeta() pokúsime nahradiť ho presnejším obrázkom priamo
+  // z metadát stránky (spoľahlivejšie pri stránkach, ktoré embed endpoint
+  // blokuje).
   pendingPostLink = {
     url,
     title: '',
@@ -4170,30 +4275,39 @@ function setPostLink(rawUrl){
   document.getElementById('post-link-input').value = url;
   document.getElementById('post-link-row').classList.add('show');
   renderLinkPreview();
-  fetchLinkTitle(url);
+  fetchLinkMeta(url);
 }
 
-function fetchLinkTitle(url){
-  // Toto je len "bonus" — skúsime doplniť titulok stránky. Ak appku
-  // otváraš cez file://, tento fetch môže prehliadač zablokovať (CORS) —
-  // v tom prípade sa jednoducho zobrazí len doména, samotný obrázok
-  // hore to vôbec neovplyvní, keďže sa načítava nezávisle cez <img>.
+function fetchLinkMeta(url){
+  // Doplní titulok a - ak sa dá - presnejší obrázok stránky (og:image a pod.)
+  // priamo z metadát. Ak appku otváraš cez file://, tento fetch môže
+  // prehliadač zablokovať (CORS) — v tom prípade ostane aspoň obrázok
+  // a doména z embed <img> volania vyššie.
   fetch('https://api.microlink.io/?url=' + encodeURIComponent(url) + '&palette=false')
     .then(r=>r.json())
     .then(data=>{
       if(!pendingPostLink || pendingPostLink.url !== url) return;
-      if(data && data.status === 'success' && data.data && data.data.title){
-        pendingPostLink.title = data.data.title;
+      if(data && data.status === 'success' && data.data){
+        if(data.data.title) pendingPostLink.title = data.data.title;
+        if(data.data.image && data.data.image.url) pendingPostLink.image = data.data.image.url;
         renderLinkPreview();
       }
     })
-    .catch(()=>{ /* nevadí — titulok je len doplnkový údaj */ });
+    .catch(()=>{ /* nevadí — titulok a presný obrázok sú len doplnkové */ });
 }
 
 function handleLinkImgError(imgEl){
-  // Ak sa obrázok k odkazu nepodarí načítať (stránka žiadny nemá), jednoducho
-  // skryjeme miesto pre obrázok — zvyšok karty (doména/titulok) ostane vidno.
+  // Ak sa obrázok k odkazu nepodarí načítať (stránka blokuje embed alebo
+  // žiadny obrázok nemá), skúsime ešte raz - cez screenshot samotnej
+  // stránky, ktorý funguje aj tam, kde bežný og:image zlyhá. Až keď
+  // zlyhá aj to, miesto pre obrázok skryjeme a zostane len doména/titulok.
   const wrap = imgEl.closest('.link-card-img, .link-preview-img');
+  const linkUrl = imgEl.dataset.linkUrl;
+  if(wrap && linkUrl && !imgEl.dataset.fallbackTried){
+    imgEl.dataset.fallbackTried = '1';
+    imgEl.src = 'https://api.microlink.io/?url=' + encodeURIComponent(linkUrl) + '&screenshot=true&meta=false&embed=screenshot.url';
+    return;
+  }
   if(wrap) wrap.style.display = 'none';
 }
 
@@ -4213,7 +4327,8 @@ function renderLinkPreview(){
     imgWrap.className = 'link-preview-img';
     const img = document.createElement('img');
     img.src = pendingPostLink.image;
-    img.onerror = ()=>{ imgWrap.style.display = 'none'; };
+    img.dataset.linkUrl = pendingPostLink.url;
+    img.onerror = ()=>{ handleLinkImgError(img); };
     imgWrap.appendChild(img);
     box.appendChild(imgWrap);
   }
@@ -4290,8 +4405,7 @@ function uploadImageToCloudinary(fileOrBlob){
 // priamo v UI, obmedzenie robíme tu v appke - jednoducho a spoľahlivo,
 // nezávisle od Cloudinary plánu.
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;   // 10 MB pre fotky
-const MAX_VIDEO_SIZE = 100 * 1024 * 1024;  // 100 MB pre videá (príspevok aj sekcia Videá)
-const MAX_FILE_SIZE  = 50 * 1024 * 1024;   // 50 MB pre obyčajný súbor pri príspevku (poistka)
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024;   // 50 MB pre videá
 const MAX_VOICE_SIZE = 5  * 1024 * 1024;   // 5 MB pre hlasové správy (poistka, bežne sú oveľa menšie)
 
 function checkFileSizeOk(file, maxBytes, label){
@@ -4459,7 +4573,7 @@ function formatFileSize(bytes){
 async function handlePostFile(event){
   const file = event.target.files[0];
   if(!file) return;
-  if(!checkFileSizeOk(file, MAX_FILE_SIZE, 'Súbor')){ event.target.value = ''; return; }
+  if(!checkFileSizeOk(file, MAX_VIDEO_SIZE, 'Súbor')){ event.target.value = ''; return; }
 
   if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){
     alert('Nahrávanie súborov zatiaľ nie je nastavené.');
@@ -4517,6 +4631,17 @@ function removePostFile(){
 
 function addPost(){
   let text = document.getElementById('post-text').value.trim();
+  // Ak je v texte odkaz, no automatické rozpoznanie (500ms debounce) ho ešte
+  // nestihlo spracovať - napr. keď užívateľ klikne Uverejniť hneď po vložení
+  // odkazu - dotiahneme náhľad (vrátane obrázka) synchrónne ešte tu, nech
+  // karta v príspevku nechýba obrázok.
+  const autoLinkMatch = text.match(URL_DETECT_REGEX);
+  if(autoLinkMatch){
+    const normalizedAuto = normalizeUrl(autoLinkMatch[0]);
+    if(normalizedAuto && (!pendingPostLink || pendingPostLink.url !== normalizedAuto)){
+      setPostLink(autoLinkMatch[0]);
+    }
+  }
   const linkVal = normalizeUrl(document.getElementById('post-link-input').value);
   if(!text && !pendingPostImages.length && !linkVal && !pendingPostVideo && !pendingPostFile) return;
   const modErr = moderationError(text);
@@ -4537,7 +4662,7 @@ function addPost(){
     linkTitle: hasMatchingPreview ? pendingPostLink.title : '',
     linkImage: hasMatchingPreview ? pendingPostLink.image : null,
     file: pendingPostFile ? {...pendingPostFile} : null,
-    img: (pendingPostImages.length || pendingPostVideo || pendingPostFile) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
+    img: (pendingPostImages.length || pendingPostVideo || pendingPostFile || linkVal) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
   };
   posts.push(newPost);
   if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid].push(newPost);
@@ -5048,20 +5173,22 @@ function renderVideos(){
     const isMuted = videoMuteState[v.id] === true; // default: NEstlmené (so zvukom)
 
     let media = '';
-    const ytId = v.url ? getYouTubeId(v.url) : null;
-    if(ytId){
-      div.dataset.kind = 'youtube';
-      div.dataset.ytId = ytId;
-      // Dôležité pre výkon: NEvytvárame tu hneď <iframe> pre každé YouTube
-      // video (pri desiatkach videí naraz by prehliadač musel spustiť
-      // desiatky plných YouTube prehrávačov súčasne = veľmi pomalé/ťažké).
-      // Namiesto toho zobrazíme len ľahkú náhľadovú miniatúru; skutočný
-      // prehrávač sa vytvorí (a zase odstráni) až podľa toho, či je video
-      // práve v zábere — pozri mountAndPlay()/unmountIfYouTube() nižšie.
-      media = `<img class="video-poster" id="poster-${v.id}" src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" loading="lazy" alt="">`;
-    } else if(v.url){
-      div.dataset.kind = 'video';
-      media = `<video id="media-${v.id}" src="${cldOptimizedVideoUrl(v.url)}" ${isMuted?'muted':''} loop playsinline controls preload="none"></video>`;
+    if(v.url){
+      const ytId = getYouTubeId(v.url);
+      if(ytId){
+        div.dataset.kind = 'youtube';
+        div.dataset.ytId = ytId;
+        // Dôležité pre výkon: NEvytvárame tu hneď <iframe> pre každé YouTube
+        // video (pri desiatkach videí naraz by prehliadač musel spustiť
+        // desiatky plných YouTube prehrávačov súčasne = veľmi pomalé/ťažké).
+        // Namiesto toho zobrazíme len ľahkú náhľadovú miniatúru; skutočný
+        // prehrávač sa vytvorí (a zase odstráni) až podľa toho, či je video
+        // práve v zábere — pozri mountAndPlay()/unmountIfYouTube() nižšie.
+        media = `<img class="video-poster" id="poster-${v.id}" src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" loading="lazy" alt="">`;
+      } else {
+        div.dataset.kind = 'video';
+        media = `<video id="media-${v.id}" src="${optimizeCloudinaryVideoUrl(v.url)}" ${isMuted?'muted':''} loop playsinline controls></video>`;
+      }
     }
 
     div.innerHTML = `
@@ -5183,6 +5310,14 @@ function pauseMedia(id){
   } else if(mediaEl.tagName === 'IFRAME'){
     mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'pauseVideo', args:[]}), '*');
   }
+}
+
+function pauseAllVideoSectionMedia(){
+  // Zastaví úplne všetky videá/iframe v sekcii Videá, nech je stav observera akýkoľvek.
+  document.querySelectorAll('#video-scroller video').forEach(v=>{ if(!v.paused) v.pause(); });
+  document.querySelectorAll('#video-scroller iframe').forEach(f=>{
+    try{ f.contentWindow.postMessage(JSON.stringify({event:'command', func:'pauseVideo', args:[]}), '*'); }catch(e){}
+  });
 }
 
 function setupVideoObserver(){
