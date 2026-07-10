@@ -2133,6 +2133,21 @@ function initials(name){
   return name.split(' ').map(p=>p[0]).join('').substring(0,2).toUpperCase();
 }
 
+// Bezpečnostná funkcia — escapuje HTML špeciálne znaky, aby sa text od
+// používateľov (mená, príspevky, komentáre, popisy...) nedal použiť na
+// XSS útok (vloženie vlastného <script>/<img onerror> a pod.) keď ho
+// vkladáme cez innerHTML. VŽDY použiť na akýkoľvek text, ktorý zadal
+// používateľ, predtým než ide do innerHTML.
+function escapeHtml(str){
+  if(str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function applyAvatar(el, photoURL){
   if(!el) return;
   if(photoURL){
@@ -2835,7 +2850,7 @@ function createNotification(toUid, type, extra){
 }
 
 function notifText(n){
-  const name = `<b>${n.fromName || 'Niekto'}</b>`;
+  const name = `<b>${escapeHtml(n.fromName || 'Niekto')}</b>`;
   switch(n.type){
     case 'like_post': return `${name} sa páči tvoj príspevok`;
     case 'like_video': return `${name} sa páči tvoje video`;
@@ -3830,8 +3845,8 @@ function getAuthorPhoto(p){
 
 function avatarHtml(name, photo){
   return photo
-    ? `<div class="avatar" style="background-image:url(${photo});background-size:cover;background-position:center;"></div>`
-    : `<div class="avatar">${initials(name)}</div>`;
+    ? `<div class="avatar" style="background-image:url(${escapeHtml(photo)});background-size:cover;background-position:center;"></div>`
+    : `<div class="avatar">${escapeHtml(initials(name))}</div>`;
 }
 
 /* ---------------- FEED ---------------- */
@@ -3869,40 +3884,40 @@ function buildPostCard(p, opts={}){
   return `
       <div class="post-head">
         ${avatarHtml(p.name, getAuthorPhoto(p))}
-        <div><div class="name">${p.name}</div><div class="time" data-ts="${p.createdAt || p.id}" title="${formatFullDate(p.createdAt || p.id)}">${formatPostTime(p.createdAt || p.id)}</div></div>
+        <div><div class="name">${escapeHtml(p.name)}</div><div class="time" data-ts="${p.createdAt || p.id}" title="${formatFullDate(p.createdAt || p.id)}">${formatPostTime(p.createdAt || p.id)}</div></div>
         ${followBtnHtml(p.authorId)}
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="Vymazať príspevok">🗑️</button>` : ''}
       </div>
-      ${p.text ? `<div class="post-text">${p.text}</div>` : ''}
+      ${p.text ? `<div class="post-text">${escapeHtml(p.text)}</div>` : ''}
       ${p.video ? `<div class="post-video-wrap">
-        <video class="post-video" id="post-video-${p.id}" src="${p.video}" controls playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
+        <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(p.video)}" controls playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
       </div>` : ''}
       ${getPostPhotos(p).length ? buildPostImgGrid(getPostPhotos(p)) : (p.img ? `<div class="post-img" style="background:var(--accent-soft);">${p.img}</div>` : '')}
       ${p.file ? `
-      <a class="post-file-card" href="${p.file.url}" target="_blank" rel="noopener noreferrer" download="${p.file.name}">
+      <a class="post-file-card" href="${escapeHtml(p.file.url)}" target="_blank" rel="noopener noreferrer" download="${escapeHtml(p.file.name)}">
         <div class="file-icon">📎</div>
         <div class="file-info">
-          <div class="file-name">${p.file.name}</div>
+          <div class="file-name">${escapeHtml(p.file.name)}</div>
           <div class="file-size">${formatFileSize(p.file.size)}</div>
         </div>
         <div class="file-download-arrow">⬇</div>
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostFile(${p.id})">✕</div>` : ''}
       </a>` : ''}
       ${p.link ? (p.linkImage ? `
-      <a class="link-card link-card-media" href="${p.link}" target="_blank" rel="noopener noreferrer">
-        <div class="link-card-img"><img src="${p.linkImage}" loading="lazy" onerror="handleLinkImgError(this)"></div>
+      <a class="link-card link-card-media" href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer">
+        <div class="link-card-img"><img src="${escapeHtml(p.linkImage)}" loading="lazy" onerror="handleLinkImgError(this)"></div>
         <div class="link-card-media-info">
-          <div class="link-domain">${getDomain(p.link)}</div>
-          <div class="link-url">${p.linkTitle || p.link}</div>
+          <div class="link-domain">${escapeHtml(getDomain(p.link))}</div>
+          <div class="link-url">${escapeHtml(p.linkTitle || p.link)}</div>
         </div>
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostLink(${p.id})">✕</div>` : ''}
       </a>` : `
-      <a class="link-card" href="${p.link}" target="_blank" rel="noopener noreferrer">
+      <a class="link-card" href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer">
         <div class="link-icon">🔗</div>
         <div class="link-info">
-          <div class="link-domain">${getDomain(p.link)}</div>
-          <div class="link-url">${p.link}</div>
+          <div class="link-domain">${escapeHtml(getDomain(p.link))}</div>
+          <div class="link-url">${escapeHtml(p.link)}</div>
         </div>
         <div class="link-arrow">↗</div>
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostLink(${p.id})">✕</div>` : ''}
@@ -3915,7 +3930,7 @@ function buildPostCard(p, opts={}){
         <button onclick="openShareModal(${p.id})">↗ Zdieľať</button>
       </div>
       ${showComments ? `<div class="comments ${p.open?'open':''}" id="comments-${p.id}">
-        ${p.comments.map((c,ci)=>`<div class="comment"><span class="comment-text"><b>${c.name}:</b> ${c.text}</span><button class="comment-like-btn ${getLikedBy(c).includes(currentUser.uid)?'liked':''}" onclick="toggleCommentLike(${p.id},${ci})">👍${c.likes?' '+c.likes:''}</button></div>`).join('')}
+        ${p.comments.map((c,ci)=>`<div class="comment"><span class="comment-text"><b>${escapeHtml(c.name)}:</b> ${escapeHtml(c.text)}</span><button class="comment-like-btn ${getLikedBy(c).includes(currentUser.uid)?'liked':''}" onclick="toggleCommentLike(${p.id},${ci})">👍${c.likes?' '+c.likes:''}</button></div>`).join('')}
         <div class="comment-input">
           <input type="text" id="cinput-${p.id}" placeholder="Napíš komentár...">
           <button onclick="addComment(${p.id})">Odoslať</button>
@@ -4572,8 +4587,8 @@ function renderProducts(){
       <div class="product-img" style="position:relative;">${getProductPhotos(pr).length ? `<img src="${getProductPhotos(pr)[0]}">${getProductPhotos(pr).length>1 ? `<div class="product-photo-badge">📷 ${getProductPhotos(pr).length}</div>` : ''}` : pr.emoji}</div>
       <div class="product-body">
         <div class="product-price">${pr.price} €</div>
-        <div class="product-title">${pr.title}</div>
-        <div class="product-seller">${pr.seller} · <span class="product-time" data-ts="${pr.createdAt || pr.id}" title="${formatFullDate(pr.createdAt || pr.id)}">${formatPostTime(pr.createdAt || pr.id)}</span></div>
+        <div class="product-title">${escapeHtml(pr.title)}</div>
+        <div class="product-seller">${escapeHtml(pr.seller)} · <span class="product-time" data-ts="${pr.createdAt || pr.id}" title="${formatFullDate(pr.createdAt || pr.id)}">${formatPostTime(pr.createdAt || pr.id)}</span></div>
       </div>`;
     grid.appendChild(div);
   });
@@ -4630,18 +4645,18 @@ function renderProductDetail(){
     <div class="product-detail-top">
       <div>
         <div class="product-detail-price">${pr.price} €</div>
-        <div class="product-detail-title">${pr.title}</div>
+        <div class="product-detail-title">${escapeHtml(pr.title)}</div>
       </div>
     </div>
     <div class="product-detail-badges">
-      ${pr.category ? `<div class="product-detail-badge">${pr.emoji || ''} ${pr.category}</div>` : ''}
+      ${pr.category ? `<div class="product-detail-badge">${pr.emoji || ''} ${escapeHtml(pr.category)}</div>` : ''}
     </div>
-    ${pr.desc ? `<div class="product-detail-desc">${pr.desc}</div>` : ''}
+    ${pr.desc ? `<div class="product-detail-desc">${escapeHtml(pr.desc)}</div>` : ''}
     <div class="product-detail-seller">
-      <div class="avatar">${initials(pr.seller)}</div>
+      <div class="avatar">${escapeHtml(initials(pr.seller))}</div>
       <div class="product-detail-seller-info">
         <div class="product-detail-seller-label">Predávajúci</div>
-        <div class="product-detail-seller-name">${pr.seller}</div>
+        <div class="product-detail-seller-name">${escapeHtml(pr.seller)}</div>
       </div>
       <div class="product-time" data-ts="${pr.createdAt || pr.id}" title="${formatFullDate(pr.createdAt || pr.id)}" style="margin-left:auto;">${formatPostTime(pr.createdAt || pr.id)}</div>
     </div>
@@ -4835,8 +4850,8 @@ function renderVideos(){
     div.innerHTML = `
       ${media}
       <div class="video-caption-wrap">
-        <div class="video-user"><div class="avatar">${initials(v.name)}</div>${v.name}<span class="video-time" data-ts="${v.createdAt || v.id}" title="${formatFullDate(v.createdAt || v.id)}">${formatPostTime(v.createdAt || v.id)}</span><span class="video-views" id="views-${v.id}">👁 ${formatViewCount(v.views||0)}</span></div>
-        <div class="video-caption">${v.caption}</div>
+        <div class="video-user"><div class="avatar">${escapeHtml(initials(v.name))}</div>${escapeHtml(v.name)}<span class="video-time" data-ts="${v.createdAt || v.id}" title="${formatFullDate(v.createdAt || v.id)}">${formatPostTime(v.createdAt || v.id)}</span><span class="video-views" id="views-${v.id}">👁 ${formatViewCount(v.views||0)}</span></div>
+        <div class="video-caption">${escapeHtml(v.caption)}</div>
       </div>
       <div class="video-side">
         <div><button id="mute-btn-${v.id}" onclick="toggleMute(${v.id})">${isMuted?'🔇':'🔊'}</button><div class="count">Zvuk</div></div>
@@ -5039,7 +5054,7 @@ function renderVideoComments(){
   if(!v){ list.innerHTML=''; return; }
   const comments = v.comments || [];
   list.innerHTML = comments.length
-    ? comments.map((c,ci)=>`<div class="video-comment-item"><span class="video-comment-text"><b>${c.name}:</b> ${c.text}</span><button class="video-comment-like-btn ${getLikedBy(c).includes(currentUser.uid)?'liked':''}" onclick="toggleVideoCommentLike(${v.id},${ci})">👍${c.likes?' '+c.likes:''}</button></div>`).join('')
+    ? comments.map((c,ci)=>`<div class="video-comment-item"><span class="video-comment-text"><b>${escapeHtml(c.name)}:</b> ${escapeHtml(c.text)}</span><button class="video-comment-like-btn ${getLikedBy(c).includes(currentUser.uid)?'liked':''}" onclick="toggleVideoCommentLike(${v.id},${ci})">👍${c.likes?' '+c.likes:''}</button></div>`).join('')
     : `<div class="video-comments-empty">Zatiaľ žiadne komentáre. Buď prvý! 💬</div>`;
   list.scrollTop = list.scrollHeight;
 }
