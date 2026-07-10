@@ -3850,6 +3850,13 @@ function switchMode(mode){
     videoObserver = null;
   }
 
+  if(mode === 'feed'){
+    setupFeedVideoObserver(); // sekcia Feed je teraz viditeľná, videá sa smú autoplay-ovať
+  } else if(feedVideoObserver){
+    feedVideoObserver.disconnect(); // Feed nie je viditeľný, žiadne video na pozadí nesmie hrať
+    feedVideoObserver = null;
+  }
+
   if(mode === 'news'){
     loadNewsFeed(false); // prvé otvorenie sekcie natiahne správy (ďalej sa už len cachuje)
   }
@@ -4075,7 +4082,7 @@ function buildPostCard(p, opts={}){
       </a>` : ''}
       ${p.link ? (getYouTubeId(p.link) ? `
       <div class="post-youtube-embed">
-        <iframe src="https://www.youtube.com/embed/${getYouTubeId(p.link)}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <iframe id="feed-yt-${p.id}" src="https://www.youtube.com/embed/${getYouTubeId(p.link)}?autoplay=0&mute=0&playsinline=1&enablejsapi=1&controls=1" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostLink(${p.id})">✕</div>` : ''}
       </div>` : (p.linkImage ? `
       <a class="link-card link-card-media" href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer">
@@ -4112,6 +4119,54 @@ function buildPostCard(p, opts={}){
     `;
 }
 
+let feedVideoObserver = null;
+
+// Rovnaký princíp ako v sekcii Videá: keď príspevok s videom (nahraté aj
+// YouTube) preskroluje do stredu obrazovky, video sa samo spustí; keď
+// odscroluje preč, zase sa zastaví.
+function playFeedMedia(wrapEl){
+  const video = wrapEl.querySelector('video');
+  if(video){
+    video.play().catch(()=>{
+      // Prehliadač zablokoval prehrávanie so zvukom bez priamej interakcie -
+      // spusti aspoň stlmené, nech video nezostane zaseknuté.
+      video.muted = true;
+      video.play().catch(()=>{});
+    });
+    return;
+  }
+  const iframe = wrapEl.querySelector('iframe');
+  if(iframe && iframe.contentWindow){
+    try{ iframe.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*'); }catch(e){}
+  }
+}
+
+function pauseFeedMedia(wrapEl){
+  const video = wrapEl.querySelector('video');
+  if(video){ video.pause(); return; }
+  const iframe = wrapEl.querySelector('iframe');
+  if(iframe && iframe.contentWindow){
+    try{ iframe.contentWindow.postMessage(JSON.stringify({event:'command', func:'pauseVideo', args:[]}), '*'); }catch(e){}
+  }
+}
+
+function setupFeedVideoObserver(){
+  if(feedVideoObserver) feedVideoObserver.disconnect();
+  const feedView = document.getElementById('view-feed');
+  const list = document.getElementById('posts-list');
+  if(!list || !feedView || !feedView.classList.contains('active')) return; // Feed nie je viditeľný, netreba sledovať
+  feedVideoObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting && entry.intersectionRatio >= 0.6){
+        playFeedMedia(entry.target);
+      } else {
+        pauseFeedMedia(entry.target);
+      }
+    });
+  }, {threshold:[0, 0.6]}); // root = viewport (Feed sa scrolluje cez celú stránku)
+  list.querySelectorAll('.post-video-wrap, .post-youtube-embed').forEach(el=>feedVideoObserver.observe(el));
+}
+
 function renderPosts(){
   const list = document.getElementById('posts-list');
   list.innerHTML = '';
@@ -4121,6 +4176,7 @@ function renderPosts(){
     div.innerHTML = buildPostCard(p);
     list.appendChild(div);
   });
+  setupFeedVideoObserver();
 }
 
 let pendingPostImages = []; // pole dataURL reťazcov (viacero fotiek k jednému príspevku)
