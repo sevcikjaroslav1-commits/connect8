@@ -4224,22 +4224,16 @@ let postLinkInputDebounceTimer = null;
 const URL_DETECT_REGEX = /((?:https?:\/\/)|(?:www\.))\S+/i;
 
 // Microlink (služba na náhľad odkazu) niekedy zamietne požiadavku (400),
-// ak cieľová adresa obsahuje dlhý "chvost" sledovacích parametrov typu
-// utm_/itm_/fbclid a pod. (bežné pri odkazoch zdieľaných zo spravodajských
-// webov a sociálnych sietí). Preto pre samotný dopyt na Microlink použijeme
-// očistenú adresu bez týchto parametrov — samotný uložený odkaz (na ktorý
+// ak cieľová adresa obsahuje zložený query reťazec (sledovacie parametre
+// typu utm_/itm_, ale ukázalo sa, že aj bežné parametre iných stránok
+// spôsobujú to isté). Preto pre samotný dopyt na Microlink použijeme
+// adresu BEZ akéhokoľvek query stringu — samotný uložený odkaz (na ktorý
 // používateľ klikne) zostáva nezmenený, mení sa len to, čo posielame
 // Microlinku na vygenerovanie náhľadu.
 function urlForLinkPreview(url){
   try{
     const u = new URL(url);
-    const trackingPrefixes = ['utm_','itm_','fbclid','gclid','gclsrc','dclid','msclkid','mc_','igshid','ref_src','yclid','vero_'];
-    const toDelete = [];
-    u.searchParams.forEach((_, key)=>{
-      const low = key.toLowerCase();
-      if(trackingPrefixes.some(p=>low === p || low.startsWith(p))) toDelete.push(key);
-    });
-    toDelete.forEach(k=>u.searchParams.delete(k));
+    u.search = '';
     return u.toString();
   }catch(e){
     return url; // ak sa adresu nepodarí rozobrať, použijeme ju tak, ako je
