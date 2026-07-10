@@ -4062,7 +4062,7 @@ function buildPostCard(p, opts={}){
         <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" controls playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
       </div>` : ''}
-      ${getPostPhotos(p).length ? buildPostImgGrid(getPostPhotos(p)) : (p.img ? `<div class="post-img" style="background:var(--accent-soft);">${p.img}</div>` : '')}
+      ${getPostPhotos(p).length ? buildPostImgGrid(getPostPhotos(p)) : (p.img && !p.link ? `<div class="post-img" style="background:var(--accent-soft);">${p.img}</div>` : '')}
       ${p.file ? `
       <a class="post-file-card" href="${escapeHtml(p.file.url)}" target="_blank" rel="noopener noreferrer" download="${escapeHtml(p.file.name)}">
         <div class="file-icon">📎</div>
@@ -4546,7 +4546,7 @@ function addPost(){
     linkTitle: hasMatchingPreview ? pendingPostLink.title : '',
     linkImage: hasMatchingPreview ? pendingPostLink.image : null,
     file: pendingPostFile ? {...pendingPostFile} : null,
-    img: (pendingPostImages.length || pendingPostVideo || pendingPostFile) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
+    img: (pendingPostImages.length || pendingPostVideo || pendingPostFile || linkVal) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
   };
   posts.push(newPost);
   if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid].push(newPost);
