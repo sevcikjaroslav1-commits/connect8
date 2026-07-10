@@ -4223,6 +4223,29 @@ let postTextDebounceTimer = null;
 let postLinkInputDebounceTimer = null;
 const URL_DETECT_REGEX = /((?:https?:\/\/)|(?:www\.))\S+/i;
 
+// Microlink (služba na náhľad odkazu) niekedy zamietne požiadavku (400),
+// ak cieľová adresa obsahuje dlhý "chvost" sledovacích parametrov typu
+// utm_/itm_/fbclid a pod. (bežné pri odkazoch zdieľaných zo spravodajských
+// webov a sociálnych sietí). Preto pre samotný dopyt na Microlink použijeme
+// očistenú adresu bez týchto parametrov — samotný uložený odkaz (na ktorý
+// používateľ klikne) zostáva nezmenený, mení sa len to, čo posielame
+// Microlinku na vygenerovanie náhľadu.
+function urlForLinkPreview(url){
+  try{
+    const u = new URL(url);
+    const trackingPrefixes = ['utm_','itm_','fbclid','gclid','gclsrc','dclid','msclkid','mc_','igshid','ref_src','yclid','vero_'];
+    const toDelete = [];
+    u.searchParams.forEach((_, key)=>{
+      const low = key.toLowerCase();
+      if(trackingPrefixes.some(p=>low === p || low.startsWith(p))) toDelete.push(key);
+    });
+    toDelete.forEach(k=>u.searchParams.delete(k));
+    return u.toString();
+  }catch(e){
+    return url; // ak sa adresu nepodarí rozobrať, použijeme ju tak, ako je
+  }
+}
+
 function toggleLinkInput(){
   const row = document.getElementById('post-link-row');
   row.classList.toggle('show');
@@ -4270,7 +4293,7 @@ function setPostLink(rawUrl){
   pendingPostLink = {
     url,
     title: '',
-    image: 'https://api.microlink.io/?url=' + encodeURIComponent(url) + '&embed=image.url'
+    image: 'https://api.microlink.io/?url=' + encodeURIComponent(urlForLinkPreview(url)) + '&embed=image.url'
   };
   document.getElementById('post-link-input').value = url;
   document.getElementById('post-link-row').classList.add('show');
@@ -4283,7 +4306,7 @@ function fetchLinkMeta(url){
   // priamo z metadát. Ak appku otváraš cez file://, tento fetch môže
   // prehliadač zablokovať (CORS) — v tom prípade ostane aspoň obrázok
   // a doména z embed <img> volania vyššie.
-  fetch('https://api.microlink.io/?url=' + encodeURIComponent(url) + '&palette=false')
+  fetch('https://api.microlink.io/?url=' + encodeURIComponent(urlForLinkPreview(url)) + '&palette=false')
     .then(r=>r.json())
     .then(data=>{
       if(!pendingPostLink || pendingPostLink.url !== url) return;
@@ -4305,7 +4328,7 @@ function handleLinkImgError(imgEl){
   const linkUrl = imgEl.dataset.linkUrl;
   if(wrap && linkUrl && !imgEl.dataset.fallbackTried){
     imgEl.dataset.fallbackTried = '1';
-    imgEl.src = 'https://api.microlink.io/?url=' + encodeURIComponent(linkUrl) + '&screenshot=true&meta=false&embed=screenshot.url';
+    imgEl.src = 'https://api.microlink.io/?url=' + encodeURIComponent(urlForLinkPreview(linkUrl)) + '&screenshot=true&meta=false&embed=screenshot.url';
     return;
   }
   if(wrap) wrap.style.display = 'none';
