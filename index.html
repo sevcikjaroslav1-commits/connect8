@@ -4120,13 +4120,15 @@ function buildPostCard(p, opts={}){
 }
 
 let feedVideoObserver = null;
+let feedMediaVisibility = new Map(); // element (.post-video-wrap / .post-youtube-embed) -> aktuálny pomer viditeľnosti
 
-// Rovnaký princíp ako v sekcii Videá: keď príspevok s videom (nahraté aj
-// YouTube) preskroluje do stredu obrazovky, video sa samo spustí; keď
-// odscroluje preč, zase sa zastaví.
+// Rovnaký princíp ako v sekcii Videá, ALE navyše: nech hrá vždy len JEDNO
+// video naraz - presne to, ktoré je práve najviac v strede/najviac viditeľné
+// počas scrollovania. Všetky ostatné sa pauznú, aj keby boli čiastočne vidieť.
 function playFeedMedia(wrapEl){
   const video = wrapEl.querySelector('video');
   if(video){
+    if(!video.paused) return;
     video.play().catch(()=>{
       // Prehliadač zablokoval prehrávanie so zvukom bez priamej interakcie -
       // spusti aspoň stlmené, nech video nezostane zaseknuté.
@@ -4143,28 +4145,44 @@ function playFeedMedia(wrapEl){
 
 function pauseFeedMedia(wrapEl){
   const video = wrapEl.querySelector('video');
-  if(video){ video.pause(); return; }
+  if(video){ if(!video.paused) video.pause(); return; }
   const iframe = wrapEl.querySelector('iframe');
   if(iframe && iframe.contentWindow){
     try{ iframe.contentWindow.postMessage(JSON.stringify({event:'command', func:'pauseVideo', args:[]}), '*'); }catch(e){}
   }
 }
 
+function updateFeedActiveVideo(){
+  let bestEl = null, bestRatio = 0;
+  feedMediaVisibility.forEach((ratio, el)=>{
+    if(ratio > bestRatio){ bestRatio = ratio; bestEl = el; }
+  });
+  feedMediaVisibility.forEach((ratio, el)=>{
+    if(el === bestEl && bestRatio >= 0.6){
+      playFeedMedia(el);
+    } else {
+      pauseFeedMedia(el);
+    }
+  });
+}
+
 function setupFeedVideoObserver(){
   if(feedVideoObserver) feedVideoObserver.disconnect();
+  feedMediaVisibility = new Map();
   const feedView = document.getElementById('view-feed');
   const list = document.getElementById('posts-list');
   if(!list || !feedView || !feedView.classList.contains('active')) return; // Feed nie je viditeľný, netreba sledovať
+  const steps = Array.from({length:21}, (_,i)=> i/20); // jemnejšie kroky (0, 0.05, 0.10 ... 1) - presnejšie zistí, ktoré video je "najstredovejšie"
   feedVideoObserver = new IntersectionObserver((entries)=>{
     entries.forEach(entry=>{
-      if(entry.isIntersecting && entry.intersectionRatio >= 0.6){
-        playFeedMedia(entry.target);
-      } else {
-        pauseFeedMedia(entry.target);
-      }
+      feedMediaVisibility.set(entry.target, entry.intersectionRatio);
     });
-  }, {threshold:[0, 0.6]}); // root = viewport (Feed sa scrolluje cez celú stránku)
-  list.querySelectorAll('.post-video-wrap, .post-youtube-embed').forEach(el=>feedVideoObserver.observe(el));
+    updateFeedActiveVideo();
+  }, {threshold: steps}); // root = viewport (Feed sa scrolluje cez celú stránku)
+  list.querySelectorAll('.post-video-wrap, .post-youtube-embed').forEach(el=>{
+    feedMediaVisibility.set(el, 0);
+    feedVideoObserver.observe(el);
+  });
 }
 
 function renderPosts(){
