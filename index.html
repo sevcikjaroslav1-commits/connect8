@@ -3906,8 +3906,14 @@ const NEWS_REFRESH_MS = 15 * 60 * 1000; // 15 minút
 let newsCache = { items: [], ts: 0 };
 let newsLoading = false;
 
-// Viacero záložných proxy služieb - ak prvá nezareaguje do pár sekúnd alebo zlyhá,
-// automaticky sa skúsi ďalšia. Toto rieši výpadky/preťaženie jednej konkrétnej
+// ⚠️ Po nasadení Cloudflare Workera sem vlož jeho skutočnú adresu
+// (dostaneš ju v Cloudflare dashboarde po kliknutí na "Deploy"),
+// napr. 'https://connect8-news.tvoj-nick.workers.dev/news'
+const NEWS_WORKER_URL = 'https://sparkling-pine-7e28.sevcikjaroslav1.workers.dev/news';
+
+// Viacero záložných proxy služieb - toto je teraz len ZÁLOHA pre prípad,
+// že by Cloudflare Worker vyššie z nejakého dôvodu nebol dostupný.
+// Primárne appka používa vlastný Worker (rýchlejší a spoľahlivejší,
 // zdarma proxy služby (GitHub Pages nemá vlastný server, takže RSS musíme sťahovať
 // cez takýto medzičlánok kvôli CORS obmedzeniam prehliadača).
 const NEWS_PROXIES = [
@@ -3947,7 +3953,7 @@ function extractImageFromItem(itemEl, rawXml){
   return m ? m[1] : null;
 }
 
-async function fetchOneSource(source){
+async function fetchOneSourceViaProxies(source){
   for(const url of source.urls){
     for(const buildProxyUrl of NEWS_PROXIES){
       try{
@@ -3979,6 +3985,12 @@ async function fetchOneSource(source){
     }
   }
   return [];
+}
+
+// Záložná cesta cez staré proxy - použije sa, len ak Worker vyššie zlyhá
+async function loadNewsViaProxiesFallback(){
+  const results = await Promise.all(NEWS_SOURCES.map(s=>fetchOneSourceViaProxies(s)));
+  return shuffleArray([].concat(...results)).slice(0, 32);
 }
 
 function shuffleArray(arr){
@@ -4013,13 +4025,25 @@ async function loadNewsFeed(forceRefresh){
   chipsRow.innerHTML = NEWS_SOURCES.map(s=>`<span class="news-source-chip">${s.name}</span>`).join('');
 
   try{
-    const results = await Promise.all(NEWS_SOURCES.map(s=>fetchOneSource(s)));
-    let all = [].concat(...results);
+    let all = [];
+    // 1) Skús vlastný Cloudflare Worker - rýchly a spoľahlivý jeden request
+    try{
+      const workerUrl = NEWS_WORKER_URL + (forceRefresh ? '?refresh=1' : '');
+      const res = await fetchWithTimeout(workerUrl, 8000);
+      if(!res.ok) throw new Error('worker http ' + res.status);
+      const data = await res.json();
+      if(Array.isArray(data.items) && data.items.length) all = data.items;
+    }catch(workerErr){
+      console.warn('Connect8 news: Worker nedostupný, prepínam na záložné proxy.', workerErr);
+    }
+    // 2) Ak Worker zlyhal alebo nevrátil nič, použi starý systém so 4 proxy
+    if(all.length === 0){
+      all = await loadNewsViaProxiesFallback();
+    }
     if(all.length === 0){
       grid.innerHTML = '<div class="news-status">Správy sa nepodarilo načítať (zdroje momentálne neodpovedajú). Skús obnoviť o chvíľu.</div>';
       return;
     }
-    all = shuffleArray(all).slice(0, 32);
     newsCache = { items: all, ts: Date.now() };
     renderNewsGrid(all);
   }catch(e){
