@@ -4244,6 +4244,17 @@ function urlForLinkPreview(url){
   }
 }
 
+// Ak zatiaľ appka nestihla zistiť "ozajstný" obrázok stránky (ten sa
+// zoberie priamo z webu, napr. z cas.sk servera) a stále máme len dočasný
+// náhľad priamo z Microlinku (api.microlink.io), NESMIEME ho uložiť do
+// príspevku natrvalo — inak by každé jedno zobrazenie tohto príspevku
+// (aj inými ľuďmi) stálo kredit navždy. V tom prípade radšej uložíme
+// príspevok bez obrázka (zostane len doména/titulok), než aby bol trvalo
+// závislý na Microlinku.
+function isLiveMicrolinkUrl(url){
+  return !!url && url.indexOf('api.microlink.io') !== -1;
+}
+
 function toggleLinkInput(){
   const row = document.getElementById('post-link-row');
   row.classList.toggle('show');
@@ -4681,7 +4692,7 @@ function addPost(){
     id:Date.now(), name:currentUser.name, authorId:currentUser.uid, createdAt: Date.now(),
     text, photos:pendingPostImages.slice(), video: pendingPostVideo, link:linkVal,
     linkTitle: hasMatchingPreview ? pendingPostLink.title : '',
-    linkImage: hasMatchingPreview ? pendingPostLink.image : null,
+    linkImage: (hasMatchingPreview && !isLiveMicrolinkUrl(pendingPostLink.image)) ? pendingPostLink.image : null,
     file: pendingPostFile ? {...pendingPostFile} : null,
     img: (pendingPostImages.length || pendingPostVideo || pendingPostFile || linkVal) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
   };
