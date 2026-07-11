@@ -1653,7 +1653,11 @@ function optimizeCloudinaryVideoUrl(url){
   if(!url || typeof url !== 'string') return url;
   if(!url.includes('res.cloudinary.com') || !url.includes('/video/upload/')) return url; // nie je to Cloudinary video
   if(/\/upload\/[^/]*q_auto/.test(url)) return url; // transformácia už je nastavená, nepridávaj druhýkrát
-  return url.replace('/video/upload/', '/video/upload/q_auto,f_auto/');
+  // w_720: obmedzí šírku videa na max 720px (výška sa dopočíta automaticky, c_limit
+  // zabezpečí, že sa menšie/užšie videá nezväčšujú). Pri 4K videách z telefónu ide
+  // o výrazné zníženie prenesených dát pri každom prehratí, bez viditeľného poklesu
+  // kvality na bežnej obrazovke telefónu/PC.
+  return url.replace('/video/upload/', '/video/upload/w_720,c_limit,q_auto,f_auto/');
 }
 
 const LOCAL_STORAGE_KEY = "connect_app_state_v1";
