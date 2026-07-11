@@ -1448,9 +1448,6 @@
           <div class="profile-section-title">📷 Fotky</div>
           <div class="profile-photos-grid" id="profile-photos-grid"></div>
 
-          <div class="profile-section-title">🔗 Odkazy</div>
-          <div id="profile-links-list"></div>
-
           <div class="profile-section-title">📝 Príspevky</div>
           <div id="profile-posts-list"></div>
 
@@ -2506,7 +2503,6 @@ function renderProfile(){
   const myPosts = postsSource.filter(p=> p.authorId ? p.authorId===profileUser.uid : p.name===profileUser.name);
   loadOwnPostsIfNeeded(profileUser);
   const allPhotos = myPosts.reduce((acc,p)=> acc.concat(getPostPhotos(p)), []);
-  const links = myPosts.filter(p=>p.link);
 
   applyProfileAvatar(document.getElementById('profile-avatar'), profileUser);
   document.getElementById('profile-name').textContent = profileUser.name;
@@ -2557,26 +2553,6 @@ function renderProfile(){
   grid.innerHTML = allPhotos.length
     ? allPhotos.slice().reverse().map(src=>`<img src="${src}" onclick="openLightbox('${src}')">`).join('')
     : `<div class="profile-empty">Zatiaľ žiadne fotky.</div>`;
-
-  const linksList = document.getElementById('profile-links-list');
-  linksList.innerHTML = links.length
-    ? links.slice().reverse().map(p=> p.linkImage ? `
-        <a class="link-card link-card-media" href="${p.link}" target="_blank" rel="noopener noreferrer">
-          <div class="link-card-img"><img src="${p.linkImage}" data-link-url="${p.link}" loading="lazy" onerror="handleLinkImgError(this)"></div>
-          <div class="link-card-media-info">
-            <div class="link-domain">${getDomain(p.link)}</div>
-            <div class="link-url">${p.linkTitle || p.link}</div>
-          </div>
-        </a>` : `
-        <a class="link-card" href="${p.link}" target="_blank" rel="noopener noreferrer">
-          <div class="link-icon">🔗</div>
-          <div class="link-info">
-            <div class="link-domain">${getDomain(p.link)}</div>
-            <div class="link-url">${p.link}</div>
-          </div>
-          <div class="link-arrow">↗</div>
-        </a>`).join('')
-    : `<div class="profile-empty">Zatiaľ žiadne zdieľané odkazy.</div>`;
 
   const postsList = document.getElementById('profile-posts-list');
   postsList.innerHTML = myPosts.length
