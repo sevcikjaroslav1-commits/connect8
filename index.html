@@ -1322,7 +1322,7 @@
               <label class="file-btn">📎 Súbor<input type="file" id="post-file-input" onchange="handlePostFile(event)"></label>
               <button class="file-btn" onclick="toggleLinkInput()">🔗 Odkaz</button>
             </div>
-            <div class="composer-actions"><button id="post-submit-btn" onclick="addPost()">Uverejniť</button></div>
+            <div class="composer-actions"><button onclick="addPost()">Uverejniť</button></div>
           </div>
           <div id="posts-list"></div>
         </section>
@@ -4361,22 +4361,20 @@ function setPostLink(rawUrl){
   pendingPostLink = {
     url,
     title: '',
-    image: 'https://api.microlink.io/?url=' + encodeURIComponent(urlForLinkPreview(url)) + '&embed=image.url',
-    metaPromise: null
+    image: 'https://api.microlink.io/?url=' + encodeURIComponent(urlForLinkPreview(url)) + '&embed=image.url'
   };
   document.getElementById('post-link-input').value = url;
   document.getElementById('post-link-row').classList.add('show');
   renderLinkPreview();
-  pendingPostLink.metaPromise = fetchLinkMeta(url);
+  fetchLinkMeta(url);
 }
 
 function fetchLinkMeta(url){
   // Doplní titulok a - ak sa dá - presnejší obrázok stránky (og:image a pod.)
   // priamo z metadát. Ak appku otváraš cez file://, tento fetch môže
   // prehliadač zablokovať (CORS) — v tom prípade ostane aspoň obrázok
-  // a doména z embed <img> volania vyššie. Vraciame promise, aby addPost()
-  // vedel počkať, kým sa skutočný obrázok zistí, predtým než sa príspevok uloží.
-  return fetch('https://api.microlink.io/?url=' + encodeURIComponent(urlForLinkPreview(url)) + '&palette=false')
+  // a doména z embed <img> volania vyššie.
+  fetch('https://api.microlink.io/?url=' + encodeURIComponent(urlForLinkPreview(url)) + '&palette=false')
     .then(r=>r.json())
     .then(data=>{
       if(!pendingPostLink || pendingPostLink.url !== url) return;
@@ -4722,7 +4720,7 @@ function removePostFile(){
   document.getElementById('post-file-input').value = '';
 }
 
-async function addPost(){
+function addPost(){
   let text = document.getElementById('post-text').value.trim();
   // Ak je v texte odkaz, no automatické rozpoznanie (500ms debounce) ho ešte
   // nestihlo spracovať - napr. keď užívateľ klikne Uverejniť hneď po vložení
@@ -4739,25 +4737,7 @@ async function addPost(){
   if(!text && !pendingPostImages.length && !linkVal && !pendingPostVideo && !pendingPostFile) return;
   const modErr = moderationError(text);
   if(modErr){ alert(modErr); return; }
-  let hasMatchingPreview = pendingPostLink && pendingPostLink.url === linkVal;
-
-  // Ak máme odkaz, no appka ešte nestihla zistiť skutočný obrázok článku
-  // (stále vidíme len dočasný Microlink náhľad), počkáme naň - inak by sa
-  // príspevok uložil bez obrázka takmer vždy, keďže na to zistenie treba
-  // 1-3 sekundy a ľudia zvyčajne klikajú Uverejniť rýchlejšie.
-  if(linkVal && hasMatchingPreview && isLiveMicrolinkUrl(pendingPostLink.image) && pendingPostLink.metaPromise){
-    const btn = document.getElementById('post-submit-btn');
-    const originalLabel = btn ? btn.textContent : '';
-    if(btn){ btn.disabled = true; btn.textContent = 'Načítavam náhľad...'; }
-    await Promise.race([
-      pendingPostLink.metaPromise,
-      new Promise(resolve=>setTimeout(resolve, 5000)) // max. 5s čakania, potom pokračujeme aj bez obrázka
-    ]);
-    if(btn){ btn.disabled = false; btn.textContent = originalLabel || 'Uverejniť'; }
-    // medzičasom mohol užívateľ odkaz zmeniť/zmazať - over znova
-    hasMatchingPreview = pendingPostLink && pendingPostLink.url === linkVal;
-  }
-
+  const hasMatchingPreview = pendingPostLink && pendingPostLink.url === linkVal;
   if(linkVal && hasMatchingPreview){
     // Ak sme z textu automaticky rozpoznali odkaz (zobrazuje sa nižšie ako
     // náhľad karty), samotnú surovú adresu z textu vystrihneme, nech sa
