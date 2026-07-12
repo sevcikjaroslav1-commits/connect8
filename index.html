@@ -3910,6 +3910,9 @@ let newsLoading = false;
 // (dostaneš ju v Cloudflare dashboarde po kliknutí na "Deploy"),
 // napr. 'https://connect8-news.tvoj-nick.workers.dev/news'
 const NEWS_WORKER_URL = 'https://sparkling-pine-7e28.sevcikjaroslav1.workers.dev/news';
+// Rovnaký Worker, len iná cesta (/preview) - zisťuje obrázok/titulok
+// zdieľaných odkazov namiesto Microlink API.
+const LINK_PREVIEW_WORKER_URL = 'https://sparkling-pine-7e28.sevcikjaroslav1.workers.dev/preview';
 
 // Viacero záložných proxy služieb - toto je teraz len ZÁLOHA pre prípad,
 // že by Cloudflare Worker vyššie z nejakého dôvodu nebol dostupný.
@@ -4303,17 +4306,6 @@ function urlForLinkPreview(url){
   }
 }
 
-// Ak zatiaľ appka nestihla zistiť "ozajstný" obrázok stránky (ten sa
-// zoberie priamo z webu, napr. z cas.sk servera) a stále máme len dočasný
-// náhľad priamo z Microlinku (api.microlink.io), NESMIEME ho uložiť do
-// príspevku natrvalo — inak by každé jedno zobrazenie tohto príspevku
-// (aj inými ľuďmi) stálo kredit navždy. V tom prípade radšej uložíme
-// príspevok bez obrázka (zostane len doména/titulok), než aby bol trvalo
-// závislý na Microlinku.
-function isLiveMicrolinkUrl(url){
-  return !!url && url.indexOf('api.microlink.io') !== -1;
-}
-
 function toggleLinkInput(){
   const row = document.getElementById('post-link-row');
   row.classList.toggle('show');
@@ -4350,18 +4342,15 @@ function setPostLink(rawUrl){
   if(!url) return;
   if(pendingPostLink && pendingPostLink.url === url) return; // rovnaký odkaz už máme, netreba nič ďalšie robiť
 
-  // Obrázok najprv nastavíme cez Microlink "embed" endpoint ako <img src="...">.
-  // To je dôležité najmä vtedy, keď appku otváraš ako lokálny súbor cez
-  // file:// — v takom prípade prehliadač bežné fetch()/JSON požiadavky na
-  // cudzie API kvôli CORS blokuje, no načítanie obrázka cez <img> tag týmto
-  // obmedzením nepodlieha, takže funguje aj z lokálneho súboru. Hneď potom
-  // sa v fetchLinkMeta() pokúsime nahradiť ho presnejším obrázkom priamo
-  // z metadát stránky (spoľahlivejšie pri stránkach, ktoré embed endpoint
-  // blokuje).
+  // Obrázok aj titulok teraz zisťuje priamo náš vlastný Cloudflare Worker
+  // (/preview) - stiahne stránku server-side a vytiahne z nej og:image a
+  // og:title. Kým odpoveď nepríde, zobrazí sa len doména ako dočasný
+  // placeholder (viď renderLinkPreview).
   pendingPostLink = {
     url,
     title: '',
-    image: 'https://api.microlink.io/?url=' + encodeURIComponent(urlForLinkPreview(url)) + '&embed=image.url',
+    image: null,
+    loading: true,
     metaPromise: null
   };
   document.getElementById('post-link-input').value = url;
@@ -4371,22 +4360,28 @@ function setPostLink(rawUrl){
 }
 
 function fetchLinkMeta(url){
-  // Doplní titulok a - ak sa dá - presnejší obrázok stránky (og:image a pod.)
-  // priamo z metadát. Ak appku otváraš cez file://, tento fetch môže
-  // prehliadač zablokovať (CORS) — v tom prípade ostane aspoň obrázok
-  // a doména z embed <img> volania vyššie. Vraciame promise, aby addPost()
-  // vedel počkať, kým sa skutočný obrázok zistí, predtým než sa príspevok uloží.
-  return fetch('https://api.microlink.io/?url=' + encodeURIComponent(urlForLinkPreview(url)) + '&palette=false')
+  // Vlastný Cloudflare Worker namiesto Microlink API - žiadny limit
+  // 50 requestov/deň, zvláda aj presmerovania (napr. share.google odkazy),
+  // keďže sťahovanie beží priamo na serveri, nie v prehliadači. Vraciame
+  // promise, aby addPost() vedel počkať, kým sa obrázok zistí, predtým
+  // než sa príspevok naozaj uloží.
+  return fetch(LINK_PREVIEW_WORKER_URL + '?url=' + encodeURIComponent(urlForLinkPreview(url)))
     .then(r=>r.json())
     .then(data=>{
       if(!pendingPostLink || pendingPostLink.url !== url) return;
-      if(data && data.status === 'success' && data.data){
-        if(data.data.title) pendingPostLink.title = data.data.title;
-        if(data.data.image && data.data.image.url) pendingPostLink.image = data.data.image.url;
+      pendingPostLink.loading = false;
+      if(data){
+        if(data.title) pendingPostLink.title = data.title;
+        if(data.image) pendingPostLink.image = data.image;
+      }
+      renderLinkPreview();
+    })
+    .catch(()=>{
+      if(pendingPostLink && pendingPostLink.url === url){
+        pendingPostLink.loading = false;
         renderLinkPreview();
       }
-    })
-    .catch(()=>{ /* nevadí — titulok a presný obrázok sú len doplnkové */ });
+    });
 }
 
 function handleLinkImgError(imgEl){
@@ -4432,6 +4427,12 @@ function renderLinkPreview(){
     const title = document.createElement('div');
     title.className = 'link-preview-title';
     title.textContent = pendingPostLink.title;
+    info.appendChild(title);
+  } else if(pendingPostLink.loading){
+    const title = document.createElement('div');
+    title.className = 'link-preview-title';
+    title.style.opacity = '.6';
+    title.textContent = 'Načítavam náhľad...';
     info.appendChild(title);
   }
   box.appendChild(info);
@@ -4741,7 +4742,7 @@ async function addPost(){
   // (stále vidíme len dočasný Microlink náhľad), počkáme naň - inak by sa
   // príspevok uložil bez obrázka takmer vždy, keďže na to zistenie treba
   // 1-3 sekundy a ľudia zvyčajne klikajú Uverejniť rýchlejšie.
-  if(linkVal && hasMatchingPreview && isLiveMicrolinkUrl(pendingPostLink.image) && pendingPostLink.metaPromise){
+  if(linkVal && hasMatchingPreview && pendingPostLink.loading && pendingPostLink.metaPromise){
     const btn = document.getElementById('post-submit-btn');
     const originalLabel = btn ? btn.textContent : '';
     if(btn){ btn.disabled = true; btn.textContent = 'Načítavam náhľad...'; }
@@ -4767,7 +4768,7 @@ async function addPost(){
     id:Date.now(), name:currentUser.name, authorId:currentUser.uid, createdAt: Date.now(),
     text, photos:pendingPostImages.slice(), video: pendingPostVideo, link:linkVal,
     linkTitle: hasMatchingPreview ? pendingPostLink.title : '',
-    linkImage: (hasMatchingPreview && !isLiveMicrolinkUrl(pendingPostLink.image)) ? pendingPostLink.image : null,
+    linkImage: hasMatchingPreview ? pendingPostLink.image : null,
     file: pendingPostFile ? {...pendingPostFile} : null,
     img: (pendingPostImages.length || pendingPostVideo || pendingPostFile || linkVal) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
   };
