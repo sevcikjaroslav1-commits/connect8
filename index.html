@@ -1732,6 +1732,22 @@ function removeProductDoc(id){ deleteDoc(productDoc(id), 'produkt'); }
 function saveVideo(v){ return saveDoc(videoDoc(v.id), v, 'video'); }
 function removeVideoDoc(id){ deleteDoc(videoDoc(id), 'video'); }
 
+// Pre reakcie (lajk/komentár) OD KOHOKOĽVEK — nielen od autora — posielame
+// vždy len presne tie polia, čo sa menia (update), NIE celý dokument (set).
+// Dôvod: Firestore pravidlá cudzím ľuďom povoľujú meniť len likes/likedBy/
+// comments/views. Keby appka posielala celý objekt a ten by (čo i len
+// náhodou, napr. starým poľom "liked" ešte z predošlej verzie) obsahoval
+// aj inú zmenu, pravidlá by CELÝ zápis zamietli. Cielený update() toto
+// riziko úplne odstraňuje, keďže fyzicky nemôže poslať nič navyše.
+function updatePostFields(id, fields){
+  if(storageMode !== "online" || !FIREBASE_CONFIGURED || !db){ saveToLocalStorage(); return Promise.resolve(); }
+  return postDoc(id).update(fields).catch(e=>{ console.error('Aktualizácia príspevku zlyhala:', e); throw e; });
+}
+function updateVideoFields(id, fields){
+  if(storageMode !== "online" || !FIREBASE_CONFIGURED || !db){ saveToLocalStorage(); return Promise.resolve(); }
+  return videoDoc(id).update(fields).catch(e=>{ console.error('Aktualizácia videa zlyhala:', e); throw e; });
+}
+
 /* =================================================================
    RATE LIMITING A ZÁKLADNÝ TEXTOVÝ FILTER
    Toto je len KLIENTSKA (UX) vrstva — okamžitá spätná väzba pre
@@ -4770,7 +4786,7 @@ async function addPost(){
     linkTitle: hasMatchingPreview ? pendingPostLink.title : '',
     linkImage: hasMatchingPreview ? pendingPostLink.image : null,
     file: pendingPostFile ? {...pendingPostFile} : null,
-    img: (pendingPostImages.length || pendingPostVideo || pendingPostFile || linkVal) ? null : '✨', likes:0, liked:false, views:0, comments:[], open:false
+    img: (pendingPostImages.length || pendingPostVideo || pendingPostFile || linkVal) ? null : '✨', likes:0, likedBy:[], views:0, comments:[], open:false
   };
   posts.push(newPost);
   if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid].push(newPost);
@@ -4807,17 +4823,25 @@ function getLikedBy(obj){
 function toggleLike(id){
   const p = findPostById(id);
   if(!p) return;
-  const likedBy = getLikedBy(p);
+  const likedBy = getLikedBy(p).slice(); // kópia — pôvodné pole nechceme meniť skôr, než vieme, že sa to naozaj uložilo
   const uid = currentUser.uid;
   const idx = likedBy.indexOf(uid);
   const wasLiked = idx>=0;
   if(idx>=0) likedBy.splice(idx,1); else likedBy.push(uid);
+
+  const prevLikedBy = p.likedBy, prevLikes = p.likes, hadLegacyLiked = ('liked' in p), prevLegacyLiked = p.liked;
   p.likedBy = likedBy;
   p.likes = likedBy.length;
   delete p.liked;
-  savePost(p);
-  if(!wasLiked && p.authorId) createNotification(p.authorId, 'like_post', {postId: p.id});
   refreshPostViews();
+
+  updatePostFields(id, {likedBy, likes: likedBy.length})
+    .then(()=>{ if(!wasLiked && p.authorId) createNotification(p.authorId, 'like_post', {postId: p.id}); })
+    .catch(err=>{
+      p.likedBy = prevLikedBy; p.likes = prevLikes;
+      if(hadLegacyLiked) p.liked = prevLegacyLiked;
+      handleCreateRejection(err, null, 'lajk', refreshPostViews);
+    });
 }
 
 function toggleComments(id){
@@ -4857,15 +4881,22 @@ function toggleCommentLike(postId, commentIndex){
   if(!p) return;
   const c = p.comments[commentIndex];
   if(!c) return;
-  const likedBy = getLikedBy(c);
+  const likedBy = getLikedBy(c).slice();
   const uid = currentUser.uid;
   const idx = likedBy.indexOf(uid);
   if(idx>=0) likedBy.splice(idx,1); else likedBy.push(uid);
+
+  const prevLikedBy = c.likedBy, prevLikes = c.likes, hadLegacyLiked = ('liked' in c), prevLegacyLiked = c.liked;
   c.likedBy = likedBy;
   c.likes = likedBy.length;
   delete c.liked;
-  savePost(p);
   renderPosts();
+
+  updatePostFields(postId, {comments: p.comments}).catch(err=>{
+    c.likedBy = prevLikedBy; c.likes = prevLikes;
+    if(hadLegacyLiked) c.liked = prevLegacyLiked;
+    handleCreateRejection(err, null, 'lajk komentára', renderPosts);
+  });
 }
 
 function addComment(id){
@@ -4880,7 +4911,7 @@ function addComment(id){
   p.open = true;
   input.value = '';
   renderPosts();
-  savePost(p)
+  updatePostFields(id, {comments: p.comments})
     .then(()=>bumpRateLimit('lastCommentAt'))
     .then(()=>{ if(p.authorId) createNotification(p.authorId, 'comment_post', {postId: p.id}); })
     .catch(err=>{
@@ -5514,17 +5545,25 @@ function toggleMute(id){
 function toggleVideoLike(id){
   const v = videos.find(v=>v.id===id);
   if(!v) return;
-  const likedBy = getLikedBy(v);
+  const likedBy = getLikedBy(v).slice();
   const uid = currentUser.uid;
   const idx = likedBy.indexOf(uid);
   const wasLiked = idx>=0;
   if(idx>=0) likedBy.splice(idx,1); else likedBy.push(uid);
+
+  const prevLikedBy = v.likedBy, prevLikes = v.likes, hadLegacyLiked = ('liked' in v), prevLegacyLiked = v.liked;
   v.likedBy = likedBy;
   v.likes = likedBy.length;
   delete v.liked;
-  saveVideo(v);
-  if(!wasLiked && v.authorId) createNotification(v.authorId, 'like_video', {videoId: v.id});
   renderVideos();
+
+  updateVideoFields(id, {likedBy, likes: likedBy.length})
+    .then(()=>{ if(!wasLiked && v.authorId) createNotification(v.authorId, 'like_video', {videoId: v.id}); })
+    .catch(err=>{
+      v.likedBy = prevLikedBy; v.likes = prevLikes;
+      if(hadLegacyLiked) v.liked = prevLegacyLiked;
+      handleCreateRejection(err, null, 'lajk', renderVideos);
+    });
 }
 
 function deleteVideo(id){
@@ -5567,15 +5606,22 @@ function toggleVideoCommentLike(videoId, commentIndex){
   if(!v || !v.comments) return;
   const c = v.comments[commentIndex];
   if(!c) return;
-  const likedBy = getLikedBy(c);
+  const likedBy = getLikedBy(c).slice();
   const uid = currentUser.uid;
   const idx = likedBy.indexOf(uid);
   if(idx>=0) likedBy.splice(idx,1); else likedBy.push(uid);
+
+  const prevLikedBy = c.likedBy, prevLikes = c.likes, hadLegacyLiked = ('liked' in c), prevLegacyLiked = c.liked;
   c.likedBy = likedBy;
   c.likes = likedBy.length;
   delete c.liked;
-  saveVideo(v);
   renderVideoComments();
+
+  updateVideoFields(videoId, {comments: v.comments}).catch(err=>{
+    c.likedBy = prevLikedBy; c.likes = prevLikes;
+    if(hadLegacyLiked) c.liked = prevLegacyLiked;
+    handleCreateRejection(err, null, 'lajk komentára', renderVideoComments);
+  });
 }
 
 function submitVideoComment(){
@@ -5593,7 +5639,7 @@ function submitVideoComment(){
   renderVideoComments();
   const countEl = document.getElementById('chat-count-'+v.id);
   if(countEl) countEl.textContent = v.comments.length;
-  saveVideo(v)
+  updateVideoFields(v.id, {comments: v.comments})
     .then(()=>bumpRateLimit('lastCommentAt'))
     .then(()=>{ if(v.authorId) createNotification(v.authorId, 'comment_video', {videoId: v.id}); })
     .catch(err=>{
@@ -5691,7 +5737,7 @@ function addVideo(){
   const modErr = moderationError(caption);
   if(modErr){ alert(modErr); return; }
   const g = randomGradients[Math.floor(Math.random()*randomGradients.length)];
-  const newVideo = {id:Date.now(), name:currentUser.name, authorId:currentUser.uid, createdAt: Date.now(), caption: caption || '', url, likes:0, liked:false, views:0, comments:[], c1:g[0], c2:g[1]};
+  const newVideo = {id:Date.now(), name:currentUser.name, authorId:currentUser.uid, createdAt: Date.now(), caption: caption || '', url, likes:0, likedBy:[], views:0, comments:[], c1:g[0], c2:g[1]};
   videos.unshift(newVideo);
   closeVideoModal();
   renderVideos();
