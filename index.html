@@ -1647,7 +1647,33 @@ if(FIREBASE_CONFIGURED){
 // "Web Push certificates" → Generate key pair (skopíruj vygenerovaný kľúč).
 const FCM_VAPID_KEY = 'BG_sGfM424ZStyp5kTtyZLN1o7EGTdn8c-eBW5Ya9CBKL2tFlGE0cETuG6qfkZhnGzWEpUBzfSAnbCWGjK7LpBg';
 
-// Požiada o povolenie zobrazovať upozornenia a uloží "push token" tohto
+// KROK 3 — Cloudflare Worker, ktorý reálne odosiela push notifikácie
+// (obsahuje bezpečne schovaný Firebase Service Account kľúč, ktorý sa
+// nikdy nesmie objaviť tu v index.html).
+const CALL_PUSH_WORKER_URL = 'https://sparkling-pine-7e28.sevcikjaroslav1.workers.dev/notify-call';
+// Jednoduchá spoločná "poistka" proti tomu, aby si niekto cudzí mohol
+// poslať push cez tento endpoint - nie je to dokonalé zabezpečenie
+// (kód appky je verejne čitateľný), len základná ochrana proti
+// náhodnému/automatizovanému zneužitiu.
+const CALL_PUSH_SHARED_SECRET = 'c8-push-9f2ab74e1d';
+
+async function triggerCallPushNotification(calleeUid, callerName, type, callId){
+  if(!db) return;
+  const prof = await db.collection('profiles').doc(calleeUid).get();
+  const tokens = (prof.exists && Array.isArray(prof.data().fcmTokens)) ? prof.data().fcmTokens : [];
+  if(!tokens.length) return; // druhá strana si appku ešte nenainštalovala / nepovolila upozornenia
+  await fetch(CALL_PUSH_WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret: CALL_PUSH_SHARED_SECRET,
+      tokens,
+      title: (type === 'video' ? '📹 Videohovor' : '📞 Hovor') + ' od ' + callerName,
+      body: 'Klepnutím prijmeš hovor v Connect8',
+      data: { type: 'call', callId, callType: type }
+    })
+  });
+}
 // zariadenia do profilu prihláseného používateľa. Tento token je to, čo
 // neskôr appka (resp. Cloudflare Worker) použije na poslanie upozornenia
 // na hovor/správu aj vtedy, keď appka nie je práve otvorená.
@@ -5900,6 +5926,11 @@ async function startCall(user, type){
     offer: { type: offer.type, sdp: offer.sdp },
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
+
+  // KROK 3: pošli push upozornenie druhej strane cez Cloudflare Worker -
+  // toto zafunguje aj vtedy, keď callee nemá Connect8 práve otvorený.
+  triggerCallPushNotification(user.uid, currentUser.name, type, callDoc.id)
+    .catch(e=>console.warn('Connect8: push na hovor sa nepodarilo poslať:', e));
 
   callDocUnsub = callDoc.onSnapshot(async doc=>{
     const d = doc.data();
