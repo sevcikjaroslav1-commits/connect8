@@ -1603,6 +1603,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 <script>
 /* =================================================================
    ÚLOŽISKO DÁT + PRIHLASOVANIE — Firebase (Google), zadarmo
@@ -1639,6 +1640,44 @@ if(FIREBASE_CONFIGURED){
   auth = firebase.auth();
   db = firebase.firestore();
   rtdb = firebase.database();
+}
+
+// ⚠️ KROK 2 — sem vlož VAPID kľúč z Firebase Console:
+// Project settings → Cloud Messaging → záložka "Web configuration" →
+// "Web Push certificates" → Generate key pair (skopíruj vygenerovaný kľúč).
+const FCM_VAPID_KEY = 'BG_sGfM424ZStyp5kTtyZLN1o7EGTdn8c-eBW5Ya9CBKL2tFlGE0cETuG6qfkZhnGzWEpUBzfSAnbCWGjK7LpBg';
+
+// Požiada o povolenie zobrazovať upozornenia a uloží "push token" tohto
+// zariadenia do profilu prihláseného používateľa. Tento token je to, čo
+// neskôr appka (resp. Cloudflare Worker) použije na poslanie upozornenia
+// na hovor/správu aj vtedy, keď appka nie je práve otvorená.
+async function setupPushNotifications(){
+  if(!FIREBASE_CONFIGURED || !currentUser) return;
+  if(!('Notification' in window) || !('serviceWorker' in navigator)) return;
+  if(FCM_VAPID_KEY.startsWith('VLOZ_SEM')){
+    console.warn('Connect8: FCM_VAPID_KEY ešte nie je nastavený — upozornenia na pozadí zatiaľ nefungujú.');
+    return;
+  }
+  try{
+    const permission = await Notification.requestPermission();
+    if(permission !== 'granted') return;
+    const swReg = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+    const messaging = firebase.messaging();
+    const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
+    if(!token) return;
+    // Ulož token do profilu (viac zariadení = viac tokenov, preto pole)
+    await db.collection('profiles').doc(currentUser.uid).set({
+      fcmTokens: firebase.firestore.FieldValue.arrayUnion(token)
+    }, { merge: true });
+    // Upozornenia, ktoré prídu, kým je appka priamo otvorená na obrazovke,
+    // sa nezobrazia ako systémová notifikácia automaticky - o to sa
+    // postará táto funkcia (napr. jednoduché zobrazenie v appke).
+    messaging.onMessage((payload)=>{
+      console.log('Connect8: správa prišla, kým bola appka otvorená:', payload);
+    });
+  }catch(e){
+    console.warn('Connect8: nastavenie push notifikácií zlyhalo:', e);
+  }
 }
 
 let storageMode = "offline"; // "offline" | "online"
@@ -3749,6 +3788,7 @@ if(FIREBASE_CONFIGURED){
       // predvolené dáta namiesto tých reálnych.
       await loadState();
       enterApp();
+      setupPushNotifications(); // KROK 2: požiada o povolenie a uloží push token
     }
     authReadyResolve();
   });
