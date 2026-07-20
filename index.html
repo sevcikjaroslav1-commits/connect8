@@ -324,7 +324,7 @@
   .mode-dock button[data-mode="movies"].active{background:var(--mode-movies);}
   .mode-dock button[data-mode="games"].active{background:var(--mode-games);}
   .movies-nav-row{
-    display:flex;justify-content:center;
+    display:flex;justify-content:flex-start;
     background:var(--surface);border-bottom:1px solid var(--line);
     padding:0 16px 12px;position:sticky;top:var(--topbar-h, 58px);z-index:39;
   }
@@ -3057,6 +3057,8 @@ function enterApp(){
   document.getElementById('app').style.display = 'block';
   updateTopbarHeightVar();
   setTimeout(updateTopbarHeightVar, 300);
+  alignSecondNavRow();
+  setTimeout(alignSecondNavRow, 300);
   renderAllAvatars();
   document.getElementById('sidebar-username').textContent = currentUser.name;
   loadViewedVideoIds();
@@ -4027,6 +4029,31 @@ window.addEventListener('orientationchange', ()=>setTimeout(updateTopbarHeightVa
 // pre istotu prepočítať aj tesne po tom, čo sa layout ustáli (fonty/obrázky)
 setTimeout(updateTopbarHeightVar, 300);
 setTimeout(updateTopbarHeightVar, 1000);
+
+// Druhý riadok navigácie (Filmy/Hry) má byť presne vystredený pod prvým
+// riadkom (Feed/Videá/...) - keďže horný riadok je vycentrovaný medzi
+// vyhľadávaním a hodinami/avatarom (nie medzi celou šírkou stránky),
+// jednoduché "vycentrovať na celú šírku" by sa s ním nezhodovalo. Preto
+// polohu druhého riadku dopočítavame podľa skutočnej pozície prvého.
+function alignSecondNavRow(){
+  const topDock = document.querySelector('.topbar > .mode-dock');
+  const row = document.querySelector('.movies-nav-row');
+  if(!topDock || !row) return;
+  const bottomDock = row.querySelector('.mode-dock');
+  if(!bottomDock) return;
+  bottomDock.style.marginLeft = '0px';
+  const topRect = topDock.getBoundingClientRect();
+  const rowRect = row.getBoundingClientRect();
+  const bottomRect = bottomDock.getBoundingClientRect();
+  const topCenter = topRect.left + topRect.width / 2;
+  const offset = topCenter - (rowRect.left + bottomRect.width / 2);
+  bottomDock.style.marginLeft = Math.max(0, offset) + 'px';
+}
+window.addEventListener('load', alignSecondNavRow);
+window.addEventListener('resize', alignSecondNavRow);
+window.addEventListener('orientationchange', ()=>setTimeout(alignSecondNavRow, 200));
+setTimeout(alignSecondNavRow, 300);
+setTimeout(alignSecondNavRow, 1000);
 
 /* ---------------- MODE SWITCH ---------------- */
 function clearSideNavActive(){
