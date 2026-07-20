@@ -6370,6 +6370,26 @@ document.addEventListener('DOMContentLoaded', init);
       window.screen.orientation.addEventListener('change', ()=> setTimeout(resetViewport, 150));
     }
   })();
+
+  // Appka je (podľa manifest.json) natvrdo uzamknutá na výšku - to platí
+  // pre bežné prezeranie feedu, správ, marketplace a pod. Keď ale niekto
+  // pustí video na celú obrazovku (sekcia Filmy, prípadne YouTube video vo
+  // Videách), na čas trvania celoobrazovkového prehrávania appku dočasne
+  // ODOMKNEME na šírku, nech sa dá telefón otočiť presne tak, ako na
+  // youtube.com. Hneď po opustení celej obrazovky sa zámok na výšku vráti.
+  (function(){
+    function onFullscreenChange(){
+      const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      if(!window.screen || !window.screen.orientation || !window.screen.orientation.lock) return;
+      if(isFullscreen){
+        window.screen.orientation.lock('landscape').catch(()=>{ /* niektoré prehliadače (napr. iPhone) toto API vôbec nemajú - fullscreen video vtedy funguje ich vlastným natívnym spôsobom */ });
+      }else{
+        window.screen.orientation.lock('portrait').catch(()=>{});
+      }
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+  })();
 </script>
 </body>
 </html>
