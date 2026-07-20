@@ -33,6 +33,8 @@
     --mode-news-soft: #E4F7EE;
     --mode-movies: #C0392B;
     --mode-movies-soft: #FBE6E3;
+    --mode-games: #2563EB;
+    --mode-games-soft: #E4ECFB;
 
     --accent: var(--mode-feed);
     --accent-soft: var(--mode-feed-soft);
@@ -319,7 +321,14 @@
   .mode-dock button[data-mode="market"].active{background:var(--mode-market);}
   .mode-dock button[data-mode="video"].active{background:var(--mode-video);}
   .mode-dock button[data-mode="news"].active{background:var(--mode-news);}
-  .mode-dock button[data-mode="movies"].active{background:var(--mode-movies);}
+  .movies-nav-row{display:flex;justify-content:center;gap:10px;padding:12px 16px 0;}
+  .movies-nav-btn{
+    padding:8px 22px;border-radius:10px;border:2px solid var(--mode-movies);
+    color:var(--mode-movies);font-weight:700;font-size:14px;background:var(--surface);
+  }
+  .movies-nav-btn.active{background:var(--mode-movies);color:#fff;}
+  .games-nav-btn{border-color:var(--mode-games);color:var(--mode-games);}
+  .games-nav-btn.active{background:var(--mode-games);color:#fff;}
 
   /* ---------- FILMY / DOKUMENTY ---------- */
   .movies-subtabs{display:flex;gap:8px;margin-bottom:16px;}
@@ -364,6 +373,11 @@
   .movie-del-btn{background:transparent;color:var(--text-dim);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
   .movie-del-btn:hover{background:var(--bg);color:var(--mode-video);}
   .movies-status{font-size:13px;color:var(--text-dim);padding:20px 4px;grid-column:1/-1;}
+  .games-frame-wrap{
+    width:100%;height:calc(100vh - 220px);min-height:480px;
+    border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);background:#000;
+  }
+  .games-frame-wrap iframe{width:100%;height:100%;border:0;display:block;}
 
   .news-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
   .news-head h2{margin:0;font-size:20px;}
@@ -1235,7 +1249,6 @@
       <button data-mode="video" onclick="switchMode('video')"><span class="ind"></span>Videá</button>
       <button data-mode="market" onclick="switchMode('market')"><span class="ind"></span>Marketplace</button>
       <button data-mode="news" onclick="switchMode('news')"><span class="ind"></span>Správy</button>
-      <button data-mode="movies" onclick="switchMode('movies')"><span class="ind"></span>Filmy</button>
     </div>
 
     <div class="mobile-quick-links">
@@ -1261,6 +1274,11 @@
       <div class="avatar" id="user-avatar">?</div>
       <button class="logout-btn" onclick="doLogout()">Odhlásiť</button>
     </div>
+  </div>
+
+  <div class="movies-nav-row">
+    <button class="movies-nav-btn" data-mode="movies" onclick="switchMode('movies')">🎬 Filmy</button>
+    <button class="movies-nav-btn games-nav-btn" data-mode="games" onclick="switchMode('games')">🎮 Hry</button>
   </div>
 
   <button class="invite-friends-btn" onclick="openInviteModal()" title="Pozvať priateľov">
@@ -1499,6 +1517,21 @@
 
           <div class="movies-grid" id="movies-grid">
             <div class="movies-status">Zatiaľ tu nič nie je.</div>
+          </div>
+        </section>
+
+        <!-- HRY -->
+        <section class="view" id="view-games">
+          <div class="games-frame-wrap">
+            <iframe
+              src="https://www.crazygames.com/t/adrenaline"
+              title="Hry"
+              allow="gamepad; fullscreen; autoplay; clipboard-write"
+              allowfullscreen
+              webkitallowfullscreen
+              mozallowfullscreen
+              loading="lazy"
+            ></iframe>
           </div>
         </section>
 
@@ -2636,7 +2669,7 @@ function toggleFollowFromProfile(){
 
 function openProfile(){
   viewedProfileUser = null;
-  document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.mode-dock button, .movies-nav-btn').forEach(b=>b.classList.remove('active'));
   setSideNavActive('profile');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-profile').classList.add('active');
@@ -2645,7 +2678,7 @@ function openProfile(){
 
 function openUserProfile(user){
   viewedProfileUser = user;
-  document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.mode-dock button, .movies-nav-btn').forEach(b=>b.classList.remove('active'));
   clearSideNavActive();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-profile').classList.add('active');
@@ -2759,7 +2792,7 @@ function buildCallButtonRow(u){
 }
 
 function openUsersList(){
-  document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.mode-dock button, .movies-nav-btn').forEach(b=>b.classList.remove('active'));
   setSideNavActive('users');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-users').classList.add('active');
@@ -2849,7 +2882,7 @@ async function renderUsersList(){
 }
 
 function openFriendsList(){
-  document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.mode-dock button, .movies-nav-btn').forEach(b=>b.classList.remove('active'));
   setSideNavActive('friends');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-friends').classList.add('active');
@@ -4010,7 +4043,7 @@ function setSideNavActive(key){
   });
 }
 function switchMode(mode){
-  document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
+  document.querySelectorAll('.mode-dock button, .movies-nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
   clearSideNavActive();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+mode).classList.add('active');
@@ -4045,7 +4078,7 @@ function switchMode(mode){
   }
 
   const root = document.documentElement.style;
-  const map = {feed:['--mode-feed','--mode-feed-soft'], market:['--mode-market','--mode-market-soft'], video:['--mode-video','--mode-video-soft'], news:['--mode-news','--mode-news-soft'], movies:['--mode-movies','--mode-movies-soft']};
+  const map = {feed:['--mode-feed','--mode-feed-soft'], market:['--mode-market','--mode-market-soft'], video:['--mode-video','--mode-video-soft'], news:['--mode-news','--mode-news-soft'], movies:['--mode-movies','--mode-movies-soft'], games:['--mode-games','--mode-games-soft']};
   root.setProperty('--accent', getComputedStyle(document.documentElement).getPropertyValue(map[mode][0]));
   root.setProperty('--accent-soft', getComputedStyle(document.documentElement).getPropertyValue(map[mode][1]));
 }
@@ -5203,7 +5236,7 @@ let currentProductDetailId = null;
 
 function openProductDetail(id){
   currentProductDetailId = id;
-  document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.mode-dock button, .movies-nav-btn').forEach(b=>b.classList.remove('active'));
   clearSideNavActive();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-product-detail').classList.add('active');
