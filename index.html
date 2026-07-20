@@ -5444,6 +5444,18 @@ function addMovie(){
   const modErr = moderationError(title);
   if(modErr){ alert(modErr); return; }
 
+  // Kontrola duplicít - podľa YouTube odkazu (identické video) alebo podľa
+  // názvu (nech niekto nepridá to isté pod mierne iným popisom/veľkými
+  // písmenami) naprieč celou databázou, nielen v rámci jednej kategórie.
+  const normalizedTitle = title.toLowerCase().trim();
+  const duplicate = movies.find(m =>
+    m.youtubeId === ytId || (m.title && m.title.toLowerCase().trim() === normalizedTitle)
+  );
+  if(duplicate){
+    alert(`Toto už je v databáze pridané ako "${duplicate.title}" (${duplicate.category === 'film' ? 'Filmy' : 'Dokumenty'}) - nemá zmysel pridávať to isté znova.`);
+    return;
+  }
+
   const newMovie = {
     id: Date.now(),
     name: currentUser.name,
