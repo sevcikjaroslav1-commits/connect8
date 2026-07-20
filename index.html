@@ -6378,6 +6378,16 @@ document.addEventListener('DOMContentLoaded', init);
   // ODOMKNEME na šírku, nech sa dá telefón otočiť presne tak, ako na
   // youtube.com. Hneď po opustení celej obrazovky sa zámok na výšku vráti.
   (function(){
+    function lockPortraitIfInstalled(){
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      if(!isStandalone) return; // v bežnej záložke prehliadača zámok nevynucujeme, len v nainštalovanej appke
+      if(window.screen && window.screen.orientation && window.screen.orientation.lock){
+        window.screen.orientation.lock('portrait').catch(()=>{ /* niektoré Android verzie toto mimo fullscreen odmietnu - vtedy platí aspoň nastavenie z manifest.json */ });
+      }
+    }
+    lockPortraitIfInstalled();
+    window.addEventListener('load', lockPortraitIfInstalled);
+
     function onFullscreenChange(){
       const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
       if(!window.screen || !window.screen.orientation || !window.screen.orientation.lock) return;
