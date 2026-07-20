@@ -128,7 +128,7 @@
   .topbar{
     position:sticky;top:0;z-index:40;
     display:flex;align-items:center;justify-content:space-between;
-    padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--line);
+    padding:12px 24px;background:var(--surface);
   }
   .topbar-left{display:flex;align-items:center;gap:14px;}
   .topbar .brand{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:700;flex-shrink:0;}
@@ -323,7 +323,11 @@
   .mode-dock button[data-mode="news"].active{background:var(--mode-news);}
   .mode-dock button[data-mode="movies"].active{background:var(--mode-movies);}
   .mode-dock button[data-mode="games"].active{background:var(--mode-games);}
-  .movies-nav-row{display:flex;justify-content:center;padding:10px 16px 0;}
+  .movies-nav-row{
+    display:flex;justify-content:center;
+    background:var(--surface);border-bottom:1px solid var(--line);
+    padding:0 16px 12px;position:sticky;top:var(--topbar-h, 58px);z-index:39;
+  }
 
   /* ---------- FILMY / DOKUMENTY ---------- */
   .movies-subtabs{display:flex;gap:8px;margin-bottom:16px;}
