@@ -2,7 +2,7 @@
 <html lang="sk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#F2F3F5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -6348,6 +6348,28 @@ document.addEventListener('DOMContentLoaded', init);
       });
     });
   }
+
+  // Oprava známej Android/Chrome chyby: po otočení telefónu (napr. z
+  // celoobrazovkového videa späť na výšku) niekedy prehliadač nesprávne
+  // prepočíta priblíženie stránky a zostane "roztiahnutá", kým používateľ
+  // ručne neuštipne prstami na zmenšenie. Krátkym "preblikaním" viewport
+  // meta tagu hneď po zmene orientácie donútime prehliadač prepočítať to
+  // odznova, nech sa vždy vráti do správnej pôvodnej veľkosti sám.
+  (function(){
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if(!viewportMeta) return;
+    const original = viewportMeta.getAttribute('content');
+    function resetViewport(){
+      viewportMeta.setAttribute('content', original + ', maximum-scale=0.99');
+      requestAnimationFrame(()=>{
+        viewportMeta.setAttribute('content', original);
+      });
+    }
+    window.addEventListener('orientationchange', ()=> setTimeout(resetViewport, 150));
+    if(window.screen && window.screen.orientation){
+      window.screen.orientation.addEventListener('change', ()=> setTimeout(resetViewport, 150));
+    }
+  })();
 </script>
 </body>
 </html>
