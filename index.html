@@ -1158,7 +1158,8 @@
     .mode-dock button{flex:1;min-width:0;padding:7px 2px;font-size:10.5px;gap:3px;white-space:nowrap;justify-content:center;overflow:hidden;text-overflow:ellipsis;}
     .mode-dock button .ind{display:none;}
     .mobile-quick-links{
-      order:4;width:100%;display:flex;gap:4px;overflow-x:auto;padding:2px 0 2px;
+      width:100%;display:flex;gap:4px;overflow-x:auto;padding:8px 16px 10px;
+      background:var(--surface);border-bottom:1px solid var(--line);
     }
     .mobile-quick-links button{
       flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--bg);
@@ -1250,12 +1251,6 @@
       <button data-mode="news" onclick="switchMode('news')"><span class="ind"></span>Správy</button>
     </div>
 
-    <div class="mobile-quick-links">
-      <button id="mobile-nav-profile" onclick="openProfile()"><span class="avatar" id="mobile-quick-avatar">?</span>Môj profil</button>
-      <button id="mobile-nav-friends" onclick="openFriendsList()">👥 Priatelia</button>
-      <button id="mobile-nav-users" onclick="openUsersList()">🧑‍🤝‍🧑 Používatelia</button>
-    </div>
-
     <div class="topbar-right">
       <div class="header-clock" id="header-clock" title="Aktuálny čas a dátum">
         <div class="header-clock-time" id="header-clock-time">--:--</div>
@@ -1280,6 +1275,12 @@
       <button data-mode="movies" onclick="switchMode('movies')"><span class="ind"></span>Filmy</button>
       <button data-mode="games" onclick="switchMode('games')"><span class="ind"></span>Hry</button>
     </div>
+  </div>
+
+  <div class="mobile-quick-links">
+    <button id="mobile-nav-profile" onclick="openProfile()"><span class="avatar" id="mobile-quick-avatar">?</span>Môj profil</button>
+    <button id="mobile-nav-friends" onclick="openFriendsList()">👥 Priatelia</button>
+    <button id="mobile-nav-users" onclick="openUsersList()">🧑‍🤝‍🧑 Používatelia</button>
   </div>
 
   <button class="invite-friends-btn" onclick="openInviteModal()" title="Pozvať priateľov">
