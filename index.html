@@ -5483,7 +5483,11 @@ function playMovie(id){
   const thumbEl = document.querySelector(`.movie-thumb[data-mid="${id}"]`);
   if(!thumbEl) return;
   const ytId = thumbEl.dataset.yt;
-  thumbEl.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+  // "fullscreen" v allow + všetky 3 varianty allowfullscreen atribútu
+  // (bežný, webkit, moz) sú potrebné na to, aby sa video pri otočení
+  // telefónu na šírku samo prepnulo na celú obrazovku presne ako na
+  // youtube.com - bez toho to niektoré mobilné prehliadače blokujú.
+  thumbEl.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1&playsinline=1" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>`;
 }
 
 function renderMovies(){
