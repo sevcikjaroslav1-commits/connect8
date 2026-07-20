@@ -6,7 +6,7 @@
   "scope": "./",
   "id": "./index.html",
   "display": "standalone",
-  "orientation": "any",
+  "orientation": "portrait",
   "background_color": "#f2f3f5",
   "theme_color": "#5B4CFF",
   "lang": "sk",
