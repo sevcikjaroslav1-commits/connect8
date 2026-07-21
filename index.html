@@ -378,6 +378,36 @@
     display:inline-block;background:var(--mode-games);color:#fff;font-weight:700;
     padding:12px 28px;border-radius:12px;font-size:15px;text-decoration:none;
   }
+  .games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;}
+  .game-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .game-thumb{position:relative;aspect-ratio:1/1;background:#000;cursor:pointer;}
+  .game-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .game-thumb iframe{width:100%;height:100%;border:0;display:block;}
+  .game-thumb .play-overlay{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.25);
+  }
+  .game-thumb .play-overlay span{
+    width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.9);
+    display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--mode-games);
+  }
+  .game-body{padding:10px 12px;}
+  .game-title{font-weight:700;font-size:13.5px;margin:0;line-height:1.3;text-align:center;}
+  .game-back-btn{
+    background:var(--mode-games-soft);color:var(--mode-games);padding:8px 14px;border-radius:999px;
+    font-size:12.5px;font-weight:700;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;
+  }
+  .game-player-wrap{margin-bottom:20px;}
+  .game-player-wrap .game-thumb{aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;}
+  .game-player-overlay{
+    position:fixed;inset:0;z-index:9999;background:#000;
+    display:flex;flex-direction:column;
+  }
+  .game-player-overlay iframe{flex:1;width:100%;height:100%;border:0;display:block;}
+  .game-player-overlay .game-back-btn{
+    position:absolute;top:12px;left:12px;z-index:2;margin-bottom:0;
+    background:rgba(20,20,20,.7);color:#fff;
+  }
 
   .news-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
   .news-head h2{margin:0;font-size:20px;}
@@ -1257,7 +1287,7 @@
       <button data-mode="market" onclick="switchMode('market')"><span class="ind"></span>Marketplace</button>
       <button data-mode="news" onclick="switchMode('news')"><span class="ind"></span>Správy</button>
       <button data-mode="movies" onclick="switchMode('movies')"><span class="ind"></span>Filmy</button>
-      <button data-mode="games" onclick="openGamesDirect()"><span class="ind"></span>Hry</button>
+      <button data-mode="games" onclick="switchMode('games')"><span class="ind"></span>Hry</button>
     </div>
 
     <div class="topbar-right">
@@ -1526,12 +1556,8 @@
 
         <!-- HRY -->
         <section class="view" id="view-games">
-          <div class="games-cta-card">
-            <div class="games-cta-icon">🎮</div>
-            <h2>Adrenaline na CrazyGames</h2>
-            <p>Táto hra sa dá hrať priamo na CrazyGames - klikni na tlačidlo nižšie a otvorí sa ti v novej záložke.</p>
-            <a class="games-cta-btn" href="https://www.crazygames.com/t/adrenaline" target="_blank" rel="noopener noreferrer">Otvoriť CrazyGames ↗</a>
-          </div>
+          <div id="games-player-area"></div>
+          <div class="games-grid" id="games-grid"></div>
         </section>
 
         <!-- PROFIL -->
@@ -4044,48 +4070,6 @@ function setSideNavActive(key){
     if(el) el.classList.add('active');
   });
 }
-// Tlačidlo "Hry" v navigácii otvorí CrazyGames rovno v novej záložke -
-// keďže sa to nedá vložiť priamo do appky (CrazyGames to blokuje), nemá
-// zmysel najprv prepínať na internú sekciu a až tam čakať na druhé
-// kliknutie.
-function openGamesDirect(){
-  // zapamätáme si tlačidlo, ktoré bolo aktívne predtým - obsah stránky sa
-  // totiž nemení (Hry nie sú interná sekcia), takže po návrate z CrazyGames
-  // musí zvýraznenie sedieť s tým, čo je reálne zobrazené
-  const previousActiveBtn = document.querySelector('.mode-dock button.active');
-
-  document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
-  const gamesBtn = document.querySelector('.mode-dock button[data-mode="games"]');
-  if(gamesBtn){
-    gamesBtn.classList.add('active');
-    gamesBtn.getBoundingClientRect(); // vynúti prekreslenie, aby prehliadač stihol zobraziť zafarbenie
-  }
-
-  // keď sa používateľ vráti z CrazyGames záložky späť na Connect8 (táto
-  // záložka sa opäť stane viditeľnou), vrátime zvýraznenie na pôvodnú sekciu
-  const restorePreviousActive = () => {
-    if(document.visibilityState !== 'visible') return;
-    document.removeEventListener('visibilitychange', restorePreviousActive);
-    document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
-    if(previousActiveBtn){
-      previousActiveBtn.classList.add('active');
-    } else {
-      const feedBtn = document.querySelector('.mode-dock button[data-mode="feed"]');
-      if(feedBtn) feedBtn.classList.add('active');
-    }
-  };
-  document.addEventListener('visibilitychange', restorePreviousActive);
-
-  // Poznámka: 'noopener' spôsobuje, že window.open() vráti null, preto ho
-  // nepoužívame. Krátke oneskorenie (200ms) necháva prehliadač vykresliť
-  // zafarbené tlačidlo predtým, než sa pozornosť prepne na novú záložku -
-  // user-activation z kliknutia v prehliadačoch vydrží niekoľko sekúnd,
-  // takže window.open() v setTimeoute nebude blokovaný ako pop-up.
-  setTimeout(()=>{
-    window.open('https://www.onlinegames.io/t/mobile/', '_blank');
-  }, 200);
-}
-
 function switchMode(mode){
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
   clearSideNavActive();
@@ -4119,6 +4103,10 @@ function switchMode(mode){
 
   if(mode === 'movies'){
     renderMovies();
+  }
+
+  if(mode === 'games'){
+    renderGames();
   }
 
   const root = document.documentElement.style;
@@ -5592,6 +5580,72 @@ function renderMovies(){
   `).join('');
 }
 
+
+/* ---------------- HRY (mriežka hier s prehrávaním priamo v appke) ---------------- */
+const GAMES = [
+  { id:'gta-simulator',        title:'GTA Simulator',        thumb:'https://www.onlinegames.io/media/posts/416/GTA-Simulator.jpg',       embed:'https://www.onlinegames.io/games/2023/unity2/gta-simulator/index.html' },
+  { id:'army-combat',          title:'Army Combat',          thumb:'https://www.onlinegames.io/media/posts/664/Army-Combat.jpg',          embed:'https://www.onlinegames.io/games/2021/unity/army-combat/index.html' },
+  { id:'fps-strike',           title:'FPS Strike',           thumb:'https://www.onlinegames.io/media/posts/902/fps-strike-online.jpg',    embed:'https://cloud.onlinegames.io/games/2024/unity2/fps-strike/index-og.html' },
+  { id:'real-flight-simulator',title:'Real Flight Simulator',thumb:'https://www.onlinegames.io/media/posts/342/Real-Flight-Simulator-2.jpg', embed:'https://www.onlinegames.io/games/2023/unity/real-flight-simulator/index.html' },
+  { id:'grand-extreme-racing', title:'Grand Extreme Racing', thumb:'https://www.onlinegames.io/media/posts/1341/grand-extreme-racing.webp', embed:'https://www.onlinegames.io/grand-extreme-racing/' },
+  { id:'american-truck-car-driving', title:'American Truck Car Driving', thumb:'https://www.onlinegames.io/media/posts/355/American-Truck-Car-Driving-Game.jpg', embed:'https://html5.gamedistribution.com/d3e870c05a48468c8e03062b75698b8a/?gd_sdk_referrer_url=https://www.onlinegames.io/american-truck-car-driving/' },
+  { id:'football-soccer-world-cup', title:'Football Soccer World Cup', thumb:'https://www.onlinegames.io/media/posts/337/Football-Soccer-World-Cup-Game.jpg', embed:'https://html5.gamemonetize.com/9usvzqu6z2g7r1ym8g0layskj5oixk46/' }
+];
+
+function renderGames(){
+  const grid = document.getElementById('games-grid');
+  if(!grid) return;
+  grid.innerHTML = GAMES.map(g=>`
+    <div class="game-card">
+      <div class="game-thumb" data-gid="${g.id}" onclick="playGame('${g.id}')">
+        <img src="${g.thumb}" loading="lazy" alt="${escapeHtml(g.title)}">
+        <div class="play-overlay"><span>▶</span></div>
+      </div>
+      <div class="game-body"><p class="game-title">${escapeHtml(g.title)}</p></div>
+    </div>
+  `).join('');
+}
+
+function playGame(id){
+  const game = GAMES.find(g=>g.id === id);
+  if(!game) return;
+  const area = document.getElementById('games-player-area');
+  if(!area) return;
+  area.innerHTML = `
+    <div class="game-player-overlay" id="game-player-overlay">
+      <button class="game-back-btn" onclick="closeGamePlayer()">✕ Zavrieť</button>
+      <iframe id="game-player-iframe" src="${game.embed}" title="${escapeHtml(game.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>
+    </div>
+  `;
+  // automaticky prepnúť na skutočnú celú obrazovku (funguje, lebo sme stále
+  // v rámci klikacej udalosti - prehliadače to bez toho blokujú)
+  const overlay = document.getElementById('game-player-overlay');
+  const goFullscreen = overlay.requestFullscreen || overlay.webkitRequestFullscreen || overlay.mozRequestFullScreen;
+  if(goFullscreen){
+    goFullscreen.call(overlay).catch(()=>{}); // ak prehliadač odmietne, ostane aspoň celoobrazovkový overlay v rámci appky
+  }
+}
+
+function closeGamePlayer(){
+  const area = document.getElementById('games-player-area');
+  if(document.fullscreenElement || document.webkitFullscreenElement){
+    (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document);
+  }
+  if(area) area.innerHTML = '';
+}
+document.addEventListener('fullscreenchange', ()=>{
+  // ak používateľ zavrel celú obrazovku klávesou ESC, zruš aj prekryvný panel s hrou
+  if(!document.fullscreenElement){
+    const area = document.getElementById('games-player-area');
+    if(area && area.querySelector('.game-player-overlay')) area.innerHTML = '';
+  }
+});
+document.addEventListener('webkitfullscreenchange', ()=>{
+  if(!document.webkitFullscreenElement){
+    const area = document.getElementById('games-player-area');
+    if(area && area.querySelector('.game-player-overlay')) area.innerHTML = '';
+  }
+});
 
 function renderVideos(){
   const scroller = document.getElementById('video-scroller');
