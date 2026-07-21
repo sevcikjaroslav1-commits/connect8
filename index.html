@@ -33,8 +33,8 @@
     --mode-news-soft: #E4F7EE;
     --mode-movies: #C0392B;
     --mode-movies-soft: #FBE6E3;
-    --mode-games: #2563EB;
-    --mode-games-soft: #E4ECFB;
+    --mode-games: #38BDF8;
+    --mode-games-soft: #E5F5FE;
 
     --accent: var(--mode-feed);
     --accent-soft: var(--mode-feed-soft);
@@ -4049,6 +4049,9 @@ function setSideNavActive(key){
 // zmysel najprv prepínať na internú sekciu a až tam čakať na druhé
 // kliknutie.
 function openGamesDirect(){
+  document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+  const gamesBtn = document.querySelector('.mode-dock button[data-mode="games"]');
+  if(gamesBtn) gamesBtn.classList.add('active');
   window.open('https://www.crazygames.com/t/adrenaline', '_blank', 'noopener,noreferrer');
 }
 
