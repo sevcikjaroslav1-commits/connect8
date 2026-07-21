@@ -4051,11 +4051,18 @@ function setSideNavActive(key){
 function openGamesDirect(){
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   const gamesBtn = document.querySelector('.mode-dock button[data-mode="games"]');
-  if(gamesBtn) gamesBtn.classList.add('active');
-  // Poznámka: 'noopener' spôsobuje, že window.open() vráti null, takže
-  // neskoršie nastavenie win.location.href sa nikdy nevykoná. Preto
-  // otvárame záložku rovno s cieľovou URL, bez noopener/noreferrer.
-  window.open('https://www.crazygames.com/t/adrenaline', '_blank');
+  if(gamesBtn){
+    gamesBtn.classList.add('active');
+    gamesBtn.getBoundingClientRect(); // vynúti prekreslenie, aby prehliadač stihol zobraziť zafarbenie
+  }
+  // Poznámka: 'noopener' spôsobuje, že window.open() vráti null, preto ho
+  // nepoužívame. Krátke oneskorenie (200ms) necháva prehliadač vykresliť
+  // zafarbené tlačidlo predtým, než sa pozornosť prepne na novú záložku -
+  // user-activation z kliknutia v prehliadačoch vydrží niekoľko sekúnd,
+  // takže window.open() v setTimeoute nebude blokovaný ako pop-up.
+  setTimeout(()=>{
+    window.open('https://www.crazygames.com/t/adrenaline', '_blank');
+  }, 200);
 }
 
 function switchMode(mode){
