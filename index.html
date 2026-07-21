@@ -4052,14 +4052,10 @@ function openGamesDirect(){
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   const gamesBtn = document.querySelector('.mode-dock button[data-mode="games"]');
   if(gamesBtn) gamesBtn.classList.add('active');
-  // Záložku otvoríme synchrónne hneď (aby to prehliadač nepovažoval za
-  // blokované vyskakovacie okno), no jej obsah nastavíme až o chvíľu -
-  // vďaka tomu si používateľ stihne všimnúť zafarbenie tlačidla predtým,
-  // než sa pozornosť prepne na novú záložku.
-  const win = window.open('', '_blank', 'noopener,noreferrer');
-  setTimeout(()=>{
-    if(win) win.location.href = 'https://www.crazygames.com/t/adrenaline';
-  }, 250);
+  // Poznámka: 'noopener' spôsobuje, že window.open() vráti null, takže
+  // neskoršie nastavenie win.location.href sa nikdy nevykoná. Preto
+  // otvárame záložku rovno s cieľovou URL, bez noopener/noreferrer.
+  window.open('https://www.crazygames.com/t/adrenaline', '_blank');
 }
 
 function switchMode(mode){
