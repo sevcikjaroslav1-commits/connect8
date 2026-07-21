@@ -323,12 +323,6 @@
   .mode-dock button[data-mode="news"].active{background:var(--mode-news);}
   .mode-dock button[data-mode="movies"].active{background:var(--mode-movies);}
   .mode-dock button[data-mode="games"].active{background:var(--mode-games);}
-  .movies-nav-row{
-    display:flex;justify-content:flex-start;
-    background:var(--surface);border-bottom:1px solid var(--line);
-    padding:0 16px 12px;position:sticky;top:var(--topbar-h, 58px);z-index:39;
-  }
-  .movies-nav-row .mode-dock button{padding:10px 26px;}
 
   /* ---------- FILMY / DOKUMENTY ---------- */
   .movies-subtabs{display:flex;gap:8px;margin-bottom:16px;}
@@ -1161,11 +1155,12 @@
     .market-grid{grid-template-columns:1fr 1fr;}
     .topbar{flex-wrap:wrap;row-gap:10px;}
     .user-stats{display:none;}
-    .topbar > .mode-dock{order:3;width:100%;justify-content:stretch;padding:4px;gap:2px;}
-    .topbar > .mode-dock button{flex:1;min-width:0;padding:7px 2px;font-size:10.5px;gap:3px;white-space:nowrap;justify-content:center;overflow:hidden;text-overflow:ellipsis;}
-    .movies-nav-row .mode-dock button{padding:7px 22px;font-size:10.5px;}
+    .topbar > .mode-dock{
+      order:3;width:100%;padding:4px;gap:2px;
+      overflow-x:auto;justify-content:flex-start;-webkit-overflow-scrolling:touch;
+    }
+    .topbar > .mode-dock button{flex:0 0 auto;min-width:0;padding:7px 9px;font-size:10px;gap:3px;white-space:nowrap;justify-content:center;}
     .topbar > .mode-dock button .ind{display:none;}
-    .movies-nav-row{justify-content:center;}
     .mobile-quick-links{
       width:100%;display:flex;gap:4px;overflow-x:auto;padding:8px 16px 10px;
       background:var(--surface);border-bottom:1px solid var(--line);
@@ -1259,6 +1254,8 @@
       <button data-mode="video" onclick="switchMode('video')"><span class="ind"></span>Videá</button>
       <button data-mode="market" onclick="switchMode('market')"><span class="ind"></span>Marketplace</button>
       <button data-mode="news" onclick="switchMode('news')"><span class="ind"></span>Správy</button>
+      <button data-mode="movies" onclick="switchMode('movies')"><span class="ind"></span>Filmy</button>
+      <button data-mode="games" onclick="switchMode('games')"><span class="ind"></span>Hry</button>
     </div>
 
     <div class="topbar-right">
@@ -1277,13 +1274,6 @@
       </button>
       <div class="avatar" id="user-avatar">?</div>
       <button class="logout-btn" onclick="doLogout()">Odhlásiť</button>
-    </div>
-  </div>
-
-  <div class="movies-nav-row">
-    <div class="mode-dock">
-      <button data-mode="movies" onclick="switchMode('movies')"><span class="ind"></span>Filmy</button>
-      <button data-mode="games" onclick="switchMode('games')"><span class="ind"></span>Hry</button>
     </div>
   </div>
 
@@ -3063,8 +3053,6 @@ function enterApp(){
   document.getElementById('app').style.display = 'block';
   updateTopbarHeightVar();
   setTimeout(updateTopbarHeightVar, 300);
-  alignSecondNavRow();
-  setTimeout(alignSecondNavRow, 300);
   renderAllAvatars();
   document.getElementById('sidebar-username').textContent = currentUser.name;
   loadViewedVideoIds();
@@ -4027,17 +4015,9 @@ function updateTopbarHeightVar(){
   const h = topbar.getBoundingClientRect().height;
   if(h > 0){
     document.documentElement.style.setProperty('--topbar-h', h + 'px');
-  }
-  // "Môj profil / Priatelia / Používatelia" má ostať prilepené navrchu aj
-  // pri skrolovaní, hneď pod riadkom Filmy/Hry - preto dopočítame presnú
-  // výšku všetkého nad ním (topbar + Filmy/Hry), nech vieme, kam presne
-  // ho "prilepiť".
-  const moviesRow = document.querySelector('.movies-nav-row');
-  if(moviesRow){
-    const mh = moviesRow.getBoundingClientRect().height;
-    if(mh > 0){
-      document.documentElement.style.setProperty('--quicklinks-top', (h + mh) + 'px');
-    }
+    // "Môj profil / Priatelia / Používatelia" má ostať prilepené navrchu
+    // aj pri skrolovaní, hneď pod hornou lištou.
+    document.documentElement.style.setProperty('--quicklinks-top', h + 'px');
   }
 }
 window.addEventListener('load', updateTopbarHeightVar);
@@ -4046,38 +4026,6 @@ window.addEventListener('orientationchange', ()=>setTimeout(updateTopbarHeightVa
 // pre istotu prepočítať aj tesne po tom, čo sa layout ustáli (fonty/obrázky)
 setTimeout(updateTopbarHeightVar, 300);
 setTimeout(updateTopbarHeightVar, 1000);
-
-// Druhý riadok navigácie (Filmy/Hry) má byť presne vystredený pod prvým
-// riadkom (Feed/Videá/...) - keďže horný riadok je vycentrovaný medzi
-// vyhľadávaním a hodinami/avatarom (nie medzi celou šírkou stránky),
-// jednoduché "vycentrovať na celú šírku" by sa s ním nezhodovalo. Preto
-// polohu druhého riadku dopočítavame podľa skutočnej pozície prvého.
-function alignSecondNavRow(){
-  const topDock = document.querySelector('.topbar > .mode-dock');
-  const row = document.querySelector('.movies-nav-row');
-  if(!topDock || !row) return;
-  const bottomDock = row.querySelector('.mode-dock');
-  if(!bottomDock) return;
-  if(window.innerWidth <= 480){
-    // na mobile má hlavný riadok naťahované tlačidlá na celú šírku, takže
-    // jeho "stred" je vlastne stred celej stránky - o to sa postará čisté
-    // CSS centrovanie (justify-content:center), netreba nič dopočítavať.
-    bottomDock.style.marginLeft = '0px';
-    return;
-  }
-  bottomDock.style.marginLeft = '0px';
-  const topRect = topDock.getBoundingClientRect();
-  const rowRect = row.getBoundingClientRect();
-  const bottomRect = bottomDock.getBoundingClientRect();
-  const topCenter = topRect.left + topRect.width / 2;
-  const offset = topCenter - (rowRect.left + bottomRect.width / 2);
-  bottomDock.style.marginLeft = Math.max(0, offset) + 'px';
-}
-window.addEventListener('load', alignSecondNavRow);
-window.addEventListener('resize', alignSecondNavRow);
-window.addEventListener('orientationchange', ()=>setTimeout(alignSecondNavRow, 200));
-setTimeout(alignSecondNavRow, 300);
-setTimeout(alignSecondNavRow, 1000);
 
 /* ---------------- MODE SWITCH ---------------- */
 function clearSideNavActive(){
