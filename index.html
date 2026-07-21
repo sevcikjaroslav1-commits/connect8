@@ -4049,12 +4049,33 @@ function setSideNavActive(key){
 // zmysel najprv prepínať na internú sekciu a až tam čakať na druhé
 // kliknutie.
 function openGamesDirect(){
+  // zapamätáme si tlačidlo, ktoré bolo aktívne predtým - obsah stránky sa
+  // totiž nemení (Hry nie sú interná sekcia), takže po návrate z CrazyGames
+  // musí zvýraznenie sedieť s tým, čo je reálne zobrazené
+  const previousActiveBtn = document.querySelector('.mode-dock button.active');
+
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   const gamesBtn = document.querySelector('.mode-dock button[data-mode="games"]');
   if(gamesBtn){
     gamesBtn.classList.add('active');
     gamesBtn.getBoundingClientRect(); // vynúti prekreslenie, aby prehliadač stihol zobraziť zafarbenie
   }
+
+  // keď sa používateľ vráti z CrazyGames záložky späť na Connect8 (táto
+  // záložka sa opäť stane viditeľnou), vrátime zvýraznenie na pôvodnú sekciu
+  const restorePreviousActive = () => {
+    if(document.visibilityState !== 'visible') return;
+    document.removeEventListener('visibilitychange', restorePreviousActive);
+    document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
+    if(previousActiveBtn){
+      previousActiveBtn.classList.add('active');
+    } else {
+      const feedBtn = document.querySelector('.mode-dock button[data-mode="feed"]');
+      if(feedBtn) feedBtn.classList.add('active');
+    }
+  };
+  document.addEventListener('visibilitychange', restorePreviousActive);
+
   // Poznámka: 'noopener' spôsobuje, že window.open() vráti null, preto ho
   // nepoužívame. Krátke oneskorenie (200ms) necháva prehliadač vykresliť
   // zafarbené tlačidlo predtým, než sa pozornosť prepne na novú záložku -
