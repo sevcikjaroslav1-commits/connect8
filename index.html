@@ -1158,7 +1158,9 @@
     .topbar > .mode-dock{
       order:3;width:100%;padding:4px;gap:2px;
       overflow-x:auto;justify-content:flex-start;-webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
     }
+    .topbar > .mode-dock::-webkit-scrollbar{display:none;height:0;}
     .topbar > .mode-dock button{flex:0 0 auto;min-width:0;padding:7px 9px;font-size:10px;gap:3px;white-space:nowrap;justify-content:center;}
     .topbar > .mode-dock button .ind{display:none;}
     .mobile-quick-links{
