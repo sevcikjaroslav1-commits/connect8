@@ -367,17 +367,11 @@
   .movie-del-btn{background:transparent;color:var(--text-dim);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
   .movie-del-btn:hover{background:var(--bg);color:var(--mode-video);}
   .movies-status{font-size:13px;color:var(--text-dim);padding:20px 4px;grid-column:1/-1;}
-  .games-cta-card{
-    max-width:480px;margin:60px auto;text-align:center;background:var(--surface);
-    border:1px solid var(--line);border-radius:var(--radius);padding:40px 28px;
+  .games-frame-wrap{
+    width:100%;height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));
+    background:#000;border-radius:var(--radius);overflow:hidden;
   }
-  .games-cta-icon{font-size:48px;margin-bottom:14px;}
-  .games-cta-card h2{margin:0 0 10px;font-size:20px;}
-  .games-cta-card p{margin:0 0 22px;font-size:14px;color:var(--text-dim);line-height:1.5;}
-  .games-cta-btn{
-    display:inline-block;background:var(--mode-games);color:#fff;font-weight:700;
-    padding:12px 28px;border-radius:12px;font-size:15px;text-decoration:none;
-  }
+  .games-frame-wrap iframe{width:100%;height:100%;border:0;display:block;}
 
   .news-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
   .news-head h2{margin:0;font-size:20px;}
@@ -1257,7 +1251,7 @@
       <button data-mode="market" onclick="switchMode('market')"><span class="ind"></span>Marketplace</button>
       <button data-mode="news" onclick="switchMode('news')"><span class="ind"></span>Správy</button>
       <button data-mode="movies" onclick="switchMode('movies')"><span class="ind"></span>Filmy</button>
-      <button data-mode="games" onclick="openGamesDirect()"><span class="ind"></span>Hry</button>
+      <button data-mode="games" onclick="switchMode('games')"><span class="ind"></span>Hry</button>
     </div>
 
     <div class="topbar-right">
@@ -1526,11 +1520,8 @@
 
         <!-- HRY -->
         <section class="view" id="view-games">
-          <div class="games-cta-card">
-            <div class="games-cta-icon">🎮</div>
-            <h2>Adrenaline na CrazyGames</h2>
-            <p>Táto hra sa dá hrať priamo na CrazyGames - klikni na tlačidlo nižšie a otvorí sa ti v novej záložke.</p>
-            <a class="games-cta-btn" href="https://www.crazygames.com/t/adrenaline" target="_blank" rel="noopener noreferrer">Otvoriť CrazyGames ↗</a>
+          <div class="games-frame-wrap">
+            <iframe id="games-iframe" src="" title="Hra" allow="autoplay; fullscreen; gamepad; accelerometer; gyroscope" allowfullscreen loading="lazy"></iframe>
           </div>
         </section>
 
@@ -4044,46 +4035,18 @@ function setSideNavActive(key){
     if(el) el.classList.add('active');
   });
 }
-// Tlačidlo "Hry" v navigácii otvorí CrazyGames rovno v novej záložke -
-// keďže sa to nedá vložiť priamo do appky (CrazyGames to blokuje), nemá
-// zmysel najprv prepínať na internú sekciu a až tam čakať na druhé
-// kliknutie.
-function openGamesDirect(){
-  // zapamätáme si tlačidlo, ktoré bolo aktívne predtým - obsah stránky sa
-  // totiž nemení (Hry nie sú interná sekcia), takže po návrate z CrazyGames
-  // musí zvýraznenie sedieť s tým, čo je reálne zobrazené
-  const previousActiveBtn = document.querySelector('.mode-dock button.active');
+// Adresa hry, ktorá podporuje vloženie do iframe (onlinegames.io na rozdiel
+// od CrazyGames vloženie priamo do inej stránky nezakazuje).
+const GAMES_IFRAME_SRC = 'https://www.onlinegames.io/t/simulator/';
 
-  document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
-  const gamesBtn = document.querySelector('.mode-dock button[data-mode="games"]');
-  if(gamesBtn){
-    gamesBtn.classList.add('active');
-    gamesBtn.getBoundingClientRect(); // vynúti prekreslenie, aby prehliadač stihol zobraziť zafarbenie
+// Sekcia "Hry" natiahne hru priamo do iframe na stránke Connect8 - src sa
+// nastaví až pri prvom otvorení sekcie, aby sa hra nenačítavala zbytočne
+// na pozadí, kým si ju používateľ nevyžiada.
+function loadGamesFrame(){
+  const iframe = document.getElementById('games-iframe');
+  if(iframe && !iframe.src){
+    iframe.src = GAMES_IFRAME_SRC;
   }
-
-  // keď sa používateľ vráti z CrazyGames záložky späť na Connect8 (táto
-  // záložka sa opäť stane viditeľnou), vrátime zvýraznenie na pôvodnú sekciu
-  const restorePreviousActive = () => {
-    if(document.visibilityState !== 'visible') return;
-    document.removeEventListener('visibilitychange', restorePreviousActive);
-    document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
-    if(previousActiveBtn){
-      previousActiveBtn.classList.add('active');
-    } else {
-      const feedBtn = document.querySelector('.mode-dock button[data-mode="feed"]');
-      if(feedBtn) feedBtn.classList.add('active');
-    }
-  };
-  document.addEventListener('visibilitychange', restorePreviousActive);
-
-  // Poznámka: 'noopener' spôsobuje, že window.open() vráti null, preto ho
-  // nepoužívame. Krátke oneskorenie (200ms) necháva prehliadač vykresliť
-  // zafarbené tlačidlo predtým, než sa pozornosť prepne na novú záložku -
-  // user-activation z kliknutia v prehliadačoch vydrží niekoľko sekúnd,
-  // takže window.open() v setTimeoute nebude blokovaný ako pop-up.
-  setTimeout(()=>{
-    window.open('https://www.crazygames.com/t/adrenaline', '_blank');
-  }, 200);
 }
 
 function switchMode(mode){
@@ -4119,6 +4082,11 @@ function switchMode(mode){
 
   if(mode === 'movies'){
     renderMovies();
+  }
+
+  if(mode === 'games'){
+    updateTopbarHeightVar(); // prepočítať výšku, nech iframe presne vyplní zvyšok obrazovky
+    loadGamesFrame(); // hra sa natiahne až pri prvom otvorení sekcie (šetrí dáta a výkon)
   }
 
   const root = document.documentElement.style;
