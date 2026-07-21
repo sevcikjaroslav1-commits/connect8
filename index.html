@@ -1169,6 +1169,7 @@
     .mobile-quick-links{
       width:100%;display:flex;gap:4px;overflow-x:auto;padding:8px 16px 10px;
       background:var(--surface);border-bottom:1px solid var(--line);
+      position:sticky;top:var(--quicklinks-top, 108px);z-index:38;
     }
     .mobile-quick-links button{
       flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--bg);
@@ -4026,6 +4027,17 @@ function updateTopbarHeightVar(){
   const h = topbar.getBoundingClientRect().height;
   if(h > 0){
     document.documentElement.style.setProperty('--topbar-h', h + 'px');
+  }
+  // "Môj profil / Priatelia / Používatelia" má ostať prilepené navrchu aj
+  // pri skrolovaní, hneď pod riadkom Filmy/Hry - preto dopočítame presnú
+  // výšku všetkého nad ním (topbar + Filmy/Hry), nech vieme, kam presne
+  // ho "prilepiť".
+  const moviesRow = document.querySelector('.movies-nav-row');
+  if(moviesRow){
+    const mh = moviesRow.getBoundingClientRect().height;
+    if(mh > 0){
+      document.documentElement.style.setProperty('--quicklinks-top', (h + mh) + 'px');
+    }
   }
 }
 window.addEventListener('load', updateTopbarHeightVar);
