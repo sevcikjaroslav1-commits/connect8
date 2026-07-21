@@ -1257,7 +1257,7 @@
       <button data-mode="market" onclick="switchMode('market')"><span class="ind"></span>Marketplace</button>
       <button data-mode="news" onclick="switchMode('news')"><span class="ind"></span>Správy</button>
       <button data-mode="movies" onclick="switchMode('movies')"><span class="ind"></span>Filmy</button>
-      <button data-mode="games" onclick="switchMode('games')"><span class="ind"></span>Hry</button>
+      <button data-mode="games" onclick="openGamesDirect()"><span class="ind"></span>Hry</button>
     </div>
 
     <div class="topbar-right">
@@ -4044,6 +4044,14 @@ function setSideNavActive(key){
     if(el) el.classList.add('active');
   });
 }
+// Tlačidlo "Hry" v navigácii otvorí CrazyGames rovno v novej záložke -
+// keďže sa to nedá vložiť priamo do appky (CrazyGames to blokuje), nemá
+// zmysel najprv prepínať na internú sekciu a až tam čakať na druhé
+// kliknutie.
+function openGamesDirect(){
+  window.open('https://www.crazygames.com/t/adrenaline', '_blank', 'noopener,noreferrer');
+}
+
 function switchMode(mode){
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
   clearSideNavActive();
