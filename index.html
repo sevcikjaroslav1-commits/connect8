@@ -838,6 +838,11 @@
     color:#fff;
   }
   .video-caption-wrap{padding:24px 70px 34px 20px;}
+  .shared-highlight{outline:3px solid var(--accent);outline-offset:-3px;animation:sharedPulse 2.2s ease-out;}
+  @keyframes sharedPulse{
+    0%{box-shadow:0 0 0 0 rgba(255,255,255,.5);}
+    100%{box-shadow:0 0 0 18px rgba(255,255,255,0);}
+  }
   .video-user{font-weight:700;font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
   .video-user .avatar{width:26px;height:26px;font-size:11px;}
   .video-time{font-weight:500;font-size:12px;opacity:.75;}
@@ -2553,22 +2558,41 @@ function buildShareText(item){
   return txt ? `${item.name} na Connect: ${txt}` : `Pozri si príspevok od ${item.name} na Connect`;
 }
 
+// Zostaví kompletnú správu na zdieľanie (pre kopírovanie, WhatsApp, e-mail):
+// text príspevku/videa + odkaz na Connect8 (rovno na danú položku) a - ak k
+// príspevku patrí aj pôvodný odkaz na externý článok/stránku (napr. Aktuality.sk) -
+// pridá aj ten, všetko v jednej správe namiesto dvoch samostatných.
+function buildFullShareMessage(item){
+  const pageUrl = getShareableUrl(item);
+  let msg = `${buildShareText(item)}\n${pageUrl}`;
+  if(item && shareItemType === 'post' && item.link){
+    msg += `\n\nZdroj: ${item.link}`;
+  }
+  return msg;
+}
+
 const DEPLOYED_APP_URL = 'https://connect8.eu/';
 
-function getShareableUrl(){
+function getShareableUrl(item){
   // Facebook vyžaduje reálnu, verejne dostupnú https adresu, ktorú si vie stiahnuť a overiť.
   // Ak appku niekto otvára lokálne (file://) alebo z iného neverejného zdroja, pošleme radšej
   // ostrú nasadenú adresu - inak Facebook zdieľanie zlyhá s chybou "Sorry, something went wrong".
-  return (location.protocol === 'http:' || location.protocol === 'https:')
-    ? location.href.split('#')[0]
+  const base = (location.protocol === 'http:' || location.protocol === 'https:')
+    ? location.href.split('#')[0].split('?')[0]
     : DEPLOYED_APP_URL;
+  if(!item) return base;
+  // Pridáme parameter s ID konkrétneho príspevku/videa, aby odkaz po otvorení
+  // viedol priamo naň (nie len na všeobecnú hlavnú stránku) - pozri handleSharedDeepLink().
+  const param = shareItemType === 'video' ? 'video' : 'post';
+  const sep = base.includes('?') ? '&' : '?';
+  return base + sep + param + '=' + encodeURIComponent(item.id);
 }
 
 function openShareModal(postId){
   shareItemType = 'post';
   sharePostId = postId;
   const item = getShareItem();
-  const pageUrl = getShareableUrl();
+  const pageUrl = getShareableUrl(item);
   const text = buildShareText(item);
 
   const fbLink = document.getElementById('share-fb-link');
@@ -2581,7 +2605,7 @@ function openVideoShareModal(videoId){
   shareItemType = 'video';
   sharePostId = videoId;
   const item = getShareItem();
-  const pageUrl = getShareableUrl();
+  const pageUrl = getShareableUrl(item);
   const text = buildShareText(item);
 
   const fbLink = document.getElementById('share-fb-link');
@@ -2597,8 +2621,7 @@ function closeShareModal(){
 
 async function copyShareLinkToClipboard(){
   const item = getShareItem();
-  const pageUrl = getShareableUrl();
-  const text = `${buildShareText(item)}\n${pageUrl}`;
+  const text = buildFullShareMessage(item);
   try{
     await navigator.clipboard.writeText(text);
     return true;
@@ -2628,18 +2651,16 @@ async function shareToTikTok(){
 
 function shareToWhatsApp(){
   const item = getShareItem();
-  const pageUrl = getShareableUrl();
-  const text = `${buildShareText(item)}\n${pageUrl}`;
+  const text = buildFullShareMessage(item);
   window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
   closeShareModal();
 }
 
 function shareToEmail(){
   const item = getShareItem();
-  const pageUrl = getShareableUrl();
-  const text = buildShareText(item);
+  const text = buildFullShareMessage(item);
   const subject = encodeURIComponent('Pozri sa na toto na Connect8');
-  const body = encodeURIComponent(text + '\n\n' + pageUrl);
+  const body = encodeURIComponent(text);
   window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
   closeShareModal();
 }
@@ -3117,6 +3138,37 @@ function enterApp(){
   subscribeNotifications();
   listenForIncomingCalls();
   warmProfilePhotosCache();
+  handleSharedDeepLink();
+}
+
+function handleSharedDeepLink(){
+  // Ak niekto otvoril appku cez zdieľaný odkaz na konkrétny príspevok/video
+  // (napr. connect8.eu/?video=123 alebo ?post=456), prepneme ho rovno
+  // na danú sekciu a scrollneme/zvýrazníme presne tú položku.
+  const params = new URLSearchParams(location.search);
+  const videoId = params.get('video');
+  const postId = params.get('post');
+  if(videoId){
+    switchMode('video');
+    setTimeout(()=>{
+      const el = document.querySelector('.video-card[data-vid="' + CSS.escape(videoId) + '"]');
+      if(el){
+        el.scrollIntoView({block:'start'});
+        el.classList.add('shared-highlight');
+        setTimeout(()=>el.classList.remove('shared-highlight'), 2200);
+      }
+    }, 250);
+  } else if(postId){
+    switchMode('feed');
+    setTimeout(()=>{
+      const el = document.getElementById('post-' + postId);
+      if(el){
+        el.scrollIntoView({block:'start'});
+        el.classList.add('shared-highlight');
+        setTimeout(()=>el.classList.remove('shared-highlight'), 2200);
+      }
+    }, 250);
+  }
 }
 
 async function warmProfilePhotosCache(){
@@ -4576,6 +4628,7 @@ function renderPosts(){
   posts.slice().reverse().forEach(p=>{
     const div = document.createElement('div');
     div.className = 'post';
+    div.id = 'post-' + p.id;
     div.innerHTML = buildPostCard(p);
     list.appendChild(div);
   });
