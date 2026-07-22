@@ -1863,7 +1863,13 @@ function optimizeCloudinaryVideoUrl(url){
   // zabezpečí, že sa menšie/užšie videá nezväčšujú). Pri 4K videách z telefónu ide
   // o výrazné zníženie prenesených dát pri každom prehratí, bez viditeľného poklesu
   // kvality na bežnej obrazovke telefónu/PC.
-  return url.replace('/video/upload/', '/video/upload/w_720,c_limit,q_auto,f_auto/');
+  // f_mp4,vc_h264 (namiesto f_auto): "f_auto" necháva Cloudinary uhádnuť najlepší
+  // formát podľa prehliadača a niekedy pošle WebM/VP9 - to vie prehrať Android aj
+  // desktopové Chrome/Firefox, ale iOS (Safari AJ Chrome - obe bežia na tom istom
+  // WebKit jadre s podporou len MP4/H.264/HEVC) taký súbor vôbec nevie dekódovať,
+  // takže sa video na iPhone nikdy nespustí. MP4/H.264 je univerzálne podporovaný
+  // formát naprieč všetkými platformami vrátane iOS, preto ho vynucujeme vždy.
+  return url.replace('/video/upload/', '/video/upload/w_720,c_limit,q_auto,f_mp4,vc_h264/');
 }
 
 const LOCAL_STORAGE_KEY = "connect_app_state_v1";
@@ -5742,7 +5748,7 @@ function renderVideos(){
         media = `<img class="video-poster" id="poster-${v.id}" src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" loading="lazy" alt="">`;
       } else {
         div.dataset.kind = 'video';
-        media = `<video id="media-${v.id}" src="${optimizeCloudinaryVideoUrl(v.url)}" ${isMuted?'muted':''} loop playsinline controls></video>`;
+        media = `<video id="media-${v.id}" src="${optimizeCloudinaryVideoUrl(v.url)}" ${isMuted?'muted':''} loop playsinline webkit-playsinline preload="auto" controls></video>`;
       }
     }
 
