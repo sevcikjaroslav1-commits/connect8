@@ -189,11 +189,12 @@
     box-shadow:0 4px 10px rgba(31,174,92,.35);transition:.15s;
   }
   .messenger-btn:hover{filter:brightness(1.08);transform:translateY(-1px);}
-  .messenger-btn .badge-dot{
-    display:none;position:absolute;top:-2px;right:-2px;width:12px;height:12px;border-radius:50%;
-    background:#FF3C5C;border:2px solid var(--surface);
+  .messenger-btn .badge-count{
+    display:none;position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;
+    background:#FF3C5C;color:#fff;font-size:10.5px;font-weight:700;line-height:17px;text-align:center;
+    border:2px solid var(--surface);box-sizing:border-box;
   }
-  .messenger-btn .badge-dot.show{display:block;}
+  .messenger-btn .badge-count.show{display:block;}
 
   .notif-btn{
     position:relative;width:38px;height:38px;border-radius:50%;flex-shrink:0;
@@ -1278,7 +1279,7 @@
       </div>
       <button class="messenger-btn" onclick="openConvModal()" title="Správy">
         <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>
-        <span class="badge-dot" id="messenger-badge-dot"></span>
+        <span class="badge-count" id="messenger-badge-dot">0</span>
       </button>
       <button class="notif-btn" onclick="openNotifModal()" title="Upozornenia">
         <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
@@ -3941,12 +3942,12 @@ function subscribeConversations(){
     .where('participants', 'array-contains', currentUser.uid)
     .onSnapshot(snap=>{
       const chats = [];
-      let anyUnread = false;
+      let totalUnread = 0;
       let shouldPlaySound = false;
       snap.forEach(doc=>{
         const data = doc.data() || {};
         const unreadCount = (data.unread && data.unread[currentUser.uid]) || 0;
-        if(unreadCount > 0) anyUnread = true;
+        totalUnread += unreadCount;
         chats.push({ id: doc.id, ...data, unreadCount });
 
         // Zisti, či ide o novú správu od niekoho iného (nie odo mňa), nech
@@ -3964,16 +3965,18 @@ function subscribeConversations(){
         return tb - ta;
       });
       cachedConversations = chats;
-      updateMessengerBadge(anyUnread);
+      updateMessengerBadge(totalUnread);
       renderConversationsList();
       if(shouldPlaySound) playMessageNotificationSound();
       conversationsFirstLoad = false;
     }, err=>console.error('Chyba pri načítaní konverzácií:', err));
 }
 
-function updateMessengerBadge(show){
+function updateMessengerBadge(count){
   const badge = document.getElementById('messenger-badge-dot');
-  if(badge) badge.classList.toggle('show', !!show);
+  if(!badge) return;
+  badge.textContent = count > 99 ? '99+' : String(count);
+  badge.classList.toggle('show', count > 0);
 }
 
 function renderConversationsList(){
