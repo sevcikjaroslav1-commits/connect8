@@ -829,7 +829,7 @@
   /* ---------- VIDEO ---------- */
   #view-video{background:var(--mode-video-soft);margin:-20px -16px -40px;padding:0;min-height:calc(100vh - var(--topbar-h, 58px));min-height:calc(100dvh - var(--topbar-h, 58px));position:relative;}
   .video-scroller{
-    height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));overflow-y:auto;scroll-snap-type:y mandatory;
+    height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;
   }
   .video-card{
     height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));scroll-snap-align:start;position:relative;
@@ -4227,6 +4227,7 @@ function switchMode(mode){
       videoObserver.disconnect(); // sekcia Videá nie je viditeľná, nesleduj zhliadnutia na pozadí
       videoObserver = null;
     }
+    detachVideoScrollFallback();
     pauseAllVideoSectionMedia(); // opustili sme sekciu Videá - všetko čo tam hralo sa musí zastaviť
   }
 
@@ -5899,6 +5900,70 @@ function setupVideoObserver(){
     });
   }, {root: scroller, threshold: [0, 0.6]});
   scroller.querySelectorAll('.video-card').forEach(card=>videoObserver.observe(card));
+
+  // iOS Safari/WebKit fallback: IntersectionObserver s vlastným "root" kontajnerom
+  // (nie hlavné okno) kombinovaný so scroll-snap posúvaním sa na iPhone občas správa
+  // nespoľahlivo - callback sa nespustí vôbec alebo s neskorým/nesprávnym pomerom
+  // viditeľnosti, takže sa video nikdy nespustí. Preto navyše ručne prepočítavame
+  // "najviditeľnejšiu" kartu priamo pri scrollovaní (cez getBoundingClientRect),
+  // čo funguje spoľahlivo naprieč všetkými prehliadačmi vrátane iPhone Safari/Chrome.
+  attachVideoScrollFallback(scroller);
+}
+
+let videoScrollFallbackHandler = null;
+let videoScrollFallbackScroller = null;
+
+function attachVideoScrollFallback(scroller){
+  detachVideoScrollFallback();
+  videoScrollFallbackScroller = scroller;
+  let ticking = false;
+  videoScrollFallbackHandler = ()=>{
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(()=>{
+      ticking = false;
+      updateActiveVideoCardManually(scroller);
+    });
+  };
+  scroller.addEventListener('scroll', videoScrollFallbackHandler, {passive:true});
+  // aj hneď pri otvorení sekcie (bez čakania na prvý scroll)
+  updateActiveVideoCardManually(scroller);
+}
+
+function detachVideoScrollFallback(){
+  if(videoScrollFallbackScroller && videoScrollFallbackHandler){
+    videoScrollFallbackScroller.removeEventListener('scroll', videoScrollFallbackHandler);
+  }
+  videoScrollFallbackHandler = null;
+  videoScrollFallbackScroller = null;
+}
+
+function updateActiveVideoCardManually(scroller){
+  const videoView = document.getElementById('view-video');
+  if(!videoView || !videoView.classList.contains('active')) return;
+  const rect = scroller.getBoundingClientRect();
+  if(rect.height === 0) return;
+  const mid = rect.top + rect.height / 2;
+  let bestCard = null, bestDist = Infinity;
+  scroller.querySelectorAll('.video-card').forEach(card=>{
+    const cRect = card.getBoundingClientRect();
+    if(cRect.bottom <= rect.top || cRect.top >= rect.bottom) return; // karta vôbec nie je v zábere
+    const visibleTop = Math.max(cRect.top, rect.top);
+    const visibleBottom = Math.min(cRect.bottom, rect.bottom);
+    const visibleRatio = (visibleBottom - visibleTop) / cRect.height;
+    if(visibleRatio < 0.6) return; // rovnaká podmienka ako pri IntersectionObserveri (>=60% viditeľné)
+    const cMid = cRect.top + cRect.height / 2;
+    const dist = Math.abs(cMid - mid);
+    if(dist < bestDist){ bestDist = dist; bestCard = card; }
+  });
+  scroller.querySelectorAll('.video-card').forEach(card=>{
+    if(card === bestCard){
+      mountAndPlay(card);
+      registerVideoView(card.dataset.vid);
+    } else {
+      unmountIfYouTube(card);
+    }
+  });
 }
 
 // Vytvorí (ak ešte neexistuje) skutočný YouTube <iframe> prehrávač pre dané
