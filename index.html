@@ -4196,14 +4196,6 @@ function setSideNavActive(key){
 // zmysel najprv prepínať na internú sekciu a až tam čakať na druhé
 // kliknutie.
 function openGamesDirect(){
-  // DÔLEŽITÉ: window.open() musí byť úplne prvá vec, ktorá sa vykoná, a to
-  // synchrónne (žiadny setTimeout, žiadne await pred tým). Safari na iOS je
-  // v tomto oveľa prísnejší než Chrome/Android - ak window.open() nie je
-  // zavolané v tom istom "ticku" ako kliknutie, prehliadač to vyhodnotí ako
-  // pop-up (nie ako priamu reakciu na používateľa) a ticho ho zablokuje.
-  // Preto to na Androide fungovalo a na iPhone Safari nie.
-  const newTab = window.open('https://www.crazygames.com/t/adrenaline', '_blank');
-
   // zapamätáme si tlačidlo, ktoré bolo aktívne predtým - obsah stránky sa
   // totiž nemení (Hry nie sú interná sekcia), takže po návrate z CrazyGames
   // musí zvýraznenie sedieť s tým, čo je reálne zobrazené
@@ -4213,6 +4205,7 @@ function openGamesDirect(){
   const gamesBtn = document.querySelector('.mode-dock button[data-mode="games"]');
   if(gamesBtn){
     gamesBtn.classList.add('active');
+    gamesBtn.getBoundingClientRect(); // vynúti prekreslenie, aby prehliadač stihol zobraziť zafarbenie
   }
 
   // keď sa používateľ vráti z CrazyGames záložky späť na Connect8 (táto
@@ -4230,12 +4223,14 @@ function openGamesDirect(){
   };
   document.addEventListener('visibilitychange', restorePreviousActive);
 
-  if(!newTab){
-    // Ak aj tak prehliadač pop-up zablokoval (napr. ak sa táto funkcia
-    // niekedy zavolá mimo priameho kliknutia), aspoň presmerujeme priamo
-    // v tejto záložke, nech používateľ nezostane bez reakcie.
-    window.location.href = 'https://www.crazygames.com/t/adrenaline';
-  }
+  // Poznámka: 'noopener' spôsobuje, že window.open() vráti null, preto ho
+  // nepoužívame. Krátke oneskorenie (200ms) necháva prehliadač vykresliť
+  // zafarbené tlačidlo predtým, než sa pozornosť prepne na novú záložku -
+  // user-activation z kliknutia v prehliadačoch vydrží niekoľko sekúnd,
+  // takže window.open() v setTimeoute nebude blokovaný ako pop-up.
+  setTimeout(()=>{
+    window.open('https://www.crazygames.com/t/adrenaline', '_blank');
+  }, 200);
 }
 
 function switchMode(mode){
