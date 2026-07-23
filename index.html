@@ -4501,7 +4501,7 @@ function buildPostCard(p, opts={}){
       </div>
       ${p.text ? `<div class="post-text">${escapeHtml(p.text)}</div>` : ''}
       ${p.video ? `<div class="post-video-wrap">
-        <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" muted controls playsinline webkit-playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
+        <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" controls playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
       </div>` : ''}
       ${getPostPhotos(p).length ? buildPostImgGrid(getPostPhotos(p)) : (p.img && !p.link ? `<div class="post-img" style="background:var(--accent-soft);">${p.img}</div>` : '')}
@@ -4564,14 +4564,12 @@ function playFeedMedia(wrapEl){
   const video = wrapEl.querySelector('video');
   if(video){
     if(!video.paused) return;
-    // Rovnaká iOS reštrikcia ako v sekcii Videá: automatické spustenie bez dotyku
-    // (keď video vo Feede príde scrollom do záberu) smie ísť len stlmene - preto
-    // vždy najprv nastavíme muted=true a spustíme, a keďže vo Feede si používateľ
-    // zvuk nevypína (nie je tam prepínač), po úspešnom spustení ho hneď vrátime.
-    video.muted = true;
-    video.play().then(()=>{
-      video.muted = false;
-    }).catch(()=>{ /* zlyhalo aj stlmené - skús znova pri ďalšom scrolle */ });
+    video.play().catch(()=>{
+      // Prehliadač zablokoval prehrávanie so zvukom bez priamej interakcie -
+      // spusti aspoň stlmené, nech video nezostane zaseknuté.
+      video.muted = true;
+      video.play().catch(()=>{});
+    });
     return;
   }
   const iframe = wrapEl.querySelector('iframe');
@@ -5751,11 +5749,7 @@ function renderVideos(){
         media = `<img class="video-poster" id="poster-${v.id}" src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" loading="lazy" alt="">`;
       } else {
         div.dataset.kind = 'video';
-        // Poznámka: HTML atribút "muted" dávame VŽDY (nezávisle od isMuted) - iOS
-        // vyžaduje, aby video bolo pri prvom pokuse o automatické spustenie stlmené
-        // už na úrovni HTML atribútu; zvuk sa podľa preferencie zapne hneď po
-        // spustení v playMedia() (pozri komentár tam).
-        media = `<video id="media-${v.id}" src="${optimizeCloudinaryVideoUrl(v.url)}" muted loop playsinline webkit-playsinline preload="auto" controls></video>`;
+        media = `<video id="media-${v.id}" src="${optimizeCloudinaryVideoUrl(v.url)}" ${isMuted?'muted':''} loop playsinline webkit-playsinline preload="auto" controls></video>`;
       }
     }
 
@@ -5852,49 +5846,21 @@ function registerVideoView(id){
   saveVideo(v);
 }
 
-function playMedia(id, opts={}){
+function playMedia(id){
   const mediaEl = document.getElementById('media-'+id);
   if(!mediaEl) return;
-  const desiredMuted = videoMuteState[id] === true; // preferencia - default: používateľ chce zvuk
   if(mediaEl.tagName === 'VIDEO'){
-    if(opts.autoplay){
-      // KĽÚČOVÉ pre iOS/Safari (a v podstate všetky moderné prehliadače): automatické
-      // spustenie prehrávania BEZ priameho dotyku (napr. keď video príde do záberu pri
-      // scrollovaní) je povolené VÝLUČNE ak je video stlmené. Preto pri automatickom
-      // spustení VŽDY najprv nastavíme muted=true a spustíme - to teraz spoľahlivo
-      // prejde na 100% prehliadačov vrátane iPhone. Keď video už reálne beží, zmena
-      // .muted na bežiacom videu ("odstlmenie") už nový dotyk/gesto nevyžaduje, takže
-      // hneď potom v tichosti zapneme zvuk, ak si to používateľ takto nastavil.
+    mediaEl.play().catch(()=>{
+      // Prehliadač zablokoval prehrávanie so zvukom bez priamej interakcie —
+      // spusti aspoň stlmené, aby video nezostalo úplne zaseknuté.
       mediaEl.muted = true;
-      mediaEl.play().then(()=>{
-        if(!desiredMuted) mediaEl.muted = false;
-      }).catch(()=>{ /* aj stlmené zlyhalo - nedá sa nič viac spraviť, skús pri ďalšom scrolle */ });
-    } else {
-      mediaEl.muted = desiredMuted;
-      mediaEl.play().catch(()=>{
-        // Prehliadač zablokoval prehrávanie so zvukom bez priamej interakcie —
-        // spusti aspoň stlmené, aby video nezostalo úplne zaseknuté.
-        mediaEl.muted = true;
-        videoMuteState[id] = true;
-        const btn = document.getElementById('mute-btn-'+id);
-        if(btn) btn.textContent = '🔇';
-        mediaEl.play().catch(()=>{});
-      });
-    }
+      videoMuteState[id] = true;
+      const btn = document.getElementById('mute-btn-'+id);
+      if(btn) btn.textContent = '🔇';
+      mediaEl.play().catch(()=>{});
+    });
   } else if(mediaEl.tagName === 'IFRAME'){
-    if(opts.autoplay){
-      // Rovnaká iOS reštrikcia platí aj pre vložený YouTube prehrávač - automatické
-      // spustenie bez dotyku smie ísť len stlmene, zvuk dorovnáme hneď po spustení.
-      mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'mute', args:[]}), '*');
-      mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*');
-      if(!desiredMuted){
-        setTimeout(()=>{
-          mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'unMute', args:[]}), '*');
-        }, 400);
-      }
-    } else {
-      mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*');
-    }
+    mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*');
   }
 }
 
@@ -6007,22 +5973,21 @@ function mountAndPlay(card){
   if(card.dataset.kind === 'youtube'){
     if(!document.getElementById('media-'+id)){
       const ytId = card.dataset.ytId;
+      const isMuted = videoMuteState[id] === true;
       const iframe = document.createElement('iframe');
       iframe.id = 'media-'+id;
-      // mute=1 vždy pri prvom načítaní - automatické spustenie bez dotyku (iOS) povolí
-      // len stlmené video; zvuk podľa preferencie dorovnáme až po spustení v playMedia().
-      iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=0&mute=1&loop=1&playlist=${ytId}&controls=1&playsinline=1&enablejsapi=1`;
+      iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=0&mute=${isMuted?1:0}&loop=1&playlist=${ytId}&controls=1&playsinline=1&enablejsapi=1`;
       iframe.setAttribute('allow','autoplay; encrypted-media');
       iframe.allowFullscreen = true;
       const poster = document.getElementById('poster-'+id);
       if(poster) poster.replaceWith(iframe);
       else card.insertBefore(iframe, card.firstChild);
-      iframe.addEventListener('load', ()=>playMedia(id, {autoplay:true}), {once:true});
+      iframe.addEventListener('load', ()=>playMedia(id), {once:true});
     } else {
-      playMedia(id, {autoplay:true});
+      playMedia(id);
     }
   } else {
-    playMedia(id, {autoplay:true});
+    playMedia(id);
   }
 }
 
