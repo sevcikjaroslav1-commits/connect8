@@ -4504,7 +4504,7 @@ function buildPostCard(p, opts={}){
       </div>
       ${p.text ? `<div class="post-text">${escapeHtml(p.text)}</div>` : ''}
       ${p.video ? `<div class="post-video-wrap">
-        <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" controls playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
+        <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" ${isIOSDevice()?'muted':''} controls playsinline webkit-playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
       </div>` : ''}
       ${getPostPhotos(p).length ? buildPostImgGrid(getPostPhotos(p)) : (p.img && !p.link ? `<div class="post-img" style="background:var(--accent-soft);">${p.img}</div>` : '')}
@@ -4520,7 +4520,7 @@ function buildPostCard(p, opts={}){
       </a>` : ''}
       ${p.link ? (getYouTubeId(p.link) ? `
       <div class="post-youtube-embed">
-        <iframe id="feed-yt-${p.id}" src="https://www.youtube.com/embed/${getYouTubeId(p.link)}?autoplay=0&mute=0&playsinline=1&enablejsapi=1&controls=1" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <iframe id="feed-yt-${p.id}" src="https://www.youtube.com/embed/${getYouTubeId(p.link)}?autoplay=0&mute=${isIOSDevice()?1:0}&playsinline=1&enablejsapi=1&controls=1" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostLink(${p.id})">✕</div>` : ''}
       </div>` : (p.linkImage ? `
       <a class="link-card link-card-media" href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer">
@@ -4567,6 +4567,17 @@ function playFeedMedia(wrapEl){
   const video = wrapEl.querySelector('video');
   if(video){
     if(!video.paused) return;
+    if(isIOSDevice()){
+      // iPhone: automatické spustenie (keď video vo Feede príde scrollom do záberu,
+      // bez priameho dotyku) smie ísť LEN stlmene - preto vždy najprv nastavíme
+      // muted=true a spustíme, a keďže video už reálne beží, hneď potom v tichosti
+      // vrátime zvuk (zmena .muted na bežiacom videu nový dotyk/gesto nevyžaduje).
+      video.muted = true;
+      video.play().then(()=>{
+        video.muted = false;
+      }).catch(()=>{ /* zlyhalo aj stlmené - skús znova pri ďalšom scrolle */ });
+      return;
+    }
     video.play().catch(()=>{
       // Prehliadač zablokoval prehrávanie so zvukom bez priamej interakcie -
       // spusti aspoň stlmené, nech video nezostane zaseknuté.
@@ -4577,6 +4588,17 @@ function playFeedMedia(wrapEl){
   }
   const iframe = wrapEl.querySelector('iframe');
   if(iframe && iframe.contentWindow){
+    if(isIOSDevice()){
+      // Rovnaké obmedzenie platí aj pre vložený YouTube prehrávač na iPhone.
+      try{
+        iframe.contentWindow.postMessage(JSON.stringify({event:'command', func:'mute', args:[]}), '*');
+        iframe.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*');
+        setTimeout(()=>{
+          try{ iframe.contentWindow.postMessage(JSON.stringify({event:'command', func:'unMute', args:[]}), '*'); }catch(e){}
+        }, 400);
+      }catch(e){}
+      return;
+    }
     try{ iframe.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*'); }catch(e){}
   }
 }
@@ -5868,6 +5890,7 @@ function playMedia(id, opts={}){
   if(!mediaEl) return;
   const desiredMuted = videoMuteState[id] === true; // preferencia - default: používateľ chce zvuk
   if(mediaEl.tagName === 'VIDEO'){
+    if(opts.autoplay && !mediaEl.paused && mediaEl.muted === desiredMuted) return; // už beží presne v požadovanom stave, netreba nič robiť znova
     if(opts.autoplay && isIOSDevice()){
       // iPhone: automatické spustenie bez dotyku smie ísť LEN stlmene - preto vždy
       // najprv nastavíme muted=true a spustíme (to teraz spoľahlivo prejde), a keďže
