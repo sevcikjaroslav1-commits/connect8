@@ -829,7 +829,7 @@
   /* ---------- VIDEO ---------- */
   #view-video{background:var(--mode-video-soft);margin:-20px -16px -40px;padding:0;min-height:calc(100vh - var(--topbar-h, 58px));min-height:calc(100dvh - var(--topbar-h, 58px));position:relative;}
   .video-scroller{
-    height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));overflow-y:auto;scroll-snap-type:y mandatory;
+    height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;
   }
   .video-card{
     height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));scroll-snap-align:start;position:relative;
@@ -838,6 +838,11 @@
     color:#fff;
   }
   .video-caption-wrap{padding:24px 70px 34px 20px;}
+  .shared-highlight{outline:3px solid var(--accent);outline-offset:-3px;animation:sharedPulse 2.2s ease-out;}
+  @keyframes sharedPulse{
+    0%{box-shadow:0 0 0 0 rgba(255,255,255,.5);}
+    100%{box-shadow:0 0 0 18px rgba(255,255,255,0);}
+  }
   .video-user{font-weight:700;font-size:15px;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
   .video-user .avatar{width:26px;height:26px;font-size:11px;}
   .video-time{font-weight:500;font-size:12px;opacity:.75;}
@@ -870,7 +875,7 @@
   .video-caption-wrap{z-index:2;position:relative;}
   .video-side{z-index:2;}
   .video-card::after{
-    content:"";position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.55), transparent 45%);z-index:1;
+    content:"";position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.55), transparent 45%);z-index:1;pointer-events:none;
   }
 
   .video-add-btn{
@@ -1858,7 +1863,13 @@ function optimizeCloudinaryVideoUrl(url){
   // zabezpečí, že sa menšie/užšie videá nezväčšujú). Pri 4K videách z telefónu ide
   // o výrazné zníženie prenesených dát pri každom prehratí, bez viditeľného poklesu
   // kvality na bežnej obrazovke telefónu/PC.
-  return url.replace('/video/upload/', '/video/upload/w_720,c_limit,q_auto,f_auto/');
+  // f_mp4,vc_h264 (namiesto f_auto): "f_auto" necháva Cloudinary uhádnuť najlepší
+  // formát podľa prehliadača a niekedy pošle WebM/VP9 - to vie prehrať Android aj
+  // desktopové Chrome/Firefox, ale iOS (Safari AJ Chrome - obe bežia na tom istom
+  // WebKit jadre s podporou len MP4/H.264/HEVC) taký súbor vôbec nevie dekódovať,
+  // takže sa video na iPhone nikdy nespustí. MP4/H.264 je univerzálne podporovaný
+  // formát naprieč všetkými platformami vrátane iOS, preto ho vynucujeme vždy.
+  return url.replace('/video/upload/', '/video/upload/w_720,c_limit,q_auto,f_mp4,vc_h264/');
 }
 
 const LOCAL_STORAGE_KEY = "connect_app_state_v1";
@@ -2553,22 +2564,41 @@ function buildShareText(item){
   return txt ? `${item.name} na Connect: ${txt}` : `Pozri si príspevok od ${item.name} na Connect`;
 }
 
+// Zostaví kompletnú správu na zdieľanie (pre kopírovanie, WhatsApp, e-mail):
+// text príspevku/videa + odkaz na Connect8 (rovno na danú položku) a - ak k
+// príspevku patrí aj pôvodný odkaz na externý článok/stránku (napr. Aktuality.sk) -
+// pridá aj ten, všetko v jednej správe namiesto dvoch samostatných.
+function buildFullShareMessage(item){
+  const pageUrl = getShareableUrl(item);
+  let msg = `${buildShareText(item)}\n${pageUrl}`;
+  if(item && shareItemType === 'post' && item.link){
+    msg += `\n\nZdroj: ${item.link}`;
+  }
+  return msg;
+}
+
 const DEPLOYED_APP_URL = 'https://connect8.eu/';
 
-function getShareableUrl(){
+function getShareableUrl(item){
   // Facebook vyžaduje reálnu, verejne dostupnú https adresu, ktorú si vie stiahnuť a overiť.
   // Ak appku niekto otvára lokálne (file://) alebo z iného neverejného zdroja, pošleme radšej
   // ostrú nasadenú adresu - inak Facebook zdieľanie zlyhá s chybou "Sorry, something went wrong".
-  return (location.protocol === 'http:' || location.protocol === 'https:')
-    ? location.href.split('#')[0]
+  const base = (location.protocol === 'http:' || location.protocol === 'https:')
+    ? location.href.split('#')[0].split('?')[0]
     : DEPLOYED_APP_URL;
+  if(!item) return base;
+  // Pridáme parameter s ID konkrétneho príspevku/videa, aby odkaz po otvorení
+  // viedol priamo naň (nie len na všeobecnú hlavnú stránku) - pozri handleSharedDeepLink().
+  const param = shareItemType === 'video' ? 'video' : 'post';
+  const sep = base.includes('?') ? '&' : '?';
+  return base + sep + param + '=' + encodeURIComponent(item.id);
 }
 
 function openShareModal(postId){
   shareItemType = 'post';
   sharePostId = postId;
   const item = getShareItem();
-  const pageUrl = getShareableUrl();
+  const pageUrl = getShareableUrl(item);
   const text = buildShareText(item);
 
   const fbLink = document.getElementById('share-fb-link');
@@ -2581,7 +2611,7 @@ function openVideoShareModal(videoId){
   shareItemType = 'video';
   sharePostId = videoId;
   const item = getShareItem();
-  const pageUrl = getShareableUrl();
+  const pageUrl = getShareableUrl(item);
   const text = buildShareText(item);
 
   const fbLink = document.getElementById('share-fb-link');
@@ -2597,8 +2627,7 @@ function closeShareModal(){
 
 async function copyShareLinkToClipboard(){
   const item = getShareItem();
-  const pageUrl = getShareableUrl();
-  const text = `${buildShareText(item)}\n${pageUrl}`;
+  const text = buildFullShareMessage(item);
   try{
     await navigator.clipboard.writeText(text);
     return true;
@@ -2628,18 +2657,16 @@ async function shareToTikTok(){
 
 function shareToWhatsApp(){
   const item = getShareItem();
-  const pageUrl = getShareableUrl();
-  const text = `${buildShareText(item)}\n${pageUrl}`;
+  const text = buildFullShareMessage(item);
   window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank', 'noopener,noreferrer');
   closeShareModal();
 }
 
 function shareToEmail(){
   const item = getShareItem();
-  const pageUrl = getShareableUrl();
-  const text = buildShareText(item);
+  const text = buildFullShareMessage(item);
   const subject = encodeURIComponent('Pozri sa na toto na Connect8');
-  const body = encodeURIComponent(text + '\n\n' + pageUrl);
+  const body = encodeURIComponent(text);
   window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
   closeShareModal();
 }
@@ -3117,6 +3144,37 @@ function enterApp(){
   subscribeNotifications();
   listenForIncomingCalls();
   warmProfilePhotosCache();
+  handleSharedDeepLink();
+}
+
+function handleSharedDeepLink(){
+  // Ak niekto otvoril appku cez zdieľaný odkaz na konkrétny príspevok/video
+  // (napr. connect8.eu/?video=123 alebo ?post=456), prepneme ho rovno
+  // na danú sekciu a scrollneme/zvýrazníme presne tú položku.
+  const params = new URLSearchParams(location.search);
+  const videoId = params.get('video');
+  const postId = params.get('post');
+  if(videoId){
+    switchMode('video');
+    setTimeout(()=>{
+      const el = document.querySelector('.video-card[data-vid="' + CSS.escape(videoId) + '"]');
+      if(el){
+        el.scrollIntoView({block:'start'});
+        el.classList.add('shared-highlight');
+        setTimeout(()=>el.classList.remove('shared-highlight'), 2200);
+      }
+    }, 250);
+  } else if(postId){
+    switchMode('feed');
+    setTimeout(()=>{
+      const el = document.getElementById('post-' + postId);
+      if(el){
+        el.scrollIntoView({block:'start'});
+        el.classList.add('shared-highlight');
+        setTimeout(()=>el.classList.remove('shared-highlight'), 2200);
+      }
+    }, 250);
+  }
 }
 
 async function warmProfilePhotosCache(){
@@ -4169,6 +4227,7 @@ function switchMode(mode){
       videoObserver.disconnect(); // sekcia Videá nie je viditeľná, nesleduj zhliadnutia na pozadí
       videoObserver = null;
     }
+    detachVideoScrollFallback();
     pauseAllVideoSectionMedia(); // opustili sme sekciu Videá - všetko čo tam hralo sa musí zastaviť
   }
 
@@ -4576,6 +4635,7 @@ function renderPosts(){
   posts.slice().reverse().forEach(p=>{
     const div = document.createElement('div');
     div.className = 'post';
+    div.id = 'post-' + p.id;
     div.innerHTML = buildPostCard(p);
     list.appendChild(div);
   });
@@ -5689,7 +5749,10 @@ function renderVideos(){
         media = `<img class="video-poster" id="poster-${v.id}" src="https://img.youtube.com/vi/${ytId}/hqdefault.jpg" loading="lazy" alt="">`;
       } else {
         div.dataset.kind = 'video';
-        media = `<video id="media-${v.id}" src="${optimizeCloudinaryVideoUrl(v.url)}" ${isMuted?'muted':''} loop playsinline controls></video>`;
+        // Na iPhone (iOS) musí byť video stlmené už na úrovni HTML atribútu pre prvý
+        // pokus o automatické spustenie; na Androide/desktope necháme pôvodné správanie.
+        const mutedAttr = (isIOSDevice() || isMuted) ? 'muted' : '';
+        media = `<video id="media-${v.id}" src="${optimizeCloudinaryVideoUrl(v.url)}" ${mutedAttr} loop playsinline webkit-playsinline preload="auto" controls></video>`;
       }
     }
 
@@ -5786,10 +5849,33 @@ function registerVideoView(id){
   saveVideo(v);
 }
 
-function playMedia(id){
+// Detekcia iPhone/iPad (iOS) - Safari aj Chrome na iOS bežia na tom istom WebKit
+// jadre, ktoré dovoľuje AUTOMATICKÉ spustenie videa (bez priameho dotyku, napr. pri
+// scrollovaní) VÝLUČNE ak je video v danej chvíli stlmené. Android/desktop takéto
+// obmedzenie nemá, preto tam necháme pôvodné správanie (so zvukom hneď) bezo zmeny.
+function isIOSDevice(){
+  const ua = navigator.userAgent || '';
+  const isAppleTouch = /iPad|iPhone|iPod/.test(ua) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS sa niekedy hlási ako "Mac"
+  return isAppleTouch;
+}
+
+function playMedia(id, opts={}){
   const mediaEl = document.getElementById('media-'+id);
   if(!mediaEl) return;
+  const desiredMuted = videoMuteState[id] === true; // preferencia - default: používateľ chce zvuk
   if(mediaEl.tagName === 'VIDEO'){
+    if(opts.autoplay && isIOSDevice()){
+      // iPhone: automatické spustenie bez dotyku smie ísť LEN stlmene - preto vždy
+      // najprv nastavíme muted=true a spustíme (to teraz spoľahlivo prejde), a keďže
+      // video už reálne beží, hneď potom v tichosti zapneme zvuk podľa preferencie
+      // (zmena .muted na už bežiacom videu nový dotyk/gesto nevyžaduje).
+      mediaEl.muted = true;
+      mediaEl.play().then(()=>{
+        if(!desiredMuted) mediaEl.muted = false;
+      }).catch(()=>{ /* zlyhalo aj stlmené - skús znova pri ďalšom scrolle */ });
+      return;
+    }
     mediaEl.play().catch(()=>{
       // Prehliadač zablokoval prehrávanie so zvukom bez priamej interakcie —
       // spusti aspoň stlmené, aby video nezostalo úplne zaseknuté.
@@ -5800,6 +5886,17 @@ function playMedia(id){
       mediaEl.play().catch(()=>{});
     });
   } else if(mediaEl.tagName === 'IFRAME'){
+    if(opts.autoplay && isIOSDevice()){
+      // Rovnaké obmedzenie platí aj pre vložený YouTube prehrávač na iPhone.
+      mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'mute', args:[]}), '*');
+      mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*');
+      if(!desiredMuted){
+        setTimeout(()=>{
+          mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'unMute', args:[]}), '*');
+        }, 400);
+      }
+      return;
+    }
     mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*');
   }
 }
@@ -5840,6 +5937,70 @@ function setupVideoObserver(){
     });
   }, {root: scroller, threshold: [0, 0.6]});
   scroller.querySelectorAll('.video-card').forEach(card=>videoObserver.observe(card));
+
+  // iOS Safari/WebKit fallback: IntersectionObserver s vlastným "root" kontajnerom
+  // (nie hlavné okno) kombinovaný so scroll-snap posúvaním sa na iPhone občas správa
+  // nespoľahlivo - callback sa nespustí vôbec alebo s neskorým/nesprávnym pomerom
+  // viditeľnosti, takže sa video nikdy nespustí. Preto navyše ručne prepočítavame
+  // "najviditeľnejšiu" kartu priamo pri scrollovaní (cez getBoundingClientRect),
+  // čo funguje spoľahlivo naprieč všetkými prehliadačmi vrátane iPhone Safari/Chrome.
+  attachVideoScrollFallback(scroller);
+}
+
+let videoScrollFallbackHandler = null;
+let videoScrollFallbackScroller = null;
+
+function attachVideoScrollFallback(scroller){
+  detachVideoScrollFallback();
+  videoScrollFallbackScroller = scroller;
+  let ticking = false;
+  videoScrollFallbackHandler = ()=>{
+    if(ticking) return;
+    ticking = true;
+    requestAnimationFrame(()=>{
+      ticking = false;
+      updateActiveVideoCardManually(scroller);
+    });
+  };
+  scroller.addEventListener('scroll', videoScrollFallbackHandler, {passive:true});
+  // aj hneď pri otvorení sekcie (bez čakania na prvý scroll)
+  updateActiveVideoCardManually(scroller);
+}
+
+function detachVideoScrollFallback(){
+  if(videoScrollFallbackScroller && videoScrollFallbackHandler){
+    videoScrollFallbackScroller.removeEventListener('scroll', videoScrollFallbackHandler);
+  }
+  videoScrollFallbackHandler = null;
+  videoScrollFallbackScroller = null;
+}
+
+function updateActiveVideoCardManually(scroller){
+  const videoView = document.getElementById('view-video');
+  if(!videoView || !videoView.classList.contains('active')) return;
+  const rect = scroller.getBoundingClientRect();
+  if(rect.height === 0) return;
+  const mid = rect.top + rect.height / 2;
+  let bestCard = null, bestDist = Infinity;
+  scroller.querySelectorAll('.video-card').forEach(card=>{
+    const cRect = card.getBoundingClientRect();
+    if(cRect.bottom <= rect.top || cRect.top >= rect.bottom) return; // karta vôbec nie je v zábere
+    const visibleTop = Math.max(cRect.top, rect.top);
+    const visibleBottom = Math.min(cRect.bottom, rect.bottom);
+    const visibleRatio = (visibleBottom - visibleTop) / cRect.height;
+    if(visibleRatio < 0.6) return; // rovnaká podmienka ako pri IntersectionObserveri (>=60% viditeľné)
+    const cMid = cRect.top + cRect.height / 2;
+    const dist = Math.abs(cMid - mid);
+    if(dist < bestDist){ bestDist = dist; bestCard = card; }
+  });
+  scroller.querySelectorAll('.video-card').forEach(card=>{
+    if(card === bestCard){
+      mountAndPlay(card);
+      registerVideoView(card.dataset.vid);
+    } else {
+      unmountIfYouTube(card);
+    }
+  });
 }
 
 // Vytvorí (ak ešte neexistuje) skutočný YouTube <iframe> prehrávač pre dané
@@ -5852,18 +6013,21 @@ function mountAndPlay(card){
       const isMuted = videoMuteState[id] === true;
       const iframe = document.createElement('iframe');
       iframe.id = 'media-'+id;
-      iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=0&mute=${isMuted?1:0}&loop=1&playlist=${ytId}&controls=1&playsinline=1&enablejsapi=1`;
+      // Na iPhone vždy mute=1 pri prvom načítaní - automatické spustenie bez dotyku
+      // tam povolí len stlmené video; zvuk podľa preferencie dorovnáme v playMedia().
+      const initialMute = isIOSDevice() ? 1 : (isMuted?1:0);
+      iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=0&mute=${initialMute}&loop=1&playlist=${ytId}&controls=1&playsinline=1&enablejsapi=1`;
       iframe.setAttribute('allow','autoplay; encrypted-media');
       iframe.allowFullscreen = true;
       const poster = document.getElementById('poster-'+id);
       if(poster) poster.replaceWith(iframe);
       else card.insertBefore(iframe, card.firstChild);
-      iframe.addEventListener('load', ()=>playMedia(id), {once:true});
+      iframe.addEventListener('load', ()=>playMedia(id, {autoplay:true}), {once:true});
     } else {
-      playMedia(id);
+      playMedia(id, {autoplay:true});
     }
   } else {
-    playMedia(id);
+    playMedia(id, {autoplay:true});
   }
 }
 
