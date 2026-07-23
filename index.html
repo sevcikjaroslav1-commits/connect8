@@ -1004,16 +1004,19 @@
 
   /* ---------- USER/FRIEND CARD CALL BUTTONS ---------- */
   .user-card-call-row{display:flex;gap:5px;margin-top:6px;justify-content:center;}
+  .user-card-call-row button{
+    -webkit-appearance:none;appearance:none;padding:0;margin:0;
+  }
   .user-card-call-btn{
     width:24px;height:24px;border-radius:50%;background:var(--bg);color:var(--text-dim);
-    display:flex;align-items:center;justify-content:center;font-size:11px;transition:.15s;
+    display:flex;align-items:center;justify-content:center;font-size:11px;transition:.15s;flex-shrink:0;
   }
   .user-card-call-btn:hover{background:var(--accent-soft);color:var(--accent);}
   .user-card-call-btn:disabled{opacity:.35;cursor:default;}
   .user-card-call-btn-audio{color:#e63946;}
   .user-card-call-btn-audio:not(:disabled):hover{color:#e63946;}
   .user-card-call-row .user-card-msg-btn{
-    width:24px;height:24px;font-size:11px;
+    width:24px;height:24px;font-size:11px;flex-shrink:0;
     background:transparent;color:#1FAE5C;box-shadow:none;
   }
   .user-card-call-row .user-card-msg-btn:hover{background:var(--accent-soft);color:#1FAE5C;}
