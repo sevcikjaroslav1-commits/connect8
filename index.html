@@ -1928,6 +1928,18 @@ function saveDoc(ref, data, what){
   if(storageMode !== "online"){ saveToLocalStorage(); return Promise.resolve(); }
   return ref.set(data).catch(e=>{ console.error(`Uloženie (${what}) zlyhalo:`, e); throw e; });
 }
+// Cielená aktualizácia LEN vybraných polí (napr. likes/likedBy/views).
+// Na rozdiel od saveDoc (ktoré robí .set() a prepíše CELÝ dokument) sa tu
+// menia iba explicitne uvedené polia — ostatné polia dokumentu (aj staré
+// "legacy" polia typu 'liked', ktoré lokálny objekt už nemá) ostanú vo
+// Firestore nedotknuté. Toto je dôležité, lebo bezpečnostné pravidlá
+// povoľujú cudzím používateľom (nie autorovi) meniť len presne vymedzený
+// zoznam polí — akákoľvek iná zmena (aj "zmiznutie" poľa pri .set()) by
+// zápis zamietla.
+function updateDoc(ref, fields, what){
+  if(storageMode !== "online"){ saveToLocalStorage(); return Promise.resolve(); }
+  return ref.update(fields).catch(e=>{ console.error(`Aktualizácia (${what}) zlyhala:`, e); throw e; });
+}
 function deleteDoc(ref, what){
   if(storageMode !== "online"){ saveToLocalStorage(); return Promise.resolve(); }
   return ref.delete().catch(e=>console.error(`Zmazanie (${what}) zlyhalo:`, e));
@@ -5203,7 +5215,7 @@ function toggleLike(id){
   p.likedBy = likedBy;
   p.likes = likedBy.length;
   delete p.liked;
-  savePost(p);
+  updateDoc(postDoc(p.id), {likes: p.likes, likedBy: p.likedBy}, 'príspevok - lajk');
   if(!wasLiked && p.authorId) createNotification(p.authorId, 'like_post', {postId: p.id});
   refreshPostViews();
 }
@@ -5252,7 +5264,7 @@ function toggleCommentLike(postId, commentIndex){
   c.likedBy = likedBy;
   c.likes = likedBy.length;
   delete c.liked;
-  savePost(p);
+  updateDoc(postDoc(p.id), {comments: p.comments}, 'príspevok - lajk komentára');
   renderPosts();
 }
 
@@ -5856,7 +5868,7 @@ function registerFeedVideoView(postId){
   p.views = (p.views||0) + 1;
   const el = document.getElementById('post-video-views-'+numId);
   if(el) el.textContent = `👁 ${formatViewCount(p.views)}`;
-  savePost(p);
+  updateDoc(postDoc(p.id), {views: p.views}, 'príspevok - zobrazenie');
 }
 
 function registerVideoView(id){
@@ -5873,7 +5885,7 @@ function registerVideoView(id){
   v.views = (v.views||0) + 1;
   const el = document.getElementById('views-'+numId);
   if(el) el.textContent = `👁 ${formatViewCount(v.views)}`;
-  saveVideo(v);
+  updateDoc(videoDoc(v.id), {views: v.views}, 'video - zobrazenie');
 }
 
 // Detekcia iPhone/iPad (iOS) - Safari aj Chrome na iOS bežia na tom istom WebKit
@@ -6108,7 +6120,7 @@ function toggleVideoLike(id){
   v.likedBy = likedBy;
   v.likes = likedBy.length;
   delete v.liked;
-  saveVideo(v);
+  updateDoc(videoDoc(v.id), {likes: v.likes, likedBy: v.likedBy}, 'video - lajk');
   if(!wasLiked && v.authorId) createNotification(v.authorId, 'like_video', {videoId: v.id});
   renderVideos();
 }
@@ -6160,7 +6172,7 @@ function toggleVideoCommentLike(videoId, commentIndex){
   c.likedBy = likedBy;
   c.likes = likedBy.length;
   delete c.liked;
-  saveVideo(v);
+  updateDoc(videoDoc(v.id), {comments: v.comments}, 'video - lajk komentára');
   renderVideoComments();
 }
 
