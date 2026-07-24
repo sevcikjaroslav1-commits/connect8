@@ -3675,28 +3675,6 @@ function updateConversationTurnLabel(){
   if(el) el.textContent = TRANSLATOR_LANG_NAMES[conversationTurnLang];
 }
 
-// Rozpozná, v ktorom z dvoch jazykov (sk/en) bola pravdepodobne povedaná
-// veta - podľa slovenskej diakritiky a bežných slovíčok. Appka podľa toho
-// preloží VŽDY do opačného jazyka, nezávisle od toho, kto má "na rade" -
-// takže aj keby ten istý človek povedal niečo po anglicky dva razy za
-// sebou, obakrát sa to preloží do slovenčiny.
-function detectConversationLang(text){
-  const skDiacritics = /[áäčďéíľĺňóôŕšťúýžÁÄČĎÉÍĽĹŇÓÔŔŠŤÚÝŽ]/;
-  if(skDiacritics.test(text)) return 'sk';
-
-  const padded = ' ' + text.toLowerCase() + ' ';
-  const enWords = [' the ',' is ',' are ',' you ',' what ',' how ',' where ',' when ',' hello ',' hi ',' thanks ',' thank you ',' please ',' good ',' yes ',' no ',' i am ',' my name ',' can ',' do ',' does ',' this ',' that ',' with ',' and ',' have ',' want ',' need '];
-  const skWords = [' je ',' som ',' si ',' ako ',' kde ',' kedy ',' co ',' preco ',' prosim ',' dakujem ',' ahoj ',' dobry ',' ano ',' nie ',' mam ',' chcem ',' potrebujem ',' a ',' ale ',' ten ',' tento '];
-
-  let enScore = 0, skScore = 0;
-  enWords.forEach(w=>{ if(padded.includes(w)) enScore++; });
-  skWords.forEach(w=>{ if(padded.includes(w)) skScore++; });
-
-  if(enScore > skScore) return 'en';
-  if(skScore > enScore) return 'sk';
-  return null; // nejednoznačné - appka potom ostane pri poslednom odhadnutom jazyku
-}
-
 function resetConversationLog(){
   const log = document.getElementById('convo-log');
   if(log){
@@ -3743,8 +3721,7 @@ function startConversationRecognitionRound(){
     for(let i=0;i<e.results.length;i++) text += e.results[i][0].transcript;
     if(e.results[e.results.length-1].isFinal && text.trim()){
       conversationAwaitingTranslation = true; // nepočúvaj znova, kým sa nepreloží a neprehrá
-      const spokenLang = detectConversationLang(text) || conversationTurnLang;
-      translateConversationTurn(text, spokenLang);
+      translateConversationTurn(text, conversationTurnLang);
     }
   };
   conversationRecognition.onerror = (e)=>{
@@ -3795,7 +3772,7 @@ function translateConversationTurn(text, fromLang){
       const translated = (data && data.responseData && data.responseData.translatedText) || '';
       if(!translated){ throw new Error('Prázdna odpoveď prekladača'); }
       updateConversationEntryTranslation(entryId, translated);
-      conversationTurnLang = fromLang; // dalsie kolo pocuvania zacne v jazyku, ktory sme prave poculi
+      conversationTurnLang = toLang;
       updateConversationTurnLabel();
 
       const resumeListening = ()=>{
