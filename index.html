@@ -3485,6 +3485,8 @@ let translatorMode = 'single';
 let conversationRecognition = null;
 let conversationListening = false;
 let conversationTurnLang = 'sk';
+let conversationSessionActive = false;      // true od stlačenia mikrofónu po stlačenie stop - drží konverzáciu "naživo"
+let conversationAwaitingTranslation = false; // true kým čakáme na preklad/prehratie - vtedy sa este neposlucha znova
 
 function openTranslatorModal(){
   document.getElementById('translator-modal').classList.add('open');
@@ -3681,12 +3683,28 @@ function resetConversationLog(){
 }
 
 function toggleConversationListening(){
-  if(conversationListening){ stopConversationListening(); return; }
+  if(conversationSessionActive){ stopConversationListening(); return; }
   const Ctor = getTranslatorRecognitionCtor();
   if(!Ctor){
     document.getElementById('convo-log').innerHTML = '<p class="convo-empty">Tento prehliadač nepodporuje rozpoznávanie reči. Skús to priamo v Safari alebo Chrome (nie v appke pridanej na plochu).</p>';
     return;
   }
+  conversationSessionActive = true;
+  conversationAwaitingTranslation = false;
+  conversationTurnLang = translatorSourceLang;
+  updateConversationTurnLabel();
+  startConversationRecognitionRound();
+}
+
+// Spustí jedno "kolo" počúvania v aktuálnom jazyku (conversationTurnLang).
+// Kým je conversationSessionActive=true, appka si toto kolo po skončení
+// (či už úspešnom rozpoznaní, tichu, alebo chybe) sama znova zapne -
+// tlačidlo teda treba stlačiť len raz na začiatku celej konverzácie.
+function startConversationRecognitionRound(){
+  if(!conversationSessionActive) return;
+  const Ctor = getTranslatorRecognitionCtor();
+  if(!Ctor) return;
+
   conversationRecognition = new Ctor();
   conversationRecognition.lang = TRANSLATOR_SPEECH_LOCALE[conversationTurnLang];
   conversationRecognition.interimResults = false;
@@ -3696,34 +3714,51 @@ function toggleConversationListening(){
 
   conversationRecognition.onstart = ()=>{
     conversationListening = true;
-    micBtn.classList.add('listening');
+    if(micBtn) micBtn.classList.add('listening');
   };
   conversationRecognition.onresult = (e)=>{
     let text = '';
     for(let i=0;i<e.results.length;i++) text += e.results[i][0].transcript;
     if(e.results[e.results.length-1].isFinal && text.trim()){
+      conversationAwaitingTranslation = true; // nepočúvaj znova, kým sa nepreloží a neprehrá
       translateConversationTurn(text, conversationTurnLang);
     }
   };
   conversationRecognition.onerror = (e)=>{
     console.error('Chyba rozpoznávania reči (konverzácia):', e.error);
-    stopConversationListening();
     if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+      conversationSessionActive = false;
+      conversationListening = false;
+      if(micBtn) micBtn.classList.remove('listening');
       document.getElementById('convo-log').innerHTML = '<p class="convo-empty">Nepodarilo sa získať prístup k mikrofónu - povoľ ho v nastaveniach prehliadača.</p>';
     }
+    // Pri iných chybách (napr. no-speech pri tichu, network) sa proste
+    // znova spustí počúvanie nižšie v onend - konverzácia sa nezastaví.
   };
-  conversationRecognition.onend = ()=>{ stopConversationListening(); };
+  conversationRecognition.onend = ()=>{
+    conversationListening = false;
+    if(micBtn) micBtn.classList.remove('listening');
+    // Ak sedenie stále beží a nečakáme práve na preklad/prehratie
+    // (to vybaví translateConversationTurn samo, keď skončí), rovno
+    // znova začni počúvať v tom istom jazyku - napr. po tichu/timeoute.
+    if(conversationSessionActive && !conversationAwaitingTranslation){
+      setTimeout(()=>{ if(conversationSessionActive) startConversationRecognitionRound(); }, 250);
+    }
+  };
 
-  conversationRecognition.start();
+  try{ conversationRecognition.start(); }catch(e){ /* uz beziace rozpoznavanie - ignoruj */ }
 }
 
 function stopConversationListening(){
+  conversationSessionActive = false;
+  conversationAwaitingTranslation = false;
   conversationListening = false;
   const micBtn = document.getElementById('convo-mic-btn');
   if(micBtn) micBtn.classList.remove('listening');
   if(conversationRecognition){
     try{ conversationRecognition.stop(); }catch(e){}
   }
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
 }
 
 function translateConversationTurn(text, fromLang){
@@ -3737,18 +3772,35 @@ function translateConversationTurn(text, fromLang){
       const translated = (data && data.responseData && data.responseData.translatedText) || '';
       if(!translated){ throw new Error('Prázdna odpoveď prekladača'); }
       updateConversationEntryTranslation(entryId, translated);
+      conversationTurnLang = toLang;
+      updateConversationTurnLabel();
+
+      const resumeListening = ()=>{
+        conversationAwaitingTranslation = false;
+        if(conversationSessionActive) startConversationRecognitionRound();
+      };
+
       if('speechSynthesis' in window){
         window.speechSynthesis.cancel();
         const utter = new SpeechSynthesisUtterance(translated);
         utter.lang = TRANSLATOR_SPEECH_LOCALE[toLang];
+        // Kým sa preklad prehráva nahlas, mikrofón nesmie počúvať (inak by
+        // si appka mohla "vypočuť" sama seba) - znova začne počúvať v novom
+        // jazyku AŽ keď prehrávanie skutočne skončí (alebo zlyhá).
+        utter.onend = resumeListening;
+        utter.onerror = resumeListening;
         window.speechSynthesis.speak(utter);
+      } else {
+        resumeListening();
       }
-      conversationTurnLang = toLang;
-      updateConversationTurnLabel();
     })
     .catch(err=>{
       console.error('Chyba prekladu (konverzácia):', err);
       updateConversationEntryTranslation(entryId, 'Preklad sa nepodarilo načítať, skús to znova.');
+      // Aj pri chybe prekladu treba pokračovať v počúvaní (v pôvodnom
+      // jazyku tohto kola), inak by konverzácia "zamrzla".
+      conversationAwaitingTranslation = false;
+      if(conversationSessionActive) startConversationRecognitionRound();
     });
 }
 
