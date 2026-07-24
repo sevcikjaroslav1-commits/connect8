@@ -259,17 +259,22 @@
 
   .invite-modal{display:none;position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.4);align-items:center;justify-content:center;padding:16px;}
 
-  /* ---------- TLMOČNÍK (kruhové tlačidlo, rovnaký štýl ako "Pozvať", nad ním) ---------- */
+  /* ---------- TLMOČNÍK (kruhové tlačidlo, rovnaký štýl ako "Pozvať") ---------- */
+  /* Na počítači (nad 900px) je POD tlačidlom "Pozvať" (top:100px + výška) - na mobile ostáva nad ním (viď media query nižšie, nezmenené) */
   .translator-btn{
     display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;
     background:none;border:none;padding:0;flex-shrink:0;
-    position:fixed;top:40px;right:24px;z-index:50;
+    position:fixed;top:170px;right:24px;z-index:50;
   }
   @media(max-width:900px){
     .translator-btn{top:8px;right:14px;}
   }
   .translator-btn .invite-ring{background:conic-gradient(from 45deg,#20C4C4,#4C7CFF,#20C4C4);}
   .translator-btn .invite-ring-inner{color:#20A8C4;}
+  .translator-btn .invite-label{font-size:10px;color:var(--text-dim);font-weight:600;white-space:nowrap;}
+  @media(max-width:900px){
+    .translator-btn .invite-label{display:none;}
+  }
   .translator-modal{display:none;position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.4);align-items:center;justify-content:center;padding:16px;}
   .translator-modal.open{display:flex;}
   .translator-sheet{background:var(--surface);border-radius:16px;width:100%;max-width:400px;max-height:88vh;overflow:auto;}
@@ -303,7 +308,7 @@
   .convo-entry.convo-other .convo-original{background:var(--accent-soft);}
   .convo-translated{font-size:13px;color:var(--accent);font-weight:600;padding:0 3px;}
   .convo-turn-hint{font-size:12px;color:var(--text-dim);text-align:center;}
-  .translator-type-row{display:flex;align-items:center;gap:8px;}
+  .translator-type-row{display:flex;align-items:center;gap:8px;margin-top:14px;}
   .translator-type-row input{
     flex:1;padding:11px 14px;border-radius:10px;border:1.5px solid var(--line);
     font-size:14px;outline:none;background:var(--bg);color:var(--text);transition:.15s;
@@ -3538,40 +3543,74 @@ function toggleTranslatorListening(){
     box.innerHTML = '<span class="translator-unsupported">Tento prehliadač nepodporuje rozpoznávanie reči. Skús to priamo v Safari alebo Chrome (nie v appke pridanej na plochu).</span>';
     return;
   }
-  translatorRecognition = new Ctor();
-  translatorRecognition.lang = TRANSLATOR_SPEECH_LOCALE[translatorSourceLang];
-  translatorRecognition.interimResults = true;
-  translatorRecognition.continuous = false;
 
   const micBtn = document.getElementById('translator-mic-btn');
   const sourceText = document.getElementById('translator-source-text');
 
-  translatorRecognition.onstart = ()=>{
-    translatorListening = true;
-    micBtn.classList.add('listening');
-    sourceText.textContent = 'Počúvam...';
-    sourceText.className = 'translator-placeholder';
-  };
-  translatorRecognition.onresult = (e)=>{
-    let text = '';
-    for(let i=0;i<e.results.length;i++) text += e.results[i][0].transcript;
-    sourceText.textContent = text;
-    sourceText.className = '';
-    if(e.results[e.results.length-1].isFinal){
-      translateTranscribedText(text);
-    }
-  };
-  translatorRecognition.onerror = (e)=>{
-    console.error('Chyba rozpoznávania reči:', e.error);
-    stopTranslatorListening();
-    if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
-      sourceText.textContent = 'Nepodarilo sa získať prístup k mikrofónu - povoľ ho v nastaveniach prehliadača.';
-      sourceText.className = 'translator-placeholder';
-    }
-  };
-  translatorRecognition.onend = ()=>{ stopTranslatorListening(); };
+  // Niektoré mobilné prehliadače (hlavne Android WebView / staršie Chrome)
+  // odmietnu SpeechRecognition úplne potichu (bez onstart aj bez onerror),
+  // pokiaľ predtým appka mikrofón explicitne nevyžiadala cez getUserMedia.
+  // Preto si najprv vypýtame mikrofón takto - a hneď ho zase pustíme,
+  // samotné nahrávanie a rozpoznávanie rieši SpeechRecognition sám.
+  const startRecognition = ()=>{
+    translatorRecognition = new Ctor();
+    translatorRecognition.lang = TRANSLATOR_SPEECH_LOCALE[translatorSourceLang];
+    translatorRecognition.interimResults = true;
+    translatorRecognition.continuous = false;
 
-  translatorRecognition.start();
+    translatorRecognition.onstart = ()=>{
+      translatorListening = true;
+      micBtn.classList.add('listening');
+      sourceText.textContent = 'Počúvam...';
+      sourceText.className = 'translator-placeholder';
+    };
+    translatorRecognition.onresult = (e)=>{
+      let text = '';
+      for(let i=0;i<e.results.length;i++) text += e.results[i][0].transcript;
+      sourceText.textContent = text;
+      sourceText.className = '';
+      if(e.results[e.results.length-1].isFinal){
+        translateTranscribedText(text);
+      }
+    };
+    translatorRecognition.onerror = (e)=>{
+      console.error('Chyba rozpoznávania reči:', e.error);
+      stopTranslatorListening();
+      const messages = {
+        'not-allowed': 'Nepodarilo sa získať prístup k mikrofónu - povoľ ho v nastaveniach prehliadača.',
+        'service-not-allowed': 'Nepodarilo sa získať prístup k mikrofónu - povoľ ho v nastaveniach prehliadača.',
+        'no-speech': 'Nepočul som žiadnu reč. Stlač mikrofón a skús to znova.',
+        'audio-capture': 'Nenašiel sa žiadny mikrofón. Skontroluj, či ho zariadenie má a či nie je použitý inou appkou.',
+        'network': 'Rozpoznávanie reči potrebuje internetové pripojenie - skontroluj ho a skús znova.',
+        'aborted': ''
+      };
+      const msg = messages.hasOwnProperty(e.error) ? messages[e.error] : ('Rozpoznávanie reči zlyhalo (' + e.error + '). Skús to znova.');
+      if(msg){
+        sourceText.textContent = msg;
+        sourceText.className = 'translator-placeholder';
+      }
+    };
+    translatorRecognition.onend = ()=>{ stopTranslatorListening(); };
+
+    translatorRecognition.start();
+  };
+
+  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+    sourceText.textContent = 'Pýtam si prístup k mikrofónu...';
+    sourceText.className = 'translator-placeholder';
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream=>{
+        stream.getTracks().forEach(t=>t.stop());
+        startRecognition();
+      })
+      .catch(err=>{
+        console.error('Chyba prístupu k mikrofónu:', err);
+        sourceText.textContent = 'Nepodarilo sa získať prístup k mikrofónu - povoľ ho v nastaveniach prehliadača.';
+        sourceText.className = 'translator-placeholder';
+      });
+  } else {
+    startRecognition();
+  }
 }
 
 function stopTranslatorListening(){
