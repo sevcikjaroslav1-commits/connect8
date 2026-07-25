@@ -283,7 +283,9 @@
   .translator-sheet-header button{background:transparent;color:var(--text-dim);font-size:18px;}
   .translator-body{padding:16px 18px 20px;display:flex;flex-direction:column;gap:14px;}
   .translator-langs{display:flex;align-items:center;justify-content:center;gap:14px;}
-  .translator-lang-tag{font-size:13px;font-weight:700;padding:6px 12px;border-radius:20px;background:var(--bg);color:var(--text);min-width:64px;text-align:center;}
+  .translator-lang-tag{font-size:13px;font-weight:700;padding:6px 12px;border-radius:20px;background:var(--bg);color:var(--text);min-width:64px;text-align:center;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:.15s;}
+  .translator-lang-tag:hover{background:var(--accent-soft);}
+  .translator-lang-tag::after{content:"";width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid var(--text-dim);margin-left:1px;}
   .translator-swap-btn{background:var(--bg);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;color:var(--accent);cursor:pointer;flex-shrink:0;}
   .translator-swap-btn:hover{filter:brightness(1.15);}
   .translator-box{background:var(--bg);border-radius:12px;padding:12px 14px;min-height:70px;font-size:14.5px;line-height:1.4;position:relative;}
@@ -1404,11 +1406,11 @@
         </div>
 
         <div class="translator-langs">
-          <span class="translator-lang-tag" id="translator-lang-from">Slovenčina</span>
+          <button class="translator-lang-tag" id="translator-lang-from" onclick="cycleTranslatorLang('from')" title="Klikni pre zmenu jazyka">Slovenčina</button>
           <button class="translator-swap-btn" onclick="swapTranslatorLangs()" title="Prehodiť smer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17"><path d="M7 7h13l-4-4M17 17H4l4 4"/></svg>
           </button>
-          <span class="translator-lang-tag" id="translator-lang-to">Angličtina</span>
+          <button class="translator-lang-tag" id="translator-lang-to" onclick="cycleTranslatorLang('to')" title="Klikni pre zmenu jazyka">Angličtina</button>
         </div>
 
         <div id="translator-single-mode">
@@ -3478,8 +3480,27 @@ let translatorRecognition = null;
 let translatorListening = false;
 let translatorLastResultText = '';
 
-const TRANSLATOR_LANG_NAMES = { sk: 'Slovenčina', en: 'Angličtina' };
-const TRANSLATOR_SPEECH_LOCALE = { sk: 'sk-SK', en: 'en-US' };
+const TRANSLATOR_LANG_NAMES = { sk: 'Slovenčina', en: 'Angličtina', de: 'Nemčina' };
+const TRANSLATOR_SPEECH_LOCALE = { sk: 'sk-SK', en: 'en-US', de: 'de-DE' };
+const TRANSLATOR_LANG_ORDER = ['sk', 'en', 'de'];
+
+function cycleTranslatorLang(which){
+  const list = TRANSLATOR_LANG_ORDER;
+  if(which === 'from'){
+    let next = list[(list.indexOf(translatorSourceLang) + 1) % list.length];
+    while(next === translatorTargetLang) next = list[(list.indexOf(next) + 1) % list.length];
+    translatorSourceLang = next;
+  } else {
+    let next = list[(list.indexOf(translatorTargetLang) + 1) % list.length];
+    while(next === translatorSourceLang) next = list[(list.indexOf(next) + 1) % list.length];
+    translatorTargetLang = next;
+  }
+  updateTranslatorLangLabels();
+  resetTranslatorBoxes();
+  resetConversationLog();
+  conversationTurnLang = translatorSourceLang;
+  updateConversationTurnLabel();
+}
 
 let translatorMode = 'single';
 let conversationRecognition = null;
