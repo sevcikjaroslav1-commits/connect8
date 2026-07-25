@@ -5120,28 +5120,17 @@ let feedMediaVisibility = new Map(); // element (.post-video-wrap / .post-youtub
 // Rovnaký princíp ako v sekcii Videá, ALE navyše: nech hrá vždy len JEDNO
 // video naraz - presne to, ktoré je práve najviac v strede/najviac viditeľné
 // počas scrollovania. Všetky ostatné sa pauznú, aj keby boli čiastočne vidieť.
+//
+// DÔLEŽITÉ: vlastné nahraté videá (Cloudinary) sa NEspúšťajú automaticky pri
+// scrollovaní - len keď na ne človek klikne (má vlastné "controls"). Dôvod:
+// autoplay pri scrollovaní zbytočne sťahoval dáta z Cloudinary aj ľuďom, ktorí
+// video ani nechceli pozrieť, a to zaťažovalo Cloudinary kredity (Bandwidth).
+// YouTube videá autoplay naďalej majú - tie idú cez YouTube servery, nič to
+// nestojí a na Cloudinary kredity to nemá žiadny vplyv.
 function playFeedMedia(wrapEl){
   const video = wrapEl.querySelector('video');
   if(video){
-    if(!video.paused) return;
-    if(isIOSDevice()){
-      // iPhone: automatické spustenie (keď video vo Feede príde scrollom do záberu,
-      // bez priameho dotyku) smie ísť LEN stlmene - preto vždy najprv nastavíme
-      // muted=true a spustíme, a keďže video už reálne beží, hneď potom v tichosti
-      // vrátime zvuk (zmena .muted na bežiacom videu nový dotyk/gesto nevyžaduje).
-      video.muted = true;
-      video.play().then(()=>{
-        video.muted = false;
-      }).catch(()=>{ /* zlyhalo aj stlmené - skús znova pri ďalšom scrolle */ });
-      return;
-    }
-    video.play().catch(()=>{
-      // Prehliadač zablokoval prehrávanie so zvukom bez priamej interakcie -
-      // spusti aspoň stlmené, nech video nezostane zaseknuté.
-      video.muted = true;
-      video.play().catch(()=>{});
-    });
-    return;
+    return; // vlastné video sa autoplay-om nespúšťa - iba na klik cez native controls
   }
   const iframe = wrapEl.querySelector('iframe');
   if(iframe && iframe.contentWindow){
