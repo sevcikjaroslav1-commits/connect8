@@ -289,6 +289,25 @@
   .finance-btn .invite-ring{background:conic-gradient(from 45deg,#22C55E,#15803D,#22C55E);}
   .finance-btn .invite-ring-inner{color:#16A34A;}
   .finance-btn .invite-label{font-size:10px;color:var(--text-dim);font-weight:600;white-space:nowrap;}
+
+  .finance-gate-modal{display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.4);align-items:center;justify-content:center;padding:16px;}
+  .finance-gate-modal.open{display:flex;}
+  .finance-gate-sheet{background:var(--surface);border-radius:16px;width:100%;max-width:320px;overflow:hidden;}
+  .finance-gate-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line);}
+  .finance-gate-header h3{margin:0;font-size:16px;}
+  .finance-gate-header button{background:transparent;color:var(--text-dim);font-size:18px;}
+  .finance-gate-body{padding:18px;}
+  .finance-gate-body p{margin:0 0 10px;font-size:13.5px;color:var(--text-dim);}
+  .finance-gate-body input{
+    width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid var(--line);
+    font-size:14px;outline:none;background:var(--bg);color:var(--text);margin-bottom:12px;box-sizing:border-box;
+  }
+  .finance-gate-body input:focus{border-color:#22C55E;background:var(--surface);}
+  .finance-gate-submit{
+    width:100%;padding:11px 0;border-radius:10px;background:#16A34A;color:#fff;font-weight:700;font-size:14px;
+  }
+  .finance-gate-submit:hover{filter:brightness(1.06);}
+  .finance-gate-error{color:#E14F4F;font-size:12.5px;margin:10px 0 0;text-align:center;}
   .translator-modal.open{display:flex;}
   .translator-sheet{background:var(--surface);border-radius:16px;width:100%;max-width:400px;max-height:88vh;overflow:auto;}
   .translator-sheet-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line);}
@@ -1400,7 +1419,7 @@
     <span class="invite-label">Preklad</span>
   </button>
 
-  <button class="finance-btn" onclick="window.open('DaxWin.html','_blank')" title="Financie">
+  <button class="finance-btn" onclick="openFinanceGate()" title="Financie">
     <span class="invite-ring">
       <span class="invite-ring-inner">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
@@ -1408,6 +1427,21 @@
     </span>
     <span class="invite-label">Financie</span>
   </button>
+
+  <div class="finance-gate-modal" id="finance-gate-modal" onclick="if(event.target===this) closeFinanceGate()">
+    <div class="finance-gate-sheet">
+      <div class="finance-gate-header">
+        <h3>🔒 Financie</h3>
+        <button onclick="closeFinanceGate()">✕</button>
+      </div>
+      <div class="finance-gate-body">
+        <p>Zadaj prístupový kód:</p>
+        <input type="password" id="finance-gate-input" placeholder="Kód..." autocomplete="off" onkeydown="if(event.key==='Enter') submitFinanceGate()">
+        <button class="finance-gate-submit" onclick="submitFinanceGate()">Vstúpiť</button>
+        <p class="finance-gate-error" id="finance-gate-error" style="display:none;">Nesprávny kód, skús to znova.</p>
+      </div>
+    </div>
+  </div>
 
   <div class="translator-modal" id="translator-modal" onclick="if(event.target===this) closeTranslatorModal()">
     <div class="translator-sheet">
@@ -3524,6 +3558,35 @@ let conversationListening = false;
 let conversationTurnLang = 'sk';
 let conversationSessionActive = false;      // true od stlačenia mikrofónu po stlačenie stop - drží konverzáciu "naživo"
 let conversationAwaitingTranslation = false; // true kým čakáme na preklad/prehratie - vtedy sa este neposlucha znova
+
+/* ---------------- FINANCIE (kódom chránený prístup k DaxWin.html) ---------------- */
+const FINANCE_GATE_CODE = 'daxwin';
+
+function openFinanceGate(){
+  const modal = document.getElementById('finance-gate-modal');
+  const input = document.getElementById('finance-gate-input');
+  const error = document.getElementById('finance-gate-error');
+  modal.classList.add('open');
+  error.style.display = 'none';
+  input.value = '';
+  setTimeout(()=>input.focus(), 50);
+}
+function closeFinanceGate(){
+  document.getElementById('finance-gate-modal').classList.remove('open');
+}
+function submitFinanceGate(){
+  const input = document.getElementById('finance-gate-input');
+  const error = document.getElementById('finance-gate-error');
+  const val = (input.value || '').trim().toLowerCase();
+  if(val === FINANCE_GATE_CODE){
+    closeFinanceGate();
+    window.open('DaxWin.html', '_blank');
+  } else {
+    error.style.display = 'block';
+    input.value = '';
+    input.focus();
+  }
+}
 
 function openTranslatorModal(){
   document.getElementById('translator-modal').classList.add('open');
