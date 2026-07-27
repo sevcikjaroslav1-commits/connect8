@@ -308,6 +308,46 @@
   }
   .finance-gate-submit:hover{filter:brightness(1.06);}
   .finance-gate-error{color:#E14F4F;font-size:12.5px;margin:10px 0 0;text-align:center;}
+
+  /* ---------- KALENDÁR (mesiac, víkendy, sviatky, meniny) ---------- */
+  .calendar-modal{display:none;position:fixed;inset:0;z-index:92;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:14px;}
+  .calendar-modal.open{display:flex;}
+  .calendar-sheet{background:var(--surface);border-radius:18px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;padding:16px;box-sizing:border-box;}
+  .calendar-header{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+  .calendar-header h3{flex:1;text-align:center;margin:0;font-size:15.5px;font-weight:700;}
+  .calendar-nav-btn{width:30px;height:30px;border-radius:9px;background:var(--bg);color:var(--text);font-size:17px;flex-shrink:0;}
+  .calendar-nav-btn:hover{background:var(--accent-soft);}
+  .calendar-close-btn{width:26px;height:26px;border-radius:8px;background:transparent;color:var(--text-dim);font-size:15px;flex-shrink:0;}
+  .calendar-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}
+  .calendar-weekdays span{text-align:center;font-size:11px;font-weight:700;color:var(--text-dim);padding:4px 0;}
+  .calendar-weekdays span.weekend{color:#E14F4F;}
+  .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-day{
+    aspect-ratio:1/1;border-radius:10px;background:var(--bg);padding:4px 3px;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    overflow:hidden;position:relative;
+  }
+  .cal-day.other-month{opacity:.28;}
+  .cal-day-num{font-size:12.5px;font-weight:700;color:var(--text);}
+  .cal-day-name{font-size:8px;color:var(--text-dim);text-align:center;line-height:1.15;margin-top:1px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .cal-day.weekend .cal-day-num{color:#E14F4F;}
+  .cal-day.holiday{background:var(--mode-news-soft, rgba(255,159,10,.14));}
+  .cal-day.holiday .cal-day-num{color:#D97706;}
+  .cal-day.holiday .cal-day-name{color:#B45309;font-weight:600;}
+  .cal-day.today{background:var(--accent);}
+  .cal-day.today .cal-day-num,.cal-day.today .cal-day-name{color:#fff;}
+  .calendar-legend{display:flex;gap:14px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+  .calendar-legend span{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-dim);}
+  .cal-dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+  .cal-dot-today{background:var(--accent);}
+  .cal-dot-holiday{background:#D97706;}
+  .cal-dot-weekend{background:#E14F4F;}
+  @media(max-width:480px){
+    .cal-day-num{font-size:11px;}
+    .cal-day-name{font-size:7px;}
+    .calendar-sheet{padding:12px;max-width:100%;}
+  }
   .translator-modal.open{display:flex;}
   .translator-sheet{background:var(--surface);border-radius:16px;width:100%;max-width:400px;max-height:88vh;overflow:auto;}
   .translator-sheet-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line);}
@@ -1377,7 +1417,7 @@
     </div>
 
     <div class="topbar-right">
-      <div class="header-clock" id="header-clock" title="Aktuálny čas a dátum">
+      <div class="header-clock" id="header-clock" title="Aktuálny čas a dátum" onclick="openCalendarModal()" style="cursor:pointer;">
         <div class="header-clock-time" id="header-clock-time">--:--</div>
         <div class="header-clock-date" id="header-clock-date">--.--.----</div>
         <div class="header-clock-name" id="header-clock-name">—</div>
@@ -1439,6 +1479,26 @@
         <input type="password" id="finance-gate-input" placeholder="Kód..." autocomplete="off" onkeydown="if(event.key==='Enter') submitFinanceGate()">
         <button class="finance-gate-submit" onclick="submitFinanceGate()">Vstúpiť</button>
         <p class="finance-gate-error" id="finance-gate-error" style="display:none;">Nesprávny kód, skús to znova.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="calendar-modal" id="calendar-modal" onclick="if(event.target===this) closeCalendarModal()">
+    <div class="calendar-sheet">
+      <div class="calendar-header">
+        <button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)">‹</button>
+        <h3 id="calendar-month-title">—</h3>
+        <button class="calendar-nav-btn" onclick="changeCalendarMonth(1)">›</button>
+        <button class="calendar-close-btn" onclick="closeCalendarModal()">✕</button>
+      </div>
+      <div class="calendar-weekdays">
+        <span>Po</span><span>Ut</span><span>St</span><span>Št</span><span>Pia</span><span class="weekend">So</span><span class="weekend">Ne</span>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+      <div class="calendar-legend">
+        <span><i class="cal-dot cal-dot-today"></i>Dnes</span>
+        <span><i class="cal-dot cal-dot-holiday"></i>Sviatok</span>
+        <span><i class="cal-dot cal-dot-weekend"></i>Víkend</span>
       </div>
     </div>
   </div>
@@ -2662,6 +2722,107 @@ const SK_NAMEDAYS = {
   "12-21":"Bohdan", "12-22":"Adela", "12-23":"Nadežda", "12-24":"Adam a Eva", "12-25":"",
   "12-26":"Štefan", "12-27":"Filoména", "12-28":"Ivana, Ivona", "12-29":"Milada", "12-30":"Dávid", "12-31":"Silvester"
 };
+
+/* ---------------- KALENDÁR (mesiac, víkendy, slovenské štátne sviatky, meniny) ---------------- */
+let calendarViewDate = new Date();
+
+function getEasterSunday(year){
+  const a = year % 19, b = Math.floor(year/100), c = year % 100;
+  const d = Math.floor(b/4), e = b % 4, f = Math.floor((b+8)/25);
+  const g = Math.floor((b-f+1)/3), h = (19*a+b-d-g+15)%30;
+  const i = Math.floor(c/4), k = c % 4, l = (32+2*e+2*i-h-k)%7;
+  const m = Math.floor((a+11*h+22*l)/451);
+  const month = Math.floor((h+l-7*m+114)/31);
+  const day = ((h+l-7*m+114)%31)+1;
+  return new Date(year, month-1, day);
+}
+
+function getSlovakHolidays(year){
+  const easter = getEasterSunday(year);
+  const goodFriday = new Date(easter); goodFriday.setDate(easter.getDate()-2);
+  const easterMonday = new Date(easter); easterMonday.setDate(easter.getDate()+1);
+  const fmt = d => `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const holidays = {};
+  holidays['01-01'] = 'Deň vzniku SR';
+  holidays['01-06'] = 'Zjavenie Pána (Traja králi)';
+  holidays[fmt(goodFriday)] = 'Veľký piatok';
+  holidays[fmt(easterMonday)] = 'Veľkonočný pondelok';
+  holidays['05-01'] = 'Sviatok práce';
+  holidays['05-08'] = 'Deň víťazstva nad fašizmom';
+  holidays['07-05'] = 'Cyril a Metod';
+  holidays['08-29'] = 'Výročie SNP';
+  holidays['09-01'] = 'Deň Ústavy SR';
+  holidays['09-15'] = 'Sedembolestná Panna Mária';
+  holidays['11-01'] = 'Sviatok všetkých svätých';
+  holidays['11-17'] = 'Deň boja za slobodu a demokraciu';
+  holidays['12-24'] = 'Štedrý deň';
+  holidays['12-25'] = '1. sviatok vianočný';
+  holidays['12-26'] = '2. sviatok vianočný';
+  return holidays;
+}
+
+function openCalendarModal(){
+  calendarViewDate = new Date();
+  renderCalendar();
+  document.getElementById('calendar-modal').classList.add('open');
+}
+function closeCalendarModal(){
+  document.getElementById('calendar-modal').classList.remove('open');
+}
+function changeCalendarMonth(delta){
+  calendarViewDate.setMonth(calendarViewDate.getMonth() + delta);
+  renderCalendar();
+}
+
+function renderCalendar(){
+  const MONTH_NAMES = ['Január','Február','Marec','Apríl','Máj','Jún','Júl','August','September','Október','November','December'];
+  const year = calendarViewDate.getFullYear();
+  const month = calendarViewDate.getMonth();
+  document.getElementById('calendar-month-title').textContent = `${MONTH_NAMES[month]} ${year}`;
+
+  const holidays = getSlovakHolidays(year);
+  const firstDay = new Date(year, month, 1);
+  const firstWeekdayIdx = (firstDay.getDay() + 6) % 7; // Po=0 ... Ne=6
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+  const today = new Date();
+  const isTodayMonth = today.getFullYear() === year && today.getMonth() === month;
+
+  let cells = [];
+  for(let i = firstWeekdayIdx - 1; i >= 0; i--){
+    cells.push({ day: daysInPrevMonth - i, otherMonth: true });
+  }
+  for(let d = 1; d <= daysInMonth; d++){
+    cells.push({ day: d, otherMonth: false });
+  }
+  let nextDay = 1;
+  while(cells.length % 7 !== 0){
+    cells.push({ day: nextDay++, otherMonth: true });
+  }
+
+  const grid = document.getElementById('calendar-grid');
+  grid.innerHTML = cells.map(c => {
+    if(c.otherMonth){
+      return `<div class="cal-day other-month"><div class="cal-day-num">${c.day}</div></div>`;
+    }
+    const dateObj = new Date(year, month, c.day);
+    const dow = dateObj.getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const mmdd = `${String(month+1).padStart(2,'0')}-${String(c.day).padStart(2,'0')}`;
+    const nameDay = SK_NAMEDAYS[mmdd] || '';
+    const holidayName = holidays[mmdd];
+    const isToday = isTodayMonth && today.getDate() === c.day;
+    let classes = 'cal-day';
+    if(isWeekend) classes += ' weekend';
+    if(holidayName) classes += ' holiday';
+    if(isToday) classes += ' today';
+    return `<div class="${classes}" title="${holidayName || ''}">
+      <div class="cal-day-num">${c.day}</div>
+      ${holidayName ? `<div class="cal-day-name">${holidayName}</div>` : (nameDay ? `<div class="cal-day-name">${nameDay}</div>` : '')}
+    </div>`;
+  }).join('');
+}
 
 function updateHeaderClock(){
   const timeEl = document.getElementById('header-clock-time');
