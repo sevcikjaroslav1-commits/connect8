@@ -629,6 +629,19 @@
   }
   #calcModalClose:hover{border-color:var(--gold); color:var(--gold);}
   #calcFrame{flex:1; width:100%; border:none; background:#0a0a0a;}
+  #calcModalFoot{
+    display:flex; align-items:center; justify-content:flex-start;
+    padding:12px 18px; border-top:1px solid var(--line);
+    flex-shrink:0; background:var(--ink);
+  }
+  #calcDownloadBtn{
+    display:flex; align-items:center; gap:8px;
+    background:none; border:1px solid #FFD400; color:var(--paper-dim);
+    border-radius:6px; padding:8px 14px; font-size:12.5px;
+    font-family:'IBM Plex Mono',monospace; letter-spacing:0.03em;
+    cursor:pointer;
+  }
+  #calcDownloadBtn:hover{border-color:#FFD400; color:#FFD400;}
 </style>
 </head>
 <body>
@@ -1669,6 +1682,9 @@
       <button id="calcModalClose" onclick="closeCalcModal()">✕</button>
     </div>
     <iframe id="calcFrame"></iframe>
+    <div id="calcModalFoot">
+      <button id="calcDownloadBtn" onclick="downloadCalc()">⬇ Stiahnuť kalkulačku</button>
+    </div>
   </div>
 </div>
 
@@ -1692,6 +1708,18 @@
   function closeCalcModal() {
     document.getElementById('calcModalOverlay').classList.remove('open');
     document.body.style.overflow = '';
+  }
+  function downloadCalc() {
+    var html = b64DecodeUnicode(CALC_HTML_B64);
+    var blob = new Blob([html], { type: 'text/html' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'skorekonzistencie-kalkulacka.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeCalcModal();
