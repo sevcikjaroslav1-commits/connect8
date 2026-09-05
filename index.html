@@ -510,6 +510,30 @@
   .translator-hint{font-size:12px;color:var(--text-dim);text-align:center;}
   .translator-unsupported{font-size:13px;color:var(--text-dim);text-align:center;padding:10px 0;}
   .invite-modal.open{display:flex;}
+
+  .legal-modal{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);align-items:center;justify-content:center;padding:16px;}
+  .legal-modal.open{display:flex;}
+  .legal-sheet{
+    background:var(--surface);width:640px;max-width:100%;max-height:85vh;border-radius:18px;
+    box-shadow:0 12px 40px rgba(0,0,0,.35);overflow:hidden;display:flex;flex-direction:column;
+  }
+  .legal-sheet-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);flex-shrink:0;}
+  .legal-sheet-header h3{margin:0;font-size:16px;}
+  .legal-sheet-header button{background:transparent;color:var(--text-dim);font-size:18px;cursor:pointer;border:none;}
+  .legal-sheet-header button:hover{color:var(--accent);}
+  .legal-sheet-body{padding:18px 22px 26px;overflow-y:auto;font-size:13.5px;line-height:1.65;color:var(--text);}
+  .legal-sheet-body h2{font-size:15.5px;margin:22px 0 8px;color:var(--text);}
+  .legal-sheet-body h2:first-child{margin-top:0;}
+  .legal-sheet-body p{margin:0 0 10px;color:var(--text-dim);}
+  .legal-sheet-body ul{margin:0 0 10px;padding-left:20px;color:var(--text-dim);}
+  .legal-sheet-body li{margin-bottom:4px;}
+  .legal-sheet-body table{width:100%;border-collapse:collapse;margin:0 0 12px;font-size:13px;}
+  .legal-sheet-body th,.legal-sheet-body td{border:1px solid var(--line);padding:6px 8px;text-align:left;color:var(--text-dim);}
+  .legal-sheet-body th{color:var(--text);}
+  .legal-sheet-body .legal-updated{font-size:12px;color:var(--text-dim);margin-bottom:16px;}
+  .legal-sheet-body .legal-note{font-size:12px;color:var(--text-dim);font-style:italic;border-top:1px solid var(--line);padding-top:12px;margin-top:18px;}
+  .legal-sheet-body a{color:var(--accent);}
+
   .invite-sheet{
     background:var(--surface);width:340px;max-width:100%;border-radius:18px;
     box-shadow:0 12px 40px rgba(0,0,0,.3);overflow:hidden;
@@ -1602,7 +1626,7 @@
   <footer>
     <div>© Connect8 Všetky práva vyhradené.</div>
     <div class="footer-links">
-      <span>Zásady ochrany súkromia</span>
+      <span onclick="openLegalModal('privacy')" style="cursor:pointer;">Zásady ochrany súkromia</span>
       <span>Centrum ochrany súkromia</span>
       <span>Nastavenia cookies</span>
       <span>Informácie</span>
@@ -1807,6 +1831,104 @@
           <p class="convo-turn-hint">Teraz hovorí: <strong id="convo-turn-lang">Slovenčina</strong></p>
           <p class="translator-hint">Funguje priamo v Safari/Chrome. Ak appku máš pridanú na ploche ako ikonu, otvor ju radšej priamo v prehliadači.</p>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-modal" id="legal-modal-privacy" onclick="if(event.target===this) closeLegalModal('privacy')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>Zásady ochrany súkromia</h3>
+        <button onclick="closeLegalModal('privacy')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p class="legal-updated">Posledná aktualizácia: 5. septembra 2026</p>
+
+        <h2>1. Kto sme (prevádzkovateľ)</h2>
+        <p>Prevádzkovateľom platformy Connect8 („Connect8" alebo „appka") a správcom osobných údajov je:</p>
+        <ul>
+          <li><strong>Jaroslav Ševčík</strong>, fyzická osoba</li>
+          <li>Kontaktný e-mail pre otázky ohľadom ochrany súkromia: <strong>sevcikjaroslav1@gmail.com</strong></li>
+        </ul>
+        <p>Tieto zásady popisujú, aké osobné údaje o tebe (používateľovi) zbierame, prečo, ako ich chránime a aké máš práva.</p>
+
+        <h2>2. Aké údaje spracúvame</h2>
+        <p><strong>2.1 Registrácia a profil</strong></p>
+        <ul>
+          <li>Meno (zobrazované meno)</li>
+          <li>E-mailová adresa</li>
+          <li>Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme</li>
+          <li>Profilová fotka (ak ju nahráš)</li>
+        </ul>
+        <p><strong>2.2 Obsah, ktorý vytváraš</strong></p>
+        <ul>
+          <li>Príspevky vo feede (text, obrázky, videá, súbory)</li>
+          <li>Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov</li>
+          <li>Komentáre a lajky pod príspevkami a videami</li>
+          <li>Inzeráty v marketplace (názov, popis, cena, fotky tovaru)</li>
+          <li>Odkazy na YouTube videá vložené k príspevku alebo do sekcie Filmy (prehrávanie beží priamo cez servery YouTube/Google)</li>
+        </ul>
+        <p><strong>2.3 Komunikácia medzi používateľmi</strong></p>
+        <ul>
+          <li>Textové správy medzi používateľmi</li>
+          <li>Zvukové (hlasové) správy</li>
+          <li>Súbory posielané v súkromných správach</li>
+          <li>Metadáta o hovoroch a videohovoroch (kto komu volal, kedy, ako dlho) — samotný zvuk/obraz hovoru sa neukladá, prenáša sa v reálnom čase priamo medzi zariadeniami (technológia WebRTC)</li>
+        </ul>
+        <p><strong>2.4 Technické a prevádzkové údaje</strong></p>
+        <ul>
+          <li>Technické identifikátory potrebné na doručovanie push notifikácií (napr. o novej správe alebo hovore) cez Firebase Cloud Messaging</li>
+          <li>Základné technické údaje o zariadení/prehliadači potrebné na fungovanie appky</li>
+          <li>Dátum registrácie, dátum poslednej aktivity</li>
+        </ul>
+        <p><strong>2.5 Čo nezbierame</strong></p>
+        <p>Connect8 nezbiera polohu, neanalyzuje obsah tvojich súkromných správ na reklamné účely a nepoužíva nástroje na sledovanie správania naprieč inými webmi (napr. Google Analytics, reklamné pixely).</p>
+
+        <h2>3. Prečo tieto údaje spracúvame (účel a právny základ)</h2>
+        <table>
+          <tr><th>Účel</th><th>Právny základ (GDPR)</th></tr>
+          <tr><td>Vytvorenie a správa účtu, prihlásenie</td><td>Plnenie zmluvy (čl. 6 ods. 1 písm. b)</td></tr>
+          <tr><td>Zobrazovanie feedu, videí, komentárov, lajkov</td><td>Plnenie zmluvy</td></tr>
+          <tr><td>Súkromné správy, hovory, zdieľanie súborov medzi používateľmi</td><td>Plnenie zmluvy</td></tr>
+          <tr><td>Fungovanie marketplace (inzeráty, predaj medzi používateľmi)</td><td>Plnenie zmluvy</td></tr>
+          <tr><td>Push notifikácie o novej správe/hovore</td><td>Oprávnený záujem / súhlas (podľa nastavenia zariadenia)</td></tr>
+          <tr><td>Zabezpečenie appky, predchádzanie zneužitiu</td><td>Oprávnený záujem (čl. 6 ods. 1 písm. f)</td></tr>
+        </table>
+
+        <h2>4. Tretie strany, ktoré nám pomáhajú</h2>
+        <p>Connect8 využíva na svoje fungovanie tieto externé služby (spracúvatelia údajov):</p>
+        <ul>
+          <li><strong>Firebase (Google)</strong> — autentifikácia používateľov, ukladanie dát appky (príspevky, správy, profily) a push notifikácie. Viac: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></li>
+          <li><strong>Cloudinary</strong> — ukladanie a spracovanie nahraných obrázkov a videí. Viac: <a href="https://cloudinary.com/privacy" target="_blank" rel="noopener">cloudinary.com/privacy</a></li>
+          <li><strong>YouTube / Google</strong> — prehrávanie vložených YouTube videí sa riadi zásadami YouTube/Google, nie Connect8</li>
+        </ul>
+        <p>Connect8 nepredáva tvoje osobné údaje tretím stranám na marketingové účely.</p>
+
+        <h2>5. Ako dlho údaje uchovávame</h2>
+        <p>Tvoje údaje uchovávame, kým máš aktívny účet. Po vymazaní účtu (bod 7) sa tvoj profil, príspevky, inzeráty a videá natrvalo odstránia z našich databáz. Súkromné správy a hlasové/textové konverzácie, ktoré si poslal iným používateľom, zostávajú uložené aj po vymazaní tvojho účtu, keďže sú súčasťou spoločnej histórie konverzácie s druhou osobou.</p>
+
+        <h2>6. Zabezpečenie údajov</h2>
+        <p>Heslá sú spravované cez Firebase Authentication a nie sú nikdy uložené v čitateľnej podobe. Prenos dát medzi tvojím zariadením a appkou je šifrovaný (HTTPS). Prístup k databáze appky je obmedzený len na nevyhnutné technické účely.</p>
+
+        <h2>7. Tvoje práva</h2>
+        <p>Ako používateľ máš podľa GDPR najmä právo:</p>
+        <ul>
+          <li>na prístup k svojim osobným údajom,</li>
+          <li>na opravu nesprávnych údajov (väčšinu si vieš upraviť priamo v nastaveniach profilu),</li>
+          <li>na vymazanie — svoj účet a s ním spojený obsah (príspevky, inzeráty, videá) môžeš kedykoľvek natrvalo vymazať priamo v appke, v nastaveniach profilu tlačidlom „Zrušiť účet". Táto akcia je nevratná,</li>
+          <li>na obmedzenie spracúvania a namietanie voči spracúvaniu,</li>
+          <li>na prenosnosť údajov,</li>
+          <li>podať sťažnosť na Úrad na ochranu osobných údajov SR (<a href="https://dataprotection.gov.sk" target="_blank" rel="noopener">dataprotection.gov.sk</a>), ak sa domnievaš, že tvoje údaje spracúvame v rozpore s GDPR.</li>
+        </ul>
+        <p>Na uplatnenie týchto práv nás môžeš kontaktovať na <strong>sevcikjaroslav1@gmail.com</strong>.</p>
+
+        <h2>8. Vek používateľov</h2>
+        <p>Connect8 je určený pre používateľov od 15 rokov.</p>
+
+        <h2>9. Zmeny týchto zásad</h2>
+        <p>Tieto zásady môžeme z času na čas aktualizovať, napríklad pri pridaní novej funkcie appky. O väčších zmenách ťa budeme informovať v appke.</p>
+
+        <p class="legal-note">Tento dokument je návrh a nepredstavuje právne poradenstvo.</p>
       </div>
     </div>
   </div>
@@ -4401,6 +4523,15 @@ function openInviteModal(){
 }
 function closeInviteModal(){
   document.getElementById('invite-modal').classList.remove('open');
+}
+
+function openLegalModal(name){
+  const el = document.getElementById('legal-modal-' + name);
+  if(el) el.classList.add('open');
+}
+function closeLegalModal(name){
+  const el = document.getElementById('legal-modal-' + name);
+  if(el) el.classList.remove('open');
 }
 
 function inviteViaWhatsApp(){
