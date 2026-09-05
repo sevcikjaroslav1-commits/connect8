@@ -1531,11 +1531,11 @@
         <div id="form-login">
           <div class="field">
             <label>E-mail</label>
-            <input type="email" id="login-email" placeholder="tvoj@email.sk">
+            <input type="email" id="login-email" placeholder="tvoj@email.sk" onkeydown="if(event.key==='Enter'){doLogin();}">
           </div>
           <div class="field">
             <label>Heslo</label>
-            <input type="password" id="login-pass" placeholder="••••••••">
+            <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter'){doLogin();}">
           </div>
           <button class="cta" onclick="doLogin()">Prihlásiť sa</button>
           <p class="form-error" id="login-error"></p>
