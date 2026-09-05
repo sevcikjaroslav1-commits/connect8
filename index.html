@@ -1405,6 +1405,7 @@
   .lp-scope .topbar{
     display:flex; align-items:center; justify-content:space-between;
     padding:28px 0 0;
+    background:transparent;
   }
   .lp-scope .brand{ display:flex; align-items:center; gap:10px; }
   .lp-scope .brand .dot{
@@ -7698,7 +7699,7 @@ async function init(){
       banner.innerHTML += `<br><span class="mono" style="font-size:11px;opacity:.85;">Detail: ${lastStorageError}</span>`;
     }
   } else {
-    document.getElementById('storage-note').textContent = 'Pripoj sa aj ty a ak chceš, pozvi aj svojich priateľov.';
+    document.getElementById('storage-note').innerHTML = 'Pripoj sa aj ty a <span style="color:var(--lightblue);font-weight:600;">pozvi aj svojich priateľov</span>.';
   }
 
   setInterval(()=>{
