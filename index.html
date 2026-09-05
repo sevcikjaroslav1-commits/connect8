@@ -1720,18 +1720,313 @@
       </div>
     </div>
   </div>
+
+  <div class="legal-modal" id="legal-modal-center" onclick="if(event.target===this) closeLegalModal('center')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>Centrum ochrany súkromia</h3>
+        <button onclick="closeLegalModal('center')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p>Vitaj v Centre ochrany súkromia Connect8. Tu nájdeš prehľadné vysvetlenie, ako máš pod kontrolou svoje údaje a svoje súkromie priamo v appke.</p>
+
+        <h2>Kto vidí tvoj obsah</h2>
+        <p>Príspevky, videá, komentáre a inzeráty v marketplace, ktoré vytvoríš, sú viditeľné pre ostatných používateľov Connect8. Súkromné správy, hlasové správy, súbory a hovory/videohovory vidí iba osoba, ktorej ich pošleš — nie sú verejné a nezobrazujú sa vo feede.</p>
+
+        <h2>Blokovanie používateľov</h2>
+        <p>Ak si neželáš, aby ti konkrétny používateľ mohol písať, volať alebo vidieť tvoj profil, môžeš ho kedykoľvek zablokovať priamo na jeho profile. Zablokovaný používateľ ťa nemôže kontaktovať a stratí prístup k tvojmu obsahu.</p>
+
+        <h2>Správa tvojho účtu</h2>
+        <ul>
+          <li>Meno a profilovú fotku si vieš kedykoľvek upraviť v nastaveniach profilu.</li>
+          <li>Svoje jednotlivé príspevky, videá alebo inzeráty môžeš kedykoľvek vymazať sám (ikona 🗑️ pri danom obsahu).</li>
+          <li>Celý účet vrátane všetkého obsahu (príspevky, inzeráty, videá, profil) môžeš natrvalo vymazať tlačidlom „Zrušiť účet" v nastaveniach profilu. Táto akcia je nevratná.</li>
+        </ul>
+
+        <h2>Notifikácie</h2>
+        <p>Connect8 ti môže posielať push notifikácie o nových správach alebo hovoroch. Povolenie na notifikácie udeľuješ priamo cez nastavenia svojho prehliadača alebo zariadenia a kedykoľvek ho môžeš odvolať.</p>
+
+        <h2>Bezpečnosť účtu</h2>
+        <p>Tvoje heslo je spravované cez Firebase Authentication a nikdy sa neukladá v čitateľnej podobe. Odporúčame používať jedinečné a silné heslo a nezdieľať prihlasovacie údaje s nikým iným.</p>
+
+        <h2>Kompletné zásady ochrany súkromia</h2>
+        <p>Podrobný prehľad toho, aké údaje spracúvame, prečo, s kým ich zdieľame a aké máš práva podľa GDPR, nájdeš v dokumente <a href="#" onclick="closeLegalModal('center');openLegalModal('privacy');return false;">Zásady ochrany súkromia</a>.</p>
+
+        <h2>Kontakt</h2>
+        <p>Máš otázku ohľadom svojich údajov alebo súkromia? Napíš na <strong>sevcikjaroslav1@gmail.com</strong>.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-modal" id="legal-modal-cookies" onclick="if(event.target===this) closeLegalModal('cookies')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>Nastavenia cookies</h3>
+        <button onclick="closeLegalModal('cookies')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p>Connect8 nepoužíva reklamné ani sledovacie cookies tretích strán. To, čo appka ukladá vo tvojom prehliadači, je len technické úložisko (<em>local storage</em>) potrebné na jej fungovanie:</p>
+
+        <h2>Nevyhnutné (vždy aktívne)</h2>
+        <ul>
+          <li><strong>Prihlásenie</strong> — Firebase Authentication si v prehliadači uchováva prihlasovací stav, aby ťa appka nemusela pri každom otvorení odhlasovať.</li>
+          <li><strong>Offline režim</strong> — appka si ukladá stav (napr. rozpracovaný obsah) lokálne v prehliadači, aby fungovala aj bez pripojenia a dáta sa po zatvorení nestratili.</li>
+          <li><strong>Zapamätané zhliadnutia</strong> — appka si lokálne pamätá, ktoré videá si už videl, aby sa ti neopakovali zbytočne v odporúčaniach.</li>
+        </ul>
+        <p>Tieto položky sú nevyhnutné pre základné fungovanie appky a nedajú sa jednotlivo vypnúť — dajú sa ale kedykoľvek vymazať tak, že v nastaveniach svojho prehliadača vymažeš dáta stránky Connect8 (napr. „Vymazať údaje o prehliadaní" → „Súbory cookie a údaje stránok").</p>
+
+        <h2>Analytické a reklamné cookies</h2>
+        <p>Connect8 aktuálne nepoužíva žiadne analytické (napr. Google Analytics) ani reklamné cookies, takže tu nie je nič na nastavovanie.</p>
+
+        <h2>Ako vymazať uložené dáta</h2>
+        <p>Vymazanie dát prehliadača pre túto stránku ťa odhlási z účtu a appka stratí lokálne uložené offline dáta — tvoj účet a obsah na serveri (príspevky, správy, profil) tým dotknuté nie sú.</p>
+
+        <p>Viac o tom, aké údaje o tebe spracúvame celkovo, nájdeš v dokumente <a href="#" onclick="closeLegalModal('cookies');openLegalModal('privacy');return false;">Zásady ochrany súkromia</a>.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-modal" id="legal-modal-info" onclick="if(event.target===this) closeLegalModal('info')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>Informácie</h3>
+        <button onclick="closeLegalModal('info')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p><strong>Connect8</strong> je slovenská sociálna platforma na vzájomnú komunikáciu, zdieľanie obsahu a nadväzovanie kontaktov.</p>
+
+        <h2>Čo appka ponúka</h2>
+        <ul>
+          <li><strong>Feed</strong> — zdieľanie príspevkov, ktoré môžeš lajkovať, komentovať a zdieľať</li>
+          <li><strong>Videá</strong> — krátke vertikálne videá v štýle TikTok</li>
+          <li><strong>Filmy</strong> — pozeranie schválených YouTube videí priamo v appke</li>
+          <li><strong>Správy</strong> — textové a hlasové správy, posielanie súborov medzi používateľmi</li>
+          <li><strong>Hovory</strong> — audio aj videohovory medzi používateľmi</li>
+          <li><strong>Marketplace</strong> — predaj a nákup vecí, ktoré už nepotrebuješ, priamo medzi používateľmi</li>
+        </ul>
+
+        <h2>Podporované jazyky</h2>
+        <p>Rozhranie appky je dostupné v slovenčine, angličtine, nemčine, poľštine, španielčine, francúzštine, portugalčine a taliančine.</p>
+
+        <h2>Prevádzkovateľ</h2>
+        <p>Connect8 prevádzkuje Jaroslav Ševčík ako fyzická osoba. Kontakt: <strong>sevcikjaroslav1@gmail.com</strong>.</p>
+
+        <h2>Ďalšie informácie</h2>
+        <p>Podrobnosti o spracúvaní údajov nájdeš v dokumente <a href="#" onclick="closeLegalModal('info');openLegalModal('privacy');return false;">Zásady ochrany súkromia</a>, prehľad ovládania súkromia v <a href="#" onclick="closeLegalModal('info');openLegalModal('center');return false;">Centre ochrany súkromia</a>.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-modal" id="legal-modal-terms" onclick="if(event.target===this) closeLegalModal('terms')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>Podmienky používania</h3>
+        <button onclick="closeLegalModal('terms')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p class="legal-updated">Posledná aktualizácia: 5. septembra 2026</p>
+
+        <h2>1. Úvod</h2>
+        <p>Tieto podmienky upravujú používanie platformy Connect8, ktorú ako fyzická osoba prevádzkuje Jaroslav Ševčík (kontakt: <strong>sevcikjaroslav1@gmail.com</strong>). Registráciou a používaním Connect8 súhlasíš s týmito podmienkami.</p>
+
+        <h2>2. Kto môže Connect8 používať</h2>
+        <p>Connect8 je určený pre používateľov od 15 rokov. Registráciou potvrdzuješ, že spĺňaš túto vekovú hranicu a že údaje, ktoré uvádzaš (meno, e-mail), sú pravdivé.</p>
+
+        <h2>3. Tvoj účet</h2>
+        <p>Za bezpečnosť svojho hesla a za všetku aktivitu na svojom účte zodpovedáš ty sám. Účet je osobný a neprevoditeľný na inú osobu. Svoj účet môžeš kedykoľvek natrvalo vymazať v nastaveniach profilu tlačidlom „Zrušiť účet".</p>
+
+        <h2>4. Obsah, ktorý zdieľaš</h2>
+        <p>Za príspevky, videá, komentáre, správy, súbory a inzeráty, ktoré na Connect8 zdieľaš, zodpovedáš výhradne ty. Nahrávaním obsahu potvrdzuješ, že naň máš potrebné práva a že jeho zdieľaním neporušuješ práva tretích strán ani platné zákony.</p>
+        <p>Zakázané je najmä zdieľať obsah, ktorý je nezákonný, urážlivý, podnecuje k násiliu alebo nenávisti, porušuje autorské práva, alebo obťažuje či ohrozuje iných používateľov.</p>
+
+        <h2>5. Marketplace</h2>
+        <p>Marketplace slúži na sprostredkovanie ponúk medzi používateľmi navzájom. Connect8 nie je predávajúcim ani kupujúcim, nezaručuje kvalitu, dodanie ani pravosť ponúkaného tovaru a nie je zmluvnou stranou žiadnej transakcie medzi používateľmi. Dohoda o cene, platbe a odovzdaní tovaru je výlučne na dohode medzi predávajúcim a kupujúcim.</p>
+
+        <h2>6. Správy, hovory a videohovory</h2>
+        <p>Súkromné správy, hlasové správy, zdieľané súbory a hovory/videohovory slúžia na komunikáciu medzi používateľmi. Connect8 tento obsah pri prenose neupravuje ani neschvaľuje — používatelia sú povinní správať sa k sebe navzájom slušne a v súlade so zákonom.</p>
+
+        <h2>7. Filmy (YouTube obsah)</h2>
+        <p>Sekcia Filmy zobrazuje výhradne odkazy na videá hostované na YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.</p>
+
+        <h2>8. Zablokovanie a zrušenie účtu</h2>
+        <p>Ak porušíš tieto podmienky, môžeme obmedziť alebo zrušiť tvoj prístup k Connect8. Rovnako máš možnosť kedykoľvek zablokovať iného používateľa, ktorý ťa obťažuje, alebo natrvalo zrušiť svoj vlastný účet.</p>
+
+        <h2>9. Obmedzenie zodpovednosti</h2>
+        <p>Connect8 je poskytovaný „tak ako je", bez záruky nepretržitej dostupnosti alebo bezchybnej prevádzky. V rozsahu povolenom zákonom nezodpovedáme za škody vzniknuté používaním appky, obsahom nahraným používateľmi ani transakciami uskutočnenými cez marketplace.</p>
+
+        <h2>10. Zmeny podmienok</h2>
+        <p>Tieto podmienky môžeme z času na čas aktualizovať, napríklad pri pridaní novej funkcie appky. O väčších zmenách ťa budeme informovať priamo v appke.</p>
+
+        <h2>11. Rozhodné právo</h2>
+        <p>Tieto podmienky sa riadia právnym poriadkom Slovenskej republiky.</p>
+
+        <h2>12. Kontakt</h2>
+        <p>Otázky ohľadom týchto podmienok posielaj na <strong>sevcikjaroslav1@gmail.com</strong>.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-modal" id="legal-modal-community" onclick="if(event.target===this) closeLegalModal('community')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>Komunitné pravidlá</h3>
+        <button onclick="closeLegalModal('community')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p>Connect8 je miesto na zdieľanie obsahu a komunikáciu s ostatnými. Aby tu bolo príjemne a bezpečne pre všetkých, dodržiavaj prosím tieto pravidlá.</p>
+
+        <h2>Správaj sa k ostatným s rešpektom</h2>
+        <p>Nezdieľaj obsah, ktorý je urážlivý, ponižujúci, podnecuje k nenávisti alebo násiliu voči jednotlivcom či skupinám. Obťažovanie, vyhrážanie a šikanovanie iných používateľov (v príspevkoch, komentároch, správach aj hovoroch) je zakázané.</p>
+
+        <h2>Zdieľaj len zákonný obsah</h2>
+        <p>Je zakázané zdieľať obsah, ktorý porušuje zákony Slovenskej republiky alebo autorské práva tretích strán (napr. cudzie fotky, videá alebo hudbu bez súhlasu autora).</p>
+
+        <h2>Buď sám sebou</h2>
+        <p>Nevytváraj falošné profily ani sa nevydávaj za inú osobu. Používaj svoje skutočné meno a fotku, prípadne prezývku, ktorá nikoho neuvádza do omylu.</p>
+
+        <h2>Žiadny spam</h2>
+        <p>Nezasielaj hromadné nevyžiadané správy, opakovane rovnaký obsah ani podvodné odkazy iným používateľom.</p>
+
+        <h2>Marketplace — poctivo</h2>
+        <p>V inzerátoch uvádzaj pravdivý popis a stav tovaru. Podvodné alebo klamlivé ponuky sú zakázané. Connect8 nie je stranou transakcie medzi predávajúcim a kupujúcim — viac v <a href="#" onclick="closeLegalModal('community');openLegalModal('terms');return false;">Podmienkach používania</a>.</p>
+
+        <h2>Ochrana mladších používateľov</h2>
+        <p>Connect8 je určený pre používateľov od 15 rokov. Obsah sexuálnej povahy, obsah ohrozujúci maloletých alebo akýkoľvek pokus o kontaktovanie maloletých s nevhodným úmyslom je prísne zakázaný.</p>
+
+        <h2>Čo sa stane pri porušení pravidiel</h2>
+        <p>Ak niekto tieto pravidlá poruší, môžeš ho kedykoľvek zablokovať priamo na jeho profile — stratí tak možnosť ťa kontaktovať alebo vidieť tvoj obsah. Pri závažnom alebo opakovanom porušení môže byť dotknutému používateľovi obmedzený alebo zrušený prístup k Connect8.</p>
+
+        <h2>Nahlásenie problému</h2>
+        <p>Ak si sa stretol s obsahom alebo správaním, ktoré porušuje tieto pravidlá, napíš nám na <strong>sevcikjaroslav1@gmail.com</strong>.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-modal" id="legal-modal-copyright" onclick="if(event.target===this) closeLegalModal('copyright')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>Pravidlá k autorským právam</h3>
+        <button onclick="closeLegalModal('copyright')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p>Connect8 rešpektuje duševné vlastníctvo iných a očakáva to isté od svojich používateľov.</p>
+
+        <h2>Zodpovednosť za nahrávaný obsah</h2>
+        <p>Nahrávaním príspevku, videa, fotky, súboru alebo inzerátu na Connect8 potvrdzuješ, že si autorom daného obsahu alebo že naň máš potrebné práva/súhlas na jeho zdieľanie. Nahrávanie cudzích fotiek, videí, hudby alebo textu bez súhlasu autora je zakázané.</p>
+
+        <h2>Vloženie YouTube videa</h2>
+        <p>Vkladanie odkazu na YouTube video (v príspevku alebo v sekcii Filmy) nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.</p>
+
+        <h2>Nahlásenie porušenia autorských práv</h2>
+        <p>Ak si vlastníkom autorských práv a myslíš si, že tvoje dielo bolo na Connect8 zdieľané bez tvojho súhlasu, napíš na <strong>sevcikjaroslav1@gmail.com</strong> a prilož:</p>
+        <ul>
+          <li>presný popis alebo odkaz na sporný obsah (napr. odkaz na príspevok/video/inzerát),</li>
+          <li>popis diela, ktorého sa autorské právo týka, a dôkaz, že si jeho autorom alebo držiteľom práv,</li>
+          <li>svoje kontaktné údaje,</li>
+          <li>vyhlásenie, že žiadosť podávaš v dobrej viere a údaje v nej sú pravdivé.</li>
+        </ul>
+
+        <h2>Čo nasleduje po nahlásení</h2>
+        <p>Oprávnene nahlásený obsah bude odstránený. Pri opakovanom porušovaní autorských práv môže byť účet používateľa obmedzený alebo zrušený.</p>
+
+        <h2>Ak si presvedčený, že tvoj obsah bol odstránený neprávom</h2>
+        <p>Ak sa domnievaš, že tvoj obsah bol odstránený omylom alebo neoprávnene (napr. si mal na jeho zdieľanie súhlas), napíš na <strong>sevcikjaroslav1@gmail.com</strong> s vysvetlením a doložením svojich práv — situáciu preveríme.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-modal" id="legal-modal-ads" onclick="if(event.target===this) closeLegalModal('ads')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>Pravidlá pre reklamu</h3>
+        <button onclick="closeLegalModal('ads')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p>Connect8 aktuálne nezobrazuje žiadne platené reklamy tretích strán. Tieto pravidlá sa vzťahujú najmä na inzeráty v Marketplace a na propagáciu vlastného obsahu či produktov, ktorú používatelia zdieľajú vo feede.</p>
+
+        <h2>Čo je „reklama" na Connect8</h2>
+        <p>Za reklamný/propagačný obsah sa považuje najmä: inzerát v Marketplace, príspevok propagujúci vlastný tovar, službu alebo iný účet/stránku.</p>
+
+        <h2>Pravidlá pre inzeráty a propagačný obsah</h2>
+        <ul>
+          <li>Popis a fotky musia pravdivo zodpovedať skutočnému stavu ponúkaného tovaru — žiadne klamlivé alebo zavádzajúce tvrdenia.</li>
+          <li>Uvedená cena musí byť reálna ponuka, nie návnada na prilákanie pozornosti bez úmyslu predať za danú sumu.</li>
+          <li>Je zakázané opakovane (spamovo) zverejňovať rovnaký inzerát alebo propagačný príspevok.</li>
+        </ul>
+
+        <h2>Zakázaný obsah v inzerátoch</h2>
+        <p>V Marketplace ani v propagačnom obsahu nie je dovolené ponúkať:</p>
+        <ul>
+          <li>nelegálny tovar alebo služby (napr. zbrane, drogy, falšované doklady),</li>
+          <li>falzifikáty a napodobeniny značkového tovaru,</li>
+          <li>tovar alebo služby porušujúce autorské práva tretích strán,</li>
+          <li>obsah pre dospelých alebo sexuálne služby,</li>
+          <li>podvodné schémy (napr. pyramídové hry, garantované rýchle zbohatnutie).</li>
+        </ul>
+
+        <h2>Zodpovednosť</h2>
+        <p>Za obsah a pravdivosť svojho inzerátu alebo propagačného príspevku zodpovedá výhradne používateľ, ktorý ho zverejnil — pozri aj <a href="#" onclick="closeLegalModal('ads');openLegalModal('terms');return false;">Podmienky používania</a>, časť o Marketplace.</p>
+
+        <h2>Nahlásenie porušenia</h2>
+        <p>Ak si narazil na inzerát alebo propagačný obsah, ktorý porušuje tieto pravidlá, napíš na <strong>sevcikjaroslav1@gmail.com</strong>.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-modal" id="legal-modal-security" onclick="if(event.target===this) closeLegalModal('security')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>Bezpečnosť účtu</h3>
+        <button onclick="closeLegalModal('security')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p>Tvoj účet je pre nás dôležitý. Tu je prehľad, ako je zabezpečený a čo môžeš urobiť pre jeho ochranu.</p>
+
+        <h2>Ako spravujeme tvoje heslo</h2>
+        <p>Prihlásenie do Connect8 zabezpečuje Firebase Authentication (Google). Tvoje heslo sa nikdy neukladá v čitateľnej podobe — my sami k nemu nemáme prístup.</p>
+
+        <h2>Šifrovaný prenos dát</h2>
+        <p>Všetka komunikácia medzi tvojím zariadením a appkou prebieha cez šifrené pripojenie (HTTPS).</p>
+
+        <h2>Potvrdenie hesla pri citlivých akciách</h2>
+        <p>Pri vymazaní účtu ťa appka môže požiadať o opätovné zadanie hesla — ide o bezpečnostnú poistku, aby účet nemohol natrvalo vymazať niekto iný, ak si zabudol odhlásiť sa na cudzom zariadení.</p>
+
+        <h2>Blokovanie nežiaducich používateľov</h2>
+        <p>Ak ťa niekto obťažuje alebo sa ti nepáči jeho správanie, môžeš ho kedykoľvek zablokovať priamo na jeho profile. Zablokovaný používateľ ťa nemôže kontaktovať, volať ti ani vidieť tvoj obsah.</p>
+
+        <h2>Čo môžeš urobiť ty</h2>
+        <ul>
+          <li>Používaj jedinečné, silné heslo, ktoré nepoužívaš na iných stránkach.</li>
+          <li>Nezdieľaj svoje prihlasovacie údaje s nikým iným.</li>
+          <li>Na verejných alebo cudzích zariadeniach sa po skončení vždy odhlás.</li>
+          <li>Ak si všimneš podozrivú aktivitu na svojom účte, zmeň si heslo čo najskôr.</li>
+        </ul>
+
+        <h2>Máš podozrenie na zneužitie účtu?</h2>
+        <p>Napíš nám na <strong>sevcikjaroslav1@gmail.com</strong> a popíš, čo sa stalo — pomôžeme ti to vyriešiť.</p>
+
+      </div>
+    </div>
+  </div>
   <footer>
     <div>© Connect8 Všetky práva vyhradené.</div>
     <div class="footer-links">
       <span onclick="openLegalModal('privacy')" style="cursor:pointer;">Zásady ochrany súkromia</span>
-      <span>Centrum ochrany súkromia</span>
-      <span>Nastavenia cookies</span>
-      <span>Informácie</span>
-      <span>Podmienky</span>
-      <span>Komunitné pravidlá</span>
-      <span>Pravidlá k autorským právam</span>
-      <span>Pravidlá pre reklamu</span>
-      <span>Bezpečnosť účtu</span>
+      <span onclick="openLegalModal('center')" style="cursor:pointer;">Centrum ochrany súkromia</span>
+      <span onclick="openLegalModal('cookies')" style="cursor:pointer;">Nastavenia cookies</span>
+      <span onclick="openLegalModal('info')" style="cursor:pointer;">Informácie</span>
+      <span onclick="openLegalModal('terms')" style="cursor:pointer;">Podmienky</span>
+      <span onclick="openLegalModal('community')" style="cursor:pointer;">Komunitné pravidlá</span>
+      <span onclick="openLegalModal('copyright')" style="cursor:pointer;">Pravidlá k autorským právam</span>
+      <span onclick="openLegalModal('ads')" style="cursor:pointer;">Pravidlá pre reklamu</span>
+      <span onclick="openLegalModal('security')" style="cursor:pointer;">Bezpečnosť účtu</span>
       <span>O nás</span>
       <span>Pomoc</span>
       <span>Kontakt</span>
