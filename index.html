@@ -1558,7 +1558,7 @@
           <p class="form-error" id="reg-error"></p>
         </div>
 
-        <p class="card-foot" id="storage-note">Pripoj sa aj ty a <a href="#">pozvi svojich priateľov</a></p>
+        <p class="card-foot" id="storage-note">Pripoj sa aj ty a <a href="#" style="color:var(--lightblue)">pozvi aj svojich priateľov</a></p>
       </div>
     </div>
 
@@ -7655,7 +7655,7 @@ async function init(){
       banner.innerHTML += `<br><span class="mono" style="font-size:11px;opacity:.85;">Detail: ${lastStorageError}</span>`;
     }
   } else {
-    document.getElementById('storage-note').textContent = 'Pripoj sa aj ty a ak chceš, pozvi aj svojich priateľov.';
+    document.getElementById('storage-note').innerHTML = 'Pripoj sa aj ty a <span style="color:var(--lightblue);font-weight:600;">pozvi aj svojich priateľov</span>.';
   }
 
   setInterval(()=>{
