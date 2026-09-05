@@ -1607,16 +1607,16 @@
         </div>
 
         <div id="form-login">
-          <div class="field"><label>E-mail</label><input type="email" id="login-email" placeholder="tvoj@email.sk"></div>
-          <div class="field"><label>Heslo</label><input type="password" id="login-pass" placeholder="••••••••"></div>
+          <div class="field"><label>E-mail</label><input type="email" id="login-email" placeholder="tvoj@email.sk" onkeydown="if(event.key==='Enter') doLogin()"></div>
+          <div class="field"><label>Heslo</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()"></div>
           <button class="cta" onclick="doLogin()">Prihlásiť sa</button>
           <p class="auth-error" id="login-error"></p>
         </div>
 
         <div id="form-register" style="display:none;">
-          <div class="field"><label>Meno</label><input type="text" id="reg-name" placeholder="Jaro Novák"></div>
-          <div class="field"><label>E-mail</label><input type="email" id="reg-email" placeholder="tvoj@email.sk"></div>
-          <div class="field"><label>Heslo</label><input type="password" id="reg-pass" placeholder="min. 4 znaky"></div>
+          <div class="field"><label>Meno</label><input type="text" id="reg-name" placeholder="Jaro Novák" onkeydown="if(event.key==='Enter') doRegister()"></div>
+          <div class="field"><label>E-mail</label><input type="email" id="reg-email" placeholder="tvoj@email.sk" onkeydown="if(event.key==='Enter') doRegister()"></div>
+          <div class="field"><label>Heslo</label><input type="password" id="reg-pass" placeholder="min. 4 znaky" onkeydown="if(event.key==='Enter') doRegister()"></div>
           <button class="cta" onclick="doRegister()">Vytvoriť účet</button>
           <p class="auth-error" id="reg-error"></p>
         </div>
