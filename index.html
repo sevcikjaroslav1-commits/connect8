@@ -5956,6 +5956,32 @@ const NEWS_REFRESH_MS = 15 * 60 * 1000; // 15 minút
 let newsCache = { sk: { items: [], ts: 0 }, en: { items: [], ts: 0 } };
 let newsLoading = false;
 
+// ---- Trvalá záloha v localStorage -----------------------------------
+// Nezávisle od toho, či momentálne zlyhá Worker aj všetky proxy naraz
+// (napr. výpadok internetu na chvíľu, alebo všetky verejné proxy práve
+// niečo blokujú), si posledné úspešne stiahnuté správy uložíme aj do
+// localStorage. Vďaka tomu vieme aj pri kompletnom zlyhaní siete zobraziť
+// aspoň posledné dostupné správy namiesto holej chybovej hlášky - a hneď
+// po štarte appky (predtým, než prebehne prvý fetch) môžeme rovno ukázať
+// tieto uložené správy, nech sekcia nikdy nie je prázdna.
+const NEWS_LOCALSTORAGE_KEY = 'c8_news_cache_v1';
+function saveNewsToLocalStorage(lang, items){
+  try{
+    const raw = localStorage.getItem(NEWS_LOCALSTORAGE_KEY);
+    const all = raw ? JSON.parse(raw) : {};
+    all[lang] = { items, ts: Date.now() };
+    localStorage.setItem(NEWS_LOCALSTORAGE_KEY, JSON.stringify(all));
+  }catch(e){ /* plný/nedostupný localStorage - ticho ignorujeme */ }
+}
+function loadNewsFromLocalStorage(lang){
+  try{
+    const raw = localStorage.getItem(NEWS_LOCALSTORAGE_KEY);
+    if(!raw) return null;
+    const all = JSON.parse(raw);
+    return (all && all[lang] && Array.isArray(all[lang].items) && all[lang].items.length) ? all[lang] : null;
+  }catch(e){ return null; }
+}
+
 // ⚠️ Po nasadení Cloudflare Workera sem vlož jeho skutočnú adresu
 // (dostaneš ju v Cloudflare dashboarde po kliknutí na "Deploy"),
 // napr. 'https://connect8-news.tvoj-nick.workers.dev/news'
@@ -5973,9 +5999,13 @@ const NEWS_PROXIES = [
   (url) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
   (url) => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
   (url) => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
-  (url) => 'https://thingproxy.freeboard.io/fetch/' + url
+  (url) => 'https://thingproxy.freeboard.io/fetch/' + url,
+  (url) => 'https://api.cors.lol/?url=' + encodeURIComponent(url)
 ];
-const NEWS_FETCH_TIMEOUT_MS = 4000; // po 4s sa vzdá tejto proxy a skúsi ďalšiu
+// 6s na jeden pokus (proxy + zdroj). Keďže teraz skúšame VŠETKY kombinácie
+// (adresa × proxy) naraz namiesto postupne za sebou, celkové čakanie na
+// zdroj je stále cca 6s aj tak - vyhráva ten, čo odpovie prvý.
+const NEWS_FETCH_TIMEOUT_MS = 6000;
 
 async function fetchWithTimeout(url, ms){
   const controller = new AbortController();
@@ -6006,38 +6036,106 @@ function extractImageFromItem(itemEl, rawXml){
   return m ? m[1] : null;
 }
 
+// Skúsi JEDNU konkrétnu kombináciu (RSS adresa + jedna proxy). Vráti pole
+// článkov, alebo vyhodí chybu/vráti [], ak sa nepodarilo nič zmysluplné
+// stiahnuť či rozparsovať.
+async function fetchOneCombo(source, url, buildProxyUrl){
+  const res = await fetchWithTimeout(buildProxyUrl(url), NEWS_FETCH_TIMEOUT_MS);
+  if(!res.ok) throw new Error('http ' + res.status);
+  const text = await res.text();
+  const xml = new DOMParser().parseFromString(text, 'text/xml');
+  if(xml.querySelector('parsererror')) throw new Error('bad xml');
+  let items = Array.from(xml.getElementsByTagName('item'));
+  if(items.length === 0) items = Array.from(xml.getElementsByTagName('entry'));
+  if(items.length === 0) throw new Error('no items');
+  const parsed = items.slice(0, 16).map(it=>{
+    const title = (it.getElementsByTagName('title')[0]?.textContent || '').trim();
+    let link = it.getElementsByTagName('link')[0]?.textContent || '';
+    if(!link){ const linkEl = it.getElementsByTagName('link')[0]; link = linkEl ? linkEl.getAttribute('href') : ''; }
+    const pubDate = it.getElementsByTagName('pubDate')[0]?.textContent || it.getElementsByTagName('published')[0]?.textContent || '';
+    const descRaw = it.getElementsByTagName('description')[0]?.textContent || it.getElementsByTagName('summary')[0]?.textContent || '';
+    return {
+      title: title || 'Bez názvu',
+      link: link.trim(),
+      desc: stripHtml(descRaw).slice(0, 220),
+      image: extractImageFromItem(it),
+      pubDate,
+      sourceId: source.id,
+      sourceName: source.name
+    };
+  }).filter(it=>it.title && it.link);
+  if(parsed.length === 0) throw new Error('no valid items after filter');
+  return parsed;
+}
+
+// Alternatívna cesta k tej istej RSS adrese: namiesto generickej CORS proxy
+// (ktorá len "prekopíruje" surový XML a môže byť práve preťažená/zablokovaná)
+// použijeme rss2json.com - verejné API špecializované presne na RSS, ktoré
+// feed samo stiahne, rozparsuje a vráti už ako JSON s vlastnými CORS
+// hlavičkami. Je to nezávislá tretia služba (iná ako NEWS_PROXIES), takže
+// keď zlyhajú všetky klasické proxy, táto má reálnu šancu prejsť, a naopak.
+// Žiadny API kľúč netreba (funguje aj bez neho, len s nižším free limitom).
+function fetchOneComboViaRss2Json(source, url){
+  const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(url);
+  return fetchWithTimeout(apiUrl, NEWS_FETCH_TIMEOUT_MS).then(res=>{
+    if(!res.ok) throw new Error('rss2json http ' + res.status);
+    return res.json();
+  }).then(data=>{
+    if(!data || data.status !== 'ok' || !Array.isArray(data.items) || !data.items.length){
+      throw new Error('rss2json empty');
+    }
+    const parsed = data.items.slice(0, 16).map(it=>({
+      title: (it.title || '').trim() || 'Bez názvu',
+      link: (it.link || '').trim(),
+      desc: stripHtml(it.description || '').slice(0, 220),
+      image: it.enclosure && it.enclosure.link ? it.enclosure.link : (it.thumbnail || null),
+      pubDate: it.pubDate || '',
+      sourceId: source.id,
+      sourceName: source.name
+    })).filter(it=>it.title && it.link);
+    if(parsed.length === 0) throw new Error('rss2json no valid items');
+    return parsed;
+  });
+}
+
+// Namiesto postupného skúšania "adresa 1 + proxy 1, adresa 1 + proxy 2, ..."
+// (čo pri pomalých/zahraničných zdrojoch ako NYT/WSJ vie ľahko presiahnuť
+// desiatky sekúnd a väčšinu proxy služieb minie zbytočne) teraz odpálime
+// VŠETKY kombinácie (adresa × proxy) súčasne a použijeme tú, čo odpovie
+// prvá s platným výsledkom. Toto je presne ten istý princíp, akým sa
+// správy naťahujú pre SK vlajku (len tam navyše skúšame aj Worker) - stačí
+// aby JEDNA kombinácia prešla.
+// Drobný polyfill pre Promise.any (staršie WebView na Androide ho nemusia mať).
+function raceForFirstSuccess(promises){
+  if(typeof Promise.any === 'function') return Promise.any(promises);
+  return new Promise((resolve, reject)=>{
+    let remaining = promises.length;
+    if(remaining === 0){ reject(new Error('no attempts')); return; }
+    promises.forEach(p=>{
+      p.then(resolve).catch(()=>{ if(--remaining === 0) reject(new Error('all failed')); });
+    });
+  });
+}
+
 async function fetchOneSourceViaProxies(source){
+  const attempts = [];
   for(const url of source.urls){
     for(const buildProxyUrl of NEWS_PROXIES){
-      try{
-        const res = await fetchWithTimeout(buildProxyUrl(url), NEWS_FETCH_TIMEOUT_MS);
-        if(!res.ok) continue;
-        const text = await res.text();
-        const xml = new DOMParser().parseFromString(text, 'text/xml');
-        if(xml.querySelector('parsererror')) continue;
-        let items = Array.from(xml.getElementsByTagName('item'));
-        if(items.length === 0) items = Array.from(xml.getElementsByTagName('entry'));
-        if(items.length === 0) continue;
-        return items.slice(0, 16).map(it=>{
-          const title = (it.getElementsByTagName('title')[0]?.textContent || '').trim();
-          let link = it.getElementsByTagName('link')[0]?.textContent || '';
-          if(!link){ const linkEl = it.getElementsByTagName('link')[0]; link = linkEl ? linkEl.getAttribute('href') : ''; }
-          const pubDate = it.getElementsByTagName('pubDate')[0]?.textContent || it.getElementsByTagName('published')[0]?.textContent || '';
-          const descRaw = it.getElementsByTagName('description')[0]?.textContent || it.getElementsByTagName('summary')[0]?.textContent || '';
-          return {
-            title: title || 'Bez názvu',
-            link: link.trim(),
-            desc: stripHtml(descRaw).slice(0, 220),
-            image: extractImageFromItem(it),
-            pubDate,
-            sourceId: source.id,
-            sourceName: source.name
-          };
-        }).filter(it=>it.title && it.link);
-      }catch(e){ /* táto proxy zlyhala alebo vypršal časový limit - skús ďalšiu */ }
+      attempts.push(fetchOneCombo(source, url, buildProxyUrl));
     }
+    // Pridáme aj rss2json ako ďalšiu, úplne nezávislú cestu k tomu istému
+    // zdroju - beží súčasne s ostatnými, takže žiadne dodatočné čakanie.
+    attempts.push(fetchOneComboViaRss2Json(source, url));
   }
-  return [];
+  try{
+    // Vyhrá prvý úspešný pokus spomedzi všetkých (adresa × proxy) kombinácií,
+    // ostatné (aj keď ešte bežia na pozadí) ignorujeme.
+    return await raceForFirstSuccess(attempts);
+  }catch(aggregateError){
+    // Úplne všetky kombinácie zlyhali pre tento zdroj - vrátime prázdne pole,
+    // ostatné zdroje (napr. iné 2 z 3 anglických portálov) tým nie sú dotknuté.
+    return [];
+  }
 }
 
 // Záložná cesta cez staré proxy - použije sa, len ak Worker vyššie zlyhá
@@ -6081,7 +6179,16 @@ async function loadNewsFeed(forceRefresh){
   if(newsLoading) return;
   newsLoading = true;
   if(refreshBtn){ refreshBtn.disabled = true; refreshBtn.textContent = t('⟳ Načítavam...'); }
-  grid.innerHTML = `<div class="news-status">${t('Načítavam správy zo zdrojov...')}</div>`;
+  // Kým bežia čerstvý fetch, ak z minula máme uložené správy v localStorage,
+  // rovno ich ukážeme (namiesto prázdnej obrazovky s "Načítavam...") a len
+  // ich potichu nahradíme čerstvými, keď dorazia. Ak čerstvý fetch zlyhá,
+  // tieto staré správy pokojne ostanú zobrazené.
+  const staleForInstantShow = loadNewsFromLocalStorage(lang);
+  if(staleForInstantShow && !forceRefresh){
+    renderNewsGrid(staleForInstantShow.items);
+  }else{
+    grid.innerHTML = `<div class="news-status">${t('Načítavam správy zo zdrojov...')}</div>`;
+  }
   chipsRow.innerHTML = sources.map(s=>`<span class="news-source-chip">${s.name}</span>`).join('');
 
   try{
@@ -6106,13 +6213,34 @@ async function loadNewsFeed(forceRefresh){
       all = await loadNewsViaProxiesFallback(sources);
     }
     if(all.length === 0){
-      grid.innerHTML = `<div class="news-status">${t('Správy sa nepodarilo načítať (zdroje momentálne neodpovedajú). Skús obnoviť o chvíľu.')}</div>`;
+      // 3) Úplne posledná záchrana - Worker aj VŠETKY proxy (vrátane rss2json)
+      // naraz zlyhali. Namiesto holej chyby skúsime zobraziť aspoň posledné
+      // úspešne stiahnuté správy uložené v localStorage z minulého načítania.
+      const stale = loadNewsFromLocalStorage(lang);
+      if(stale){
+        newsCache[lang] = stale; // nech sa pri ďalšom otvorení sekcie znova neťahá hneď
+        renderNewsGrid(stale.items);
+        const status = document.createElement('div');
+        status.className = 'news-status';
+        status.style.cssText = 'margin-top:8px;opacity:0.7;';
+        status.textContent = t('Zobrazujú sa posledné dostupné správy (aktuálne sa nepodarilo pripojiť).');
+        grid.prepend(status);
+      }else{
+        grid.innerHTML = `<div class="news-status">${t('Správy sa nepodarilo načítať (zdroje momentálne neodpovedajú). Skús obnoviť o chvíľu.')}</div>`;
+      }
       return;
     }
     newsCache[lang] = { items: all, ts: Date.now() };
+    saveNewsToLocalStorage(lang, all);
     renderNewsGrid(all);
   }catch(e){
-    grid.innerHTML = `<div class="news-status">${t('Nastala chyba pri načítaní správ. Skús to znova.')}</div>`;
+    const stale = loadNewsFromLocalStorage(lang);
+    if(stale){
+      newsCache[lang] = stale;
+      renderNewsGrid(stale.items);
+    }else{
+      grid.innerHTML = `<div class="news-status">${t('Nastala chyba pri načítaní správ. Skús to znova.')}</div>`;
+    }
   }finally{
     newsLoading = false;
     if(refreshBtn){ refreshBtn.disabled = false; refreshBtn.textContent = t('⟳ Obnoviť'); }
