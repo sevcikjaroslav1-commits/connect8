@@ -1507,7 +1507,7 @@
       <p class="sub">Feed, videá, marketplace aj správy — všetko na jednej platforme, postavenej pre komunitu okolo teba.</p>
 
       <div class="lang-switch">
-        <span class="lang-flag active" title="Slovenčina (aktuálny jazyk)"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
+        <span class="lang-flag active" id="lang-flag-sk" onclick="setAppLanguage('sk')" title="Slovenčina (aktuálny jazyk)"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
           <rect width="60" height="40" fill="#fff"/>
           <rect y="13.33" width="60" height="13.34" fill="#0033A0"/>
           <rect y="26.67" width="60" height="13.33" fill="#EE1C25"/>
@@ -1517,7 +1517,7 @@
           <rect x="7.5" y="15" width="2" height="8" fill="#fff"/>
           <rect x="10.5" y="15" width="2" height="8" fill="#fff"/>
         </svg> SK</span>
-        <span class="lang-flag" title="English"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
+        <span class="lang-flag" id="lang-flag-en" onclick="setAppLanguage('en')" title="English"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
           <rect width="60" height="40" fill="#012169"/>
           <path d="M0,0 L60,40 M60,0 L0,40" stroke="#fff" stroke-width="8"/>
           <path d="M0,0 L60,40 M60,0 L0,40" stroke="#C8102E" stroke-width="4.5"/>
@@ -4918,6 +4918,7 @@ function openLegalModal(name){
   document.querySelectorAll('.footer-links span[data-legal]').forEach(function(s){
     s.classList.toggle('active-link', s.getAttribute('data-legal') === name);
   });
+  if(typeof autoTranslateLegalModal === 'function') autoTranslateLegalModal(name);
 }
 function closeLegalModal(name){
   const el = document.getElementById('legal-modal-' + name);
@@ -6109,24 +6110,30 @@ function avatarHtml(name, photo){
 
 /* ---------------- FEED ---------------- */
 function formatPostTime(ts){
-  if(!ts || ts < 1000000000000) return 'práve teraz'; // ochrana pre staré/neplatné id (napr. id:1, id:2)
+  const isEn = (typeof currentLang !== 'undefined' && currentLang === 'en');
+  if(!ts || ts < 1000000000000) return isEn ? 'just now' : 'práve teraz'; // ochrana pre staré/neplatné id (napr. id:1, id:2)
   const diffMs = Date.now() - ts;
   const sec = Math.floor(diffMs/1000);
-  if(sec < 60) return 'práve teraz';
+  if(sec < 60) return isEn ? 'just now' : 'práve teraz';
   const min = Math.floor(sec/60);
-  if(min < 60) return `pred ${min} min`;
+  if(min < 60) return isEn ? `${min} min ago` : `pred ${min} min`;
   const hod = Math.floor(min/60);
-  if(hod < 24) return `pred ${hod} h`;
+  if(hod < 24) return isEn ? `${hod} h ago` : `pred ${hod} h`;
   const dni = Math.floor(hod/24);
-  if(dni === 1) return 'včera';
-  if(dni < 7) return `pred ${dni} dňami`;
+  if(dni === 1) return isEn ? 'yesterday' : 'včera';
+  if(dni < 7) return isEn ? `${dni} days ago` : `pred ${dni} dňami`;
   const d = new Date(ts);
-  return d.toLocaleDateString('sk-SK', {day:'numeric', month:'numeric', year:'numeric'});
+  return d.toLocaleDateString(isEn ? 'en-GB' : 'sk-SK', {day:'numeric', month:'numeric', year:'numeric'});
 }
 
 function formatFullDate(ts){
   if(!ts || ts < 1000000000000) return '';
+  const isEn = (typeof currentLang !== 'undefined' && currentLang === 'en');
   const d = new Date(ts);
+  if(isEn){
+    return d.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'}) +
+      ' at ' + d.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+  }
   return d.toLocaleDateString('sk-SK', {day:'numeric', month:'long', year:'numeric'}) +
     ' o ' + d.toLocaleTimeString('sk-SK', {hour:'2-digit', minute:'2-digit'});
 }
@@ -6144,9 +6151,9 @@ function buildPostCard(p, opts={}){
         ${avatarHtml(p.name, getAuthorPhoto(p))}
         <div><div class="name">${escapeHtml(p.name)}</div><div class="time" data-ts="${p.createdAt || p.id}" title="${formatFullDate(p.createdAt || p.id)}">${formatPostTime(p.createdAt || p.id)}</div></div>
         ${followBtnHtml(p.authorId)}
-        ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="Vymazať príspevok">🗑️</button>` : ''}
+        ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="${t('Vymazať príspevok')}">🗑️</button>` : ''}
       </div>
-      ${p.text ? `<div class="post-text">${escapeHtml(p.text)}</div>` : ''}
+      ${p.text ? `<div class="post-text">${escapeHtml(p.text)}</div><div class="post-text-translation" id="post-tr-${p.id}"></div>` : ''}
       ${p.video ? `<div class="post-video-wrap">
         <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" ${isIOSDevice()?'muted':''} controls playsinline webkit-playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
@@ -6185,17 +6192,17 @@ function buildPostCard(p, opts={}){
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<div class="remove-x" onclick="event.preventDefault();event.stopPropagation();deletePostLink(${p.id})">✕</div>` : ''}
       </a>`)) : ''}
       <div class="post-actions">
-        <button class="${getLikedBy(p).includes(currentUser.uid)?'liked':''}" onclick="toggleLike(${p.id})">👍 Páči sa (${p.likes})</button>
+        <button class="${getLikedBy(p).includes(currentUser.uid)?'liked':''}" onclick="toggleLike(${p.id})">👍 ${t('Páči sa')} (${p.likes})</button>
         ${showComments
-          ? `<button onclick="toggleComments(${p.id})">💬 Komentovať (${p.comments.length})</button>`
-          : `<button style="opacity:.65;cursor:default;" onclick="switchMode('feed')">💬 ${p.comments.length} komentárov</button>`}
-        <button onclick="openShareModal(${p.id})">↗ Zdieľať</button>
+          ? `<button onclick="toggleComments(${p.id})">💬 ${t('Komentovať')} (${p.comments.length})</button>`
+          : `<button style="opacity:.65;cursor:default;" onclick="switchMode('feed')">💬 ${p.comments.length} ${t('komentárov')}</button>`}
+        <button onclick="openShareModal(${p.id})">↗ ${t('Zdieľať')}</button>
       </div>
       ${showComments ? `<div class="comments ${p.open?'open':''}" id="comments-${p.id}">
         ${p.comments.map((c,ci)=>`<div class="comment"><span class="comment-text"><b>${escapeHtml(c.name)}:</b> ${escapeHtml(c.text)}</span><button class="comment-like-btn ${getLikedBy(c).includes(currentUser.uid)?'liked':''}" onclick="toggleCommentLike(${p.id},${ci})">👍${c.likes?' '+c.likes:''}</button></div>`).join('')}
         <div class="comment-input">
-          <input type="text" id="cinput-${p.id}" placeholder="Napíš komentár...">
-          <button onclick="addComment(${p.id})">Odoslať</button>
+          <input type="text" id="cinput-${p.id}" placeholder="${t('Napíš komentár...')}">
+          <button onclick="addComment(${p.id})">${t('Odoslať')}</button>
         </div>
       </div>` : ''}
     `;
@@ -6298,6 +6305,7 @@ function renderPosts(){
     list.appendChild(div);
   });
   setupFeedVideoObserver();
+  translateVisiblePosts();
 }
 
 let pendingPostImages = []; // pole dataURL reťazcov (viacero fotiek k jednému príspevku)
@@ -8301,8 +8309,401 @@ async function init(){
 
   setupVoiceRecordButton();
   updateHeaderClock();
+  if(typeof applyLanguage === 'function') applyLanguage();
 }
 document.addEventListener('DOMContentLoaded', init);
+</script>
+
+<script>
+/* =====================================================================
+   JAZYK / PREKLAD (SK <-> EN)
+   - currentLang sa ukladá do localStorage a platí pre celú appku
+   - t(text) prekladá pevné texty UI (tlačidlá, menu, nadpisy...)
+   - translateStaticDom() prejde celý dokument a preloží zhodné texty
+   - legálne dokumenty (zásady, podmienky...) a texty príspevkov vo Feede
+     sa prekladajú automaticky cez verejné MyMemory API a výsledok sa
+     ukladá do cache (localStorage), aby sa netreba prekladalo opakovane
+===================================================================== */
+const LANG_STORAGE_KEY = 'c8_lang';
+let currentLang = localStorage.getItem(LANG_STORAGE_KEY) || 'sk';
+
+const UI_DICT_EN = {
+  // topbar / navigácia
+  "Feed":"Feed",
+  "Videá":"Videos",
+  "Marketplace":"Marketplace",
+  "Správy":"News",
+  "Filmy":"Movies",
+  "Hry":"Games",
+  "Odhlásiť":"Log out",
+  "Priatelia":"Friends",
+  "Používatelia":"Users",
+  "Používateľ":"User",
+  "Môj profil":"My profile",
+  "Pozvať":"Invite",
+  "Pozvať priateľov":"Invite friends",
+  "Preklad":"Translate",
+  "Tlmočník":"Translator",
+  "Preložiť napísaný text":"Translate written text",
+  "Napíš text na preklad...":"Write text to translate...",
+  "Preklad sa zobrazí tu":"Translation appears here",
+  "Prekladám...":"Translating...",
+  "Prehodiť smer":"Swap direction",
+  "Podporované jazyky":"Supported languages",
+  "Slovenčina":"Slovak",
+  "Angličtina":"English",
+  "Hľadať na Connect...":"Search Connect...",
+  "Hľadať":"Search",
+  "Čo hľadáš?":"What are you looking for?",
+  "Upozornenia":"Notifications",
+  "Notifikácie":"Notifications",
+  "Registrovaní / online používatelia":"Registered / online users",
+  "Aktuálny čas a dátum":"Current time and date",
+  "Zatiaľ žiadne upozornenia.":"No notifications yet.",
+  "Konverzácia":"Conversation",
+  "Napíš správu...":"Write a message...",
+  "Napísať správu":"Write a message",
+  "Zatiaľ nemáš žiadne správy.":"You don't have any messages yet.",
+  "Zatiaľ žiadne správy. Napíš prvú!":"No messages yet. Write the first one!",
+  "Správy sa nepodarilo načítať.":"Messages could not be loaded.",
+  "Hovoriť":"Talk",
+  "Hovory":"Calls",
+  "Zavolať":"Call",
+  "Videohovor":"Video call",
+  "Zavesiť":"Hang up",
+  "Stlmiť mikrofón":"Mute microphone",
+  "Vypnúť kameru":"Turn off camera",
+  "Vytáčam...":"Calling...",
+  "Podrž a nahraj hlasovú správu":"Hold to record a voice message",
+  "Stlač mikrofón a hovor...":"Press the mic and speak...",
+  "Poslať obrázok":"Send image",
+  "Odosielam obrázok...":"Sending image...",
+  "Odosielam...":"Sending...",
+  // auth / prihlásenie
+  "Prihlásenie":"Log in",
+  "Registrácia":"Sign up",
+  "Prihlásiť sa":"Log in",
+  "Vytvoriť účet":"Create account",
+  "Vstúpiť":"Enter",
+  "E-mail":"Email",
+  "E-mailová adresa":"Email address",
+  "Heslo":"Password",
+  "Meno":"Name",
+  "Meno (zobrazované meno)":"Name (display name)",
+  "Jaro Novák":"John Smith",
+  "tvoj@email.sk":"you@email.com",
+  "min. 6 znakov":"min. 6 characters",
+  "Kód...":"Code...",
+  "Nesprávny kód, skús to znova.":"Incorrect code, try again.",
+  "Offline režim":"Offline mode",
+  "Beží lokálne — dáta zostávajú uložené v tomto prehliadači aj po zatvorení.":"Running locally — your data stays saved in this browser even after closing it.",
+  "Pripoj sa aj ty a":"Join us too and",
+  "pozvi aj svojich priateľov":"invite your friends too",
+  // hero / uvodná prihlasovacia stránka - doplnené preklady (chýbali)
+  "Feed, videá, marketplace aj správy — všetko na jednej platforme, postavenej pre komunitu okolo teba.":"Feed, videos, marketplace and news — all in one platform, built for the community around you.",
+  "Platforma na vzájomnú komunikáciu, zdieľanie obsahu a nadväzovanie kontaktov.":"A platform for connecting with each other, sharing content and making contacts.",
+  "Príspevky priateľov, novinky a odkazy na jednom mieste, v reálnom čase.":"Posts from friends, news and links in one place, in real time.",
+  "Krátke vertikálne videá — nahraj, sleduj a reaguj jedným ťuknutím.":"Short vertical videos — upload, watch and react with a single tap.",
+  "Predaj a nájdi veci v okolí, roztriedené podľa kategórií a ceny.":"Sell and find things nearby, sorted by category and price.",
+  "Textové aj hlasové správy, hovory a videohovory s priateľmi.":"Text and voice messages, calls and video calls with friends.",
+  "© Connect8 Všetky práva vyhradené.":"© Connect8 All rights reserved.",
+  "Načítavam Connect...":"Loading Connect...",
+  // footer / právne
+  "Zásady ochrany súkromia":"Privacy Policy",
+  "Centrum ochrany súkromia":"Privacy Center",
+  "Nastavenia cookies":"Cookie settings",
+  "Informácie":"Information",
+  "Podmienky":"Terms",
+  "Podmienky používania":"Terms of Use",
+  "Komunitné pravidlá":"Community Guidelines",
+  "Pravidlá k autorským právam":"Copyright Rules",
+  "Pravidlá pre reklamu":"Advertising Rules",
+  "Bezpečnosť účtu":"Account Security",
+  "O nás":"About us",
+  "Pomoc":"Help",
+  "Kontakt":"Contact",
+  "Nevyhnutné (vždy aktívne)":"Necessary (always active)",
+  "Analytické a reklamné cookies":"Analytics & advertising cookies",
+  "Ako vymazať uložené dáta":"How to delete stored data",
+  "Kompletné zásady ochrany súkromia":"Full Privacy Policy",
+  // feed / príspevky
+  "Čo sa deje?":"What's happening?",
+  "Uverejniť":"Post",
+  "Páči sa":"Like",
+  "Komentovať":"Comment",
+  "komentárov":"comments",
+  "Komentáre":"Comments",
+  "Zdieľať":"Share",
+  "Napíš komentár...":"Write a comment...",
+  "Odoslať":"Send",
+  "Vymazať príspevok":"Delete post",
+  "Vymazať produkt":"Delete product",
+  "Zmazať":"Delete",
+  "Zrušiť":"Cancel",
+  "Zrušiť úpravu":"Cancel editing",
+  "Pridať":"Add",
+  "Zatiaľ žiadne príspevky.":"No posts yet.",
+  "Zatiaľ tu nič nie je.":"There's nothing here yet.",
+  "Zatiaľ žiadne fotky.":"No photos yet.",
+  "Žiadny používateľ sa nenašiel.":"No user found.",
+  "Vloženie YouTube videa":"Insert a YouTube video",
+  "Odkaz na YouTube video":"Link to a YouTube video",
+  "Pridať video":"Add video",
+  "Popis videa...":"Video description...",
+  "Odkaz na video (YouTube alebo priamy .mp4 link)":"Video link (YouTube or a direct .mp4 link)",
+  // marketplace
+  "Nový inzerát":"New listing",
+  "Najnovšie inzeráty":"Latest listings",
+  "Pridať do ponuky":"Add listing",
+  "Názov (napr. Bicykel)":"Title (e.g. Bicycle)",
+  "Popis produktu...":"Product description...",
+  "Cena (€)":"Price (€)",
+  "Cena od":"Price from",
+  "do":"to",
+  "Kategórie":"Categories",
+  "Všetky rubriky":"All categories",
+  "Predávajúci":"Seller",
+  "Tento inzerát už neexistuje.":"This listing no longer exists.",
+  // filmy / kalendár
+  "Názov filmu/dokumentu":"Movie/documentary title",
+  "Dnes":"Today",
+  "Sviatok":"Holiday",
+  "Víkend":"Weekend",
+  "Pia":"Fri",
+  "Št":"Thu",
+  // profil / účet
+  "Zmeniť profilovku":"Change profile picture",
+  "Profilová fotka (ak ju nahráš)":"Profile photo (if you upload one)",
+  "Zrušenie účtu":"Account deletion",
+  "Vytvorenie a správa účtu, prihlásenie":"Account creation and management, login",
+  "Registrácia a prihlásenie":"Sign up and log in",
+  "Správa tvojho účtu":"Managing your account",
+  "Potvrdenie hesla pri citlivých akciách":"Password confirmation for sensitive actions",
+  "Ako spravujeme tvoje heslo":"How we manage your password",
+  "Push notifikácie o novej správe/hovore":"Push notifications for new messages/calls",
+  "Blokovanie nežiaducich používateľov":"Blocking unwanted users",
+  "Blokovanie používateľov":"Blocking users",
+  "Kto vidí tvoj obsah":"Who sees your content",
+  "Šifrovaný prenos dát":"Encrypted data transfer",
+  "Ochrana mladších používateľov":"Protection of younger users",
+  "Zvukové (hlasové) správy":"Voice messages",
+  "Textové správy medzi používateľmi":"Text messages between users",
+  "Príspevky, videá a marketplace":"Posts, videos and marketplace",
+  "Zvuk":"Sound",
+  // pomoc / nahlásenie
+  "Nahlásenie porušenia":"Report a violation",
+  "Nahlásenie porušenia autorských práv":"Report a copyright violation",
+  "Nahlásenie problému":"Report a problem",
+  "Máš nápad alebo pripomienku?":"Have an idea or feedback?",
+  "Máš podozrenie na zneužitie účtu?":"Suspect an account is being misused?",
+  "Obťažuje ťa niekto?":"Is someone bothering you?",
+  "Technický problém alebo chybu v appke":"A technical problem or a bug in the app",
+  "Čo nám napíš":"What to write to us",
+  "Odpoveď":"Response",
+  "Potrebuješ ďalšiu pomoc?":"Need more help?",
+  "Ďalšie informácie":"More information",
+  "Napíš nám na ":"Write to us at ",
+  "Čo appka ponúka":"What the app offers",
+  "Čo appku odlišuje":"What makes the app different",
+  "Prečo Connect8 vzniklo":"Why Connect8 was created",
+  "Buď sám sebou":"Be yourself",
+  "Neustály vývoj":"Constant development",
+  "Správaj sa k ostatným s rešpektom":"Treat others with respect",
+  "Zdieľaj len zákonný obsah":"Share only lawful content",
+  "Žiadny spam":"No spam",
+  "Čo môžeš urobiť ty":"What you can do",
+  "Čo sa stane pri porušení pravidiel":"What happens if the rules are broken",
+  "Zakázaný obsah v inzerátoch":"Prohibited content in listings",
+  "Zodpovednosť":"Responsibility",
+  "Zodpovednosť za nahrávaný obsah":"Responsibility for uploaded content",
+  "Zapamätané zhliadnutia":"Remembered views",
+  "Načítavam správy...":"Loading messages...",
+  "Načítavam správy zo zdrojov...":"Loading news from sources...",
+  "Financie":"Finance",
+  "Srdce":"Heart",
+  "Usmievavý smajlík":"Smiling face",
+  "Nahnevaný smajlík":"Angry face",
+  "Otvoriť CrazyGames ↗":"Open CrazyGames ↗",
+  "Adrenaline na CrazyGames":"Adrenaline on CrazyGames",
+};
+
+// Vráti anglický preklad pevného textu (ak existuje v slovníku), inak
+// vráti pôvodný slovenský text nezmenený. Volá sa priamo z JS šablón
+// (napr. buildPostCard) pre časti, ktoré obsahujú aj dynamický obsah
+// (počty, mená a pod.), ktoré sa nedajú prekladať ako celý text uzla.
+function t(text){
+  if(currentLang !== 'en') return text;
+  return UI_DICT_EN.hasOwnProperty(text) ? UI_DICT_EN[text] : text;
+}
+
+// Uloží pôvodný (SK) text uzla, aby sme sa vždy vedeli korektne vrátiť
+// späť do slovenčiny, nech prekladáme koľkokoľvek chceme tam a späť.
+const ORIG_TEXT = new WeakMap();
+
+function translateTextNode(node){
+  if(!node || node.nodeType !== 3) return;
+  if(!ORIG_TEXT.has(node)) ORIG_TEXT.set(node, node.nodeValue);
+  const original = ORIG_TEXT.get(node);
+  const trimmed = original.trim();
+  if(!trimmed) return;
+  if(currentLang === 'en' && UI_DICT_EN.hasOwnProperty(trimmed)){
+    node.nodeValue = original.replace(trimmed, UI_DICT_EN[trimmed]);
+  } else {
+    node.nodeValue = original;
+  }
+}
+
+const TRANSLATABLE_ATTRS = ['placeholder','title','alt'];
+function translateElementAttrs(el){
+  TRANSLATABLE_ATTRS.forEach(attr=>{
+    if(!el.hasAttribute || !el.hasAttribute(attr)) return;
+    const key = '__origAttr_' + attr;
+    if(el[key] === undefined) el[key] = el.getAttribute(attr);
+    const original = el[key];
+    const trimmed = (original || '').trim();
+    if(currentLang === 'en' && UI_DICT_EN.hasOwnProperty(trimmed)){
+      el.setAttribute(attr, UI_DICT_EN[trimmed]);
+    } else if(original !== null && original !== undefined){
+      el.setAttribute(attr, original);
+    }
+  });
+}
+
+// Prejde celý (alebo zadaný) strom DOM a preloží texty aj atribúty,
+// ktoré presne zodpovedajú niektorému kľúču v UI_DICT_EN. Nedotýka sa
+// obsahu vloženého samotnými používateľmi (príspevky, správy a pod.),
+// pretože ten sa v slovníku jednoducho nenachádza.
+function translateStaticDom(root){
+  root = root || document.body;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node){
+      const p = node.parentElement;
+      if(!p) return NodeFilter.FILTER_REJECT;
+      const tag = p.tagName;
+      if(tag === 'SCRIPT' || tag === 'STYLE' || tag === 'TEXTAREA' || tag === 'INPUT') return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  const nodes = [];
+  let n;
+  while((n = walker.nextNode())) nodes.push(n);
+  nodes.forEach(translateTextNode);
+  root.querySelectorAll ? root.querySelectorAll('[placeholder],[title],[alt]').forEach(translateElementAttrs) : null;
+  if(root.hasAttribute && (root.hasAttribute('placeholder') || root.hasAttribute('title') || root.hasAttribute('alt'))){
+    translateElementAttrs(root);
+  }
+}
+
+function updateLangFlagUI(){
+  document.querySelectorAll('.lang-flag').forEach(f=> f.classList.remove('active'));
+  const active = document.getElementById('lang-flag-' + currentLang);
+  if(active) active.classList.add('active');
+}
+
+// Voláme pri štarte appky aj pri prekliknutí vlajky. Prejde celý
+// dokument (statické texty + atribúty) a spustí prípadné doplnkové
+// preklady (aktuálne otvorený legálny dokument, viditeľné príspevky).
+function applyLanguage(){
+  document.documentElement.lang = currentLang;
+  updateLangFlagUI();
+  translateStaticDom(document.body);
+  document.querySelectorAll('.legal-modal.open').forEach(m=>{
+    const name = m.id.replace('legal-modal-', '');
+    autoTranslateLegalModal(name);
+  });
+  translateVisiblePosts();
+}
+
+function setAppLanguage(lang){
+  if(lang === currentLang) return;
+  currentLang = lang;
+  localStorage.setItem(LANG_STORAGE_KEY, lang);
+  applyLanguage();
+}
+
+/* ---------------- Automatický preklad väčších blokov textu ----------------
+   Pre dlhé texty (zásady ochrany súkromia, podmienky...) a pre texty
+   príspevkov vo Feede (ktoré môžu byť v ľubovoľnom jazyku) nie je reálne
+   udržiavať ručný slovník. Namiesto toho použijeme verejné bezplatné
+   MyMemory API na strojový preklad a výsledok si vždy zapamätáme
+   (localStorage), aby sa rovnaký text neprekladal opakovane. */
+const TRANSLATE_CACHE_KEY = 'c8_translate_cache_v1';
+function loadTranslateCache(){
+  try{ return JSON.parse(localStorage.getItem(TRANSLATE_CACHE_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveTranslateCache(cache){
+  try{ localStorage.setItem(TRANSLATE_CACHE_KEY, JSON.stringify(cache)); }catch(e){ /* plný localStorage - ticho ignorujeme */ }
+}
+let translateCache = loadTranslateCache();
+
+async function machineTranslate(text, targetLang){
+  if(!text || !text.trim()) return text;
+  const cacheKey = targetLang + '::' + text;
+  if(translateCache[cacheKey]) return translateCache[cacheKey];
+  try{
+    const chunk = text.slice(0, 490); // MyMemory má limit ~500 znakov na dopyt
+    const res = await fetch('https://api.mymemory.translated.net/get?q=' + encodeURIComponent(chunk) + '&langpair=sk|' + targetLang);
+    const data = await res.json();
+    const translated = (data && data.responseData && data.responseData.translatedText) ? data.responseData.translatedText : null;
+    if(translated){
+      translateCache[cacheKey] = translated;
+      saveTranslateCache(translateCache);
+      return translated;
+    }
+  }catch(e){ /* bez internetu / API nedostupné - necháme pôvodný text */ }
+  return null;
+}
+
+// Preloží textový obsah legálneho dokumentu (zásady, podmienky...) po
+// odsekoch/nadpisoch. Výsledok vloží ako druhý (anglický) text hneď pod
+// pôvodný slovenský text daného elementu - originál teda ostáva vždy
+// zachovaný a viditeľný.
+async function autoTranslateLegalModal(name){
+  if(currentLang !== 'en') return;
+  const body = document.querySelector('#legal-modal-' + name + ' .legal-sheet-body');
+  if(!body) return;
+  const targets = body.querySelectorAll('p, li, h2, h3');
+  for(const el of targets){
+    if(el.dataset.translated === '1') continue;
+    if(el.querySelector('.legal-en-line')) continue;
+    const original = el.dataset.origText || el.textContent;
+    el.dataset.origText = original;
+    if(!original.trim()) continue;
+    const translated = await machineTranslate(original, 'en');
+    if(currentLang !== 'en') return; // medzičasom prepnuté späť do SK
+    if(translated){
+      const line = document.createElement(el.tagName === 'LI' ? 'div' : 'div');
+      line.className = 'legal-en-line';
+      line.style.cssText = 'color:var(--muted,#8a93a6);font-style:italic;margin-top:2px;';
+      line.textContent = translated;
+      el.appendChild(line);
+      el.dataset.translated = '1';
+    }
+  }
+}
+
+// Preloží text príspevkov, ktoré sú práve viditeľné vo Feede, a vloží
+// preklad DO NOVÉHO riadku POD pôvodný text (ten sa nemení, ostáva presne
+// tak, ako ho autor napísal - platí to pre akýkoľvek jazyk príspevku).
+async function translateVisiblePosts(){
+  if(currentLang !== 'en') return;
+  const holders = document.querySelectorAll('.post-text-translation');
+  for(const holder of holders){
+    if(holder.dataset.done === '1') continue;
+    const postEl = holder.closest('.post');
+    const textEl = postEl ? postEl.querySelector('.post-text') : null;
+    if(!textEl) continue;
+    const original = textEl.textContent;
+    if(!original || !original.trim()) continue;
+    holder.dataset.done = '1';
+    const translated = await machineTranslate(original, 'en');
+    if(currentLang !== 'en') return;
+    if(translated && translated.trim().toLowerCase() !== original.trim().toLowerCase()){
+      holder.textContent = '🌐 ' + translated;
+      holder.style.cssText = 'color:var(--muted,#8a93a6);font-style:italic;font-size:13.5px;margin:-6px 0 12px;';
+    }
+  }
+}
 </script>
 
 <script>
