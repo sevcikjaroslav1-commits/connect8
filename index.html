@@ -3844,7 +3844,7 @@ async function loadFollowing(){
 function followBtnHtml(authorId){
   if(!authorId || !currentUser || authorId === currentUser.uid) return '';
   const isFollowing = followingSet.has(authorId);
-  return `<button class="follow-btn ${isFollowing?'following':''}" onclick="event.preventDefault();event.stopPropagation();toggleFollow('${authorId}')">${isFollowing?'✓ Sledované':'+ Sledovať'}</button>`;
+  return `<button class="follow-btn ${isFollowing?'following':''}" onclick="event.preventDefault();event.stopPropagation();toggleFollow('${authorId}')">${isFollowing?t('✓ Sledované'):t('+ Sledovať')}</button>`;
 }
 
 async function toggleFollow(uid){
@@ -3970,7 +3970,7 @@ function renderProfile(){
 
   applyProfileAvatar(document.getElementById('profile-avatar'), profileUser);
   document.getElementById('profile-name').textContent = profileUser.name;
-  document.getElementById('profile-stats').textContent = `${myPosts.length} príspevkov · ${allPhotos.length} fotiek`;
+  document.getElementById('profile-stats').textContent = `${myPosts.length} ${t('príspevkov')} · ${allPhotos.length} ${t('fotiek')}`;
 
   const uploadBtn = document.getElementById('avatar-upload-btn');
   if(uploadBtn) uploadBtn.style.display = isOwnProfile ? '' : 'none';
@@ -3979,7 +3979,7 @@ function renderProfile(){
   if(deleteBtn) deleteBtn.style.display = isOwnProfile ? 'inline-flex' : 'none';
 
   const backBtn = document.getElementById('profile-back-btn');
-  if(backBtn) backBtn.textContent = isOwnProfile ? '← Späť do Feedu' : '← Späť na Používateľov';
+  if(backBtn) backBtn.textContent = isOwnProfile ? t('← Späť do Feedu') : t('← Späť na Používateľov');
 
   const msgBtn = document.getElementById('profile-message-btn');
   if(msgBtn) msgBtn.style.display = (isOwnProfile || isBlocked) ? 'none' : 'flex';
@@ -3996,8 +3996,8 @@ function renderProfile(){
       callVideoBtn.style.display = 'flex';
       callAudioBtn.disabled = !online;
       callVideoBtn.disabled = !online;
-      callAudioBtn.title = online ? 'Zavolať' : 'Používateľ je offline';
-      callVideoBtn.title = online ? 'Videohovor' : 'Používateľ je offline';
+      callAudioBtn.title = online ? t('Zavolať') : t('Používateľ je offline');
+      callVideoBtn.title = online ? t('Videohovor') : t('Používateľ je offline');
     }
   }
 
@@ -4009,7 +4009,7 @@ function renderProfile(){
       followBtn.style.display = 'inline-block';
       const isFollowing = followingSet.has(profileUser.uid);
       followBtn.classList.toggle('following', isFollowing);
-      followBtn.textContent = isFollowing ? '✓ Sledované' : '+ Sledovať';
+      followBtn.textContent = isFollowing ? t('✓ Sledované') : t('+ Sledovať');
     }
   }
 
@@ -4020,19 +4020,19 @@ function renderProfile(){
     }else{
       blockBtn.style.display = 'inline-block';
       blockBtn.classList.toggle('blocked', isBlocked);
-      blockBtn.textContent = isBlocked ? '✓ Odblokovať' : '🚫 Zablokovať';
+      blockBtn.textContent = isBlocked ? t('✓ Odblokovať') : t('🚫 Zablokovať');
     }
   }
 
   const grid = document.getElementById('profile-photos-grid');
   grid.innerHTML = allPhotos.length
     ? allPhotos.slice().reverse().map(src=>`<img src="${src}" onclick="openLightbox('${src}')">`).join('')
-    : `<div class="profile-empty">Zatiaľ žiadne fotky.</div>`;
+    : `<div class="profile-empty">${t('Zatiaľ žiadne fotky.')}</div>`;
 
   const postsList = document.getElementById('profile-posts-list');
   postsList.innerHTML = myPosts.length
     ? myPosts.slice().reverse().map(p=>`<div class="post">${buildPostCard(p, {showComments:false})}</div>`).join('')
-    : `<div class="profile-empty">Zatiaľ žiadne príspevky.</div>`;
+    : `<div class="profile-empty">${t('Zatiaľ žiadne príspevky.')}</div>`;
 }
 
 function buildCallButtonRow(u){
@@ -4044,7 +4044,7 @@ function buildCallButtonRow(u){
   audioBtn.className = 'user-card-call-btn user-card-call-btn-audio';
   audioBtn.dataset.calluid = u.id;
   audioBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
-  audioBtn.title = online ? 'Zavolať' : 'Používateľ je offline';
+  audioBtn.title = online ? t('Zavolať') : t('Používateľ je offline');
   audioBtn.disabled = !online;
   audioBtn.onclick = (e)=>{ e.stopPropagation(); startCall({ uid:u.id, name:u.name, photoURL:u.photo }, 'audio'); };
 
@@ -4052,14 +4052,14 @@ function buildCallButtonRow(u){
   videoBtn.className = 'user-card-call-btn';
   videoBtn.dataset.calluid = u.id;
   videoBtn.textContent = '🎥';
-  videoBtn.title = online ? 'Videohovor' : 'Používateľ je offline';
+  videoBtn.title = online ? t('Videohovor') : t('Používateľ je offline');
   videoBtn.disabled = !online;
   videoBtn.onclick = (e)=>{ e.stopPropagation(); startCall({ uid:u.id, name:u.name, photoURL:u.photo }, 'video'); };
 
   const msgBtn = document.createElement('button');
   msgBtn.className = 'msg-icon-btn user-card-msg-btn';
   msgBtn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>';
-  msgBtn.title = 'Napísať správu';
+  msgBtn.title = t('Napísať správu');
   msgBtn.onclick = (e)=>{ e.stopPropagation(); openChatWithUser({ uid:u.id, name:u.name, photoURL:u.photo }); };
 
   row.appendChild(audioBtn);
@@ -4081,14 +4081,14 @@ async function renderUsersList(){
   grid.innerHTML = '';
   const loading = document.createElement('div');
   loading.className = 'profile-empty';
-  loading.textContent = 'Načítavam používateľov...';
+  loading.textContent = t('Načítavam používateľov...');
   grid.appendChild(loading);
 
   if(!FIREBASE_CONFIGURED || !db){
     grid.innerHTML = '';
     const msg = document.createElement('div');
     msg.className = 'profile-empty';
-    msg.textContent = 'Zoznam používateľov je dostupný len s pripojenou databázou.';
+    msg.textContent = t('Zoznam používateľov je dostupný len s pripojenou databázou.');
     grid.appendChild(msg);
     return;
   }
@@ -4098,7 +4098,7 @@ async function renderUsersList(){
     const users = [];
     qs.forEach(doc=>{
       const data = doc.data() || {};
-      users.push({ id: doc.id, name: data.name || 'Používateľ', photo: data.avatarPhoto || null });
+      users.push({ id: doc.id, name: data.name || t('Používateľ'), photo: data.avatarPhoto || null });
     });
     users.sort((a,b)=> a.name.localeCompare(b.name, 'sk'));
 
@@ -4106,7 +4106,7 @@ async function renderUsersList(){
     if(!users.length){
       const empty = document.createElement('div');
       empty.className = 'profile-empty';
-      empty.textContent = 'Zatiaľ nie je zaregistrovaný žiadny používateľ.';
+      empty.textContent = t('Zatiaľ nie je zaregistrovaný žiadny používateľ.');
       grid.appendChild(empty);
       return;
     }
@@ -4153,7 +4153,7 @@ async function renderUsersList(){
     grid.innerHTML = '';
     const err = document.createElement('div');
     err.className = 'profile-empty';
-    err.textContent = 'Nepodarilo sa načítať zoznam používateľov.';
+    err.textContent = t('Nepodarilo sa načítať zoznam používateľov.');
     grid.appendChild(err);
   }
 }
@@ -4171,14 +4171,14 @@ async function renderFriendsList(){
   grid.innerHTML = '';
   const loading = document.createElement('div');
   loading.className = 'profile-empty';
-  loading.textContent = 'Načítavam priateľov...';
+  loading.textContent = t('Načítavam priateľov...');
   grid.appendChild(loading);
 
   if(!FIREBASE_CONFIGURED || !db){
     grid.innerHTML = '';
     const msg = document.createElement('div');
     msg.className = 'profile-empty';
-    msg.textContent = 'Zoznam priateľov je dostupný len s pripojenou databázou.';
+    msg.textContent = t('Zoznam priateľov je dostupný len s pripojenou databázou.');
     grid.appendChild(msg);
     return;
   }
@@ -4188,7 +4188,7 @@ async function renderFriendsList(){
   if(!uids.length){
     const empty = document.createElement('div');
     empty.className = 'profile-empty';
-    empty.textContent = 'Zatiaľ nikoho nesleduješ. Skús niekoho vyhľadať v sekcii Používatelia 🙂';
+    empty.textContent = t('Zatiaľ nikoho nesleduješ. Skús niekoho vyhľadať v sekcii Používatelia 🙂');
     grid.appendChild(empty);
     return;
   }
@@ -4198,7 +4198,7 @@ async function renderFriendsList(){
     const docs = await Promise.all(uids.map(uid=>db.collection('profiles').doc(uid).get()));
     users = docs.map((doc, i)=>{
       const data = (doc.exists && doc.data()) || {};
-      return { id: uids[i], name: data.name || 'Používateľ', photo: data.avatarPhoto || null };
+      return { id: uids[i], name: data.name || t('Používateľ'), photo: data.avatarPhoto || null };
     });
     users.sort((a,b)=> a.name.localeCompare(b.name, 'sk'));
   }catch(e){
@@ -4206,7 +4206,7 @@ async function renderFriendsList(){
     grid.innerHTML = '';
     const err = document.createElement('div');
     err.className = 'profile-empty';
-    err.textContent = 'Priateľov sa nepodarilo načítať. Skús to znova.';
+    err.textContent = t('Priateľov sa nepodarilo načítať. Skús to znova.');
     grid.appendChild(err);
     return;
   }
@@ -8619,6 +8619,25 @@ const UI_DICT_EN = {
   "Notifikácie":"Notifications",
   "Registrovaní / online používatelia":"Registered / online users",
   "Aktuálny čas a dátum":"Current time and date",
+  "← Späť do Feedu":"← Back to Feed",
+  "← Späť na Používateľov":"← Back to Users",
+  "+ Sledovať":"+ Follow",
+  "✓ Sledované":"✓ Following",
+  "🚫 Zablokovať":"🚫 Block",
+  "✓ Odblokovať":"✓ Unblock",
+  "📝 Príspevky":"📝 Posts",
+  "Používateľ je offline":"User is offline",
+  "príspevkov":"posts",
+  "fotiek":"photos",
+  "Načítavam používateľov...":"Loading users...",
+  "Zoznam používateľov je dostupný len s pripojenou databázou.":"The user list is only available with a connected database.",
+  "Používateľ":"User",
+  "Zatiaľ nie je zaregistrovaný žiadny používateľ.":"No users have registered yet.",
+  "Nepodarilo sa načítať zoznam používateľov.":"Failed to load the list of users.",
+  "Načítavam priateľov...":"Loading friends...",
+  "Zoznam priateľov je dostupný len s pripojenou databázou.":"The friends list is only available with a connected database.",
+  "Zatiaľ nikoho nesleduješ. Skús niekoho vyhľadať v sekcii Používatelia 🙂":"You're not following anyone yet. Try searching for someone in the Users section 🙂",
+  "Priateľov sa nepodarilo načítať. Skús to znova.":"Failed to load friends. Please try again.",
   "Zatiaľ žiadne upozornenia.":"No notifications yet.",
   "Konverzácia":"Conversation",
   "Napíš správu...":"Write a message...",
@@ -8937,6 +8956,12 @@ function applyLanguage(){
     autoTranslateLegalModal(name);
   });
   translateVisiblePosts();
+  const viewProfile = document.getElementById('view-profile');
+  if(viewProfile && viewProfile.classList.contains('active')) renderProfile();
+  const viewUsers = document.getElementById('view-users');
+  if(viewUsers && viewUsers.classList.contains('active')) renderUsersList();
+  const viewFriends = document.getElementById('view-friends');
+  if(viewFriends && viewFriends.classList.contains('active')) renderFriendsList();
 }
 
 function setAppLanguage(lang){
