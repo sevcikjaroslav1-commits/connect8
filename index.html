@@ -200,6 +200,10 @@
     margin-top:8px;display:flex;flex-wrap:wrap;gap:6px 16px;
   }
   #auth-screen .footer-links span{white-space:nowrap;}
+  #auth-screen .footer-links span.active-link{
+    color:var(--lightblue);font-weight:700;border:1px solid var(--lightblue);
+    border-radius:6px;padding:2px 8px;background:rgba(41,182,246,.08);
+  }
   #auth-screen .lang-switch{display:flex;gap:4px;margin:0 0 28px;flex-wrap:wrap;max-width:392px;justify-content:space-between;}
   #auth-screen .lang-flag{
     display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;
@@ -2018,15 +2022,15 @@
   <footer>
     <div>© Connect8 Všetky práva vyhradené.</div>
     <div class="footer-links">
-      <span onclick="openLegalModal('privacy')" style="cursor:pointer;">Zásady ochrany súkromia</span>
-      <span onclick="openLegalModal('center')" style="cursor:pointer;">Centrum ochrany súkromia</span>
-      <span onclick="openLegalModal('cookies')" style="cursor:pointer;">Nastavenia cookies</span>
-      <span onclick="openLegalModal('info')" style="cursor:pointer;">Informácie</span>
-      <span onclick="openLegalModal('terms')" style="cursor:pointer;">Podmienky</span>
-      <span onclick="openLegalModal('community')" style="cursor:pointer;">Komunitné pravidlá</span>
-      <span onclick="openLegalModal('copyright')" style="cursor:pointer;">Pravidlá k autorským právam</span>
-      <span onclick="openLegalModal('ads')" style="cursor:pointer;">Pravidlá pre reklamu</span>
-      <span onclick="openLegalModal('security')" style="cursor:pointer;">Bezpečnosť účtu</span>
+      <span data-legal="privacy" onclick="openLegalModal('privacy')" style="cursor:pointer;">Zásady ochrany súkromia</span>
+      <span data-legal="center" onclick="openLegalModal('center')" style="cursor:pointer;">Centrum ochrany súkromia</span>
+      <span data-legal="cookies" onclick="openLegalModal('cookies')" style="cursor:pointer;">Nastavenia cookies</span>
+      <span data-legal="info" onclick="openLegalModal('info')" style="cursor:pointer;">Informácie</span>
+      <span data-legal="terms" onclick="openLegalModal('terms')" style="cursor:pointer;">Podmienky</span>
+      <span data-legal="community" onclick="openLegalModal('community')" style="cursor:pointer;">Komunitné pravidlá</span>
+      <span data-legal="copyright" onclick="openLegalModal('copyright')" style="cursor:pointer;">Pravidlá k autorským právam</span>
+      <span data-legal="ads" onclick="openLegalModal('ads')" style="cursor:pointer;">Pravidlá pre reklamu</span>
+      <span data-legal="security" onclick="openLegalModal('security')" style="cursor:pointer;">Bezpečnosť účtu</span>
       <span>O nás</span>
       <span>Pomoc</span>
       <span>Kontakt</span>
@@ -4822,10 +4826,15 @@ function closeInviteModal(){
 function openLegalModal(name){
   const el = document.getElementById('legal-modal-' + name);
   if(el) el.classList.add('open');
+  document.querySelectorAll('.footer-links span[data-legal]').forEach(function(s){
+    s.classList.toggle('active-link', s.getAttribute('data-legal') === name);
+  });
 }
 function closeLegalModal(name){
   const el = document.getElementById('legal-modal-' + name);
   if(el) el.classList.remove('open');
+  const link = document.querySelector('.footer-links span[data-legal="' + name + '"]');
+  if(link) link.classList.remove('active-link');
 }
 
 function inviteViaWhatsApp(){
