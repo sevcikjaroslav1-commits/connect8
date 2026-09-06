@@ -5941,8 +5941,19 @@ const NEWS_SOURCES = [
   { id:'info',         name:'Info.sk',       urls:['https://www.info.sk/feed/','https://www.info.sk/rss'] },
   { id:'sita',         name:'SITA',          urls:['https://sita.sk/rss/clanky-img/1/','https://sita.sk/spravy/feed/'] }
 ];
+// Anglické spravodajské zdroje - použijú sa namiesto tých vyššie, keď je
+// aktívna anglická vlajka (EN). Čerpajú sa presne rovnakým spôsobom
+// (RSS feed cez záložné proxy), len z iných adries.
+const NEWS_SOURCES_EN = [
+  { id:'nyt',   name:'The New York Times', urls:['https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml'] },
+  { id:'wsj',   name:'The Wall Street Journal', urls:['https://feeds.a.dj.com/rss/RSSWorldNews.xml','https://feeds.a.dj.com/rss/RSSUSnews.xml'] },
+  { id:'usatoday', name:'USA Today', urls:['http://rssfeeds.usatoday.com/usatoday-NewsTopStories','https://rssfeeds.usatoday.com/usatoday-NewsTopStories'] }
+];
+function currentNewsSources(){
+  return currentLang === 'en' ? NEWS_SOURCES_EN : NEWS_SOURCES;
+}
 const NEWS_REFRESH_MS = 15 * 60 * 1000; // 15 minút
-let newsCache = { items: [], ts: 0 };
+let newsCache = { sk: { items: [], ts: 0 }, en: { items: [], ts: 0 } };
 let newsLoading = false;
 
 // ⚠️ Po nasadení Cloudflare Workera sem vlož jeho skutočnú adresu
@@ -6030,8 +6041,11 @@ async function fetchOneSourceViaProxies(source){
 }
 
 // Záložná cesta cez staré proxy - použije sa, len ak Worker vyššie zlyhá
-async function loadNewsViaProxiesFallback(){
-  const results = await Promise.all(NEWS_SOURCES.map(s=>fetchOneSourceViaProxies(s)));
+// (alebo priamo, keď je aktívna EN vlajka - vtedy sa Worker vôbec neskúša,
+// pretože ten pozná iba slovenské zdroje).
+async function loadNewsViaProxiesFallback(sources){
+  sources = sources || NEWS_SOURCES;
+  const results = await Promise.all(sources.map(s=>fetchOneSourceViaProxies(s)));
   return shuffleArray([].concat(...results)).slice(0, 32);
 }
 
@@ -6056,43 +6070,52 @@ async function loadNewsFeed(forceRefresh){
   const refreshBtn = document.getElementById('news-refresh-btn');
   if(!grid) return;
 
-  if(!forceRefresh && newsCache.items.length && (Date.now() - newsCache.ts) < NEWS_REFRESH_MS){
-    renderNewsGrid(newsCache.items);
+  const lang = currentLang === 'en' ? 'en' : 'sk';
+  const sources = currentNewsSources();
+  const cacheSlot = newsCache[lang];
+
+  if(!forceRefresh && cacheSlot.items.length && (Date.now() - cacheSlot.ts) < NEWS_REFRESH_MS){
+    renderNewsGrid(cacheSlot.items);
     return;
   }
   if(newsLoading) return;
   newsLoading = true;
-  if(refreshBtn){ refreshBtn.disabled = true; refreshBtn.textContent = '⟳ Načítavam...'; }
-  grid.innerHTML = '<div class="news-status">Načítavam správy zo zdrojov...</div>';
-  chipsRow.innerHTML = NEWS_SOURCES.map(s=>`<span class="news-source-chip">${s.name}</span>`).join('');
+  if(refreshBtn){ refreshBtn.disabled = true; refreshBtn.textContent = t('⟳ Načítavam...'); }
+  grid.innerHTML = `<div class="news-status">${t('Načítavam správy zo zdrojov...')}</div>`;
+  chipsRow.innerHTML = sources.map(s=>`<span class="news-source-chip">${s.name}</span>`).join('');
 
   try{
     let all = [];
-    // 1) Skús vlastný Cloudflare Worker - rýchly a spoľahlivý jeden request
-    try{
-      const workerUrl = NEWS_WORKER_URL + (forceRefresh ? '?refresh=1' : '');
-      const res = await fetchWithTimeout(workerUrl, 8000);
-      if(!res.ok) throw new Error('worker http ' + res.status);
-      const data = await res.json();
-      if(Array.isArray(data.items) && data.items.length) all = data.items;
-    }catch(workerErr){
-      console.warn('Connect8 news: Worker nedostupný, prepínam na záložné proxy.', workerErr);
+    // 1) Skús vlastný Cloudflare Worker - rýchly a spoľahlivý jeden request.
+    // Worker pozná iba slovenské zdroje, takže pri EN vlajke ho preskočíme
+    // a rovno ideme cez záložné proxy s anglickými zdrojmi (NYT, WSJ, USA Today).
+    if(lang === 'sk'){
+      try{
+        const workerUrl = NEWS_WORKER_URL + (forceRefresh ? '?refresh=1' : '');
+        const res = await fetchWithTimeout(workerUrl, 8000);
+        if(!res.ok) throw new Error('worker http ' + res.status);
+        const data = await res.json();
+        if(Array.isArray(data.items) && data.items.length) all = data.items;
+      }catch(workerErr){
+        console.warn('Connect8 news: Worker nedostupný, prepínam na záložné proxy.', workerErr);
+      }
     }
-    // 2) Ak Worker zlyhal alebo nevrátil nič, použi starý systém so 4 proxy
+    // 2) Ak Worker zlyhal, nevrátil nič, alebo sme v EN režime, použi
+    // starý systém so záložnými proxy a príslušnými zdrojmi pre daný jazyk.
     if(all.length === 0){
-      all = await loadNewsViaProxiesFallback();
+      all = await loadNewsViaProxiesFallback(sources);
     }
     if(all.length === 0){
-      grid.innerHTML = '<div class="news-status">Správy sa nepodarilo načítať (zdroje momentálne neodpovedajú). Skús obnoviť o chvíľu.</div>';
+      grid.innerHTML = `<div class="news-status">${t('Správy sa nepodarilo načítať (zdroje momentálne neodpovedajú). Skús obnoviť o chvíľu.')}</div>`;
       return;
     }
-    newsCache = { items: all, ts: Date.now() };
+    newsCache[lang] = { items: all, ts: Date.now() };
     renderNewsGrid(all);
   }catch(e){
-    grid.innerHTML = '<div class="news-status">Nastala chyba pri načítaní správ. Skús to znova.</div>';
+    grid.innerHTML = `<div class="news-status">${t('Nastala chyba pri načítaní správ. Skús to znova.')}</div>`;
   }finally{
     newsLoading = false;
-    if(refreshBtn){ refreshBtn.disabled = false; refreshBtn.textContent = '⟳ Obnoviť'; }
+    if(refreshBtn){ refreshBtn.disabled = false; refreshBtn.textContent = t('⟳ Obnoviť'); }
   }
 }
 
@@ -8863,6 +8886,10 @@ const UI_DICT_EN = {
   "Zapamätané zhliadnutia":"Remembered views",
   "Načítavam správy...":"Loading messages...",
   "Načítavam správy zo zdrojov...":"Loading news from sources...",
+  "⟳ Obnoviť":"⟳ Refresh",
+  "⟳ Načítavam...":"⟳ Loading...",
+  "Správy sa nepodarilo načítať (zdroje momentálne neodpovedajú). Skús obnoviť o chvíľu.":"Couldn't load the news (sources aren't responding right now). Try refreshing in a moment.",
+  "Nastala chyba pri načítaní správ. Skús to znova.":"An error occurred while loading the news. Please try again.",
   "Financie":"Finance",
   "Srdce":"Heart",
   "Usmievavý smajlík":"Smiling face",
@@ -8962,6 +8989,8 @@ function applyLanguage(){
   if(viewUsers && viewUsers.classList.contains('active')) renderUsersList();
   const viewFriends = document.getElementById('view-friends');
   if(viewFriends && viewFriends.classList.contains('active')) renderFriendsList();
+  const viewNews = document.getElementById('view-news');
+  if(viewNews && viewNews.classList.contains('active')) loadNewsFeed(true);
 }
 
 function setAppLanguage(lang){
