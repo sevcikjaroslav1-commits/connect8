@@ -2019,6 +2019,93 @@
       </div>
     </div>
   </div>
+
+  <div class="legal-modal" id="legal-modal-about" onclick="if(event.target===this) closeLegalModal('about')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>O nás</h3>
+        <button onclick="closeLegalModal('about')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p><strong>Connect8</strong> je slovenská sociálna platforma, ktorú od základu vytvára a prevádzkuje <strong>Jaroslav Ševčík</strong> ako samostatná fyzická osoba — nie veľká firma ani korporácia.</p>
+
+        <h2>Prečo Connect8 vzniklo</h2>
+        <p>Cieľom je ponúknuť jednoduchú, prehľadnú a rýchlu alternatívu k veľkým zahraničným sociálnym sieťam — miesto, kde môžeš zdieľať príspevky, videá aj komunikovať s priateľmi, bez zbytočného balastu.</p>
+
+        <h2>Čo appku odlišuje</h2>
+        <ul>
+          <li>Žiadne reklamy tretích strán a žiadne sledovacie nástroje naprieč inými webmi (napr. Google Analytics, reklamné pixely).</li>
+          <li>Funguje priamo v prehliadači — netreba nič inštalovať.</li>
+          <li>Rozhranie dostupné vo viacerých jazykoch vrátane slovenčiny.</li>
+        </ul>
+
+        <h2>Neustály vývoj</h2>
+        <p>Connect8 sa priebežne vyvíja a dopĺňa o nové funkcie — appka je aktuálne v štádiu prípravy na beta test, takže sa môžeš stretnúť s drobnými zmenami či vylepšeniami.</p>
+
+        <h2>Máš nápad alebo pripomienku?</h2>
+        <p>Budeme radi za akúkoľvek spätnú väzbu — napíš na <strong>sevcikjaroslav1@gmail.com</strong>.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-modal" id="legal-modal-help" onclick="if(event.target===this) closeLegalModal('help')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>Pomoc</h3>
+        <button onclick="closeLegalModal('help')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p>Tu nájdeš odpovede na najčastejšie otázky o používaní Connect8. Ak tu odpoveď nenájdeš, napíš nám priamo — kontakt je na konci stránky.</p>
+
+        <h2>Registrácia a prihlásenie</h2>
+        <p>Účet si vytvoríš v záložke „Registrácia" na úvodnej stránke — stačí meno, e-mail a heslo. Prihlásenie beží cez Firebase Authentication, takže heslo sa nikdy neukladá v čitateľnej podobe.</p>
+
+        <h2>Príspevky, videá a marketplace</h2>
+        <p>Vo Feede môžeš pridávať príspevky (text, fotky, video, súbory alebo odkaz), vo Videách nahrávať krátke vertikálne videá a v Marketplace zverejňovať alebo hľadať inzeráty. Vlastný obsah vieš kedykoľvek zmazať ikonou 🗑️ priamo pri ňom.</p>
+
+        <h2>Správy a hovory</h2>
+        <p>V sekcii Správy si môžeš s ostatnými písať textové aj hlasové správy a posielať si súbory. Priamo z profilu používateľa vieš spustiť aj audio alebo videohovor.</p>
+
+        <h2>Obťažuje ťa niekto?</h2>
+        <p>Na profile daného používateľa klikni na tlačidlo „🚫 Zablokovať" — po zablokovaní ťa už nemôže kontaktovať, volať ti ani vidieť tvoj obsah. Kedykoľvek ho môžeš rovnakým tlačidlom aj odblokovať.</p>
+
+        <h2>Zrušenie účtu</h2>
+        <p>Svoj účet aj s celým obsahom (príspevky, inzeráty, videá, profil) môžeš natrvalo vymazať v nastaveniach profilu tlačidlom „Zrušiť účet". Táto akcia je nevratná.</p>
+
+        <h2>Potrebuješ ďalšiu pomoc?</h2>
+        <p>Napíš nám na <strong>sevcikjaroslav1@gmail.com</strong> — odpovieme čo najskôr.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-modal" id="legal-modal-contact" onclick="if(event.target===this) closeLegalModal('contact')">
+    <div class="legal-sheet">
+      <div class="legal-sheet-header">
+        <h3>Kontakt</h3>
+        <button onclick="closeLegalModal('contact')">✕</button>
+      </div>
+      <div class="legal-sheet-body">
+        <p>Connect8 prevádzkuje <strong>Jaroslav Ševčík</strong> ako fyzická osoba.</p>
+
+        <h2>E-mail</h2>
+        <p>Na akékoľvek otázky, nahlásenia problému alebo pripomienky nám napíš na <strong>sevcikjaroslav1@gmail.com</strong>.</p>
+
+        <h2>Čo nám napíš</h2>
+        <ul>
+          <li>Technický problém alebo chybu v appke</li>
+          <li>Nahlásenie obsahu alebo správania, ktoré porušuje pravidlá appky</li>
+          <li>Otázky ohľadom svojich osobných údajov a súkromia</li>
+          <li>Nápady na vylepšenie alebo novú funkciu</li>
+        </ul>
+
+        <h2>Odpoveď</h2>
+        <p>Snažíme sa odpovedať čo najskôr, keďže appku spravuje jeden človek, môže to v niektorých prípadoch chvíľu trvať — ďakujeme za trpezlivosť.</p>
+
+      </div>
+    </div>
+  </div>
   <footer>
     <div>© Connect8 Všetky práva vyhradené.</div>
     <div class="footer-links">
@@ -2031,9 +2118,9 @@
       <span data-legal="copyright" onclick="openLegalModal('copyright')" style="cursor:pointer;">Pravidlá k autorským právam</span>
       <span data-legal="ads" onclick="openLegalModal('ads')" style="cursor:pointer;">Pravidlá pre reklamu</span>
       <span data-legal="security" onclick="openLegalModal('security')" style="cursor:pointer;">Bezpečnosť účtu</span>
-      <span>O nás</span>
-      <span>Pomoc</span>
-      <span>Kontakt</span>
+      <span data-legal="about" onclick="openLegalModal('about')" style="cursor:pointer;">O nás</span>
+      <span data-legal="help" onclick="openLegalModal('help')" style="cursor:pointer;">Pomoc</span>
+      <span data-legal="contact" onclick="openLegalModal('contact')" style="cursor:pointer;">Kontakt</span>
     </div>
   </footer>
 </div>
