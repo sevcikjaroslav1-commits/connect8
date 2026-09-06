@@ -6991,6 +6991,18 @@ function renderCategories(){
     prodSel.innerHTML = options;
     if(prevValue) prodSel.value = prevValue;
   }
+
+  // Táto sekcia sa vykresľuje nanovo (napr. pri prihlásení alebo zmene
+  // kategórie) - jej obsah teda vzniká v DOMe AŽ PO tom, čo prípadne
+  // prebehol applyLanguage(). Bez tohto riadku by preklad kategórií
+  // naskočil až po ďalšom F5. Preto ju prejdeme prekladom rovno tu, hneď
+  // ako sa vykreslí — translateStaticDom() sama nič nerobí, ak je
+  // nastavená slovenčina.
+  if(typeof translateStaticDom === 'function'){
+    translateStaticDom(grid);
+    if(searchSel) translateStaticDom(searchSel);
+    if(prodSel) translateStaticDom(prodSel);
+  }
 }
 
 function scrollToMarketResults(){
@@ -8756,6 +8768,27 @@ const UI_DICT_EN = {
   "Letenky, Hudba, Koncerty...":"Flights, Music, Concerts...",
   "Zvieratá":"Pets",
   "Psy, Mačky, Kone...":"Dogs, Cats, Horses...",
+  // marketplace kategórie v <select> (emoji + názov v jednom textovom uzle)
+  "🚗 Auto": "🚗 Cars",
+  "🍼 Deti": "🍼 Kids",
+  "🏡 Dom a záhrada": "🏡 Home & Garden",
+  "🔌 Elektro": "🔌 Electronics",
+  "📷 Foto": "📷 Photo",
+  "🎵 Hudba": "🎵 Music",
+  "📚 Knihy": "📚 Books",
+  "📱 Mobily": "📱 Phones",
+  "🏍️ Motocykle": "🏍️ Motorcycles",
+  "🛋️ Nábytok": "🛋️ Furniture",
+  "👕 Oblečenie": "👕 Clothing",
+  "📦 Ostatné": "📦 Other",
+  "💻 PC": "💻 PC",
+  "💼 Práca": "💼 Jobs",
+  "🏠 Reality": "🏠 Real Estate",
+  "🛠️ Služby": "🛠️ Services",
+  "⚙️ Stroje": "⚙️ Machinery",
+  "⚽ Šport": "⚽ Sport",
+  "🎫 Vstupenky": "🎫 Tickets",
+  "🐾 Zvieratá": "🐾 Pets",
   // filmy / kalendár
   "Názov filmu/dokumentu":"Movie/documentary title",
   "Dnes":"Today",
