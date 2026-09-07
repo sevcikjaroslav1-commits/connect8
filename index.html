@@ -7081,7 +7081,7 @@ function addComment(id){
   p.open = true;
   input.value = '';
   renderPosts();
-  savePost(p)
+  updateDoc(postDoc(p.id), {comments: p.comments}, 'príspevok - komentár')
     .then(()=>bumpRateLimit('lastCommentAt'))
     .then(()=>{ if(p.authorId) createNotification(p.authorId, 'comment_post', {postId: p.id}); })
     .catch(err=>{
