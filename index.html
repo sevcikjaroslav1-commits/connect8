@@ -5813,7 +5813,7 @@ function startPresenceHeartbeat(){
    by bola vyššia než skutočný voľný priestor pod topbarom a spodné ikonky
    (koš, počet zhliadnutí, kto pridal, zdieľanie) by boli mimo obrazovky. */
 function updateTopbarHeightVar(){
-  const topbar = document.querySelector('.topbar');
+  const topbar = document.querySelector('#app > .topbar');
   if(!topbar) return;
   const h = topbar.getBoundingClientRect().height;
   if(h > 0){
