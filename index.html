@@ -3354,7 +3354,23 @@ async function deleteMyAccount(){
 
     // 2) zmaž profil a "online" stav
     if(FIREBASE_CONFIGURED && db){
-      await db.collection('profiles').doc(uid).delete().catch(e=>console.error('Profil sa nepodarilo zmazať:', e));
+      // Najprv profil označíme ako zmazaný a "vyprázdnime" ho (meno, foto...) -
+      // toto je bežná aktualizácia vlastného dokumentu, ktorú pravidlá takmer
+      // isto povoľujú. Skutočné .delete() dokumentu nižšie môžu bezpečnostné
+      // pravidlá pre kolekciu 'profiles' zakazovať (bežné z bezpečnostných
+      // dôvodov) - v tom prípade by dokument v databáze ostal, aj keď
+      // vymazanie "vyzeralo" úspešne, a používateľ by sa naďalej zobrazoval
+      // v zozname Používatelia. Preto tento krok robíme VŽDY, nezávisle od
+      // toho, či samotné .delete() nižšie prejde.
+      await db.collection('profiles').doc(uid).set({
+        deleted: true,
+        deletedAt: Date.now(),
+        name: 'Zmazaný účet',
+        avatarPhoto: null,
+        bio: null
+      }, {merge:true}).catch(e=>console.error('Označenie profilu ako zmazaného zlyhalo:', e));
+
+      await db.collection('profiles').doc(uid).delete().catch(e=>console.error('Profil sa nepodarilo natrvalo zmazať (dokument ostáva označený ako zmazaný):', e));
     }
     if(FIREBASE_CONFIGURED && rtdb){
       await rtdb.ref('status/' + uid).remove().catch(()=>{});
@@ -4098,6 +4114,7 @@ async function renderUsersList(){
     const users = [];
     qs.forEach(doc=>{
       const data = doc.data() || {};
+      if(data.deleted) return; // zmazaný účet - nezobrazovať v zozname
       users.push({ id: doc.id, name: data.name || t('Používateľ'), photo: data.avatarPhoto || null });
     });
     users.sort((a,b)=> a.name.localeCompare(b.name, 'sk'));
@@ -4198,8 +4215,8 @@ async function renderFriendsList(){
     const docs = await Promise.all(uids.map(uid=>db.collection('profiles').doc(uid).get()));
     users = docs.map((doc, i)=>{
       const data = (doc.exists && doc.data()) || {};
-      return { id: uids[i], name: data.name || t('Používateľ'), photo: data.avatarPhoto || null };
-    });
+      return { id: uids[i], name: data.name || t('Používateľ'), photo: data.avatarPhoto || null, deleted: !doc.exists || !!data.deleted };
+    }).filter(u=>!u.deleted); // zmazané účty sa v zozname priateľov nezobrazujú
     users.sort((a,b)=> a.name.localeCompare(b.name, 'sk'));
   }catch(e){
     console.error("Nepodarilo sa načítať priateľov:", e);
@@ -4262,6 +4279,7 @@ async function loadAllUsersForSearch(){
     const users = [];
     qs.forEach(doc=>{
       const data = doc.data() || {};
+      if(data.deleted) return; // zmazaný účet - nezobrazovať vo vyhľadávaní
       users.push({ id: doc.id, name: data.name || 'Používateľ', photo: data.avatarPhoto || null });
     });
     allUsersCache = users;
@@ -5876,7 +5894,7 @@ function startPresenceHeartbeat(){
   });
 
   db.collection('profiles').get()
-    .then(qs=>{ totalUsersCount = qs.size; updateUserStats(); })
+    .then(qs=>{ totalUsersCount = qs.docs.filter(d=>!(d.data()||{}).deleted).length; updateUserStats(); })
     .catch(e=>console.error("Nepodarilo sa spočítať používateľov:", e));
 }
 
