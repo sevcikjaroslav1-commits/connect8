@@ -4518,46 +4518,97 @@ const TRANSLATOR_LANG_ORDER = ['sk', 'en', 'de'];
 
 // Spoločná funkcia na strojový preklad textu, ktorú využíva tlmočník
 // (písaný aj hovorený text, obojsmerná konverzácia) aj automatický
-// preklad príspevkov vo feede. Používa verejné, bezplatné rozhranie
-// Google Translate (rovnaké, aké interne používa napr. rozšírenie
-// Google Translate v prehliadači) - bez API kľúča, bez platby a bez
-// pevného denného limitu, ktorý appku predtým robil v praxi
-// nepoužiteľnou (MyMemory mal len ~5000 znakov/deň na free tieri).
-function googleTranslateFetch(text, sourceLang, targetLang){
-  const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl='
+// preklad príspevkov vo feede.
+//
+// Postupne skúša VIACERO nezávislých prekladových služieb, kým jedna
+// neuspeje - žiadna voľná/neoficiálna služba nie je 100% spoľahlivá
+// natrvalo (Google svoj neoficiálny endpoint občas začne blokovať pre
+// požiadavky z prehliadača, MyMemory má denný limit znakov a pod.),
+// takže viacero rôznych ciest súčasne výrazne zvyšuje šancu, že preklad
+// prejde aj keď jedna z nich práve nefunguje.
+function parseGoogleTranslateResult(data){
+  if(!data || !Array.isArray(data[0])) return '';
+  // Odpoveď je pole segmentov [[preloženýKúsok, pôvodnýKúsok, ...], ...] -
+  // pri dlhšom texte ho Google rozdelí na viac segmentov, ktoré spojíme.
+  return data[0].map(seg=> seg && seg[0] ? seg[0] : '').join('');
+}
+
+function googleTranslateUrl(text, sourceLang, targetLang){
+  return 'https://translate.googleapis.com/translate_a/single?client=gtx&sl='
     + encodeURIComponent(sourceLang) + '&tl=' + encodeURIComponent(targetLang)
     + '&dt=t&q=' + encodeURIComponent(text);
+}
 
-  function parseResult(data){
-    if(!data || !Array.isArray(data[0])) return '';
-    // Odpoveď je pole segmentov [[preloženýKúsok, pôvodnýKúsok, ...], ...] -
-    // pri dlhšom texte ho Google rozdelí na viac segmentov, ktoré spojíme.
-    return data[0].map(seg=> seg && seg[0] ? seg[0] : '').join('');
-  }
-
-  // 1) Skús priamo - v niektorých prostrediach to prejde bez problémov.
+// 1) MyMemory - má vlastné CORS hlavičky, takže z prehliadača funguje
+// najspoľahlivejšie. Denný limit (~5000 znakov na IP) pri bežnom
+// používaní tlmočníka jednou osobou spravidla stačí.
+function translateViaMyMemory(text, sourceLang, targetLang){
+  const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text)
+    + '&langpair=' + encodeURIComponent(sourceLang) + '|' + encodeURIComponent(targetLang);
   return fetchWithTimeout(url, NEWS_FETCH_TIMEOUT_MS)
-    .then(r=>{ if(!r.ok) throw new Error('Preklad zlyhal (' + r.status + ')'); return r.json(); })
+    .then(r=>{ if(!r.ok) throw new Error('mymemory http ' + r.status); return r.json(); })
     .then(data=>{
-      const result = parseResult(data);
-      if(!result) throw new Error('prázdny preklad');
-      return result;
-    })
-    .catch(async ()=>{
-      // 2) Priamy fetch zlyhal (typicky kvôli CORS obmedzeniu prehliadača na
-      // tento neoficiálny Google endpoint) - skús cez rovnaké záložné CORS
-      // proxy, aké appka používa aj na sťahovanie RSS správ.
-      for(const buildProxyUrl of NEWS_PROXIES){
-        try{
-          const r = await fetchWithTimeout(buildProxyUrl(url), NEWS_FETCH_TIMEOUT_MS);
-          if(!r.ok) continue;
-          const data = await r.json();
-          const result = parseResult(data);
-          if(result) return result;
-        }catch(e){ /* skús ďalšiu proxy */ }
-      }
-      throw new Error('Preklad zlyhal cez všetky dostupné cesty');
+      const t = data && data.responseData && data.responseData.translatedText;
+      if(!t || /MYMEMORY WARNING|INVALID (SOURCE|TARGET) LANGUAGE/i.test(t)) throw new Error('mymemory prázdne/limit');
+      return t;
     });
+}
+
+// 2) Neoficiálny Google Translate endpoint, priamo z prehliadača.
+function translateViaGoogleDirect(text, sourceLang, targetLang){
+  const url = googleTranslateUrl(text, sourceLang, targetLang);
+  return fetchWithTimeout(url, NEWS_FETCH_TIMEOUT_MS)
+    .then(r=>{ if(!r.ok) throw new Error('google http ' + r.status); return r.json(); })
+    .then(data=>{
+      const result = parseGoogleTranslateResult(data);
+      if(!result) throw new Error('google prázdny preklad');
+      return result;
+    });
+}
+
+// 3) Ten istý Google endpoint, ale cez záložné CORS proxy (rovnaké, aké
+// appka používa aj na sťahovanie RSS správ) - pre prípad, že priamy
+// prístup blokuje prehliadač alebo sieť.
+async function translateViaGoogleProxy(text, sourceLang, targetLang){
+  const url = googleTranslateUrl(text, sourceLang, targetLang);
+  for(const buildProxyUrl of NEWS_PROXIES){
+    try{
+      const r = await fetchWithTimeout(buildProxyUrl(url), NEWS_FETCH_TIMEOUT_MS);
+      if(!r.ok) continue;
+      const data = await r.json();
+      const result = parseGoogleTranslateResult(data);
+      if(result) return result;
+    }catch(e){ /* skús ďalšiu proxy */ }
+  }
+  throw new Error('google cez proxy zlyhal');
+}
+
+// 4) LibreTranslate - nezávislá tretia služba (iný poskytovateľ ako
+// vyššie), posledná záchrana, keby zlyhali obe predošlé.
+function translateViaLibreTranslate(text, sourceLang, targetLang){
+  const url = 'https://libretranslate.de/translate';
+  return fetchWithTimeout(url, NEWS_FETCH_TIMEOUT_MS, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ q:text, source:sourceLang, target:targetLang, format:'text' })
+  })
+    .then(r=>{ if(!r.ok) throw new Error('libretranslate http ' + r.status); return r.json(); })
+    .then(data=>{
+      if(!data || !data.translatedText) throw new Error('libretranslate prázdne');
+      return data.translatedText;
+    });
+}
+
+async function googleTranslateFetch(text, sourceLang, targetLang){
+  const providers = [translateViaMyMemory, translateViaGoogleDirect, translateViaGoogleProxy, translateViaLibreTranslate];
+  let lastErr = new Error('Preklad zlyhal cez všetky dostupné cesty');
+  for(const provider of providers){
+    try{
+      const result = await provider(text, sourceLang, targetLang);
+      if(result) return result;
+    }catch(e){ lastErr = e; }
+  }
+  throw lastErr;
 }
 
 
@@ -6030,11 +6081,11 @@ const NEWS_PROXIES = [
 // zdroj je stále cca 6s aj tak - vyhráva ten, čo odpovie prvý.
 const NEWS_FETCH_TIMEOUT_MS = 6000;
 
-async function fetchWithTimeout(url, ms){
+async function fetchWithTimeout(url, ms, options){
   const controller = new AbortController();
   const timer = setTimeout(()=>controller.abort(), ms);
   try{
-    return await fetch(url, { signal: controller.signal });
+    return await fetch(url, Object.assign({}, options, { signal: controller.signal }));
   }finally{
     clearTimeout(timer);
   }
