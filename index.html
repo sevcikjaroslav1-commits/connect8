@@ -1467,9 +1467,8 @@
     .mobile-quick-links{
       width:100%;display:flex;gap:4px;overflow-x:auto;padding:8px 16px 10px;
       background:var(--surface);border-bottom:1px solid var(--line);
-      position:fixed;left:0;right:0;top:var(--quicklinks-top, 108px);z-index:38;
+      position:sticky;top:var(--quicklinks-top, 108px);z-index:38;
     }
-    .app-body{padding-top:var(--quicklinks-h, 46px);}
     .mobile-quick-links button{
       flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--bg);
       border:1px solid var(--line);border-radius:20px;padding:6px 4px;font-size:10.5px;
@@ -5822,14 +5821,6 @@ function updateTopbarHeightVar(){
     // "Môj profil / Priatelia / Používatelia" má ostať prilepené navrchu
     // aj pri skrolovaní, hneď pod hornou lištou.
     document.documentElement.style.setProperty('--quicklinks-top', h + 'px');
-  }
-  // Pás "Môj profil / Priatelia / Používatelia" je teraz position:fixed
-  // (spoľahlivejšie ako sticky na niektorých mobilných prehliadačoch),
-  // takže obsah pod ním potrebuje presné odsadenie o jeho reálnu výšku.
-  const quicklinks = document.querySelector('.mobile-quick-links');
-  if(quicklinks){
-    const qh = quicklinks.getBoundingClientRect().height;
-    if(qh > 0) document.documentElement.style.setProperty('--quicklinks-h', qh + 'px');
   }
 }
 window.addEventListener('load', updateTopbarHeightVar);
