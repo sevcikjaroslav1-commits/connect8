@@ -980,6 +980,7 @@
   .user-card:hover{background:var(--surface);}
   .user-card .avatar{width:64px;height:64px;font-size:22px;}
   .user-card-name{font-size:12.5px;font-weight:600;color:var(--text);word-break:break-word;line-height:1.25;}
+  .user-card-lastonline{display:block;font-size:10.5px;color:#e67e22;font-weight:600;margin-top:2px;}
   .user-card-avatar-wrap{position:relative;display:inline-block;}
   .status-dot{
     position:absolute;right:2px;bottom:2px;width:14px;height:14px;border-radius:50%;
@@ -1252,6 +1253,15 @@
 
   /* ---------- SPRÁVY (CHAT) ---------- */
   .profile-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .last-online-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+  .last-online-label{font-size:13px;color:var(--accent);cursor:pointer;user-select:none;}
+  .last-online-time{font-size:12.5px;color:#e67e22;font-weight:600;margin-top:4px;}
+  .toggle-switch{position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0;}
+  .toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
+  .toggle-slider{position:absolute;inset:0;background:#ccc;transition:.2s;border-radius:20px;cursor:pointer;}
+  .toggle-slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:#fff;transition:.2s;border-radius:50%;}
+  .toggle-switch input:checked + .toggle-slider{background:#2ecc71;}
+  .toggle-switch input:checked + .toggle-slider:before{transform:translateX(18px);}
   .profile-block-row{margin-top:6px;}
   .msg-icon-btn{
     width:30px;height:30px;border-radius:50%;background:#E4F8EC;color:#1FAE5C;
@@ -2592,6 +2602,14 @@
                 <button class="block-btn" id="profile-block-btn" onclick="toggleBlockFromProfile()" style="display:none;">🚫 Zablokovať</button>
               </div>
               <div class="profile-stats" id="profile-stats">0 príspevkov · 0 fotiek</div>
+              <div class="last-online-row" id="last-online-setting-row" style="display:none;">
+                <span class="last-online-label" onclick="toggleShowLastOnline()">Naposledy online</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="last-online-toggle" onchange="toggleShowLastOnline()">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="last-online-time" id="last-online-time" style="display:none;"></div>
             </div>
           </div>
 
@@ -3287,12 +3305,12 @@ async function doRegister(){
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
     await cred.user.updateProfile({displayName:name});
     await db.collection('profiles').doc(cred.user.uid).set({
-      name, email, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      name, email, showLastOnline: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     // Nastavíme currentUser priamo tu (so správnym menom), namiesto čakania
     // na onAuthStateChanged nižšie — ten by sa mohol spustiť skôr, než sa
     // meno stihne zapísať do databázy, a použil by dočasne e-mail.
-    currentUser = { uid: cred.user.uid, email, name };
+    currentUser = { uid: cred.user.uid, email, name, showLastOnline: false };
     allUsersCache = null; // nový používateľ - nech sa nabudúce znova načíta zoznam pre vyhľadávanie
     await loadState(); // istota, že posty/produkty/videá sú načítané pred zobrazením appky
     enterApp();
@@ -4049,6 +4067,15 @@ function renderProfile(){
   postsList.innerHTML = myPosts.length
     ? myPosts.slice().reverse().map(p=>`<div class="post">${buildPostCard(p, {showComments:false})}</div>`).join('')
     : `<div class="profile-empty">${t('Zatiaľ žiadne príspevky.')}</div>`;
+
+  const lastOnlineRow = document.getElementById('last-online-setting-row');
+  if(lastOnlineRow){
+    lastOnlineRow.style.display = isOwnProfile ? 'flex' : 'none';
+    const toggleInput = document.getElementById('last-online-toggle');
+    if(toggleInput) toggleInput.checked = !!(currentUser && currentUser.showLastOnline);
+  }
+  if(!isOwnProfile && profileUser.uid) loadShowLastOnlineIfNeeded(profileUser);
+  updateProfileLastOnlineTime();
 }
 
 function buildCallButtonRow(u){
@@ -4115,7 +4142,7 @@ async function renderUsersList(){
     qs.forEach(doc=>{
       const data = doc.data() || {};
       if(data.deleted) return; // zmazaný účet - nezobrazovať v zozname
-      users.push({ id: doc.id, name: data.name || t('Používateľ'), photo: data.avatarPhoto || null });
+      users.push({ id: doc.id, name: data.name || t('Používateľ'), photo: data.avatarPhoto || null, showLastOnline: !!data.showLastOnline });
     });
     users.sort((a,b)=> a.name.localeCompare(b.name, 'sk'));
 
@@ -4130,6 +4157,7 @@ async function renderUsersList(){
 
     users.forEach(u=>{
       cacheProfile(u.id, u.name, u.photo);
+      profileSettingsCache[u.id] = !!u.showLastOnline;
 
       const card = document.createElement('div');
       card.className = 'user-card';
@@ -4160,8 +4188,16 @@ async function renderUsersList(){
       name.className = 'user-card-name';
       name.textContent = u.name;
 
+      const lastOnlineText = u.showLastOnline ? getLastOnlineText(u.id) : '';
+      const lastOnline = document.createElement('span');
+      lastOnline.className = 'user-card-lastonline';
+      lastOnline.id = 'lastonline-' + u.id;
+      lastOnline.textContent = lastOnlineText;
+      lastOnline.style.display = lastOnlineText ? '' : 'none';
+
       card.appendChild(avWrap);
       card.appendChild(name);
+      card.appendChild(lastOnline);
       card.appendChild(buildCallButtonRow(u));
       grid.appendChild(card);
     });
@@ -4215,7 +4251,7 @@ async function renderFriendsList(){
     const docs = await Promise.all(uids.map(uid=>db.collection('profiles').doc(uid).get()));
     users = docs.map((doc, i)=>{
       const data = (doc.exists && doc.data()) || {};
-      return { id: uids[i], name: data.name || t('Používateľ'), photo: data.avatarPhoto || null, deleted: !doc.exists || !!data.deleted };
+      return { id: uids[i], name: data.name || t('Používateľ'), photo: data.avatarPhoto || null, deleted: !doc.exists || !!data.deleted, showLastOnline: !!data.showLastOnline };
     }).filter(u=>!u.deleted); // zmazané účty sa v zozname priateľov nezobrazujú
     users.sort((a,b)=> a.name.localeCompare(b.name, 'sk'));
   }catch(e){
@@ -4231,6 +4267,7 @@ async function renderFriendsList(){
   grid.innerHTML = '';
   users.forEach(u=>{
     cacheProfile(u.id, u.name, u.photo);
+    profileSettingsCache[u.id] = !!u.showLastOnline;
 
     const card = document.createElement('div');
     card.className = 'user-card';
@@ -4261,8 +4298,16 @@ async function renderFriendsList(){
     name.className = 'user-card-name';
     name.textContent = u.name;
 
+    const lastOnlineText = u.showLastOnline ? getLastOnlineText(u.id) : '';
+    const lastOnline = document.createElement('span');
+    lastOnline.className = 'user-card-lastonline';
+    lastOnline.id = 'lastonline-' + u.id;
+    lastOnline.textContent = lastOnlineText;
+    lastOnline.style.display = lastOnlineText ? '' : 'none';
+
     card.appendChild(avWrap);
     card.appendChild(name);
+    card.appendChild(lastOnline);
     card.appendChild(buildCallButtonRow(u));
     grid.appendChild(card);
   });
@@ -5809,12 +5854,15 @@ if(FIREBASE_CONFIGURED){
       if(currentUser && currentUser.uid === user.uid){ authReadyResolve(); return; } // už nastavené (napr. hneď po registrácii)
       let name = user.displayName || user.email;
       let photoURL = null;
+      let showLastOnline = false;
       try{
         const prof = await db.collection('profiles').doc(user.uid).get();
         if(prof.exists && prof.data().name) name = prof.data().name;
         if(prof.exists && prof.data().avatarPhoto) photoURL = prof.data().avatarPhoto;
+        if(prof.exists) showLastOnline = !!prof.data().showLastOnline;
       }catch(e){ console.error("Nepodarilo sa načítať profil:", e); }
-      currentUser = { uid:user.uid, email:user.email, name, photoURL };
+      currentUser = { uid:user.uid, email:user.email, name, photoURL, showLastOnline };
+      profileSettingsCache[user.uid] = showLastOnline;
       // DÔLEŽITÉ: počkaj, kým appka skutočne stiahne posty/produkty/videá
       // z databázy, predtým než ich zobrazíš — inak by sa (najmä pri
       // automatickom prihlásení po obnovení stránky) zobrazili len staré/
@@ -5837,6 +5885,84 @@ if(FIREBASE_CONFIGURED){
 let totalUsersCount = 0;
 let onlineUsersCount = 0;
 let presenceStatus = {}; // uid -> {state:'online'|'offline', name, last_changed}
+let profileSettingsCache = {}; // uid -> showLastOnline (bool)
+
+function formatLastOnline(ts){
+  if(!ts) return '';
+  const d = new Date(ts);
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  return `${d.getDate()}.${d.getMonth()+1}.${hh}:${mm}`;
+}
+
+function getLastOnlineText(uid){
+  const p = presenceStatus[uid];
+  if(!p || !p.last_changed) return '';
+  return formatLastOnline(p.last_changed);
+}
+
+function loadShowLastOnlineIfNeeded(profileUser){
+  if(!profileUser || !profileUser.uid) return;
+  if(profileUser.uid in profileSettingsCache) return;
+  if(!FIREBASE_CONFIGURED || !db) return;
+  db.collection('profiles').doc(profileUser.uid).get().then(doc=>{
+    const data = (doc.exists && doc.data()) || {};
+    profileSettingsCache[profileUser.uid] = !!data.showLastOnline;
+    const currentlyViewed = viewedProfileUser || currentUser;
+    const profileView = document.getElementById('view-profile');
+    if(currentlyViewed && currentlyViewed.uid === profileUser.uid && profileView && profileView.classList.contains('active')){
+      updateProfileLastOnlineTime();
+    }
+  }).catch(err=>{
+    console.error("Nepodarilo sa načítať nastavenie Naposledy online:", err);
+  });
+}
+
+function updateProfileLastOnlineTime(){
+  const timeEl = document.getElementById('last-online-time');
+  if(!timeEl) return;
+  const profileUser = viewedProfileUser || currentUser;
+  const isOwnProfile = !viewedProfileUser;
+  const uid = profileUser && profileUser.uid;
+  let show = false;
+  if(isOwnProfile){
+    show = !!(currentUser && currentUser.showLastOnline);
+  } else if(uid){
+    show = profileSettingsCache[uid] === true;
+  }
+  const txt = (show && uid) ? getLastOnlineText(uid) : '';
+  timeEl.textContent = txt ? (t('Naposledy online') + ': ' + txt) : '';
+  timeEl.style.display = txt ? 'block' : 'none';
+}
+
+function refreshLastOnlineDisplays(){
+  document.querySelectorAll('[id^="lastonline-"]').forEach(el=>{
+    const uid = el.id.slice('lastonline-'.length);
+    const show = profileSettingsCache[uid] === true;
+    const txt = show ? getLastOnlineText(uid) : '';
+    el.textContent = txt;
+    el.style.display = txt ? '' : 'none';
+  });
+  const profileView = document.getElementById('view-profile');
+  if(profileView && profileView.classList.contains('active')) updateProfileLastOnlineTime();
+}
+
+async function toggleShowLastOnline(){
+  if(!currentUser || !currentUser.uid) return;
+  const newVal = !currentUser.showLastOnline;
+  currentUser.showLastOnline = newVal;
+  profileSettingsCache[currentUser.uid] = newVal;
+  const toggleInput = document.getElementById('last-online-toggle');
+  if(toggleInput) toggleInput.checked = newVal;
+  updateProfileLastOnlineTime();
+  refreshLastOnlineDisplays();
+  if(!FIREBASE_CONFIGURED || !db) return;
+  try{
+    await db.collection('profiles').doc(currentUser.uid).set({showLastOnline:newVal}, {merge:true});
+  }catch(e){
+    console.error("Nepodarilo sa uložiť nastavenie Naposledy online:", e);
+  }
+}
 
 function updateUserStats(){
   const totalEl = document.getElementById('total-users-count');
@@ -5891,6 +6017,7 @@ function startPresenceHeartbeat(){
     if(usersView && usersView.classList.contains('active')) updateStatusDots();
     const friendsView = document.getElementById('view-friends');
     if(friendsView && friendsView.classList.contains('active')) updateStatusDots();
+    refreshLastOnlineDisplays();
   });
 
   db.collection('profiles').get()
@@ -8864,6 +8991,7 @@ const UI_DICT_EN = {
   "Aktuálny čas a dátum":"Current time and date",
   "← Späť do Feedu":"← Back to Feed",
   "← Späť na Používateľov":"← Back to Users",
+  "Naposledy online":"Last seen",
   "+ Sledovať":"+ Follow",
   "✓ Sledované":"✓ Following",
   "🚫 Zablokovať":"🚫 Block",
