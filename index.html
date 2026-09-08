@@ -718,6 +718,7 @@
     padding:16px;margin-bottom:14px;
   }
   .post-head{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+  .post-head-author{display:flex;gap:10px;align-items:center;cursor:pointer;}
   .post-head .name{font-weight:700;font-size:14px;}
   .post-head .time{font-size:12px;color:var(--text-dim);}
   .post-del-btn{
@@ -6489,6 +6490,13 @@ function renderNewsGrid(items){
 }
 
 /* ---------------- FEED ---------------- */
+function openPostAuthorProfile(postId){
+  const p = findPostById(postId);
+  if(!p || !p.authorId) return;
+  if(currentUser && p.authorId === currentUser.uid){ openProfile(); return; }
+  openUserProfile({ uid: p.authorId, name: p.name, photoURL: getAuthorPhoto(p) });
+}
+
 function getAuthorPhoto(p){
   if(p.authorId && currentUser && p.authorId === currentUser.uid) return currentUser.photoURL || null;
   if(p.authorId && profilesCache[p.authorId]) return profilesCache[p.authorId].photo || null;
@@ -6541,8 +6549,10 @@ function buildPostCard(p, opts={}){
   const showComments = opts.showComments !== false;
   return `
       <div class="post-head">
-        ${avatarHtml(p.name, getAuthorPhoto(p))}
-        <div><div class="name">${escapeHtml(p.name)}</div><div class="time" data-ts="${p.createdAt || p.id}" title="${formatFullDate(p.createdAt || p.id)}">${formatPostTime(p.createdAt || p.id)}</div></div>
+        <div class="post-head-author" ${p.authorId ? `onclick="openPostAuthorProfile(${p.id})"` : ''}>
+          ${avatarHtml(p.name, getAuthorPhoto(p))}
+          <div><div class="name">${escapeHtml(p.name)}</div><div class="time" data-ts="${p.createdAt || p.id}" title="${formatFullDate(p.createdAt || p.id)}">${formatPostTime(p.createdAt || p.id)}</div></div>
+        </div>
         ${followBtnHtml(p.authorId)}
         ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="${t('Vymazať príspevok')}">🗑️</button>` : ''}
       </div>
