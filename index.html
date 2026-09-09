@@ -727,6 +727,40 @@
     flex-shrink:0;transition:.15s;
   }
   .post-del-btn:hover{background:var(--bg);color:var(--mode-video);}
+  .post-menu{position:relative;margin-left:6px;flex-shrink:0;}
+  .post-menu-btn{
+    background:transparent;color:var(--accent);font-size:18px;font-weight:700;
+    width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    transition:.15s;
+  }
+  .post-menu-btn:hover{background:var(--accent-soft);}
+  .post-menu-dropdown{
+    display:none;position:absolute;top:36px;right:0;background:var(--surface);border:1px solid var(--line);
+    border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.15);min-width:130px;overflow:hidden;z-index:20;
+  }
+  .post-menu-dropdown.open{display:block;}
+  .post-menu-dropdown button{
+    width:100%;text-align:left;padding:10px 14px;background:transparent;color:var(--accent);
+    font-size:13.5px;font-weight:600;
+  }
+  .post-menu-dropdown button:hover{background:var(--accent-soft);}
+  .post-text-edit-box textarea{
+    width:100%;box-sizing:border-box;min-height:80px;resize:vertical;font-family:inherit;font-size:14.5px;
+    line-height:1.5;padding:10px 12px;border-radius:10px;border:1px solid var(--line);
+    background:var(--bg);color:var(--text);margin-bottom:8px;
+  }
+  .post-text-edit-actions{display:flex;gap:8px;margin-bottom:12px;}
+  .post-text-edit-actions button{
+    padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;
+  }
+  .post-text-edit-actions .save-edit-btn{background:var(--accent);color:#fff;}
+  .post-text-edit-actions .cancel-edit-btn{background:var(--bg);color:var(--text-dim);border:1px solid var(--line);}
+  .post-edited-tag{font-size:12px;color:var(--text-dim);}
+  .post-edit-img-grid{
+    display:grid;grid-template-columns:repeat(auto-fill, minmax(84px,1fr));gap:8px;margin-bottom:10px;
+  }
+  .post-edit-img-grid:empty{display:none;}
+  .post-edit-img-actions{margin-bottom:10px;}
   .follow-btn{
     margin-left:6px;background:var(--accent-soft);color:var(--accent);font-size:12.5px;font-weight:700;
     padding:6px 12px;border-radius:20px;flex-shrink:0;transition:.15s;white-space:nowrap;
@@ -6547,21 +6581,42 @@ function formatViewCount(n){
 
 function buildPostCard(p, opts={}){
   const showComments = opts.showComments !== false;
+  const isOwnPost = (p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name);
+  const isEditing = editingPostId === p.id;
   return `
       <div class="post-head">
         <div class="post-head-author" ${p.authorId ? `onclick="openPostAuthorProfile(${p.id})"` : ''}>
           ${avatarHtml(p.name, getAuthorPhoto(p))}
-          <div><div class="name">${escapeHtml(p.name)}</div><div class="time" data-ts="${p.createdAt || p.id}" title="${formatFullDate(p.createdAt || p.id)}">${formatPostTime(p.createdAt || p.id)}</div></div>
+          <div><div class="name">${escapeHtml(p.name)}</div><div class="time" data-ts="${p.createdAt || p.id}" title="${formatFullDate(p.createdAt || p.id)}">${formatPostTime(p.createdAt || p.id)}${p.editedAt ? ` · <span class="post-edited-tag">${t('upravené')}</span>` : ''}</div></div>
         </div>
         ${followBtnHtml(p.authorId)}
-        ${(p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name) ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="${t('Vymazať príspevok')}">🗑️</button>` : ''}
+        ${isOwnPost && !isEditing ? `
+        <div class="post-menu">
+          <button class="post-menu-btn" onclick="togglePostMenu(${p.id}, event)" title="${t('Upraviť príspevok')}">⋮</button>
+          <div class="post-menu-dropdown ${openPostMenuId===p.id ? 'open' : ''}" id="post-menu-${p.id}">
+            <button onclick="startEditPost(${p.id})">✏️ ${t('Upraviť')}</button>
+          </div>
+        </div>` : ''}
+        ${isOwnPost ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="${t('Vymazať príspevok')}">🗑️</button>` : ''}
       </div>
-      ${p.text ? `<div class="post-text">${escapeHtml(p.text)}</div><div class="post-text-translation" id="post-tr-${p.id}"></div>` : ''}
+      ${isEditing ? `
+      <div class="post-text-edit-box">
+        <textarea id="post-edit-text-${p.id}">${escapeHtml(p.text || '')}</textarea>
+        <div class="post-edit-img-grid" id="post-edit-img-grid-${p.id}">${buildEditImgGridHtml(p.id)}</div>
+        <div class="post-edit-img-actions">
+          <label class="file-btn">📷 ${t('Pridať/vymeniť fotky')}<input type="file" accept="image/*" multiple onchange="handleEditPostImage(${p.id}, event)"></label>
+        </div>
+        <div class="post-text-edit-actions">
+          <button class="save-edit-btn" onclick="saveEditPost(${p.id})">${t('Uložiť')}</button>
+          <button class="cancel-edit-btn" onclick="cancelEditPost(${p.id})">${t('Zrušiť')}</button>
+        </div>
+      </div>
+      ` : (p.text ? `<div class="post-text">${escapeHtml(p.text)}</div><div class="post-text-translation" id="post-tr-${p.id}"></div>` : '')}
       ${p.video ? `<div class="post-video-wrap">
         <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" ${isIOSDevice()?'muted':''} controls playsinline webkit-playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
       </div>` : ''}
-      ${getPostPhotos(p).length ? buildPostImgGrid(getPostPhotos(p)) : ''}
+      ${(!isEditing && getPostPhotos(p).length) ? buildPostImgGrid(getPostPhotos(p)) : ''}
       ${p.file ? `
       <a class="post-file-card" href="${escapeHtml(p.file.url)}" target="_blank" rel="noopener noreferrer" download="${escapeHtml(p.file.name)}">
         <div class="file-icon">📎</div>
@@ -7264,6 +7319,107 @@ function deletePost(id){
   for(const uid in ownPostsCache){ ownPostsCache[uid] = ownPostsCache[uid].filter(p=>p.id!==id); }
   removePostDoc(id);
   refreshPostViews();
+}
+
+// Editácia vlastného príspevku (iba text) - viditeľné len autorovi.
+let editingPostId = null;
+let editingPostImages = []; // pracovná kópia fotiek upravovaného príspevku (kým sa neuloží)
+let openPostMenuId = null;
+
+// Vykreslí náhľady fotiek v editačnom okne príspevku (bez toho, aby prekreslil
+// celú kartu — inak by sa stratil rozpísaný, ešte neuložený text v textarea).
+function buildEditImgGridHtml(postId){
+  return editingPostImages.map((src,i)=>`
+    <div class="img-preview-item">
+      <img src="${escapeHtml(src)}">
+      <div class="remove-x" onclick="removeEditPostImageAt(${postId}, ${i})">✕</div>
+    </div>`).join('');
+}
+
+function renderEditImagePreview(postId){
+  const box = document.getElementById(`post-edit-img-grid-${postId}`);
+  if(box) box.innerHTML = buildEditImgGridHtml(postId);
+}
+
+// Pridá novú fotku (alebo viac fotiek) do rozpracovanej úpravy príspevku —
+// pôvodné fotky ostávajú, kým ich autor sám nezmaže cez ✕. Rovnaký princíp
+// (kompresia + upload na Cloudinary) ako pri tvorbe nového príspevku.
+async function handleEditPostImage(postId, event){
+  const files = Array.from(event.target.files || []);
+  if(!files.length) return;
+  for(const file of files){
+    if(!checkFileSizeOk(file, MAX_IMAGE_SIZE, 'Fotka')) continue;
+    try{
+      const url = await processImageFile(file, 1280, 0.8);
+      editingPostImages.push(url);
+      renderEditImagePreview(postId);
+    }catch(e){
+      console.error('Fotku sa nepodarilo spracovať:', e);
+      alert('Jednu z fotiek sa nepodarilo nahrať. Skús to prosím znova.');
+    }
+  }
+  event.target.value = '';
+}
+
+function removeEditPostImageAt(postId, index){
+  editingPostImages.splice(index, 1);
+  renderEditImagePreview(postId);
+}
+
+function togglePostMenu(id, ev){
+  if(ev){ ev.preventDefault(); ev.stopPropagation(); }
+  openPostMenuId = (openPostMenuId === id) ? null : id;
+  refreshPostViews();
+}
+
+document.addEventListener('click', (ev)=>{
+  if(openPostMenuId !== null && !ev.target.closest('.post-menu')){
+    openPostMenuId = null;
+    refreshPostViews();
+  }
+});
+
+function startEditPost(id){
+  const p = findPostById(id);
+  if(!p) return;
+  openPostMenuId = null;
+  editingPostId = id;
+  editingPostImages = getPostPhotos(p).slice(); // pracovná kópia — pôvodný príspevok sa nemení, kým sa neuloží
+  refreshPostViews();
+  setTimeout(()=>{
+    const ta = document.getElementById(`post-edit-text-${id}`);
+    if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  }, 0);
+}
+
+function cancelEditPost(id){
+  editingPostId = null;
+  editingPostImages = [];
+  refreshPostViews();
+}
+
+function saveEditPost(id){
+  const p = findPostById(id);
+  if(!p) return;
+  const ta = document.getElementById(`post-edit-text-${id}`);
+  if(!ta) return;
+  const newText = ta.value.trim();
+  const newPhotos = editingPostImages.slice();
+  if(!newText && !newPhotos.length && !p.video && !p.link && !p.file){
+    alert(t('Príspevok nemôže byť prázdny.'));
+    return;
+  }
+  const modErr = moderationError(newText);
+  if(modErr){ alert(modErr); return; }
+  p.text = newText;
+  p.photos = newPhotos;
+  p.photo = null; // vyčistí staré, jednofotkové pole (nahradené poľom photos)
+  p.editedAt = Date.now();
+  editingPostId = null;
+  editingPostImages = [];
+  refreshPostViews();
+  updateDoc(postDoc(p.id), {text: p.text, photos: p.photos, photo: null, editedAt: p.editedAt}, 'príspevok - úprava')
+    .catch(()=>{ alert(t('Úprava príspevku sa nepodarila uložiť.')); });
 }
 
 function deletePostLink(id){
@@ -9097,6 +9253,14 @@ const UI_DICT_EN = {
   "Napíš komentár...":"Write a comment...",
   "Odoslať":"Send",
   "Vymazať príspevok":"Delete post",
+  "Upraviť príspevok":"Edit post",
+  "Upraviť":"Edit",
+  "Pridať/vymeniť fotky":"Add/replace photos",
+  "Uložiť":"Save",
+  "Zrušiť":"Cancel",
+  "upravené":"edited",
+  "Príspevok nemôže byť prázdny.":"The post cannot be empty.",
+  "Úprava príspevku sa nepodarila uložiť.":"Failed to save the post edit.",
   "Vymazať produkt":"Delete product",
   "Zmazať":"Delete",
   "Zrušiť":"Cancel",
