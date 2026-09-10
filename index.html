@@ -1190,7 +1190,9 @@
     display:flex;align-items:center;justify-content:center;font-size:19px;transition:.15s;
   }
   .video-side button.liked{background:var(--mode-video);}
-  .video-side .count{font-size:11px;margin-top:3px;text-align:center;opacity:.85;}
+  .video-side .count{font-size:11px;margin-top:3px;text-align:center;opacity:.85;line-height:1.2;}
+  .autoscroll-toggle-btn .as-dot{width:9px;height:9px;border-radius:50%;background:#8a8a92;transition:background .2s;}
+  .autoscroll-toggle-btn.on .as-dot{background:#33d17a;}
 
   .video-card video{
     position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
@@ -1214,13 +1216,6 @@
     background:rgba(255,255,255,.14);backdrop-filter:blur(6px);color:#fff;
     padding:9px 14px;border-radius:20px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap;
   }
-  .video-autoscroll-btn{
-    background:rgba(255,255,255,.14);backdrop-filter:blur(6px);color:#fff;
-    padding:9px 12px;border-radius:20px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap;
-  }
-  .video-autoscroll-btn .as-dot{width:9px;height:9px;border-radius:50%;background:#8a8a92;transition:background .2s;flex-shrink:0;}
-  .video-autoscroll-btn.on{background:rgba(51,209,122,.22);}
-  .video-autoscroll-btn.on .as-dot{background:#33d17a;}
   .video-upload-modal{
     position:absolute;inset:0;z-index:200;background:rgba(10,10,14,.72);backdrop-filter:blur(3px);
     display:none;align-items:center;justify-content:center;padding:20px;
@@ -2540,9 +2535,6 @@
         <!-- VIDEO -->
         <section class="view" id="view-video">
           <div class="video-top-actions">
-            <button class="video-autoscroll-btn" id="autoscroll-btn" onclick="toggleAutoScroll()">
-              <span class="as-dot"></span>Auto scroll: <span id="autoscroll-label">Vyp</span>
-            </button>
             <button class="video-add-btn" onclick="openVideoModal()">+ Pridať video</button>
           </div>
           <div class="video-upload-modal" id="video-modal">
@@ -8018,6 +8010,7 @@ function renderVideos(){
         <div class="video-caption">${escapeHtml(v.caption)}</div>
       </div>
       <div class="video-side">
+        <div><button class="autoscroll-toggle-btn" onclick="toggleAutoScroll()" title="Auto scroll"><span class="as-dot"></span></button><div class="count">Auto<br>scroll</div></div>
         <div><button id="mute-btn-${v.id}" onclick="toggleMute(${v.id})">${isMuted?'🔇':'🔊'}</button><div class="count">Zvuk</div></div>
         <div><button class="${getLikedBy(v).includes(currentUser.uid)?'liked':''}" onclick="toggleVideoLike(${v.id})">❤️</button><div class="count">${v.likes}</div></div>
         <div><button onclick="openVideoComments(${v.id})">💬</button><div class="count" id="chat-count-${v.id}">${(v.comments && v.comments.length) || 0}</div></div>
@@ -8037,11 +8030,9 @@ let videoAutoScroll = false;
 try{ videoAutoScroll = localStorage.getItem('connect_video_autoscroll') === '1'; }catch(e){}
 
 function updateAutoScrollBtn(){
-  const btn = document.getElementById('autoscroll-btn');
-  if(!btn) return;
-  btn.classList.toggle('on', videoAutoScroll);
-  const label = document.getElementById('autoscroll-label');
-  if(label) label.textContent = videoAutoScroll ? 'Zap' : 'Vyp';
+  document.querySelectorAll('.autoscroll-toggle-btn').forEach(btn=>{
+    btn.classList.toggle('on', videoAutoScroll);
+  });
 }
 
 function toggleAutoScroll(){
