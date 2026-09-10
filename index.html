@@ -3381,8 +3381,6 @@ function doLogout(){
   if(pc || currentCallDocId) endCall();
   closeChatModal();
   closeConvModal();
-  currentAppMode = 'auth';
-  stopNewsAutoScroll(); // odhlásili sme sa - auto scroll nemá zmysel na prihlasovacej obrazovke
   if(FIREBASE_CONFIGURED && auth) auth.signOut();
   currentUser = null;
   document.getElementById('app').style.display = 'none';
@@ -6573,7 +6571,7 @@ try{ newsAutoScroll = localStorage.getItem('connect_news_autoscroll') !== '0'; }
 
 let newsAutoScrollRAF = null;
 let newsAutoScrollLastTs = null;
-const NEWS_AUTOSCROLL_SPEED = 31; // px za sekundu - pokojné, ale viditeľné tempo na čítanie titulkov
+const NEWS_AUTOSCROLL_SPEED = 35; // px za sekundu - pokojné, ale viditeľné tempo na čítanie titulkov
 
 function updateNewsAutoScrollBtn(){
   document.querySelectorAll('.news-autoscroll-btn').forEach(btn=>{
