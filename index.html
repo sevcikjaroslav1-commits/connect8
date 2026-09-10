@@ -6555,10 +6555,11 @@ function renderNewsGrid(items){
    len pozastaví (viď visibilitychange nižšie) a scroll pozícia ostáva presne
    tam, kde bola. Po návrate na Connect8 (návrat do tejto záložky) auto
    scroll znova naštartuje presne odtiaľ, kde skončil. */
-let newsAutoScroll = false;
-try{ newsAutoScroll = localStorage.getItem('connect_news_autoscroll') === '1'; }catch(e){}
+let newsAutoScroll = true;
+try{ newsAutoScroll = localStorage.getItem('connect_news_autoscroll') !== '0'; }catch(e){}
 // Nový používateľ (žiadna uložená hodnota v localStorage) => newsAutoScroll
-// ostáva false, čiže tlačidlo je po registrácii/prvom vstupe do Správ vypnuté.
+// ostáva true, čiže tlačidlo je po registrácii/prvom vstupe do Správ zapnuté.
+// Ak si ho niekto vypne, uloží sa '0' a od vtedy ostáva vypnuté.
 
 let newsAutoScrollRAF = null;
 let newsAutoScrollLastTs = null;
@@ -8116,8 +8117,11 @@ function renderVideos(){
 }
 
 /* ---- Auto scroll (automatické prehratie ďalšieho videa po skončení) ---- */
-let videoAutoScroll = false;
-try{ videoAutoScroll = localStorage.getItem('connect_video_autoscroll') === '1'; }catch(e){}
+let videoAutoScroll = true;
+try{ videoAutoScroll = localStorage.getItem('connect_video_autoscroll') !== '0'; }catch(e){}
+// Nový používateľ (žiadna uložená hodnota v localStorage) => videoAutoScroll
+// ostáva true, čiže tlačidlo je po registrácii/prvom vstupe do Videí zapnuté.
+// Ak si ho niekto vypne, uloží sa '0' a od vtedy ostáva vypnuté.
 
 function updateAutoScrollBtn(){
   document.querySelectorAll('.autoscroll-toggle-btn').forEach(btn=>{
