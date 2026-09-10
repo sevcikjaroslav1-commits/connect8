@@ -6604,6 +6604,17 @@ function newsAutoScrollStep(ts){
 function startNewsAutoScroll(){
   if(newsAutoScrollRAF) return; // už beží
   if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden) return;
+  // Scroll pozícia stránky sa medzi prepínaním sekcií zámerne nemení (viď
+  // komentár v switchMode) - ale ak prichádzame napr. z dlhšieho Feedu a sme
+  // aktuálne scrollnutí nižšie, než siaha samotný obsah Správ, auto scroll by
+  // nemal kam pokračovať a pôsobil by, že "nič nerobí". V tom prípade preto
+  // stránku najprv vrátime navrch, aby malo auto scroll v sekcii Správy vždy
+  // reálne kam scrollovať.
+  const doc = document.scrollingElement || document.documentElement;
+  const maxScroll = doc.scrollHeight - window.innerHeight;
+  if(window.scrollY >= maxScroll - 2){
+    window.scrollTo(0, 0);
+  }
   newsAutoScrollLastTs = null;
   newsAutoScrollRAF = requestAnimationFrame(newsAutoScrollStep);
 }
