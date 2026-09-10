@@ -1207,11 +1207,20 @@
     content:"";position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.55), transparent 45%);z-index:1;pointer-events:none;
   }
 
-  .video-add-btn{
-    position:absolute;top:14px;right:14px;z-index:30;
-    background:rgba(255,255,255,.14);backdrop-filter:blur(6px);color:#fff;
-    padding:9px 14px;border-radius:20px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px;
+  .video-top-actions{
+    position:absolute;top:14px;right:14px;z-index:30;display:flex;align-items:center;gap:8px;
   }
+  .video-add-btn{
+    background:rgba(255,255,255,.14);backdrop-filter:blur(6px);color:#fff;
+    padding:9px 14px;border-radius:20px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .video-autoscroll-btn{
+    background:rgba(255,255,255,.14);backdrop-filter:blur(6px);color:#fff;
+    padding:9px 12px;border-radius:20px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap;
+  }
+  .video-autoscroll-btn .as-dot{width:9px;height:9px;border-radius:50%;background:#8a8a92;transition:background .2s;flex-shrink:0;}
+  .video-autoscroll-btn.on{background:rgba(51,209,122,.22);}
+  .video-autoscroll-btn.on .as-dot{background:#33d17a;}
   .video-upload-modal{
     position:absolute;inset:0;z-index:200;background:rgba(10,10,14,.72);backdrop-filter:blur(3px);
     display:none;align-items:center;justify-content:center;padding:20px;
@@ -2530,7 +2539,12 @@
 
         <!-- VIDEO -->
         <section class="view" id="view-video">
-          <button class="video-add-btn" onclick="openVideoModal()">+ Pridať video</button>
+          <div class="video-top-actions">
+            <button class="video-autoscroll-btn" id="autoscroll-btn" onclick="toggleAutoScroll()">
+              <span class="as-dot"></span>Auto scroll: <span id="autoscroll-label">Vyp</span>
+            </button>
+            <button class="video-add-btn" onclick="openVideoModal()">+ Pridať video</button>
+          </div>
           <div class="video-upload-modal" id="video-modal">
             <div class="video-upload-card">
               <h3>Pridať video</h3>
@@ -7993,7 +8007,7 @@ function renderVideos(){
         // Na iPhone (iOS) musí byť video stlmené už na úrovni HTML atribútu pre prvý
         // pokus o automatické spustenie; na Androide/desktope necháme pôvodné správanie.
         const mutedAttr = (isIOSDevice() || isMuted) ? 'muted' : '';
-        media = `<video id="media-${v.id}" src="${optimizeCloudinaryVideoUrl(v.url)}" ${mutedAttr} loop playsinline webkit-playsinline preload="auto" controls></video>`;
+        media = `<video id="media-${v.id}" src="${optimizeCloudinaryVideoUrl(v.url)}" ${mutedAttr} playsinline webkit-playsinline preload="auto" controls></video>`;
       }
     }
 
@@ -8013,8 +8027,94 @@ function renderVideos(){
     `;
     scroller.appendChild(div);
   });
+  bindVideoEndedListener(scroller);
+  updateAutoScrollBtn();
   setupVideoObserver();
 }
+
+/* ---- Auto scroll (automatické prehratie ďalšieho videa po skončení) ---- */
+let videoAutoScroll = false;
+try{ videoAutoScroll = localStorage.getItem('connect_video_autoscroll') === '1'; }catch(e){}
+
+function updateAutoScrollBtn(){
+  const btn = document.getElementById('autoscroll-btn');
+  if(!btn) return;
+  btn.classList.toggle('on', videoAutoScroll);
+  const label = document.getElementById('autoscroll-label');
+  if(label) label.textContent = videoAutoScroll ? 'Zap' : 'Vyp';
+}
+
+function toggleAutoScroll(){
+  videoAutoScroll = !videoAutoScroll;
+  try{ localStorage.setItem('connect_video_autoscroll', videoAutoScroll ? '1' : '0'); }catch(e){}
+  updateAutoScrollBtn();
+}
+
+// 'ended' event pri <video> nebubluje, preto ho zachytávame v "capture" fáze
+// priamo na scrolleri - stačí ho pripojiť raz (scroller sa medzi renderVideos()
+// nemení, mení sa len jeho obsah).
+function bindVideoEndedListener(scroller){
+  if(!scroller || scroller.dataset.endedBound) return;
+  scroller.dataset.endedBound = '1';
+  scroller.addEventListener('ended', function(e){
+    if(e.target && e.target.tagName === 'VIDEO'){
+      const card = e.target.closest('.video-card');
+      if(card) handleVideoEnded(card.dataset.vid);
+    }
+  }, true);
+}
+
+// Zavolá sa, keď dané video (natívne <video> alebo YouTube) doigrá do konca.
+function handleVideoEnded(id){
+  if(videoAutoScroll){
+    const card = document.querySelector('.video-card[data-vid="'+id+'"]');
+    const next = card && card.nextElementSibling;
+    if(next && next.classList && next.classList.contains('video-card')){
+      next.scrollIntoView({behavior:'smooth', block:'start'});
+      return;
+    }
+    // posledné video v zozname - nemá kam pokračovať, prehraj znova
+  }
+  replayMedia(id);
+}
+
+// Prehrá aktuálne video od začiatku (nahrádza pôvodný html atribút "loop").
+function replayMedia(id){
+  const mediaEl = document.getElementById('media-'+id);
+  if(!mediaEl) return;
+  if(mediaEl.tagName === 'VIDEO'){
+    mediaEl.currentTime = 0;
+    mediaEl.play().catch(()=>{});
+  } else if(mediaEl.tagName === 'IFRAME'){
+    try{
+      mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'seekTo', args:[0, true]}), '*');
+      mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*');
+    }catch(err){}
+  }
+}
+
+// YouTube iframe (bez API skriptu) posiela stavové správy cez postMessage,
+// len ak sme mu predtým poslali "listening". Tu ich zachytávame a pri
+// prechode do stavu 0 (ENDED) zavoláme handleVideoEnded (rovnako ako pri <video>).
+let ytLastPlayerState = {};
+window.addEventListener('message', function(e){
+  if(typeof e.data !== 'string') return;
+  let data;
+  try{ data = JSON.parse(e.data); }catch(err){ return; }
+  if(data.event !== 'infoDelivery' || !data.info || typeof data.info.playerState === 'undefined') return;
+  const iframes = document.querySelectorAll('#video-scroller iframe');
+  let matched = null;
+  iframes.forEach(f=>{ if(f.contentWindow === e.source) matched = f; });
+  if(!matched) return;
+  const card = matched.closest('.video-card');
+  if(!card) return;
+  const id = card.dataset.vid;
+  const state = data.info.playerState;
+  if(state === 0 && ytLastPlayerState[id] !== 0){
+    handleVideoEnded(id);
+  }
+  ytLastPlayerState[id] = state;
+});
 
 let videoObserver = null;
 let viewedVideoIds = new Set(); // zhliadnuté videá AKTUÁLNE prihláseným účtom (perzistentné cez localStorage)
@@ -8258,13 +8358,18 @@ function mountAndPlay(card){
       // Na iPhone vždy mute=1 pri prvom načítaní - automatické spustenie bez dotyku
       // tam povolí len stlmené video; zvuk podľa preferencie dorovnáme v playMedia().
       const initialMute = isIOSDevice() ? 1 : (isMuted?1:0);
-      iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=0&mute=${initialMute}&loop=1&playlist=${ytId}&controls=1&playsinline=1&enablejsapi=1`;
+      iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=0&mute=${initialMute}&controls=1&playsinline=1&enablejsapi=1`;
       iframe.setAttribute('allow','autoplay; encrypted-media');
       iframe.allowFullscreen = true;
       const poster = document.getElementById('poster-'+id);
       if(poster) poster.replaceWith(iframe);
       else card.insertBefore(iframe, card.firstChild);
-      iframe.addEventListener('load', ()=>playMedia(id, {autoplay:true}), {once:true});
+      iframe.addEventListener('load', ()=>{
+        playMedia(id, {autoplay:true});
+        // Bez tohto "listening" príkazu nám YouTube neposiela stavové správy
+        // (infoDelivery), takže by sme nevedeli zistiť koniec videa.
+        try{ iframe.contentWindow.postMessage(JSON.stringify({event:'listening', id: iframe.id}), '*'); }catch(err){}
+      }, {once:true});
     } else {
       playMedia(id, {autoplay:true});
     }
@@ -9383,6 +9488,9 @@ const UI_DICT_EN = {
   "Textové správy medzi používateľmi":"Text messages between users",
   "Príspevky, videá a marketplace":"Posts, videos and marketplace",
   "Zvuk":"Sound",
+  "Auto scroll":"Auto scroll",
+  "Vyp":"Off",
+  "Zap":"On",
   // pomoc / nahlásenie
   "Nahlásenie porušenia":"Report a violation",
   "Nahlásenie porušenia autorských práv":"Report a copyright violation",
