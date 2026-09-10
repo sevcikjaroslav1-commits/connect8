@@ -6588,15 +6588,16 @@ function newsAutoScrollStep(ts){
   const dt = (ts - newsAutoScrollLastTs) / 1000;
   newsAutoScrollLastTs = ts;
 
-  const doc = document.documentElement;
+  const doc = document.scrollingElement || document.documentElement;
   const maxScroll = doc.scrollHeight - window.innerHeight;
-  if(window.scrollY >= maxScroll - 2){
-    // Sme na konci zoznamu správ - nemá zmysel scrollovať na mieste ďalej.
-    newsAutoScrollRAF = null;
-    newsAutoScrollLastTs = null;
-    return;
+  // Ak sme (zatiaľ) na konci zoznamu, loop NEUKONČUJEME natrvalo - len v tomto
+  // frame neposunieme scroll. Dôvod: pri prvom vstupe do sekcie sa obrázky
+  // pri novinkách ešte dočítavajú a stránka môže byť ešte "krátka" (hlavne na
+  // väčších/desktopových oknách). Keď sa medzičasom obrázkami predĺži,
+  // auto scroll sa vďaka bežiacemu loopu sám rozbehne ďalej.
+  if(window.scrollY < maxScroll - 2){
+    window.scrollBy(0, NEWS_AUTOSCROLL_SPEED * dt);
   }
-  window.scrollBy(0, NEWS_AUTOSCROLL_SPEED * dt);
   newsAutoScrollRAF = requestAnimationFrame(newsAutoScrollStep);
 }
 
