@@ -8365,16 +8365,36 @@ function mountAndPlay(card){
       playMedia(id, {autoplay:true});
     }
   } else {
+    // Ak sme predtým (pri odchode zo záberu) uvoľnili zdroj videa kvôli
+    // pamäti/limitu prehliadača, teraz ho pred prehratím obnovíme.
+    const videoEl = document.getElementById('media-'+id);
+    if(videoEl && !videoEl.getAttribute('src') && videoEl.dataset.srcSaved){
+      videoEl.src = videoEl.dataset.srcSaved;
+      videoEl.load();
+    }
     playMedia(id, {autoplay:true});
   }
 }
 
-// Keď YouTube video opustí zorné pole, ODSTRÁNIME iframe z DOM (nie len
-// pauznutie) — tým sa reálne uvoľní pamäť/CPU, ktoré YouTube prehrávač
-// zaberá. Namiesto neho sa vráti späť ľahká náhľadová miniatúra.
+// Keď video (natívne aj YouTube) opustí zorné pole, uvoľníme jeho zdroj -
+// nielen ho pauznuť. Dôvod: mobilné prehliadače majú limit na počet súčasne
+// "aktívnych" (načítaných) <video>/<iframe> prehrávačov naraz (typicky len
+// pár kusov). Bez uvoľnenia by po pár videách za sebou (napr. pri Auto scrolle)
+// ďalšie video už neprehralo - presne tento problém sme riešili.
 function unmountIfYouTube(card){
   const id = card.dataset.vid;
-  if(card.dataset.kind !== 'youtube'){ pauseMedia(id); return; }
+  if(card.dataset.kind !== 'youtube'){
+    const videoEl = document.getElementById('media-'+id);
+    if(videoEl){
+      videoEl.pause();
+      if(videoEl.getAttribute('src')){
+        if(!videoEl.dataset.srcSaved) videoEl.dataset.srcSaved = videoEl.getAttribute('src');
+        videoEl.removeAttribute('src');
+        videoEl.load(); // reálne uvoľní buffer/dekodér
+      }
+    }
+    return;
+  }
   const iframe = document.getElementById('media-'+id);
   if(!iframe) return;
   const poster = document.createElement('img');
