@@ -7999,7 +7999,7 @@ function renderVideos(){
         // Na iPhone (iOS) musí byť video stlmené už na úrovni HTML atribútu pre prvý
         // pokus o automatické spustenie; na Androide/desktope necháme pôvodné správanie.
         const mutedAttr = (isIOSDevice() || isMuted) ? 'muted' : '';
-        media = `<video id="media-${v.id}" src="${optimizeCloudinaryVideoUrl(v.url)}" ${mutedAttr} playsinline webkit-playsinline preload="auto" controls></video>`;
+        media = `<video id="media-${v.id}" data-src="${optimizeCloudinaryVideoUrl(v.url)}" ${mutedAttr} playsinline webkit-playsinline preload="none" controls></video>`;
       }
     }
 
@@ -8365,11 +8365,12 @@ function mountAndPlay(card){
       playMedia(id, {autoplay:true});
     }
   } else {
-    // Ak sme predtým (pri odchode zo záberu) uvoľnili zdroj videa kvôli
-    // pamäti/limitu prehliadača, teraz ho pred prehratím obnovíme.
+    // Zdroj videa priraďujeme AŽ TERAZ (nie pri vykreslení) - inak by prehliadač
+    // začal naraz predbežne načítavať/dekódovať všetky videá v zozname, čo
+    // rýchlo vyčerpá limit súbežne aktívnych <video> prehrávačov.
     const videoEl = document.getElementById('media-'+id);
-    if(videoEl && !videoEl.getAttribute('src') && videoEl.dataset.srcSaved){
-      videoEl.src = videoEl.dataset.srcSaved;
+    if(videoEl && !videoEl.getAttribute('src') && videoEl.dataset.src){
+      videoEl.src = videoEl.dataset.src;
       videoEl.load();
     }
     playMedia(id, {autoplay:true});
@@ -8388,7 +8389,6 @@ function unmountIfYouTube(card){
     if(videoEl){
       videoEl.pause();
       if(videoEl.getAttribute('src')){
-        if(!videoEl.dataset.srcSaved) videoEl.dataset.srcSaved = videoEl.getAttribute('src');
         videoEl.removeAttribute('src');
         videoEl.load(); // reálne uvoľní buffer/dekodér
       }
