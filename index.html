@@ -6571,7 +6571,7 @@ try{ newsAutoScroll = localStorage.getItem('connect_news_autoscroll') !== '0'; }
 
 let newsAutoScrollRAF = null;
 let newsAutoScrollLastTs = null;
-const NEWS_AUTOSCROLL_SPEED = 50; // px za sekundu - pokojné, ale viditeľné tempo na čítanie titulkov
+const NEWS_AUTOSCROLL_SPEED = 35; // px za sekundu - pokojné, ale viditeľné tempo na čítanie titulkov
 
 function updateNewsAutoScrollBtn(){
   document.querySelectorAll('.news-autoscroll-btn').forEach(btn=>{
