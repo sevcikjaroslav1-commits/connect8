@@ -6588,33 +6588,21 @@ function newsAutoScrollStep(ts){
   const dt = (ts - newsAutoScrollLastTs) / 1000;
   newsAutoScrollLastTs = ts;
 
-  const doc = document.scrollingElement || document.documentElement;
+  const doc = document.documentElement;
   const maxScroll = doc.scrollHeight - window.innerHeight;
-  // Ak sme (zatiaľ) na konci zoznamu, loop NEUKONČUJEME natrvalo - len v tomto
-  // frame neposunieme scroll. Dôvod: pri prvom vstupe do sekcie sa obrázky
-  // pri novinkách ešte dočítavajú a stránka môže byť ešte "krátka" (hlavne na
-  // väčších/desktopových oknách). Keď sa medzičasom obrázkami predĺži,
-  // auto scroll sa vďaka bežiacemu loopu sám rozbehne ďalej.
-  if(window.scrollY < maxScroll - 2){
-    window.scrollBy(0, NEWS_AUTOSCROLL_SPEED * dt);
+  if(window.scrollY >= maxScroll - 2){
+    // Sme na konci zoznamu správ - nemá zmysel scrollovať na mieste ďalej.
+    newsAutoScrollRAF = null;
+    newsAutoScrollLastTs = null;
+    return;
   }
+  window.scrollBy(0, NEWS_AUTOSCROLL_SPEED * dt);
   newsAutoScrollRAF = requestAnimationFrame(newsAutoScrollStep);
 }
 
 function startNewsAutoScroll(){
   if(newsAutoScrollRAF) return; // už beží
   if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden) return;
-  // Scroll pozícia stránky sa medzi prepínaním sekcií zámerne nemení (viď
-  // komentár v switchMode) - ale ak prichádzame napr. z dlhšieho Feedu a sme
-  // aktuálne scrollnutí nižšie, než siaha samotný obsah Správ, auto scroll by
-  // nemal kam pokračovať a pôsobil by, že "nič nerobí". V tom prípade preto
-  // stránku najprv vrátime navrch, aby malo auto scroll v sekcii Správy vždy
-  // reálne kam scrollovať.
-  const doc = document.scrollingElement || document.documentElement;
-  const maxScroll = doc.scrollHeight - window.innerHeight;
-  if(window.scrollY >= maxScroll - 2){
-    window.scrollTo(0, 0);
-  }
   newsAutoScrollLastTs = null;
   newsAutoScrollRAF = requestAnimationFrame(newsAutoScrollStep);
 }
