@@ -8000,7 +8000,7 @@ function renderVideos(){
     div.innerHTML = `
       ${media}
       <div class="video-caption-wrap">
-        <div class="video-user"><div class="avatar">${escapeHtml(initials(v.name))}</div>${escapeHtml(v.name)}<span class="video-time" data-ts="${v.createdAt || v.id}" title="${formatFullDate(v.createdAt || v.id)}">${formatPostTime(v.createdAt || v.id)}</span><span class="video-views" id="views-${v.id}">👁 ${formatViewCount(v.views||0)}</span></div>
+        <div class="video-user">${avatarHtml(v.name, getAuthorPhoto(v))}${escapeHtml(v.name)}<span class="video-time" data-ts="${v.createdAt || v.id}" title="${formatFullDate(v.createdAt || v.id)}">${formatPostTime(v.createdAt || v.id)}</span><span class="video-views" id="views-${v.id}">👁 ${formatViewCount(v.views||0)}</span></div>
         <div class="video-caption">${escapeHtml(v.caption)}</div>
       </div>
       <div class="video-side">
