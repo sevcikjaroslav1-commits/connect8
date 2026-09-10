@@ -6580,6 +6580,7 @@ function toggleNewsAutoScroll(){
 
 function newsAutoScrollStep(ts){
   if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden){
+    console.log('[news-autoscroll] STOP loop', {newsAutoScroll, currentAppMode, hidden:document.hidden});
     newsAutoScrollRAF = null;
     newsAutoScrollLastTs = null;
     return;
@@ -6590,20 +6591,29 @@ function newsAutoScrollStep(ts){
 
   const doc = document.scrollingElement || document.documentElement;
   const maxScroll = doc.scrollHeight - window.innerHeight;
+  const willMove = window.scrollY < maxScroll - 2;
+  if(window.__newsAsLogCount === undefined) window.__newsAsLogCount = 0;
+  if(window.__newsAsLogCount < 10){
+    window.__newsAsLogCount++;
+    console.log('[news-autoscroll] frame', {dt, scrollY:window.scrollY, scrollHeight:doc.scrollHeight, innerHeight:window.innerHeight, maxScroll, willMove});
+  }
   // Ak sme (zatiaľ) na konci zoznamu, loop NEUKONČUJEME natrvalo - len v tomto
   // frame neposunieme scroll. Dôvod: pri prvom vstupe do sekcie sa obrázky
   // pri novinkách ešte dočítavajú a stránka môže byť ešte "krátka" (hlavne na
   // väčších/desktopových oknách). Keď sa medzičasom obrázkami predĺži,
   // auto scroll sa vďaka bežiacemu loopu sám rozbehne ďalej.
-  if(window.scrollY < maxScroll - 2){
+  if(willMove){
     window.scrollBy(0, NEWS_AUTOSCROLL_SPEED * dt);
   }
   newsAutoScrollRAF = requestAnimationFrame(newsAutoScrollStep);
 }
 
 function startNewsAutoScroll(){
-  if(newsAutoScrollRAF) return; // už beží
-  if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden) return;
+  if(newsAutoScrollRAF){ console.log('[news-autoscroll] already running, skip start'); return; }
+  if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden){
+    console.log('[news-autoscroll] start BLOCKED', {newsAutoScroll, currentAppMode, hidden:document.hidden});
+    return;
+  }
   // Scroll pozícia stránky sa medzi prepínaním sekcií zámerne nemení (viď
   // komentár v switchMode) - ale ak prichádzame napr. z dlhšieho Feedu a sme
   // aktuálne scrollnutí nižšie, než siaha samotný obsah Správ, auto scroll by
@@ -6612,9 +6622,11 @@ function startNewsAutoScroll(){
   // reálne kam scrollovať.
   const doc = document.scrollingElement || document.documentElement;
   const maxScroll = doc.scrollHeight - window.innerHeight;
+  console.log('[news-autoscroll] START', {scrollY:window.scrollY, scrollHeight:doc.scrollHeight, innerHeight:window.innerHeight, maxScroll});
   if(window.scrollY >= maxScroll - 2){
     window.scrollTo(0, 0);
   }
+  window.__newsAsLogCount = 0;
   newsAutoScrollLastTs = null;
   newsAutoScrollRAF = requestAnimationFrame(newsAutoScrollStep);
 }
