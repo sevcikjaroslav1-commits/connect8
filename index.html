@@ -4020,6 +4020,8 @@ async function isBlockedByOtherUser(otherUid){
 
 function openProfile(){
   viewedProfileUser = null;
+  currentAppMode = 'profile';
+  stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('profile');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -4029,6 +4031,8 @@ function openProfile(){
 
 function openUserProfile(user){
   viewedProfileUser = user;
+  currentAppMode = 'profile';
+  stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   clearSideNavActive();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -4164,6 +4168,8 @@ function buildCallButtonRow(u){
 }
 
 function openUsersList(){
+  currentAppMode = 'users';
+  stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('users');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -4264,6 +4270,8 @@ async function renderUsersList(){
 }
 
 function openFriendsList(){
+  currentAppMode = 'friends';
+  stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('friends');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -6563,7 +6571,7 @@ try{ newsAutoScroll = localStorage.getItem('connect_news_autoscroll') !== '0'; }
 
 let newsAutoScrollRAF = null;
 let newsAutoScrollLastTs = null;
-const NEWS_AUTOSCROLL_SPEED = 28; // px za sekundu - pokojné tempo na čítanie titulkov
+const NEWS_AUTOSCROLL_SPEED = 50; // px za sekundu - pokojné, ale viditeľné tempo na čítanie titulkov
 
 function updateNewsAutoScrollBtn(){
   document.querySelectorAll('.news-autoscroll-btn').forEach(btn=>{
@@ -6588,21 +6596,33 @@ function newsAutoScrollStep(ts){
   const dt = (ts - newsAutoScrollLastTs) / 1000;
   newsAutoScrollLastTs = ts;
 
-  const doc = document.documentElement;
+  const doc = document.scrollingElement || document.documentElement;
   const maxScroll = doc.scrollHeight - window.innerHeight;
-  if(window.scrollY >= maxScroll - 2){
-    // Sme na konci zoznamu správ - nemá zmysel scrollovať na mieste ďalej.
-    newsAutoScrollRAF = null;
-    newsAutoScrollLastTs = null;
-    return;
+  // Ak sme (zatiaľ) na konci zoznamu, loop NEUKONČUJEME natrvalo - len v tomto
+  // frame neposunieme scroll. Dôvod: pri prvom vstupe do sekcie sa obrázky
+  // pri novinkách ešte dočítavajú a stránka môže byť ešte "krátka" (hlavne na
+  // väčších/desktopových oknách). Keď sa medzičasom obrázkami predĺži,
+  // auto scroll sa vďaka bežiacemu loopu sám rozbehne ďalej.
+  if(window.scrollY < maxScroll - 2){
+    window.scrollBy(0, NEWS_AUTOSCROLL_SPEED * dt);
   }
-  window.scrollBy(0, NEWS_AUTOSCROLL_SPEED * dt);
   newsAutoScrollRAF = requestAnimationFrame(newsAutoScrollStep);
 }
 
 function startNewsAutoScroll(){
   if(newsAutoScrollRAF) return; // už beží
   if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden) return;
+  // Scroll pozícia stránky sa medzi prepínaním sekcií zámerne nemení (viď
+  // komentár v switchMode) - ale ak prichádzame napr. z dlhšieho Feedu a sme
+  // aktuálne scrollnutí nižšie, než siaha samotný obsah Správ, auto scroll by
+  // nemal kam pokračovať a pôsobil by, že "nič nerobí". V tom prípade preto
+  // stránku najprv vrátime navrch, aby malo auto scroll v sekcii Správy vždy
+  // reálne kam scrollovať.
+  const doc = document.scrollingElement || document.documentElement;
+  const maxScroll = doc.scrollHeight - window.innerHeight;
+  if(window.scrollY >= maxScroll - 2){
+    window.scrollTo(0, 0);
+  }
   newsAutoScrollLastTs = null;
   newsAutoScrollRAF = requestAnimationFrame(newsAutoScrollStep);
 }
