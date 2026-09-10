@@ -664,8 +664,12 @@
 
   .news-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
   .news-head h2{margin:0;font-size:20px;}
+  .news-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   .news-refresh-btn{background:var(--mode-news-soft);color:var(--mode-news);padding:8px 14px;border-radius:999px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;}
   .news-refresh-btn:disabled{opacity:.5;}
+  .news-autoscroll-btn{background:var(--mode-news-soft);color:var(--mode-news);padding:8px 14px;border-radius:999px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;}
+  .news-autoscroll-btn .as-dot{width:9px;height:9px;border-radius:50%;background:#8a8a92;transition:background .2s;flex:none;}
+  .news-autoscroll-btn.on .as-dot{background:#33d17a;}
   .news-sources-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
   .news-source-chip{font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--text-dim);}
   .news-status{font-size:13px;color:var(--text-dim);padding:20px 4px;}
@@ -2581,7 +2585,10 @@
         <section class="view" id="view-news">
           <div class="news-head">
             <h2>📰 Správy</h2>
-            <button class="news-refresh-btn" id="news-refresh-btn" onclick="loadNewsFeed(true)">⟳ Obnoviť</button>
+            <div class="news-head-actions">
+              <button class="news-autoscroll-btn" id="news-autoscroll-btn" onclick="toggleNewsAutoScroll()" title="Auto scroll"><span class="as-dot"></span> Auto scroll</button>
+              <button class="news-refresh-btn" id="news-refresh-btn" onclick="loadNewsFeed(true)">⟳ Obnoviť</button>
+            </div>
           </div>
           <div class="news-sources-row" id="news-sources-row"></div>
           <div class="news-list" id="news-grid">
@@ -6156,7 +6163,9 @@ function openGamesDirect(){
   }
 }
 
+let currentAppMode = 'feed';
 function switchMode(mode){
+  currentAppMode = mode;
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
   clearSideNavActive();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -6186,6 +6195,10 @@ function switchMode(mode){
 
   if(mode === 'news'){
     loadNewsFeed(false); // prvé otvorenie sekcie natiahne správy (ďalej sa už len cachuje)
+    updateNewsAutoScrollBtn();
+    startNewsAutoScroll(); // ak je auto scroll zapnutý, pokračuje presne tam, kde sme skončili (scroll pozícia stránky sa medzi prepínaním sekcií nemení)
+  } else {
+    stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
   }
 
   if(mode === 'movies'){
@@ -6532,6 +6545,83 @@ function renderNewsGrid(items){
     </a>
   `).join('');
 }
+
+/* ---- Auto scroll pre sekciu Správy (plynulé posúvanie stránky nadol) ----
+   Funguje na rovnakom princípe ako Auto scroll pri Videách (toggle tlačidlo
+   + zapamätaný stav v localStorage), len namiesto preskakovania na ďalšie
+   video plynulo posúva samotnú plochu so zoznamom správ. Kliknutím na
+   článok sa otvorí nová stránka (target="_blank") - táto stránka teda
+   nezmizne ani sa nereloadne, len prejde na pozadie, takže sa auto scroll
+   len pozastaví (viď visibilitychange nižšie) a scroll pozícia ostáva presne
+   tam, kde bola. Po návrate na Connect8 (návrat do tejto záložky) auto
+   scroll znova naštartuje presne odtiaľ, kde skončil. */
+let newsAutoScroll = false;
+try{ newsAutoScroll = localStorage.getItem('connect_news_autoscroll') === '1'; }catch(e){}
+// Nový používateľ (žiadna uložená hodnota v localStorage) => newsAutoScroll
+// ostáva false, čiže tlačidlo je po registrácii/prvom vstupe do Správ vypnuté.
+
+let newsAutoScrollRAF = null;
+let newsAutoScrollLastTs = null;
+const NEWS_AUTOSCROLL_SPEED = 28; // px za sekundu - pokojné tempo na čítanie titulkov
+
+function updateNewsAutoScrollBtn(){
+  document.querySelectorAll('.news-autoscroll-btn').forEach(btn=>{
+    btn.classList.toggle('on', newsAutoScroll);
+  });
+}
+
+function toggleNewsAutoScroll(){
+  newsAutoScroll = !newsAutoScroll;
+  try{ localStorage.setItem('connect_news_autoscroll', newsAutoScroll ? '1' : '0'); }catch(e){}
+  updateNewsAutoScrollBtn();
+  if(newsAutoScroll){ startNewsAutoScroll(); } else { stopNewsAutoScroll(); }
+}
+
+function newsAutoScrollStep(ts){
+  if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden){
+    newsAutoScrollRAF = null;
+    newsAutoScrollLastTs = null;
+    return;
+  }
+  if(newsAutoScrollLastTs == null) newsAutoScrollLastTs = ts;
+  const dt = (ts - newsAutoScrollLastTs) / 1000;
+  newsAutoScrollLastTs = ts;
+
+  const doc = document.documentElement;
+  const maxScroll = doc.scrollHeight - window.innerHeight;
+  if(window.scrollY >= maxScroll - 2){
+    // Sme na konci zoznamu správ - nemá zmysel scrollovať na mieste ďalej.
+    newsAutoScrollRAF = null;
+    newsAutoScrollLastTs = null;
+    return;
+  }
+  window.scrollBy(0, NEWS_AUTOSCROLL_SPEED * dt);
+  newsAutoScrollRAF = requestAnimationFrame(newsAutoScrollStep);
+}
+
+function startNewsAutoScroll(){
+  if(newsAutoScrollRAF) return; // už beží
+  if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden) return;
+  newsAutoScrollLastTs = null;
+  newsAutoScrollRAF = requestAnimationFrame(newsAutoScrollStep);
+}
+
+function stopNewsAutoScroll(){
+  if(newsAutoScrollRAF){ cancelAnimationFrame(newsAutoScrollRAF); newsAutoScrollRAF = null; }
+  newsAutoScrollLastTs = null;
+}
+
+// Keď záložka prejde na pozadie (napr. sme klikli na článok, ktorý sa otvoril
+// v novej záložke), auto scroll pozastavíme. Keď sa vrátime späť do tejto
+// záložky, a sme stále v sekcii Správy s auto scrollom zapnutým, plynulo
+// pokračujeme presne odtiaľ, kde sme skončili.
+document.addEventListener('visibilitychange', function(){
+  if(document.hidden){
+    stopNewsAutoScroll();
+  } else if(newsAutoScroll && currentAppMode === 'news'){
+    startNewsAutoScroll();
+  }
+});
 
 /* ---------------- FEED ---------------- */
 function openPostAuthorProfile(postId){
@@ -9007,6 +9097,7 @@ async function init(){
 
   setupVoiceRecordButton();
   updateHeaderClock();
+  updateNewsAutoScrollBtn(); // zosynchronizuj vzhľad tlačidla Auto scroll v Správach s uloženým stavom
   if(typeof applyLanguage === 'function') applyLanguage();
 }
 document.addEventListener('DOMContentLoaded', init);
