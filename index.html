@@ -8253,50 +8253,47 @@ function pauseAllVideoSectionMedia(){
 }
 
 function setupVideoObserver(){
-  if(videoObserver) videoObserver.disconnect();
+  if(videoObserver){ videoObserver.disconnect(); videoObserver = null; }
   const videoView = document.getElementById('view-video');
   const scroller = document.getElementById('video-scroller');
   if(!scroller || !videoView || !videoView.classList.contains('active')) return; // sekcia Videá nie je viditeľná, netreba (a ani sa nesmie) počítať zhliadnutia
-  videoObserver = new IntersectionObserver((entries)=>{
-    entries.forEach(entry=>{
-      const card = entry.target;
-      const id = card.dataset.vid;
-      if(entry.isIntersecting && entry.intersectionRatio >= 0.6){
-        mountAndPlay(card);
-        registerVideoView(id);
-      } else {
-        unmountIfYouTube(card);
-      }
-    });
-  }, {root: scroller, threshold: [0, 0.6]});
-  scroller.querySelectorAll('.video-card').forEach(card=>videoObserver.observe(card));
 
-  // iOS Safari/WebKit fallback: IntersectionObserver s vlastným "root" kontajnerom
-  // (nie hlavné okno) kombinovaný so scroll-snap posúvaním sa na iPhone občas správa
-  // nespoľahlivo - callback sa nespustí vôbec alebo s neskorým/nesprávnym pomerom
-  // viditeľnosti, takže sa video nikdy nespustí. Preto navyše ručne prepočítavame
-  // "najviditeľnejšiu" kartu priamo pri scrollovaní (cez getBoundingClientRect),
-  // čo funguje spoľahlivo naprieč všetkými prehliadačmi vrátane iPhone Safari/Chrome.
+  // POZNÁMKA: pôvodne tu bežal aj samostatný IntersectionObserver, ktorý súbežne
+  // (nezávisle od nižšie uvedeného scroll-fallbacku) tiež volal mountAndPlay/
+  // unmountIfYouTube. Dva nezávislé mechanizmy, ktoré si navzájom "skáču do reči"
+  // pri každom scrolli, vedeli počas plynulého auto-scrollu (scrollIntoView smooth)
+  // vyvolať rýchlo za sebou viacero protichodných mount/unmount volaní na tú istú
+  // kartu (video.load() preruší ešte prebiehajúci play()) - výsledný stav po
+  // doscrollovaní tak občas ostal "odpojený" (bez zdroja) a video sa už nespustilo.
+  // Preto teraz existuje JEDEN jediný zdroj pravdy - presný geometrický výpočet
+  // nižšie (updateActiveVideoCardManually), navyše s krátkym "ustálením" (debounce),
+  // aby sa mount/unmount vykonal až keď scroll skutočne doscrolloval na miesto.
   attachVideoScrollFallback(scroller);
 }
 
 let videoScrollFallbackHandler = null;
 let videoScrollFallbackScroller = null;
+let videoScrollSettleTimer = null;
+let activeVideoCardId = null; // id karty, ktorá je AKTUÁLNE namountovaná/prehrávaná
 
 function attachVideoScrollFallback(scroller){
   detachVideoScrollFallback();
   videoScrollFallbackScroller = scroller;
-  let ticking = false;
   videoScrollFallbackHandler = ()=>{
-    if(ticking) return;
-    ticking = true;
-    requestAnimationFrame(()=>{
-      ticking = false;
+    // "Ustálenie" (debounce): počas plynulého/auto-scrollu (najmä smooth
+    // scrollIntoView) prehliadač strieľa desiatky 'scroll' udalostí za sebou.
+    // Ak by sme pri KAŽDEJ z nich hneď prepočítali a mountovali/unmountovali
+    // video, počas jedného prechodu by sa to stihlo spustiť aj 10-20x - to
+    // opakovane preruší práve prebiehajúci video.play()/load() a video sa
+    // nakoniec vôbec nespustí. Preto reálne vykonáme mount/unmount až keď sa
+    // scroll na chvíľu (100ms) upokojí - teda keď sme skutočne doscrolovali.
+    clearTimeout(videoScrollSettleTimer);
+    videoScrollSettleTimer = setTimeout(()=>{
       updateActiveVideoCardManually(scroller);
-    });
+    }, 100);
   };
   scroller.addEventListener('scroll', videoScrollFallbackHandler, {passive:true});
-  // aj hneď pri otvorení sekcie (bez čakania na prvý scroll)
+  // aj hneď pri otvorení sekcie (bez čakania na prvý scroll/debounce)
   updateActiveVideoCardManually(scroller);
 }
 
@@ -8304,8 +8301,11 @@ function detachVideoScrollFallback(){
   if(videoScrollFallbackScroller && videoScrollFallbackHandler){
     videoScrollFallbackScroller.removeEventListener('scroll', videoScrollFallbackHandler);
   }
+  clearTimeout(videoScrollSettleTimer);
+  videoScrollSettleTimer = null;
   videoScrollFallbackHandler = null;
   videoScrollFallbackScroller = null;
+  activeVideoCardId = null;
 }
 
 function updateActiveVideoCardManually(scroller){
@@ -8326,6 +8326,13 @@ function updateActiveVideoCardManually(scroller){
     const dist = Math.abs(cMid - mid);
     if(dist < bestDist){ bestDist = dist; bestCard = card; }
   });
+  const bestId = bestCard ? bestCard.dataset.vid : null;
+  if(bestId === activeVideoCardId){
+    // rovnaká karta ako už predtým - nič nerob (najmä nevolaj znova mountAndPlay,
+    // aby sa už bežiace video nezastavovalo/nereštartovalo zbytočne).
+    return;
+  }
+  activeVideoCardId = bestId;
   scroller.querySelectorAll('.video-card').forEach(card=>{
     if(card === bestCard){
       mountAndPlay(card);
