@@ -3381,6 +3381,7 @@ function doLogout(){
   if(pc || currentCallDocId) endCall();
   closeChatModal();
   closeConvModal();
+  stopNewsAutoScroll(); // odhlásili sme sa - auto scroll nemá zmysel na prihlasovacej obrazovke
   if(FIREBASE_CONFIGURED && auth) auth.signOut();
   currentUser = null;
   document.getElementById('app').style.display = 'none';
@@ -6571,7 +6572,17 @@ try{ newsAutoScroll = localStorage.getItem('connect_news_autoscroll') !== '0'; }
 
 let newsAutoScrollRAF = null;
 let newsAutoScrollLastTs = null;
-const NEWS_AUTOSCROLL_SPEED = 35; // px za sekundu - pokojné, ale viditeľné tempo na čítanie titulkov
+const NEWS_AUTOSCROLL_SPEED = 31; // px za sekundu - pokojné, ale viditeľné tempo na čítanie titulkov
+
+// Auto scroll v sekcii Správy má zmysel len vtedy, keď je reálne vidieť
+// hlavnú appku (t.j. sme prihlásení) - nie na úvodnej prihlasovacej
+// obrazovke. Toto je samostatná podmienka od currentAppMode, aby sme
+// nemuseli meniť currentAppMode pri odhlásení (currentAppMode sa používa aj
+// na iných miestach a nechceme tam robiť vedľajšie efekty).
+function isAppVisible(){
+  const app = document.getElementById('app');
+  return !!app && app.style.display !== 'none';
+}
 
 function updateNewsAutoScrollBtn(){
   document.querySelectorAll('.news-autoscroll-btn').forEach(btn=>{
@@ -6587,7 +6598,7 @@ function toggleNewsAutoScroll(){
 }
 
 function newsAutoScrollStep(ts){
-  if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden){
+  if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden || !isAppVisible()){
     newsAutoScrollRAF = null;
     newsAutoScrollLastTs = null;
     return;
@@ -6611,7 +6622,7 @@ function newsAutoScrollStep(ts){
 
 function startNewsAutoScroll(){
   if(newsAutoScrollRAF) return; // už beží
-  if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden) return;
+  if(!newsAutoScroll || currentAppMode !== 'news' || document.hidden || !isAppVisible()) return;
   // Scroll pozícia stránky sa medzi prepínaním sekcií zámerne nemení (viď
   // komentár v switchMode) - ale ak prichádzame napr. z dlhšieho Feedu a sme
   // aktuálne scrollnutí nižšie, než siaha samotný obsah Správ, auto scroll by
@@ -6639,7 +6650,7 @@ function stopNewsAutoScroll(){
 document.addEventListener('visibilitychange', function(){
   if(document.hidden){
     stopNewsAutoScroll();
-  } else if(newsAutoScroll && currentAppMode === 'news'){
+  } else if(newsAutoScroll && currentAppMode === 'news' && isAppVisible()){
     startNewsAutoScroll();
   }
 });
