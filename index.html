@@ -1227,6 +1227,22 @@
   .video-top-actions{
     position:absolute;top:14px;right:14px;z-index:30;display:flex;align-items:center;gap:8px;
   }
+  /* Šípky na prepínanie videí - iba na počítači (od 901px), mimo videa napravo */
+  .video-nav-arrows{
+    display:none;position:absolute;top:50%;right:-64px;transform:translateY(-50%);
+    flex-direction:column;align-items:center;gap:14px;z-index:5;
+  }
+  @media(min-width:901px){
+    .video-nav-arrows{display:flex;}
+  }
+  .video-nav-arrow-btn{
+    width:44px;height:44px;border-radius:50%;background:var(--surface);border:1px solid var(--line);
+    box-shadow:0 4px 14px rgba(0,0,0,.14);display:flex;align-items:center;justify-content:center;
+    color:var(--text);transition:.15s;flex-shrink:0;
+  }
+  .video-nav-arrow-btn:hover{background:var(--accent-soft);color:var(--accent);transform:translateY(-2px);}
+  .video-nav-arrow-btn:active{transform:translateY(0);}
+  .video-nav-arrow-btn svg{width:20px;height:20px;}
   .video-add-btn{
     background:rgba(255,255,255,.14);backdrop-filter:blur(6px);color:#fff;
     padding:9px 14px;border-radius:20px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap;
@@ -2596,6 +2612,15 @@
           </div>
 
           <div class="video-scroller" id="video-scroller"></div>
+
+          <div class="video-nav-arrows">
+            <button class="video-nav-arrow-btn" onclick="scrollToAdjacentVideo(-1)" title="Predchádzajúce video" aria-label="Predchádzajúce video">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+            </button>
+            <button class="video-nav-arrow-btn" onclick="scrollToAdjacentVideo(1)" title="Ďalšie video" aria-label="Ďalšie video">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+          </div>
         </section>
 
         <!-- SPRÁVY (pexeso z iných portálov) -->
@@ -8476,6 +8501,22 @@ function pauseAllVideoSectionMedia(){
   document.querySelectorAll('#video-scroller iframe').forEach(f=>{
     try{ f.contentWindow.postMessage(JSON.stringify({event:'command', func:'pauseVideo', args:[]}), '*'); }catch(e){}
   });
+}
+
+// Prepnutie na predchádzajúce/ďalšie video pomocou šípok napravo od videa
+// (iba na počítači) - využíva rovnaký princíp ako pri automatickom prehratí
+// ďalšieho videa (scrollIntoView), takže sa nijako nebije s existujúcim
+// scrollovaním/swipe-om.
+function scrollToAdjacentVideo(dir){
+  const scroller = document.getElementById('video-scroller');
+  if(!scroller) return;
+  let card = activeVideoCardId ? scroller.querySelector('.video-card[data-vid="'+activeVideoCardId+'"]') : null;
+  if(!card) card = scroller.querySelector('.video-card');
+  if(!card) return;
+  const target = dir > 0 ? card.nextElementSibling : card.previousElementSibling;
+  if(target && target.classList && target.classList.contains('video-card')){
+    target.scrollIntoView({behavior:'smooth', block:'start'});
+  }
 }
 
 function setupVideoObserver(){
