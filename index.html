@@ -670,6 +670,10 @@
   .news-autoscroll-btn{background:var(--mode-news-soft);color:var(--mode-news);padding:8px 14px;border-radius:999px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;}
   .news-autoscroll-btn .as-dot{width:9px;height:9px;border-radius:50%;background:#8a8a92;transition:background .2s;flex:none;}
   .news-autoscroll-btn.on .as-dot{background:#33d17a;}
+  .news-tts-btn{background:var(--mode-news-soft);color:var(--mode-news);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;position:relative;flex:none;}
+  .news-tts-btn .as-dot{position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:#8a8a92;transition:background .2s;}
+  .news-tts-btn.on .as-dot{background:#33d17a;}
+  .news-tts-btn.on{background:var(--mode-news);color:#fff;}
   .news-sources-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
   .news-source-chip{font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--text-dim);}
   .news-status{font-size:13px;color:var(--text-dim);padding:20px 4px;}
@@ -2628,6 +2632,7 @@
           <div class="news-head">
             <h2>📰 Správy</h2>
             <div class="news-head-actions">
+              <button class="news-tts-btn" id="news-tts-btn" onclick="toggleNewsTTS()" title="Prečítať nadpisy nahlas"><span class="as-dot"></span>🎧</button>
               <button class="news-autoscroll-btn" id="news-autoscroll-btn" onclick="toggleNewsAutoScroll()" title="Auto scroll"><span class="as-dot"></span> Auto scroll</button>
               <button class="news-refresh-btn" id="news-refresh-btn" onclick="loadNewsFeed(true)">⟳ Obnoviť</button>
             </div>
@@ -3424,6 +3429,7 @@ function doLogout(){
   closeChatModal();
   closeConvModal();
   stopNewsAutoScroll(); // odhlásili sme sa - auto scroll nemá zmysel na prihlasovacej obrazovke
+  stopNewsTTS();
   stopFeedAutoScroll();
   if(FIREBASE_CONFIGURED && auth) auth.signOut();
   currentUser = null;
@@ -4068,6 +4074,7 @@ function openProfile(){
   viewedProfileUser = null;
   currentAppMode = 'profile';
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
+  stopNewsTTS();
   stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('profile');
@@ -4080,6 +4087,7 @@ function openUserProfile(user){
   viewedProfileUser = user;
   currentAppMode = 'profile';
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
+  stopNewsTTS();
   stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   clearSideNavActive();
@@ -4218,6 +4226,7 @@ function buildCallButtonRow(u){
 function openUsersList(){
   currentAppMode = 'users';
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
+  stopNewsTTS();
   stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('users');
@@ -4321,6 +4330,7 @@ async function renderUsersList(){
 function openFriendsList(){
   currentAppMode = 'friends';
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
+  stopNewsTTS();
   stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('friends');
@@ -6260,9 +6270,12 @@ function switchMode(mode){
   if(mode === 'news'){
     loadNewsFeed(false); // prvé otvorenie sekcie natiahne správy (ďalej sa už len cachuje)
     updateNewsAutoScrollBtn();
+    updateNewsTTSBtn();
     startNewsAutoScroll(); // ak je auto scroll zapnutý, pokračuje presne tam, kde sme skončili (scroll pozícia stránky sa medzi prepínaním sekcií nemení)
+    if(newsTTS && window.__newsItems && window.__newsItems.length) speakNewsHeadlines(); // ak je čítanie zapnuté a zoznam už je natiahnutý (cache), prečítaj hneď
   } else {
     stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
+  stopNewsTTS();
   stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
   }
 
@@ -6609,6 +6622,7 @@ function renderNewsGrid(items){
       </div>
     </a>
   `).join('');
+  if(newsTTS) speakNewsHeadlines(); // ak je čítanie nadpisov nahlas zapnuté, po (pre)načítaní zoznamu ho spusti
 }
 
 /* ---- Auto scroll pre sekciu Správy (plynulé posúvanie stránky nadol) ----
@@ -6699,6 +6713,54 @@ function stopNewsAutoScroll(){
   newsAutoScrollLastTs = null;
 }
 
+/* ---- Čítanie nadpisov správ nahlas (Text-to-Speech) ----
+   Samostatné tlačidlo (slúchadlo) vedľa Auto scroll v sekcii Správy.
+   Na rozdiel od Auto scrollu je toto tlačidlo defaultne VŽDY vypnuté -
+   aj pre úplne nového používateľa aj pre existujúceho, ktorý si ho ešte
+   nikdy nezapol (v localStorage chýba hodnota => vypnuté). Musí si ho
+   sám zapnúť. Stav sa potom pamätá (localStorage) rovnako ako pri Auto
+   scrolle - keď je zapnuté, pri každom (opätovnom) vstupe do Správ / po
+   načítaní alebo obnovení zoznamu sa nahlas prečítajú všetky nadpisy. */
+let newsTTS = false;
+try{ newsTTS = localStorage.getItem('connect_news_tts') === '1'; }catch(e){}
+// Chýbajúca hodnota v localStorage (nový aj starý používateľ, ktorý ju
+// nikdy nezapol) => newsTTS ostáva false. Zámerne opačné správanie ako
+// pri newsAutoScroll (ten je defaultne zapnutý).
+
+function updateNewsTTSBtn(){
+  document.querySelectorAll('.news-tts-btn').forEach(btn=>{
+    btn.classList.toggle('on', newsTTS);
+  });
+}
+
+function toggleNewsTTS(){
+  newsTTS = !newsTTS;
+  try{ localStorage.setItem('connect_news_tts', newsTTS ? '1' : '0'); }catch(e){}
+  updateNewsTTSBtn();
+  if(newsTTS){ speakNewsHeadlines(); } else { stopNewsTTS(); }
+}
+
+function speakNewsHeadlines(){
+  if(!newsTTS) return;
+  if(!('speechSynthesis' in window)) return;
+  const items = window.__newsItems || [];
+  if(!items.length) return;
+  speechSynthesis.cancel(); // najprv zruš prípadné rozčítané/naposkladané vety, nech sa nekopia
+  const tmp = document.createElement('div');
+  items.forEach(it=>{
+    tmp.innerHTML = it.title || '';
+    const plainTitle = tmp.textContent || tmp.innerText || '';
+    if(!plainTitle.trim()) return;
+    const utter = new SpeechSynthesisUtterance(plainTitle.trim());
+    utter.lang = 'sk-SK';
+    speechSynthesis.speak(utter);
+  });
+}
+
+function stopNewsTTS(){
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
 // Keď záložka prejde na pozadie (napr. sme klikli na článok, ktorý sa otvoril
 // v novej záložke), auto scroll pozastavíme. Keď sa vrátime späť do tejto
 // záložky, a sme stále v sekcii Správy s auto scrollom zapnutým, plynulo
@@ -6706,6 +6768,7 @@ function stopNewsAutoScroll(){
 document.addEventListener('visibilitychange', function(){
   if(document.hidden){
     stopNewsAutoScroll();
+  stopNewsTTS();
     stopFeedAutoScroll();
   } else {
     if(newsAutoScroll && currentAppMode === 'news' && isAppVisible()){
@@ -9275,6 +9338,7 @@ async function init(){
   setupVoiceRecordButton();
   updateHeaderClock();
   updateNewsAutoScrollBtn(); // zosynchronizuj vzhľad tlačidla Auto scroll v Správach s uloženým stavom
+  updateNewsTTSBtn(); // zosynchronizuj vzhľad tlačidla čítania nadpisov nahlas s uloženým stavom
   if(typeof applyLanguage === 'function') applyLanguage();
 }
 document.addEventListener('DOMContentLoaded', init);
