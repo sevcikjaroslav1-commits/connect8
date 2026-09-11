@@ -6705,7 +6705,7 @@ document.addEventListener('visibilitychange', function(){
 let feedAutoScroll = false;
 let feedAutoScrollRAF = null;
 let feedAutoScrollLastTs = null;
-const FEED_AUTOSCROLL_SPEED = NEWS_AUTOSCROLL_SPEED; // rovnaké tempo ako v Správach
+const FEED_AUTOSCROLL_SPEED = NEWS_AUTOSCROLL_SPEED * 1.2; // o 20% rýchlejšie ako v Správach
 
 function updateFeedAutoScrollBtn(){
   document.querySelectorAll('.feed-autoscroll-btn').forEach(btn=>{
