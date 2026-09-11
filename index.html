@@ -712,6 +712,17 @@
     padding:16px;margin-bottom:18px;
   }
   .composer-top{display:flex;gap:10px;}
+  .composer-left-col{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;}
+  .feed-autoscroll-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .feed-autoscroll-btn{
+    width:34px;height:34px;border-radius:50%;
+    background:rgba(120,120,127,.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0;
+  }
+  .feed-autoscroll-btn:hover{background:rgba(120,120,127,.5);}
+  .feed-autoscroll-btn .as-dot{width:9px;height:9px;border-radius:50%;background:#e4e4e7;transition:background .2s;}
+  .feed-autoscroll-btn.on .as-dot{background:#33d17a;}
+  .feed-autoscroll-label{font-size:9.5px;font-weight:600;color:var(--text-dim);line-height:1.15;text-align:center;white-space:nowrap;}
   .composer textarea{
     flex:1;border:none;background:var(--bg);border-radius:12px;padding:12px 14px;
     resize:none;font-size:14px;outline:none;min-height:92px;
@@ -2448,7 +2459,13 @@
         <section class="view active" id="view-feed">
           <div class="composer">
             <div class="composer-top">
-              <div class="avatar" id="composer-avatar">?</div>
+              <div class="composer-left-col">
+                <div class="avatar" id="composer-avatar">?</div>
+                <div class="feed-autoscroll-wrap">
+                  <button class="feed-autoscroll-btn" id="feed-autoscroll-btn" onclick="toggleFeedAutoScroll()" title="Auto scroll"><span class="as-dot"></span></button>
+                  <div class="feed-autoscroll-label">Auto<br>scroll</div>
+                </div>
+              </div>
               <textarea id="post-text" placeholder="Čo sa deje?" oninput="handlePostTextInput()"></textarea>
             </div>
             <div class="img-preview-grid" id="post-img-preview"></div>
@@ -3382,6 +3399,7 @@ function doLogout(){
   closeChatModal();
   closeConvModal();
   stopNewsAutoScroll(); // odhlásili sme sa - auto scroll nemá zmysel na prihlasovacej obrazovke
+  stopFeedAutoScroll();
   if(FIREBASE_CONFIGURED && auth) auth.signOut();
   currentUser = null;
   document.getElementById('app').style.display = 'none';
@@ -3764,10 +3782,12 @@ async function handleAvatarUpload(event){
 function openLightbox(src){
   document.getElementById('lightbox-img').src = src;
   document.getElementById('lightbox').classList.add('open');
+  stopFeedAutoScroll(); // ak sme obrázok otvorili počas auto scrollu vo Feede, na chvíľu ho pozastavíme
 }
 function closeLightbox(){
   document.getElementById('lightbox').classList.remove('open');
   document.getElementById('lightbox-img').src = '';
+  resumeFeedAutoScrollIfNeeded(); // po zatvorení obrázka pokračuje presne odtiaľ, kde skončil
 }
 
 /* ---------------- ZDIEĽANIE PRÍSPEVKOV A VIDEÍ ---------------- */
@@ -4023,6 +4043,7 @@ function openProfile(){
   viewedProfileUser = null;
   currentAppMode = 'profile';
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
+  stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('profile');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -4034,6 +4055,7 @@ function openUserProfile(user){
   viewedProfileUser = user;
   currentAppMode = 'profile';
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
+  stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   clearSideNavActive();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -4171,6 +4193,7 @@ function buildCallButtonRow(u){
 function openUsersList(){
   currentAppMode = 'users';
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
+  stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('users');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -4273,6 +4296,7 @@ async function renderUsersList(){
 function openFriendsList(){
   currentAppMode = 'friends';
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
+  stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('friends');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -6194,12 +6218,18 @@ function switchMode(mode){
 
   if(mode === 'feed'){
     setupFeedVideoObserver(); // sekcia Feed je teraz viditeľná, videá sa smú autoplay-ovať
+    // Auto scroll vo Feede sa NEPAMÄTÁ medzi vstupmi - pri každom vstupe do
+    // Feedu je vypnutý, používateľ si ho musí sám zapnúť tlačidlom.
+    feedAutoScroll = false;
+    stopFeedAutoScroll();
+    updateFeedAutoScrollBtn();
   } else {
     if(feedVideoObserver){
       feedVideoObserver.disconnect(); // Feed nie je viditeľný, žiadne video na pozadí nesmie hrať
       feedVideoObserver = null;
     }
     pauseAllFeedMedia(); // opustili sme Feed - zastav akékoľvek video, čo tam ešte hralo
+    stopFeedAutoScroll(); // opustili sme Feed - auto scroll nemá zmysel mimo neho
   }
 
   if(mode === 'news'){
@@ -6208,6 +6238,7 @@ function switchMode(mode){
     startNewsAutoScroll(); // ak je auto scroll zapnutý, pokračuje presne tam, kde sme skončili (scroll pozícia stránky sa medzi prepínaním sekcií nemení)
   } else {
     stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
+  stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
   }
 
   if(mode === 'movies'){
@@ -6650,10 +6681,80 @@ function stopNewsAutoScroll(){
 document.addEventListener('visibilitychange', function(){
   if(document.hidden){
     stopNewsAutoScroll();
-  } else if(newsAutoScroll && currentAppMode === 'news' && isAppVisible()){
-    startNewsAutoScroll();
+    stopFeedAutoScroll();
+  } else {
+    if(newsAutoScroll && currentAppMode === 'news' && isAppVisible()){
+      startNewsAutoScroll();
+    }
+    resumeFeedAutoScrollIfNeeded();
   }
 });
+
+/* ---- FEED - Auto scroll ----
+   Rovnaký princíp ako Auto scroll v sekcii Správy (plynulé posúvanie plochy
+   rovnakou rýchlosťou, pauza pri odchode zo záložky/aplikácie a pokračovanie
+   presne odtiaľ, kde sa skončilo) - ALE s jedným rozdielom: stav sa
+   NEUKLADÁ do localStorage. Vždy, keď používateľ príde do sekcie Feed
+   (switchMode('feed')), je auto scroll VYPNUTÝ a musí si ho sám zapnúť
+   tlačidlom. Okrem toho sa auto scroll dočasne pozastaví aj vtedy, keď si
+   používateľ počas scrollovania niečo vyberie kliknutím (otvorí obrázok na
+   celú obrazovku, prehrá vlastné nahraté video, alebo klikne na odkaz/článok,
+   ktorý sa otvorí na novej stránke) - a keď sa k Feedu vráti (zavrie obrázok,
+   zastaví/doigrá video, alebo sa vráti do tejto záložky), auto scroll znova
+   pokračuje presne odtiaľ, kde skončil. */
+let feedAutoScroll = false;
+let feedAutoScrollRAF = null;
+let feedAutoScrollLastTs = null;
+const FEED_AUTOSCROLL_SPEED = NEWS_AUTOSCROLL_SPEED; // rovnaké tempo ako v Správach
+
+function updateFeedAutoScrollBtn(){
+  document.querySelectorAll('.feed-autoscroll-btn').forEach(btn=>{
+    btn.classList.toggle('on', feedAutoScroll);
+  });
+}
+
+function toggleFeedAutoScroll(){
+  feedAutoScroll = !feedAutoScroll;
+  updateFeedAutoScrollBtn();
+  if(feedAutoScroll){ startFeedAutoScroll(); } else { stopFeedAutoScroll(); }
+}
+
+function feedAutoScrollStep(ts){
+  if(!feedAutoScroll || currentAppMode !== 'feed' || document.hidden || !isAppVisible()){
+    feedAutoScrollRAF = null;
+    feedAutoScrollLastTs = null;
+    return;
+  }
+  if(feedAutoScrollLastTs == null) feedAutoScrollLastTs = ts;
+  const dt = (ts - feedAutoScrollLastTs) / 1000;
+  feedAutoScrollLastTs = ts;
+
+  const doc = document.scrollingElement || document.documentElement;
+  const maxScroll = doc.scrollHeight - window.innerHeight;
+  if(window.scrollY < maxScroll - 2){
+    window.scrollBy(0, FEED_AUTOSCROLL_SPEED * dt);
+  }
+  feedAutoScrollRAF = requestAnimationFrame(feedAutoScrollStep);
+}
+
+function startFeedAutoScroll(){
+  if(feedAutoScrollRAF) return; // už beží
+  if(!feedAutoScroll || currentAppMode !== 'feed' || document.hidden || !isAppVisible()) return;
+  feedAutoScrollLastTs = null;
+  feedAutoScrollRAF = requestAnimationFrame(feedAutoScrollStep);
+}
+
+function stopFeedAutoScroll(){
+  if(feedAutoScrollRAF){ cancelAnimationFrame(feedAutoScrollRAF); feedAutoScrollRAF = null; }
+  feedAutoScrollLastTs = null;
+}
+
+// Zavolá sa po zatvorení obrázka (lightbox), zastavení/doigraní vlastného
+// videa, alebo návrate do záložky - ak je auto scroll vo Feede zapnutý,
+// plynulo pokračuje presne odtiaľ, kde sa naposledy zastavil.
+function resumeFeedAutoScrollIfNeeded(){
+  if(feedAutoScroll && currentAppMode === 'feed') startFeedAutoScroll();
+}
 
 /* ---------------- FEED ---------------- */
 function openPostAuthorProfile(postId){
@@ -6745,7 +6846,7 @@ function buildPostCard(p, opts={}){
       </div>
       ` : (p.text ? `<div class="post-text">${escapeHtml(p.text)}</div><div class="post-text-translation" id="post-tr-${p.id}"></div>` : '')}
       ${p.video ? `<div class="post-video-wrap">
-        <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" ${isIOSDevice()?'muted':''} controls playsinline webkit-playsinline preload="metadata" onplay="registerFeedVideoView(${p.id})" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
+        <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" ${isIOSDevice()?'muted':''} controls playsinline webkit-playsinline preload="metadata" onplay="registerFeedVideoView(${p.id});stopFeedAutoScroll()" onpause="resumeFeedAutoScrollIfNeeded()" onended="resumeFeedAutoScrollIfNeeded()" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
       </div>` : ''}
       ${(!isEditing && getPostPhotos(p).length) ? buildPostImgGrid(getPostPhotos(p)) : ''}
