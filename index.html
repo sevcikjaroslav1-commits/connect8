@@ -1243,7 +1243,7 @@
   }
 
   .video-top-actions{
-    position:fixed;top:calc(var(--topbar-h, 58px) + 14px);right:14px;z-index:30;display:flex;align-items:center;gap:8px;
+    position:absolute;top:14px;right:14px;z-index:30;display:flex;align-items:center;gap:8px;
   }
   /* Šípky na prepínanie videí - iba na počítači (od 901px), mimo videa napravo */
   .video-nav-arrows{
@@ -6259,9 +6259,11 @@ function switchMode(mode){
   document.getElementById('view-'+mode).classList.add('active');
 
   if(mode === 'video'){
+    document.body.style.overflow = 'hidden'; // zabráni "prepadnutiu" scrollu stránky spod interného scrollu videí (mobil)
     updateTopbarHeightVar(); // prepočítať reálnu výšku topbaru (mobil = viac riadkov)
     setupVideoObserver(); // sekcia je teraz viditeľná, pripoj sledovanie zhliadnutí
   } else {
+    document.body.style.overflow = '';
     if(videoObserver){
       videoObserver.disconnect(); // sekcia Videá nie je viditeľná, nesleduj zhliadnutia na pozadí
       videoObserver = null;
@@ -8598,6 +8600,7 @@ function pauseMedia(id){
 
 function pauseAllVideoSectionMedia(){
   // Zastaví úplne všetky videá/iframe v sekcii Videá, nech je stav observera akýkoľvek.
+  document.body.style.overflow = ''; // odomkni scroll stránky, ak bol zamknutý kvôli sekcii Videá
   document.querySelectorAll('#video-scroller video').forEach(v=>{ if(!v.paused) v.pause(); });
   document.querySelectorAll('#video-scroller iframe').forEach(f=>{
     try{ f.contentWindow.postMessage(JSON.stringify({event:'command', func:'pauseVideo', args:[]}), '*'); }catch(e){}
