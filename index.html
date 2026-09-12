@@ -2718,18 +2718,8 @@
                 </label>
               </div>
               <div class="last-online-time" id="last-online-time" style="display:none;"></div>
-              <div class="last-online-row" id="profile-viewers-setting-row" style="display:none;">
-                <span class="last-online-label" onclick="toggleShowProfileViewers()">Kto videl môj profil</span>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="profile-viewers-toggle" onchange="toggleShowProfileViewers()">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
             </div>
           </div>
-
-          <div class="profile-section-title" id="profile-viewers-title" style="display:none;">👀 Kto videl môj profil</div>
-          <div class="users-grid" id="profile-viewers-grid" style="display:none;"></div>
 
           <div class="profile-section-title">📷 Fotky</div>
           <div class="profile-photos-grid" id="profile-photos-grid"></div>
@@ -3423,12 +3413,12 @@ async function doRegister(){
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
     await cred.user.updateProfile({displayName:name});
     await db.collection('profiles').doc(cred.user.uid).set({
-      name, email, showLastOnline: false, showProfileViewers: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      name, email, showLastOnline: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     // Nastavíme currentUser priamo tu (so správnym menom), namiesto čakania
     // na onAuthStateChanged nižšie — ten by sa mohol spustiť skôr, než sa
     // meno stihne zapísať do databázy, a použil by dočasne e-mail.
-    currentUser = { uid: cred.user.uid, email, name, showLastOnline: false, showProfileViewers: false };
+    currentUser = { uid: cred.user.uid, email, name, showLastOnline: false };
     allUsersCache = null; // nový používateľ - nech sa nabudúce znova načíta zoznam pre vyhľadávanie
     await loadState(); // istota, že posty/produkty/videá sú načítané pred zobrazením appky
     enterApp();
@@ -4116,7 +4106,6 @@ function openUserProfile(user){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-profile').classList.add('active');
   renderProfile();
-  if(user && user.uid) recordProfileView(user.uid);
 }
 
 function profileBack(){
@@ -4211,23 +4200,6 @@ function renderProfile(){
   }
   if(!isOwnProfile && profileUser.uid) loadShowLastOnlineIfNeeded(profileUser);
   updateProfileLastOnlineTime();
-
-  const viewersRow = document.getElementById('profile-viewers-setting-row');
-  if(viewersRow){
-    viewersRow.style.display = isOwnProfile ? 'flex' : 'none';
-    const viewersToggle = document.getElementById('profile-viewers-toggle');
-    if(viewersToggle) viewersToggle.checked = !!(currentUser && currentUser.showProfileViewers);
-  }
-  const viewersTitle = document.getElementById('profile-viewers-title');
-  const viewersGrid = document.getElementById('profile-viewers-grid');
-  if(isOwnProfile && currentUser && currentUser.showProfileViewers){
-    if(viewersTitle) viewersTitle.style.display = '';
-    if(viewersGrid) viewersGrid.style.display = '';
-    loadAndRenderProfileViewers();
-  } else {
-    if(viewersTitle) viewersTitle.style.display = 'none';
-    if(viewersGrid) viewersGrid.style.display = 'none';
-  }
 }
 
 function buildCallButtonRow(u){
@@ -6017,17 +5989,14 @@ if(FIREBASE_CONFIGURED){
       let name = user.displayName || user.email;
       let photoURL = null;
       let showLastOnline = false;
-      let showProfileViewers = false;
       try{
         const prof = await db.collection('profiles').doc(user.uid).get();
         if(prof.exists && prof.data().name) name = prof.data().name;
         if(prof.exists && prof.data().avatarPhoto) photoURL = prof.data().avatarPhoto;
         if(prof.exists) showLastOnline = !!prof.data().showLastOnline;
-        if(prof.exists) showProfileViewers = !!prof.data().showProfileViewers;
       }catch(e){ console.error("Nepodarilo sa načítať profil:", e); }
-      currentUser = { uid:user.uid, email:user.email, name, photoURL, showLastOnline, showProfileViewers };
+      currentUser = { uid:user.uid, email:user.email, name, photoURL, showLastOnline };
       profileSettingsCache[user.uid] = showLastOnline;
-      profileViewersSettingCache[user.uid] = showProfileViewers;
       // DÔLEŽITÉ: počkaj, kým appka skutočne stiahne posty/produkty/videá
       // z databázy, predtým než ich zobrazíš — inak by sa (najmä pri
       // automatickom prihlásení po obnovení stránky) zobrazili len staré/
@@ -6051,7 +6020,6 @@ let totalUsersCount = 0;
 let onlineUsersCount = 0;
 let presenceStatus = {}; // uid -> {state:'online'|'offline', name, last_changed}
 let profileSettingsCache = {}; // uid -> showLastOnline (bool)
-let profileViewersSettingCache = {}; // uid -> showProfileViewers (bool), z profiles/{uid}
 
 function formatLastOnline(ts){
   if(!ts) return '';
@@ -6127,139 +6095,6 @@ async function toggleShowLastOnline(){
     await db.collection('profiles').doc(currentUser.uid).set({showLastOnline:newVal}, {merge:true});
   }catch(e){
     console.error("Nepodarilo sa uložiť nastavenie Naposledy online:", e);
-  }
-}
-
-/* ---------- KTO VIDEL MÔJ PROFIL ----------
-   Rovnaká logika ako "Naposledy online", ale navyše vzájomná (obojstranná):
-   - Návšteva sa niekomu zapíše len vtedy, keď má NÁVŠTEVNÍK (ten, kto prezerá
-     cudzí profil) toto tlačidlo zapnuté. Ak ho má vypnuté, jeho návšteva sa
-     nikde nezaznamená a v cudzom zozname sa jednoducho neobjaví.
-   - Zoznam návštevníkov vidí len majiteľ profilu, ktorý má toto tlačidlo
-     zapnuté sám na sebe - a aj vtedy mu ukáže iba tých návštevníkov, ktorí
-     majú toto tlačidlo AKTUÁLNE (práve teraz) tiež zapnuté.
-*/
-async function recordProfileView(viewedUid){
-  if(!FIREBASE_CONFIGURED || !db) return;
-  if(!currentUser || !currentUser.uid) return;
-  if(currentUser.uid === viewedUid) return; // vlastný profil sa nepočíta
-  if(!currentUser.showProfileViewers) return; // návštevník má tlačidlo vypnuté - nezapisuj nič
-  try{
-    await db.collection('profiles').doc(viewedUid).collection('viewers').doc(currentUser.uid).set({
-      name: currentUser.name || '',
-      photo: currentUser.photoURL || null,
-      lastViewedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, {merge:true});
-  }catch(e){
-    console.error("Nepodarilo sa zaznamenať návštevu profilu:", e);
-  }
-}
-
-async function toggleShowProfileViewers(){
-  if(!currentUser || !currentUser.uid) return;
-  const newVal = !currentUser.showProfileViewers;
-  currentUser.showProfileViewers = newVal;
-  profileViewersSettingCache[currentUser.uid] = newVal;
-  const toggleInput = document.getElementById('profile-viewers-toggle');
-  if(toggleInput) toggleInput.checked = newVal;
-  const viewersTitle = document.getElementById('profile-viewers-title');
-  const viewersGrid = document.getElementById('profile-viewers-grid');
-  if(newVal){
-    if(viewersTitle) viewersTitle.style.display = '';
-    if(viewersGrid) viewersGrid.style.display = '';
-    loadAndRenderProfileViewers();
-  } else {
-    if(viewersTitle) viewersTitle.style.display = 'none';
-    if(viewersGrid) viewersGrid.style.display = 'none';
-  }
-  if(!FIREBASE_CONFIGURED || !db) return;
-  try{
-    await db.collection('profiles').doc(currentUser.uid).set({showProfileViewers:newVal}, {merge:true});
-  }catch(e){
-    console.error("Nepodarilo sa uložiť nastavenie Kto videl môj profil:", e);
-  }
-}
-
-async function loadAndRenderProfileViewers(){
-  const grid = document.getElementById('profile-viewers-grid');
-  if(!grid) return;
-  if(!currentUser || !currentUser.uid || !currentUser.showProfileViewers) return;
-  if(!FIREBASE_CONFIGURED || !db){
-    grid.innerHTML = `<div class="profile-empty">${t('Zoznam je dostupný len s pripojenou databázou.')}</div>`;
-    return;
-  }
-  grid.innerHTML = `<div class="profile-empty">${t('Načítavam...')}</div>`;
-  try{
-    const qs = await db.collection('profiles').doc(currentUser.uid).collection('viewers').orderBy('lastViewedAt','desc').get();
-    const viewerIds = qs.docs.map(d=>d.id);
-    if(!viewerIds.length){
-      grid.innerHTML = `<div class="profile-empty">${t('Zatiaľ ťa nikto nenavštívil.')}</div>`;
-      return;
-    }
-    // Pre každého návštevníka over jeho AKTUÁLNE nastavenie showProfileViewers -
-    // ak ho odvtedy vypol, alebo si zrušil účet, do zoznamu sa nesmie dostať.
-    const profileDocs = await Promise.all(viewerIds.map(uid=> db.collection('profiles').doc(uid).get().catch(()=>null)));
-    const visibleViewers = [];
-    qs.docs.forEach((doc, i)=>{
-      const pdoc = profileDocs[i];
-      if(!pdoc || !pdoc.exists) return;
-      const pdata = pdoc.data() || {};
-      if(pdata.deleted) return;
-      if(!pdata.showProfileViewers) return; // teraz to má vypnuté - neukazuj
-      const vdata = doc.data() || {};
-      visibleViewers.push({
-        id: doc.id,
-        name: pdata.name || vdata.name || t('Používateľ'),
-        photo: pdata.avatarPhoto || vdata.photo || null,
-        lastViewedAt: vdata.lastViewedAt && vdata.lastViewedAt.toMillis ? vdata.lastViewedAt.toMillis() : null
-      });
-    });
-
-    if(!visibleViewers.length){
-      grid.innerHTML = `<div class="profile-empty">${t('Zatiaľ ťa nikto nenavštívil.')}</div>`;
-      return;
-    }
-
-    grid.innerHTML = '';
-    visibleViewers.forEach(v=>{
-      cacheProfile(v.id, v.name, v.photo);
-      const card = document.createElement('div');
-      card.className = 'user-card';
-      card.onclick = ()=>openUserProfile({ uid: v.id, name: v.name, photoURL: v.photo });
-
-      const avWrap = document.createElement('div');
-      avWrap.className = 'user-card-avatar-wrap';
-      const av = document.createElement('div');
-      av.className = 'avatar';
-      if(v.photo){
-        av.style.backgroundImage = `url(${v.photo})`;
-        av.style.backgroundSize = 'cover';
-        av.style.backgroundPosition = 'center';
-      } else {
-        av.textContent = initials(v.name);
-      }
-      const dot = document.createElement('div');
-      dot.className = 'status-dot';
-      dot.classList.toggle('online', isUserOnline(v.id));
-      avWrap.appendChild(av);
-      avWrap.appendChild(dot);
-
-      const name = document.createElement('span');
-      name.className = 'user-card-name';
-      name.textContent = v.name;
-
-      const when = document.createElement('span');
-      when.className = 'user-card-lastonline';
-      when.textContent = v.lastViewedAt ? formatLastOnline(v.lastViewedAt) : '';
-
-      card.appendChild(avWrap);
-      card.appendChild(name);
-      card.appendChild(when);
-      grid.appendChild(card);
-    });
-  }catch(e){
-    console.error("Nepodarilo sa načítať návštevníkov profilu:", e);
-    grid.innerHTML = `<div class="profile-empty">${t('Zoznam sa nepodarilo načítať.')}</div>`;
   }
 }
 
@@ -9827,11 +9662,6 @@ const UI_DICT_EN = {
   "← Späť do Feedu":"← Back to Feed",
   "← Späť na Používateľov":"← Back to Users",
   "Naposledy online":"Last seen",
-  "Kto videl môj profil":"Who viewed my profile",
-  "👀 Kto videl môj profil":"👀 Who viewed my profile",
-  "Zatiaľ ťa nikto nenavštívil.":"No one has visited you yet.",
-  "Zoznam je dostupný len s pripojenou databázou.":"This list is only available with a connected database.",
-  "Zoznam sa nepodarilo načítať.":"Failed to load the list.",
   "+ Sledovať":"+ Follow",
   "✓ Sledované":"✓ Following",
   "🚫 Zablokovať":"🚫 Block",
