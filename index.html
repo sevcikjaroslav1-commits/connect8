@@ -8415,7 +8415,13 @@ function handleVideoEnded(id){
     const card = document.querySelector('.video-card[data-vid="'+id+'"]');
     const next = card && card.nextElementSibling;
     if(next && next.classList && next.classList.contains('video-card')){
-      next.scrollIntoView({behavior:'smooth', block:'start'});
+      const scroller = document.getElementById('video-scroller');
+      // POZOR: zámerne NEPOUŽÍVAME next.scrollIntoView() - to vie "vytiahnuť"
+      // scroll aj na nadradených prvkoch (napr. celej stránke), aj keď majú
+      // overflow:hidden, lebo scrollIntoView to ignoruje. Posúvame preto priamo
+      // len samotný video-scroller, nič iné sa hýbať nesmie.
+      if(scroller) scroller.scrollTo({top: next.offsetTop, behavior:'smooth'});
+      else next.scrollIntoView({behavior:'smooth', block:'start'});
       return;
     }
     // posledné video v zozname - nemá kam pokračovať, prehraj znova
@@ -8619,7 +8625,9 @@ function scrollToAdjacentVideo(dir){
   if(!card) return;
   const target = dir > 0 ? card.nextElementSibling : card.previousElementSibling;
   if(target && target.classList && target.classList.contains('video-card')){
-    target.scrollIntoView({behavior:'smooth', block:'start'});
+    // priamo scrollujeme len video-scroller (viď poznámka v handleVideoEnded),
+    // nie target.scrollIntoView(), aby sa nikdy nepohla aj samotná stránka.
+    scroller.scrollTo({top: target.offsetTop, behavior:'smooth'});
   }
 }
 
