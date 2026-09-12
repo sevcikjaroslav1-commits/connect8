@@ -1191,7 +1191,7 @@
   /* ---------- VIDEO ---------- */
   #view-video{background:var(--mode-video-soft);margin:-20px -16px -40px;padding:0;min-height:calc(100vh - var(--topbar-h, 58px));min-height:calc(100dvh - var(--topbar-h, 58px));position:relative;}
   .video-scroller{
-    height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;
+    height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
   }
   .video-card{
     height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));scroll-snap-align:start;position:relative;
@@ -1243,7 +1243,7 @@
   }
 
   .video-top-actions{
-    position:absolute;top:14px;right:14px;z-index:30;display:flex;align-items:center;gap:8px;
+    position:fixed;top:calc(var(--topbar-h, 58px) + 14px);right:14px;z-index:30;display:flex;align-items:center;gap:8px;
   }
   /* Šípky na prepínanie videí - iba na počítači (od 901px), mimo videa napravo */
   .video-nav-arrows{
@@ -3445,6 +3445,7 @@ function doLogout(){
   stopNewsAutoScroll(); // odhlásili sme sa - auto scroll nemá zmysel na prihlasovacej obrazovke
   stopNewsTTS();
   stopFeedAutoScroll();
+  pauseAllVideoSectionMedia(); // odhlásili sme sa - akékoľvek video na pozadí sa musí zastaviť
   if(FIREBASE_CONFIGURED && auth) auth.signOut();
   currentUser = null;
   document.getElementById('app').style.display = 'none';
@@ -4090,6 +4091,7 @@ function openProfile(){
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
   stopNewsTTS();
   stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
+  pauseAllVideoSectionMedia(); // opustili sme sekciu Videá - video na pozadí sa musí zastaviť
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('profile');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -4103,6 +4105,7 @@ function openUserProfile(user){
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
   stopNewsTTS();
   stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
+  pauseAllVideoSectionMedia(); // opustili sme sekciu Videá - video na pozadí sa musí zastaviť
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   clearSideNavActive();
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -4242,6 +4245,7 @@ function openUsersList(){
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
   stopNewsTTS();
   stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
+  pauseAllVideoSectionMedia(); // opustili sme sekciu Videá - video na pozadí sa musí zastaviť
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('users');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -4346,6 +4350,7 @@ function openFriendsList(){
   stopNewsAutoScroll(); // opustili sme sekciu Správy - auto scroll nemá zmysel mimo nej
   stopNewsTTS();
   stopFeedAutoScroll(); // opustili sme sekciu Feed - auto scroll nemá zmysel mimo nej
+  pauseAllVideoSectionMedia(); // opustili sme sekciu Videá - video na pozadí sa musí zastaviť
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.remove('active'));
   setSideNavActive('friends');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
