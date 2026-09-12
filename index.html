@@ -1242,9 +1242,7 @@
     content:"";position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.55), transparent 45%);z-index:1;pointer-events:none;
   }
 
-  .video-top-actions{
-    position:absolute;top:14px;right:14px;z-index:30;display:flex;align-items:center;gap:8px;
-  }
+  .video-side .video-add-side-btn{background:var(--mode-video);font-size:22px;font-weight:700;}
   /* Šípky na prepínanie videí - iba na počítači (od 901px), mimo videa napravo */
   .video-nav-arrows{
     display:none;position:absolute;top:50%;right:-64px;transform:translateY(-50%);
@@ -1261,10 +1259,6 @@
   .video-nav-arrow-btn:hover{background:var(--accent-soft);color:var(--accent);transform:translateY(-2px);}
   .video-nav-arrow-btn:active{transform:translateY(0);}
   .video-nav-arrow-btn svg{width:20px;height:20px;}
-  .video-add-btn{
-    background:rgba(255,255,255,.14);backdrop-filter:blur(6px);color:#fff;
-    padding:9px 14px;border-radius:20px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap;
-  }
   .video-upload-modal{
     position:absolute;inset:0;z-index:200;background:rgba(10,10,14,.72);backdrop-filter:blur(3px);
     display:none;align-items:center;justify-content:center;padding:20px;
@@ -2589,9 +2583,6 @@
 
         <!-- VIDEO -->
         <section class="view" id="view-video">
-          <div class="video-top-actions">
-            <button class="video-add-btn" onclick="openVideoModal()">+ Pridať video</button>
-          </div>
           <div class="video-upload-modal" id="video-modal">
             <div class="video-upload-card">
               <h3>Pridať video</h3>
@@ -8361,6 +8352,7 @@ function renderVideos(){
         <div class="video-caption">${escapeHtml(v.caption)}</div>
       </div>
       <div class="video-side">
+        <div><button class="video-add-side-btn" onclick="openVideoModal()" title="Pridať video">+</button><div class="count">Pridať<br>video</div></div>
         <div><button class="autoscroll-toggle-btn" onclick="toggleAutoScroll()" title="Auto scroll"><span class="as-dot"></span></button><div class="count">Auto<br>scroll</div></div>
         <div><button id="mute-btn-${v.id}" onclick="toggleMute(${v.id})">${isMuted?'🔇':'🔊'}</button><div class="count">Zvuk</div></div>
         <div><button class="${getLikedBy(v).includes(currentUser.uid)?'liked':''}" onclick="toggleVideoLike(${v.id})">❤️</button><div class="count">${v.likes}</div></div>
