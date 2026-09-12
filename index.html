@@ -1216,7 +1216,7 @@
   }
   .video-caption{font-size:13.5px;line-height:1.4;opacity:.92;}
   .video-side{
-    position:absolute;right:8px;bottom:34px;display:flex;flex-direction:column;gap:18px;align-items:center;
+    position:absolute;right:8px;bottom:34px;display:flex;flex-direction:column;gap:14px;align-items:center;
   }
   .video-side button{
     background:rgba(255,255,255,.12);backdrop-filter:blur(4px);color:#fff;width:46px;height:46px;border-radius:50%;
@@ -1242,7 +1242,11 @@
     content:"";position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.55), transparent 45%);z-index:1;pointer-events:none;
   }
 
-  .video-side .video-add-side-btn{background:var(--mode-video);font-size:22px;font-weight:700;}
+  .video-side .video-add-side-btn{
+    background:var(--mode-video);width:48px;height:40px;border-radius:14px;
+    flex-direction:column;gap:1px;font-size:8.5px;font-weight:700;line-height:1.15;margin-bottom:-8px;
+  }
+  .video-side .video-add-side-btn .plus{font-size:14px;line-height:1;}
   /* Šípky na prepínanie videí - iba na počítači (od 901px), mimo videa napravo */
   .video-nav-arrows{
     display:none;position:absolute;top:50%;right:-64px;transform:translateY(-50%);
@@ -8352,7 +8356,7 @@ function renderVideos(){
         <div class="video-caption">${escapeHtml(v.caption)}</div>
       </div>
       <div class="video-side">
-        <div><button class="video-add-side-btn" onclick="openVideoModal()" title="Pridať video">+</button><div class="count">Pridať<br>video</div></div>
+        <div><button class="video-add-side-btn" onclick="openVideoModal()" title="Pridať video"><span class="plus">+</span>Pridať<br>video</button></div>
         <div><button class="autoscroll-toggle-btn" onclick="toggleAutoScroll()" title="Auto scroll"><span class="as-dot"></span></button><div class="count">Auto<br>scroll</div></div>
         <div><button id="mute-btn-${v.id}" onclick="toggleMute(${v.id})">${isMuted?'🔇':'🔊'}</button><div class="count">Zvuk</div></div>
         <div><button class="${getLikedBy(v).includes(currentUser.uid)?'liked':''}" onclick="toggleVideoLike(${v.id})">❤️</button><div class="count">${v.likes}</div></div>
