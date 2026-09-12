@@ -6292,9 +6292,7 @@ function switchMode(mode){
 /* ---------------- SPRÁVY (pexeso z iných portálov) ---------------- */
 const NEWS_SOURCES = [
   { id:'hlavnespravy', name:'Hlavné správy', urls:['https://www.hlavnespravy.sk/feed/'] },
-  { id:'postoj',       name:'Postoj',        urls:['https://www.postoj.sk/rss','https://www.postoj.sk/feed'] },
-  { id:'info',         name:'Info.sk',       urls:['https://www.info.sk/feed/','https://www.info.sk/rss'] },
-  { id:'sita',         name:'SITA',          urls:['https://sita.sk/rss/clanky-img/1/','https://sita.sk/spravy/feed/'] }
+  { id:'pravda',       name:'Pravda.sk',     urls:['https://www.pravda.sk/spravy/rss/xml'] }
 ];
 // Anglické spravodajské zdroje - použijú sa namiesto tých vyššie, keď je
 // aktívna anglická vlajka (EN). Čerpajú sa presne rovnakým spôsobom
@@ -6517,6 +6515,19 @@ function formatNewsDate(pubDate){
   return d.toLocaleString('sk-SK', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
 }
 
+// Appka primárne ťahá správy cez Cloudflare Worker (NEWS_WORKER_URL), ktorý
+// beží mimo tohto súboru na serveri a pozná svoj VLASTNÝ zoznam zdrojov -
+// zmena NEWS_SOURCES vyššie ho teda neovplyvní. Aby appka aj napriek tomu
+// vždy zobrazovala len aktuálne povolené zdroje (a nikdy staré, už
+// odstránené - napr. SITA/Postoj/Info.sk), každý výsledok (z Workera,
+// zo záložných proxy aj z localStorage zálohy) prefiltrujeme cez tento
+// zoznam podľa sourceId/sourceName ešte pred zobrazením či uložením.
+function filterToAllowedSources(items, sources){
+  const allowedIds = new Set(sources.map(s=>s.id));
+  const allowedNames = new Set(sources.map(s=>s.name));
+  return (items || []).filter(it=> allowedIds.has(it.sourceId) || allowedNames.has(it.sourceName));
+}
+
 async function loadNewsFeed(forceRefresh){
   const grid = document.getElementById('news-grid');
   const chipsRow = document.getElementById('news-sources-row');
@@ -6528,7 +6539,7 @@ async function loadNewsFeed(forceRefresh){
   const cacheSlot = newsCache[lang];
 
   if(!forceRefresh && cacheSlot.items.length && (Date.now() - cacheSlot.ts) < NEWS_REFRESH_MS){
-    renderNewsGrid(cacheSlot.items);
+    renderNewsGrid(filterToAllowedSources(cacheSlot.items, sources));
     return;
   }
   if(newsLoading) return;
@@ -6540,7 +6551,7 @@ async function loadNewsFeed(forceRefresh){
   // tieto staré správy pokojne ostanú zobrazené.
   const staleForInstantShow = loadNewsFromLocalStorage(lang);
   if(staleForInstantShow && !forceRefresh){
-    renderNewsGrid(staleForInstantShow.items);
+    renderNewsGrid(filterToAllowedSources(staleForInstantShow.items, sources));
   }else{
     grid.innerHTML = `<div class="news-status">${t('Načítavam správy zo zdrojov...')}</div>`;
   }
@@ -6557,15 +6568,21 @@ async function loadNewsFeed(forceRefresh){
         const res = await fetchWithTimeout(workerUrl, 8000);
         if(!res.ok) throw new Error('worker http ' + res.status);
         const data = await res.json();
-        if(Array.isArray(data.items) && data.items.length) all = data.items;
+        if(Array.isArray(data.items) && data.items.length) all = filterToAllowedSources(data.items, sources);
       }catch(workerErr){
         console.warn('Connect8 news: Worker nedostupný, prepínam na záložné proxy.', workerErr);
       }
     }
-    // 2) Ak Worker zlyhal, nevrátil nič, alebo sme v EN režime, použi
-    // starý systém so záložnými proxy a príslušnými zdrojmi pre daný jazyk.
-    if(all.length === 0){
-      all = await loadNewsViaProxiesFallback(sources);
+    // 2) Worker pozná len svoj vlastný (pevný) zoznam zdrojov, takže nový
+    // zdroj pridaný len v NEWS_SOURCES (napr. Pravda.sk) môže úplne chýbať,
+    // aj keď Worker inak odpovedal úspešne. Preto zistíme, ktoré z aktuálne
+    // nakonfigurovaných zdrojov v odpovedi chýbajú, a tie dofetchneme priamo
+    // cez záložné proxy - a zlúčime s tým, čo už prišlo z Workera.
+    const coveredSourceIds = new Set(all.map(it=>it.sourceId));
+    const missingSources = sources.filter(s=>!coveredSourceIds.has(s.id));
+    if(missingSources.length){
+      const extra = await loadNewsViaProxiesFallback(missingSources);
+      all = all.concat(extra);
     }
     if(all.length === 0){
       // 3) Úplne posledná záchrana - Worker aj VŠETKY proxy (vrátane rss2json)
@@ -6573,6 +6590,7 @@ async function loadNewsFeed(forceRefresh){
       // úspešne stiahnuté správy uložené v localStorage z minulého načítania.
       const stale = loadNewsFromLocalStorage(lang);
       if(stale){
+        stale.items = filterToAllowedSources(stale.items, sources);
         newsCache[lang] = stale; // nech sa pri ďalšom otvorení sekcie znova neťahá hneď
         renderNewsGrid(stale.items);
         const status = document.createElement('div');
@@ -6591,6 +6609,7 @@ async function loadNewsFeed(forceRefresh){
   }catch(e){
     const stale = loadNewsFromLocalStorage(lang);
     if(stale){
+      stale.items = filterToAllowedSources(stale.items, sources);
       newsCache[lang] = stale;
       renderNewsGrid(stale.items);
     }else{
