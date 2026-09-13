@@ -5597,6 +5597,26 @@ function drawRoundedRectPath(ctx, x, y, w, h, r){
   ctx.closePath();
 }
 
+// Rozdelí text na viac riadkov tak, aby sa každý zmestil do maxWidth
+// (podľa aktuálne nastaveného fontu na ctx) - používa sa pre popis (tagline),
+// nech sa dlhšia veta nikdy neorezáva a je vždy celá vidieť.
+function wrapTextLines(ctx, text, maxWidth){
+  const words = (text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+  words.forEach(word=>{
+    const test = line ? line + ' ' + word : word;
+    if(line && ctx.measureText(test).width > maxWidth){
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  });
+  if(line) lines.push(line);
+  return lines.length ? lines : [''];
+}
+
 // Ekvivalent CSS "object-fit:cover" - obrázok sa oreže, nedeformuje.
 function drawCoverImage(ctx, img, x, y, w, h){
   const ir = img.width / img.height;
@@ -5642,11 +5662,23 @@ async function drawVizitkaToCanvas(){
   const tileSize = (contentW - tileGap*4) / 5;
   const galleryRows = galleryEmpty ? 0 : Math.ceil(totalGalleryTiles / 5);
 
+  // Tagline (popis) sa môže zalomiť na viac riadkov, aby sa veta nikdy
+  // neorezala - rozmery pilulky preto zisťujeme vopred cez pomocný canvas.
+  const pillPadX = 14, pillPadY = 7, pillLineH = 17;
+  const measureCanvas = document.createElement('canvas');
+  const mctx = measureCanvas.getContext('2d');
+  mctx.font = '700 14.5px Inter, sans-serif';
+  const taglineLines = wrapTextLines(mctx, tagline, contentW - pillPadX*2);
+  let pillW = 0;
+  taglineLines.forEach(l=>{ pillW = Math.max(pillW, mctx.measureText(l).width); });
+  pillW = Math.min(contentW, pillW + pillPadX*2);
+  const pillH = taglineLines.length*pillLineH + pillPadY*2;
+
   // -- Výpočet celkovej výšky karty --
   let y = PAD;
   y += 74 + 10;               // avatar + margin
   y += 20 + 6;                 // meno + margin
-  y += 28 + 16;                 // tagline pill + margin
+  y += pillH + 16;             // tagline pill + margin
   y += 10 + 15 + 4 + 13 + 10;  // štatistiky (padding+číslo+medzera+popis+padding)
   y += 12 + 8;                 // nadpis galérie + margin
   y += galleryEmpty ? (30 + 18) : (galleryRows*tileSize + (galleryRows-1)*tileGap + 18);
@@ -5697,14 +5729,16 @@ async function drawVizitkaToCanvas(){
   ctx.fillText(name, W/2, cy + 15);
   cy += 20 + 6;
 
-  // Tagline (pilulka)
+  // Tagline (pilulka) - rozmery (pillW/pillH/taglineLines) sú už spočítané vyššie
   ctx.font = '700 14.5px Inter, sans-serif';
-  const pillPadX = 14, pillH = 28;
-  const pillW = Math.min(contentW, ctx.measureText(tagline).width + pillPadX*2);
-  drawRoundedRectPath(ctx, W/2 - pillW/2, cy, pillW, pillH, pillH/2);
+  drawRoundedRectPath(ctx, W/2 - pillW/2, cy, pillW, pillH, Math.min(pillH/2, 16));
   ctx.fillStyle = 'rgba(164,76,255,.15)'; ctx.fill();
-  ctx.fillStyle = '#c9a8ff'; ctx.textBaseline = 'middle';
-  ctx.fillText(tagline, W/2, cy + pillH/2 + 1);
+  ctx.fillStyle = '#c9a8ff';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  taglineLines.forEach((line, i)=>{
+    const lineY = cy + pillPadY + pillLineH*i + pillLineH/2 + 1;
+    ctx.fillText(line, W/2, lineY);
+  });
   cy += pillH + 16;
 
   // Štatistiky
@@ -5731,11 +5765,16 @@ async function drawVizitkaToCanvas(){
   });
   cy = statsTop + statsH + 12;
 
-  // Nadpis galérie
+  // Nadpis galérie + adresa connect8.eu (rovnaká farba a miesto, ako keď si
+  // si ju predtým dopisoval ručne cez editor fotiek - teraz je tam vždy natrvalo).
   ctx.fillStyle = '#cfc4e0';
   ctx.font = '700 11.5px Inter, sans-serif';
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   ctx.fillText((t('Zdieľaný obsah')||'').toUpperCase(), PAD, cy + 10);
+  ctx.fillStyle = '#2dd4e6';
+  ctx.font = '700 11.5px Inter, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('www.connect8.eu', W - PAD, cy + 10);
   cy += 12 + 8;
 
   // Galéria
