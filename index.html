@@ -1442,6 +1442,11 @@
   .vizitka-actions .btn-share{background:linear-gradient(135deg,#6a4cff,#a44cff);color:#fff;}
   .vizitka-actions .btn-share:disabled{opacity:.5;}
   .vizitka-shared-note{font-size:11.5px;color:#8ee69b;text-align:center;margin-top:10px;display:none;}
+  /* Pri vytváraní obrázka vizitky (na zdieľanie) dočasne skryjeme tlačidlá a krížik,
+     nech snímka obsahuje len samotnú vizitku (avatar, meno, popis, štatistiky, galériu) */
+  .vizitka-card.vizitka-capturing .vizitka-close,
+  .vizitka-card.vizitka-capturing .vizitka-actions,
+  .vizitka-card.vizitka-capturing .vizitka-shared-note{display:none !important;}
   .btn-share-further{
     position:relative;padding:7px 40px 7px 14px;border-radius:12px;font-weight:700;font-size:13.5px;
     background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border:none;cursor:pointer;
@@ -5504,6 +5509,56 @@ function closeInviteModal(){
   vizitkaShareMode = false;
 }
 
+// html2canvas sa načíta až keď je naozaj potrebný (pri zdieľaní vizitky ďalej),
+// nech sa zbytočne nespomaľuje prvé načítanie appky.
+let html2canvasLoadPromise = null;
+function loadHtml2Canvas(){
+  if(typeof html2canvas === 'function') return Promise.resolve();
+  if(html2canvasLoadPromise) return html2canvasLoadPromise;
+  html2canvasLoadPromise = new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  return html2canvasLoadPromise;
+}
+
+// Vytvorí PNG obrázok CELEJ vizitkovej karty (avatar, meno, popis, štatistiky,
+// galéria) - presne to, čo je vidieť v okne vizitky, len bez tlačidiel a krížika.
+// Ak sa to z nejakého dôvodu nepodarí (napr. výpadok CDN), ako núdzové
+// riešenie sa použije aspoň samotná profilová fotka.
+async function getVizitkaShareImageBlob(){
+  try{
+    await loadHtml2Canvas();
+    if(typeof html2canvas !== 'function') throw new Error('html2canvas sa nenačítal');
+    const card = document.querySelector('#vizitka-modal .vizitka-card');
+    if(!card) throw new Error('vizitka-card sa nenašla');
+    card.classList.add('vizitka-capturing');
+    try{
+      const canvas = await html2canvas(card, {backgroundColor:'#1a0f2b', useCORS:true, scale:2});
+      const blob = await new Promise(res=>canvas.toBlob(res, 'image/png'));
+      if(blob) return blob;
+    } finally {
+      card.classList.remove('vizitka-capturing');
+    }
+  }catch(e){
+    console.error('Vytvorenie obrázka celej vizitky zlyhalo, skúsim aspoň profilovú fotku:', e);
+  }
+  const photoUrl = (currentUser && currentUser.photoURL)
+    || (currentVizitkaData && currentVizitkaData.images && currentVizitkaData.images[0])
+    || null;
+  if(!photoUrl) return null;
+  try{
+    const resp = await fetch(photoUrl);
+    return await resp.blob();
+  }catch(e){
+    console.error('Ani záložnú profilovú fotku sa nepodarilo stiahnuť:', e);
+    return null;
+  }
+}
+
 // Zdieľanie vizitky ďalej (mimo Connect8) - kliknutie na zelené tlačidlo na vizitke.
 // WhatsApp/Messenger/E-mail odkazy (nižšie) vedia preniesť len text/adresu, NIE fotku.
 // Preto najprv skúsime natívne zdieľanie priamo z telefónu (Web Share API s
@@ -5512,22 +5567,18 @@ function closeInviteModal(){
 // nepodporuje (typicky počítač), otvoríme aspoň rovnakú ponuku ako doteraz,
 // s holou adresou connect8.eu bez pozývacieho textu.
 async function shareVizitkaFurther(){
-  const photoUrl = (currentUser && currentUser.photoURL)
-    || (currentVizitkaData && currentVizitkaData.images && currentVizitkaData.images[0])
-    || null;
+  const blob = await getVizitkaShareImageBlob();
 
-  if(photoUrl && navigator.share){
+  if(blob && navigator.share){
     try{
-      const resp = await fetch(photoUrl);
-      const blob = await resp.blob();
-      const file = new File([blob], 'vizitka.jpg', {type: blob.type || 'image/jpeg'});
+      const file = new File([blob], 'vizitka.png', {type: blob.type || 'image/png'});
       if(navigator.canShare && navigator.canShare({files:[file]})){
         closeVizitkaModal();
         await navigator.share({files:[file], url: INVITE_URL});
         return;
       }
     }catch(e){
-      console.error('Natívne zdieľanie fotky vizitky sa nepodarilo, prepínam na záložnú ponuku:', e);
+      console.error('Natívne zdieľanie vizitky sa nepodarilo, prepínam na záložnú ponuku:', e);
     }
   }
 
