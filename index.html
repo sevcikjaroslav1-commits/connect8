@@ -2837,7 +2837,7 @@
               <button class="btn-close2" onclick="closeVizitkaModal()">Zavrieť</button>
               <button class="btn-share" id="vizitka-share-btn" onclick="shareVizitkaToFeed()">📤 Zdieľať do feedu</button>
               <div></div>
-              <button class="btn-share-further" onclick="closeVizitkaModal();openInviteModal()">
+              <button class="btn-share-further" onclick="shareVizitkaFurther()">
                 <span>Zdieľať ďalej</span>
                 <span class="invite-ring">
                   <span class="invite-ring-inner">
@@ -5486,11 +5486,54 @@ function updateConversationEntryTranslation(id, translatedText){
 const INVITE_URL = 'https://connect8.eu';
 const INVITE_TEXT = 'Poď aj ty na sociálnu sieť Connect8 🎉';
 
+// true, keď je ponuka WhatsApp/Messenger/E-mail/... otvorená z tlačidla
+// "Zdieľať ďalej" na vizitke - vtedy sa NEPOSIELA pozývací text, iba samotná
+// adresa connect8.eu (fotku vizitky sa cez tieto konkrétne odkazy priložiť
+// nedá, pozri shareVizitkaFurther() nižšie).
+let vizitkaShareMode = false;
+
+function getInviteShareText(){
+  return vizitkaShareMode ? INVITE_URL : (INVITE_TEXT + ' ' + INVITE_URL);
+}
+
 function openInviteModal(){
   document.getElementById('invite-modal').classList.add('open');
 }
 function closeInviteModal(){
   document.getElementById('invite-modal').classList.remove('open');
+  vizitkaShareMode = false;
+}
+
+// Zdieľanie vizitky ďalej (mimo Connect8) - kliknutie na zelené tlačidlo na vizitke.
+// WhatsApp/Messenger/E-mail odkazy (nižšie) vedia preniesť len text/adresu, NIE fotku.
+// Preto najprv skúsime natívne zdieľanie priamo z telefónu (Web Share API s
+// priloženým súborom) - to je jediný spôsob, ako sa dá fotka vizitky naozaj
+// priložiť do WhatsAppu, Messengeru a pod. Ak zariadenie/prehliadač toto
+// nepodporuje (typicky počítač), otvoríme aspoň rovnakú ponuku ako doteraz,
+// s holou adresou connect8.eu bez pozývacieho textu.
+async function shareVizitkaFurther(){
+  const photoUrl = (currentUser && currentUser.photoURL)
+    || (currentVizitkaData && currentVizitkaData.images && currentVizitkaData.images[0])
+    || null;
+
+  if(photoUrl && navigator.share){
+    try{
+      const resp = await fetch(photoUrl);
+      const blob = await resp.blob();
+      const file = new File([blob], 'vizitka.jpg', {type: blob.type || 'image/jpeg'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        closeVizitkaModal();
+        await navigator.share({files:[file], url: INVITE_URL});
+        return;
+      }
+    }catch(e){
+      console.error('Natívne zdieľanie fotky vizitky sa nepodarilo, prepínam na záložnú ponuku:', e);
+    }
+  }
+
+  vizitkaShareMode = true;
+  closeVizitkaModal();
+  openInviteModal();
 }
 
 function openLegalModal(name){
@@ -5509,7 +5552,7 @@ function closeLegalModal(name){
 }
 
 function inviteViaWhatsApp(){
-  const msg = encodeURIComponent(INVITE_TEXT + ' ' + INVITE_URL);
+  const msg = encodeURIComponent(getInviteShareText());
   window.open('https://wa.me/?text=' + msg, '_blank');
   closeInviteModal();
 }
@@ -5541,10 +5584,10 @@ function inviteViaTikTok(){
     alert('Odkaz na Connect8 bol skopírovaný - vlož ho v TikToku do správy alebo popisu 👍');
   };
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(INVITE_TEXT + ' ' + INVITE_URL).then(finish).catch(finish);
+    navigator.clipboard.writeText(getInviteShareText()).then(finish).catch(finish);
   } else {
     const tmp = document.createElement('textarea');
-    tmp.value = INVITE_TEXT + ' ' + INVITE_URL;
+    tmp.value = getInviteShareText();
     document.body.appendChild(tmp);
     tmp.select();
     try{ document.execCommand('copy'); }catch(e){}
@@ -5563,10 +5606,10 @@ function inviteViaInstagram(){
     alert('Odkaz na Connect8 bol skopírovaný - vlož ho v Instagrame do správy alebo Stories 👍');
   };
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(INVITE_TEXT + ' ' + INVITE_URL).then(finish).catch(finish);
+    navigator.clipboard.writeText(getInviteShareText()).then(finish).catch(finish);
   } else {
     const tmp = document.createElement('textarea');
-    tmp.value = INVITE_TEXT + ' ' + INVITE_URL;
+    tmp.value = getInviteShareText();
     document.body.appendChild(tmp);
     tmp.select();
     try{ document.execCommand('copy'); }catch(e){}
@@ -5576,8 +5619,8 @@ function inviteViaInstagram(){
 }
 
 function inviteViaEmail(){
-  const subject = encodeURIComponent('Poď aj ty na Connect8!');
-  const body = encodeURIComponent(INVITE_TEXT + '\n\n' + INVITE_URL);
+  const subject = encodeURIComponent(vizitkaShareMode ? t('Moja elektronická vizitka na Connect8') : 'Poď aj ty na Connect8!');
+  const body = encodeURIComponent(vizitkaShareMode ? INVITE_URL : (INVITE_TEXT + '\n\n' + INVITE_URL));
   window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
   closeInviteModal();
 }
