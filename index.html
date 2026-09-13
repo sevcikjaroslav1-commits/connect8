@@ -1209,12 +1209,18 @@
   }
 
   /* ---------- VIDEO ---------- */
-  #view-video{background:var(--mode-video-soft);margin:-20px -16px -40px;padding:0;min-height:calc(100vh - var(--video-top-h, var(--topbar-h, 58px)));min-height:calc(100dvh - var(--video-top-h, var(--topbar-h, 58px)));position:relative;}
+  #view-video{background:var(--mode-video-soft);margin:-20px -16px -40px;padding:0;min-height:calc(100vh - var(--topbar-h, 58px));min-height:calc(100dvh - var(--topbar-h, 58px));position:relative;}
+  /* Karta videa je posunutá o VIDEO_TOP_GAP nižšie (margin-top), aby bočné
+     tlačidlo "Pridať video" (hore v pravom stĺpci) nebolo schované/orezané
+     pod riadkom "Môj profil/Priatelia/Používatelia". Výška je o ten istý
+     kus zmenšená, nech sa karta stále zmestí presne do voľného priestoru. */
   .video-scroller{
-    height:calc(100vh - var(--video-top-h, var(--topbar-h, 58px)));height:calc(100dvh - var(--video-top-h, var(--topbar-h, 58px)));overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
+    --video-top-gap: 26px;
+    margin-top:var(--video-top-gap);
+    height:calc(100vh - var(--topbar-h, 58px) - var(--video-top-gap));height:calc(100dvh - var(--topbar-h, 58px) - var(--video-top-gap));overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
   }
   .video-card{
-    height:calc(100vh - var(--video-top-h, var(--topbar-h, 58px)));height:calc(100dvh - var(--video-top-h, var(--topbar-h, 58px)));scroll-snap-align:start;position:relative;
+    height:calc(100vh - var(--topbar-h, 58px) - var(--video-top-gap, 26px));height:calc(100dvh - var(--topbar-h, 58px) - var(--video-top-gap, 26px));scroll-snap-align:start;position:relative;
     display:flex;align-items:flex-end;
     background:linear-gradient(160deg, var(--vc1,#3a1030), var(--vc2,#160a14));
     color:#fff;
@@ -6863,15 +6869,6 @@ function updateTopbarHeightVar(){
     // "Môj profil / Priatelia / Používatelia" má ostať prilepené navrchu
     // aj pri skrolovaní, hneď pod hornou lištou.
     document.documentElement.style.setProperty('--quicklinks-top', h + 'px');
-    // Video karty (celoobrazovkové, so snap-scrollom) potrebujú počítať aj s
-    // riadkom "Môj profil/Priatelia/Používatelia" - ten je mimo .topbar, takže
-    // topbar-h samotný by kartu videa urobil vyššou než reálny voľný priestor.
-    // Dôsledok: bočné tlačidlá (Pridať video, Auto scroll...) boli čiastočne
-    // schované nad obrazovkou a spodný riadok (počet zhliadnutí, kto video
-    // pridal) bol pod ňou.
-    const quicklinks = document.querySelector('.mobile-quick-links');
-    const qh = (quicklinks && quicklinks.getBoundingClientRect().height) || 0;
-    document.documentElement.style.setProperty('--video-top-h', (h + qh) + 'px');
   }
 }
 window.addEventListener('load', updateTopbarHeightVar);
