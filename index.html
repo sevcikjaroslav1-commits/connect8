@@ -1436,12 +1436,41 @@
     background:linear-gradient(160deg,#3a1030,#160a14);
   }
   .vizitka-empty{font-size:12.5px;color:#cfc4e0;text-align:center;padding:10px 0 4px;}
-  .vizitka-actions{display:flex;gap:8px;}
-  .vizitka-actions button{flex:1;padding:11px 0;border-radius:12px;font-weight:700;font-size:13.5px;}
+  .vizitka-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .vizitka-actions button{padding:11px 0;border-radius:12px;font-weight:700;font-size:13.5px;}
   .vizitka-actions .btn-close2{background:rgba(255,255,255,.12);color:#fff;}
   .vizitka-actions .btn-share{background:linear-gradient(135deg,#6a4cff,#a44cff);color:#fff;}
   .vizitka-actions .btn-share:disabled{opacity:.5;}
   .vizitka-shared-note{font-size:11.5px;color:#8ee69b;text-align:center;margin-top:10px;display:none;}
+  /* Poznámka: obrázok vizitky na zdieľanie sa kreslí priamo z dát cez Canvas
+     API (pozri drawVizitkaToCanvas v JS), nie odfotením tohto DOM elementu -
+     tlačidlá/krížik/overlay sa teda do zdieľanej fotky ani nedostanú, keďže
+     sa nekreslia. */
+  /* Overlay so používateľ vidí, že sa niečo deje (príprava obrázka na zdieľanie),
+     namiesto toho aby vyzeralo, že appka "zamrzla". */
+  .vizitka-share-overlay{
+    position:absolute;inset:0;z-index:5;border-radius:22px;
+    background:rgba(15,8,26,.85);display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:10px;color:#e8def7;font-size:13px;font-weight:600;text-align:center;padding:0 20px;
+  }
+  .vizitka-share-overlay.show{display:flex;}
+  .vizitka-share-overlay .spinner{width:26px;height:26px;border-color:rgba(255,255,255,.25);border-top-color:#a44cff;}
+  /* Adresa connect8.eu je teraz trvalou súčasťou vizitky (nie len počas
+     odfotenia) - vidno ju priamo v appke aj na zdieľanom obrázku. */
+  .vizitka-watermark{display:block;text-align:center;font-size:11.5px;font-weight:700;letter-spacing:.03em;
+    color:#c9a8ff;margin-top:2px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);}
+  .btn-share-further{
+    position:relative;padding:7px 50px 7px 14px;border-radius:12px;font-weight:700;font-size:13.5px;
+    background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:.15s;
+  }
+  .btn-share-further:hover{filter:brightness(1.08);}
+  .btn-share-further .invite-ring{
+    position:absolute;right:5px;top:50%;transform:translateY(-50%);
+    width:22px;height:22px;padding:2px;flex-shrink:0;
+  }
+  .btn-share-further .invite-ring-inner{background:#0e3d20;}
+  .btn-share-further .invite-ring-inner svg{width:11px;height:11px;}
 
   .chat-modal, .conv-modal{
     display:none;position:fixed;inset:0;z-index:600;background:rgba(10,10,14,.55);
@@ -2812,6 +2841,10 @@
 
         <div class="vizitka-modal" id="vizitka-modal">
           <div class="vizitka-card">
+            <div class="vizitka-share-overlay" id="vizitka-share-overlay">
+              <div class="spinner"></div>
+              <span>Pripravujem obrázok na zdieľanie…</span>
+            </div>
             <button class="vizitka-close" onclick="closeVizitkaModal()">✕</button>
             <div class="vizitka-top">
               <div class="vizitka-avatar" id="vizitka-avatar">?</div>
@@ -2821,9 +2854,19 @@
             <div class="vizitka-stats" id="vizitka-stats"></div>
             <div class="vizitka-gallery-title">Zdieľaný obsah</div>
             <div class="vizitka-gallery" id="vizitka-gallery"></div>
+            <div class="vizitka-watermark">📇 connect8.eu</div>
             <div class="vizitka-actions">
               <button class="btn-close2" onclick="closeVizitkaModal()">Zavrieť</button>
               <button class="btn-share" id="vizitka-share-btn" onclick="shareVizitkaToFeed()">📤 Zdieľať do feedu</button>
+              <div></div>
+              <button class="btn-share-further" id="vizitka-share-further-btn" onclick="shareVizitkaFurther()">
+                <span>Zdieľať ďalej</span>
+                <span class="invite-ring">
+                  <span class="invite-ring-inner">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+                  </span>
+                </span>
+              </button>
             </div>
             <div class="vizitka-shared-note" id="vizitka-shared-note">✓ Vizitka bola zdieľaná do feedu.</div>
           </div>
@@ -3119,6 +3162,19 @@ function optimizeCloudinaryVideoUrl(url){
   // takže sa video na iPhone nikdy nespustí. MP4/H.264 je univerzálne podporovaný
   // formát naprieč všetkými platformami vrátane iOS, preto ho vynucujeme vždy.
   return url.replace('/video/upload/', '/video/upload/w_720,c_limit,q_auto,f_mp4,vc_h264/');
+}
+
+// Rovnaký princíp ako vyššie, len pre obrázky - použité pri príprave vizitky
+// na zdieľanie (pozri getVizitkaShareImageBlob). Galéria na vizitke ukazuje
+// len malé miniatúry, no bez tejto úpravy by sa reálne sťahovali originálne
+// fotky v plnej veľkosti (môže byť aj niekoľko MB každá) - pri 10 fotkách to
+// vedelo trvať tak dlho, že príprava obrázka na zdieľanie stihla vypršať
+// (timeout), a appka potom potichu poslala len profilovú fotku ako náhradu.
+function optimizeCloudinaryImageUrl(url, width){
+  if(!url || typeof url !== 'string') return url;
+  if(!url.includes('res.cloudinary.com') || !url.includes('/image/upload/')) return url; // nie je to Cloudinary obrázok
+  if(/\/upload\/[^/]*w_\d/.test(url)) return url; // šírka už je nastavená, nepridávaj druhýkrát
+  return url.replace('/image/upload/', `/image/upload/w_${width},c_limit,q_auto,f_auto/`);
 }
 
 const LOCAL_STORAGE_KEY = "connect_app_state_v1";
@@ -4384,6 +4440,7 @@ function classifyVizitka(corpus, counts){
 }
 
 let currentVizitkaData = null;
+let vizitkaShareImagePromise = null; // pripravuje sa vopred, pozri openVizitkaModal()
 
 function openVizitkaModal(){
   if(!currentUser) return;
@@ -4401,7 +4458,9 @@ function openVizitkaModal(){
 
   const sampleImgs = data.photos.slice(0,10);
   const gallery = document.getElementById('vizitka-gallery');
-  let html = sampleImgs.map(src=>`<img src="${src}">`).join('');
+  // w_240: malé miniatúry stačia (mriežka ich aj tak zobrazuje maličké) -
+  // podstatne rýchlejšie sťahovanie/spracovanie pri príprave zdieľanej fotky.
+  let html = sampleImgs.map(src=>`<img src="${optimizeCloudinaryImageUrl(src, 240)}">`).join('');
   if(sampleImgs.length < 10 && data.myVideos.length){
     const remain = 10 - sampleImgs.length;
     html += data.myVideos.slice(0, remain).map(()=>`<div class="vizitka-video-thumb">🎬</div>`).join('');
@@ -4416,6 +4475,15 @@ function openVizitkaModal(){
   if(shareBtn){ shareBtn.disabled = false; shareBtn.textContent = '📤 ' + t('Zdieľať do feedu'); }
 
   document.getElementById('vizitka-modal').classList.add('open');
+
+  // Obrázok na zdieľanie pripravíme HNEĎ TERAZ na pozadí, nie až keď
+  // používateľ klikne na "Zdieľať ďalej". Vďaka tomu je pri kliknutí blob
+  // spravidla už hotový a navigator.share() sa zavolá prakticky okamžite -
+  // inak medzi kliknutím a zavolaním natívneho zdieľania ubehne pár sekúnd
+  // (kým html2canvas dobehne) a prehliadač medzitým stratí platnosť
+  // používateľovho gesta, takže natívna ponuka (WhatsApp, Messenger...) sa
+  // vôbec neukáže a appka potichu spadne na záložný odkaz bez fotky.
+  vizitkaShareImagePromise = getVizitkaShareImageBlob();
 }
 
 function closeVizitkaModal(){
@@ -4841,6 +4909,14 @@ function handleSharedDeepLink(){
         setTimeout(()=>el.classList.remove('shared-highlight'), 2200);
       }
     }, 250);
+  }
+  if(videoId || postId){
+    // Vymažeme ?video=/?post= z adresy hneď po spracovaní - inak by pri
+    // každom ďalšom potiahnutí stránky dole (pull-to-refresh reload tej
+    // istej URL) tento parameter zostal a znova by nás to hodilo do
+    // videí/feedu, aj keď sme si medzitým prepli na inú sekciu.
+    const cleanUrl = location.pathname + location.hash;
+    history.replaceState(null, '', cleanUrl);
   }
 }
 
@@ -5465,11 +5541,366 @@ function updateConversationEntryTranslation(id, translatedText){
 const INVITE_URL = 'https://connect8.eu';
 const INVITE_TEXT = 'Poď aj ty na sociálnu sieť Connect8 🎉';
 
+// true, keď je ponuka WhatsApp/Messenger/E-mail/... otvorená z tlačidla
+// "Zdieľať ďalej" na vizitke - vtedy sa NEPOSIELA pozývací text, iba samotná
+// adresa connect8.eu (fotku vizitky sa cez tieto konkrétne odkazy priložiť
+// nedá, pozri shareVizitkaFurther() nižšie).
+let vizitkaShareMode = false;
+
+function getInviteShareText(){
+  return vizitkaShareMode ? INVITE_URL : (INVITE_TEXT + ' ' + INVITE_URL);
+}
+
 function openInviteModal(){
   document.getElementById('invite-modal').classList.add('open');
 }
 function closeInviteModal(){
   document.getElementById('invite-modal').classList.remove('open');
+  vizitkaShareMode = false;
+}
+
+// Pomocná funkcia: "pretečie" (reject) danú promise, ak sa nestihne vybaviť
+// do timeoutMs - aby appka nikdy nepôsobila, že "sa nič nedeje".
+function withTimeout(promise, timeoutMs){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs))
+  ]);
+}
+
+// ============================================================
+// Vizitka na zdieľanie sa kreslí PRIAMO z dát cez Canvas API
+// (meno, popis, štatistiky, fotky) - NEODFOTÍ sa živá stránka.
+// Predošlý prístup (html2canvas odfotenie DOM elementu) bol
+// krehký: záležalo na tom, či sa všetky obrázky v galérii stihnú
+// načítať cez CDN, na CORS hlavičkách, na výkone telefónu atď. -
+// a keď čo i len jedna fotka zlyhala/trvala dlho, vedelo zlyhať
+// zachytenie celej karty. Kreslenie z vlastných dát je spoľahlivé:
+// každá fotka v galérii sa načítava samostatne a zlyhanie jednej
+// jednoducho vynechá danú dlaždicu, zvyšok vizitky sa nakreslí
+// normálne, takže obrázok sa vytvorí prakticky vždy.
+// ============================================================
+
+function loadImageForCanvas(url, timeoutMs){
+  return new Promise((resolve)=>{
+    if(!url){ resolve(null); return; }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    let done = false;
+    const finish = (result)=>{ if(done) return; done = true; resolve(result); };
+    const timer = setTimeout(()=>finish(null), timeoutMs);
+    img.onload = ()=>{ clearTimeout(timer); finish(img); };
+    img.onerror = ()=>{ clearTimeout(timer); finish(null); };
+    img.src = url;
+  });
+}
+
+function drawRoundedRectPath(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+// Rozdelí text na viac riadkov tak, aby sa každý zmestil do maxWidth
+// (podľa aktuálne nastaveného fontu na ctx) - používa sa pre popis (tagline),
+// nech sa dlhšia veta nikdy neorezáva a je vždy celá vidieť.
+function wrapTextLines(ctx, text, maxWidth){
+  const words = (text || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+  words.forEach(word=>{
+    const test = line ? line + ' ' + word : word;
+    if(line && ctx.measureText(test).width > maxWidth){
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  });
+  if(line) lines.push(line);
+  return lines.length ? lines : [''];
+}
+
+// Ekvivalent CSS "object-fit:cover" - obrázok sa oreže, nedeformuje.
+function drawCoverImage(ctx, img, x, y, w, h){
+  const ir = img.width / img.height;
+  const dr = w / h;
+  let sx, sy, sw, sh;
+  if(ir > dr){ sh = img.height; sw = sh * dr; sx = (img.width - sw) / 2; sy = 0; }
+  else { sw = img.width; sh = sw / dr; sx = 0; sy = (img.height - sh) / 2; }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+async function drawVizitkaToCanvas(){
+  if(document.fonts && document.fonts.ready){
+    try{ await Promise.race([document.fonts.ready, new Promise(r=>setTimeout(r, 1200))]); }catch(e){}
+  }
+
+  const name = (currentUser && currentUser.name) || '';
+  const tagline = (currentVizitkaData && currentVizitkaData.tagline) || '';
+  const counts = (currentVizitkaData && currentVizitkaData.counts) || {posts:0, photos:0, videos:0};
+  const photoUrls = (currentVizitkaData && currentVizitkaData.images) || [];
+
+  const S = 2; // scale pre ostrejší (retina) výstup
+  const W = 360;
+  const PAD = 20;
+  const contentW = W - PAD*2;
+
+  // Avatar a galéria sa sťahujú súbežne - zlyhanie/pomalosť jednej fotky
+  // nezablokuje ostatné (pozri loadImageForCanvas: nikdy nezamietne, len
+  // po timeoute vráti null a daná dlaždica sa jednoducho vynechá).
+  const avatarUrl = currentUser && currentUser.photoURL;
+  const galleryPhotos = photoUrls.slice(0, 10);
+  const loaded = await Promise.all([
+    loadImageForCanvas(avatarUrl, 6000),
+    ...galleryPhotos.map(u=>loadImageForCanvas(optimizeCloudinaryImageUrl(u, 240), 6000))
+  ]);
+  const avatarImg = loaded[0];
+  const galleryImgs = loaded.slice(1).filter(Boolean);
+
+  const remainSlots = Math.max(0, 10 - galleryPhotos.length);
+  const videoSlots = Math.min(remainSlots, counts.videos || 0);
+  const totalGalleryTiles = galleryImgs.length + videoSlots;
+  const galleryEmpty = totalGalleryTiles === 0;
+  const tileGap = 5;
+  const tileSize = (contentW - tileGap*4) / 5;
+  const galleryRows = galleryEmpty ? 0 : Math.ceil(totalGalleryTiles / 5);
+
+  // Tagline (popis) sa môže zalomiť na viac riadkov, aby sa veta nikdy
+  // neorezala - rozmery pilulky preto zisťujeme vopred cez pomocný canvas.
+  const pillPadX = 14, pillPadY = 7, pillLineH = 17;
+  const measureCanvas = document.createElement('canvas');
+  const mctx = measureCanvas.getContext('2d');
+  mctx.font = '700 14.5px Inter, sans-serif';
+  const taglineLines = wrapTextLines(mctx, tagline, contentW - pillPadX*2);
+  let pillW = 0;
+  taglineLines.forEach(l=>{ pillW = Math.max(pillW, mctx.measureText(l).width); });
+  pillW = Math.min(contentW, pillW + pillPadX*2);
+  const pillH = taglineLines.length*pillLineH + pillPadY*2;
+
+  // -- Výpočet celkovej výšky karty --
+  let y = PAD;
+  y += 74 + 10;               // avatar + margin
+  y += 20 + 6;                 // meno + margin
+  y += pillH + 16;             // tagline pill + margin
+  y += 10 + 15 + 4 + 13 + 10;  // štatistiky (padding+číslo+medzera+popis+padding)
+  y += 12 + 8;                 // nadpis galérie + margin
+  y += galleryEmpty ? (30 + 18) : (galleryRows*tileSize + (galleryRows-1)*tileGap + 18);
+  y += 12 + 14;                // vodoznak (padding-top + výška textu)
+  const H = Math.round(y);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(W * S);
+  canvas.height = Math.round(H * S);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(S, S);
+
+  // Pozadie karty
+  drawRoundedRectPath(ctx, 0, 0, W, H, 22);
+  const bg = ctx.createLinearGradient(0, 0, W*0.3, H);
+  bg.addColorStop(0, '#221033');
+  bg.addColorStop(1, '#120a1e');
+  ctx.fillStyle = bg;
+  ctx.fill();
+
+  // Avatar
+  const avR = 37;
+  const avCx = W/2, avCy = PAD + avR;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(avCx, avCy, avR, 0, Math.PI*2); ctx.closePath(); ctx.clip();
+  if(avatarImg){
+    drawCoverImage(ctx, avatarImg, avCx-avR, avCy-avR, avR*2, avR*2);
+  } else {
+    const grad = ctx.createLinearGradient(avCx-avR, avCy-avR, avCx+avR, avCy+avR);
+    grad.addColorStop(0, '#a44cff'); grad.addColorStop(1, '#6a4cff');
+    ctx.fillStyle = grad;
+    ctx.fillRect(avCx-avR, avCy-avR, avR*2, avR*2);
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 26px Inter, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(initials(name), avCx, avCy+1);
+  }
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(avCx, avCy, avR, 0, Math.PI*2);
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.stroke();
+
+  let cy = avCy + avR + 10;
+
+  // Meno
+  ctx.fillStyle = '#fff';
+  ctx.font = '800 17px Inter, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(name, W/2, cy + 15);
+  cy += 20 + 6;
+
+  // Tagline (pilulka) - rozmery (pillW/pillH/taglineLines) sú už spočítané vyššie
+  ctx.font = '700 14.5px Inter, sans-serif';
+  drawRoundedRectPath(ctx, W/2 - pillW/2, cy, pillW, pillH, Math.min(pillH/2, 16));
+  ctx.fillStyle = 'rgba(164,76,255,.15)'; ctx.fill();
+  ctx.fillStyle = '#c9a8ff';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  taglineLines.forEach((line, i)=>{
+    const lineY = cy + pillPadY + pillLineH*i + pillLineH/2 + 1;
+    ctx.fillText(line, W/2, lineY);
+  });
+  cy += pillH + 16;
+
+  // Štatistiky
+  const statsTop = cy;
+  const statsH = 10 + 15 + 4 + 13 + 10;
+  ctx.strokeStyle = 'rgba(255,255,255,.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD, statsTop); ctx.lineTo(W-PAD, statsTop); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD, statsTop+statsH); ctx.lineTo(W-PAD, statsTop+statsH); ctx.stroke();
+  const statCols = [
+    [String(counts.posts||0), t('príspevkov')],
+    [String(counts.photos||0), t('fotiek')],
+    [String(counts.videos||0), t('videí')]
+  ];
+  const colW = contentW / 3;
+  statCols.forEach((col, i)=>{
+    const cx = PAD + colW*i + colW/2;
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 15px Inter, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(col[0], cx, statsTop + 10 + 14);
+    ctx.fillStyle = '#cfc4e0';
+    ctx.font = '500 11.5px Inter, sans-serif';
+    ctx.fillText(col[1], cx, statsTop + 10 + 14 + 4 + 11);
+  });
+  cy = statsTop + statsH + 12;
+
+  // Nadpis galérie + adresa connect8.eu (rovnaká farba a miesto, ako keď si
+  // si ju predtým dopisoval ručne cez editor fotiek - teraz je tam vždy natrvalo).
+  ctx.fillStyle = '#cfc4e0';
+  ctx.font = '700 11.5px Inter, sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText((t('Zdieľaný obsah')||'').toUpperCase(), PAD, cy + 10);
+  ctx.fillStyle = '#2dd4e6';
+  ctx.font = '700 11.5px Inter, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('www.connect8.eu', W - PAD, cy + 10);
+  cy += 12 + 8;
+
+  // Galéria
+  if(galleryEmpty){
+    ctx.fillStyle = '#cfc4e0';
+    ctx.font = '500 12.5px Inter, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(t('Zatiaľ nemáš zdieľaný žiadny obsah'), W/2, cy + 18);
+    cy += 30 + 18;
+  } else {
+    let ti = 0;
+    galleryImgs.forEach((img)=>{
+      const col = ti % 5, row = Math.floor(ti/5);
+      const tx = PAD + col*(tileSize+tileGap), ty = cy + row*(tileSize+tileGap);
+      drawRoundedRectPath(ctx, tx, ty, tileSize, tileSize, 7);
+      ctx.save(); ctx.clip();
+      drawCoverImage(ctx, img, tx, ty, tileSize, tileSize);
+      ctx.restore();
+      ti++;
+    });
+    for(let v=0; v<videoSlots; v++){
+      const col = ti % 5, row = Math.floor(ti/5);
+      const tx = PAD + col*(tileSize+tileGap), ty = cy + row*(tileSize+tileGap);
+      drawRoundedRectPath(ctx, tx, ty, tileSize, tileSize, 7);
+      const grad = ctx.createLinearGradient(tx, ty, tx, ty+tileSize);
+      grad.addColorStop(0, '#3a1030'); grad.addColorStop(1, '#160a14');
+      ctx.fillStyle = grad; ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px Inter, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('🎬', tx+tileSize/2, ty+tileSize/2+1);
+      ti++;
+    }
+    cy += galleryRows*tileSize + (galleryRows-1)*tileGap + 18;
+  }
+
+  // Vodoznak
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.beginPath(); ctx.moveTo(PAD, cy); ctx.lineTo(W-PAD, cy); ctx.stroke();
+  ctx.fillStyle = '#c9a8ff';
+  ctx.font = '700 11.5px Inter, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('📇 connect8.eu', W/2, cy + 12 + 11);
+
+  return canvas;
+}
+
+// Vytvorí PNG obrázok CELEJ vizitky (avatar, meno, popis, štatistiky, galéria).
+// Nakreslí sa z dát cez Canvas API (pozri drawVizitkaToCanvas vyššie), takže
+// zlyhá len ak by zlyhalo úplne všetko (napr. canvas.toBlob) - vtedy sa ako
+// núdzové riešenie použije aspoň samotná profilová fotka.
+async function getVizitkaShareImageBlob(){
+  try{
+    const canvas = await withTimeout(drawVizitkaToCanvas(), 12000);
+    const blob = await withTimeout(new Promise(res=>canvas.toBlob(res, 'image/png')), 5000);
+    if(blob) return blob;
+  }catch(e){
+    console.error('Vytvorenie obrázka vizitky zlyhalo, skúsim aspoň profilovú fotku:', e);
+  }
+  const photoUrl = (currentUser && currentUser.photoURL)
+    || (currentVizitkaData && currentVizitkaData.images && currentVizitkaData.images[0])
+    || null;
+  if(!photoUrl) return null;
+  try{
+    const resp = await fetch(photoUrl);
+    return await resp.blob();
+  }catch(e){
+    console.error('Ani záložnú profilovú fotku sa nepodarilo stiahnuť:', e);
+    return null;
+  }
+}
+
+// Zdieľanie vizitky ďalej (mimo Connect8) - kliknutie na zelené tlačidlo na vizitke.
+// WhatsApp/Messenger/E-mail odkazy (nižšie) vedia preniesť len text/adresu, NIE fotku.
+// Preto najprv skúsime natívne zdieľanie priamo z telefónu (Web Share API s
+// priloženým súborom) - to je jediný spôsob, ako sa dá fotka vizitky naozaj
+// priložiť do WhatsAppu, Messengeru a pod. Ak zariadenie/prehliadač toto
+// nepodporuje (typicky počítač), otvoríme aspoň rovnakú ponuku ako doteraz,
+// s holou adresou connect8.eu bez pozývacieho textu.
+async function shareVizitkaFurther(){
+  const overlay = document.getElementById('vizitka-share-overlay');
+  const btn = document.getElementById('vizitka-share-further-btn');
+  if(overlay) overlay.classList.add('show');
+  if(btn) btn.disabled = true;
+
+  try{
+    // Použi obrázok pripravený vopred (spustené hneď pri otvorení vizitky) -
+    // ak by z nejakého dôvodu ešte nebežal, pripraví sa teraz.
+    const blob = await (vizitkaShareImagePromise || getVizitkaShareImageBlob());
+
+    if(blob && navigator.share){
+      try{
+        const file = new File([blob], 'vizitka.png', {type: blob.type || 'image/png'});
+        if(navigator.canShare && navigator.canShare({files:[file]})){
+          closeVizitkaModal();
+          // POZOR: zámerne sa NEPOSIELA aj "url" spolu so súbormi - viaceré appky
+          // (WhatsApp, Messenger a i.) sa vtedy z ponuky vyfiltrujú, lebo neviem
+          // prijať kombináciu súbor+text naraz, takže by sa zobrazila prázdna
+          // tabuľka. Adresa connect8.eu je namiesto toho vypálená priamo do
+          // obrázka (pozri .vizitka-watermark), takže cestuje s ním všade.
+          await navigator.share({files:[file]});
+          return;
+        }
+      }catch(e){
+        // Sem spadne aj bežné zrušenie ponuky používateľom (AbortError) - v tom
+        // prípade zámerne NEOTVÁRAME záložnú ponuku, lebo si to sám zavrel.
+        if(e && e.name === 'AbortError') return;
+        console.error('Natívne zdieľanie vizitky sa nepodarilo, prepínam na záložnú ponuku:', e);
+      }
+    }
+
+    vizitkaShareMode = true;
+    closeVizitkaModal();
+    openInviteModal();
+  } finally {
+    if(overlay) overlay.classList.remove('show');
+    if(btn) btn.disabled = false;
+  }
 }
 
 function openLegalModal(name){
@@ -5488,7 +5919,7 @@ function closeLegalModal(name){
 }
 
 function inviteViaWhatsApp(){
-  const msg = encodeURIComponent(INVITE_TEXT + ' ' + INVITE_URL);
+  const msg = encodeURIComponent(getInviteShareText());
   window.open('https://wa.me/?text=' + msg, '_blank');
   closeInviteModal();
 }
@@ -5520,10 +5951,10 @@ function inviteViaTikTok(){
     alert('Odkaz na Connect8 bol skopírovaný - vlož ho v TikToku do správy alebo popisu 👍');
   };
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(INVITE_TEXT + ' ' + INVITE_URL).then(finish).catch(finish);
+    navigator.clipboard.writeText(getInviteShareText()).then(finish).catch(finish);
   } else {
     const tmp = document.createElement('textarea');
-    tmp.value = INVITE_TEXT + ' ' + INVITE_URL;
+    tmp.value = getInviteShareText();
     document.body.appendChild(tmp);
     tmp.select();
     try{ document.execCommand('copy'); }catch(e){}
@@ -5542,10 +5973,10 @@ function inviteViaInstagram(){
     alert('Odkaz na Connect8 bol skopírovaný - vlož ho v Instagrame do správy alebo Stories 👍');
   };
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(INVITE_TEXT + ' ' + INVITE_URL).then(finish).catch(finish);
+    navigator.clipboard.writeText(getInviteShareText()).then(finish).catch(finish);
   } else {
     const tmp = document.createElement('textarea');
-    tmp.value = INVITE_TEXT + ' ' + INVITE_URL;
+    tmp.value = getInviteShareText();
     document.body.appendChild(tmp);
     tmp.select();
     try{ document.execCommand('copy'); }catch(e){}
@@ -5555,8 +5986,8 @@ function inviteViaInstagram(){
 }
 
 function inviteViaEmail(){
-  const subject = encodeURIComponent('Poď aj ty na Connect8!');
-  const body = encodeURIComponent(INVITE_TEXT + '\n\n' + INVITE_URL);
+  const subject = encodeURIComponent(vizitkaShareMode ? t('Moja elektronická vizitka na Connect8') : 'Poď aj ty na Connect8!');
+  const body = encodeURIComponent(vizitkaShareMode ? INVITE_URL : (INVITE_TEXT + '\n\n' + INVITE_URL));
   window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
   closeInviteModal();
 }
