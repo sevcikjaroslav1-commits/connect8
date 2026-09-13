@@ -4076,6 +4076,15 @@ let followingSet = new Set(); // uid-čka používateľov, ktorých aktuálne pr
 /* ---------------- BLOKOVANIE ---------------- */
 let blockedSet = new Set(); // uid-čka používateľov, ktorých aktuálne prihlásený zablokoval
 
+// Promise z prebiehajúceho/posledného loadFollowing() volania. Vďaka tomu
+// vie renderFriendsList() (aj čokoľvek iné, čo potrebuje aktuálny
+// followingSet) počkať, kým sa zoznam sledovaných naozaj načíta z Firestore,
+// namiesto toho, aby sa spoliehalo na to, že už bolo dosť času.
+// Bez tohto vedelo nastať, že hneď po prihlásení (kým loadFollowing() ešte
+// bežal na pozadí) klik na "Priatelia" zobrazil prázdny zoznam, a pomohlo
+// iba F5 (kde už bol dostatok času na dokončenie fetchu).
+let followingLoadPromise = null;
+
 async function loadFollowing(){
   followingSet = new Set();
   blockedSet = new Set();
@@ -4607,6 +4616,17 @@ async function renderFriendsList(){
   loading.textContent = t('Načítavam priateľov...');
   grid.appendChild(loading);
 
+  // Počkaj, kým sa naozaj dokončí načítanie zoznamu sledovaných z Firestore
+  // (mohlo byť ešte len rozbehnuté po prihlásení) — inak by sme tu čítali
+  // starý/prázdny followingSet a zoznam by pôsobil ako prázdny, hoci niekoho
+  // sleduješ.
+  if(followingLoadPromise){
+    try{ await followingLoadPromise; }catch(e){ /* chyba sa už zaloguje v loadFollowing() */ }
+  }
+  // Medzitým sa mohol užívateľ prepnúť inde — nemá zmysel dokončovať vykreslenie.
+  const friendsView = document.getElementById('view-friends');
+  if(!friendsView || !friendsView.classList.contains('active')) return;
+
   if(!FIREBASE_CONFIGURED || !db){
     grid.innerHTML = '';
     const msg = document.createElement('div');
@@ -4780,7 +4800,7 @@ function enterApp(){
   document.getElementById('sidebar-username').textContent = currentUser.name;
   loadViewedVideoIds();
   loadViewedFeedVideoIds();
-  loadFollowing().then(renderPosts);
+  followingLoadPromise = loadFollowing().then(renderPosts);
   renderPosts();
   renderCategories();
   renderProducts();
