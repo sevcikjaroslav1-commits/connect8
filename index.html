@@ -1406,6 +1406,11 @@
   .vizitka-gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;}
   .vizitka-feed-gallery{margin:0 0 12px;}
   .vizitka-feed-gallery img{cursor:zoom-in;}
+  .post-vizitka-badge{
+    display:inline-block;margin:2px 0 8px;padding:6px 14px;border-radius:20px;
+    background:rgba(59,130,246,.13);color:#2f6fd6;font-weight:700;font-size:13.5px;
+  }
+  .post-vizitka-stats{font-size:12.5px;color:var(--text-dim);margin-bottom:10px;}
   .vizitka-gallery .vizitka-video-thumb{
     width:100%;aspect-ratio:1;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;
     background:linear-gradient(160deg,#3a1030,#160a14);
@@ -4395,11 +4400,14 @@ async function shareVizitkaToFeed(){
   if(btn){ btn.disabled = true; btn.textContent = t('Zdieľam...'); }
 
   const { tagline, counts, images } = currentVizitkaData;
-  const text = `🪪 ${t('Moja elektronická vizitka na Connect8')}\n\n${tagline}\n\n📝 ${counts.posts} ${t('príspevkov')} · 📸 ${counts.photos} ${t('fotiek')} · 🎥 ${counts.videos} ${t('videí')}`;
+  const introText = `🪪 ${t('Moja elektronická vizitka na Connect8')}`;
+  const statsText = `📝 ${counts.posts} ${t('príspevkov')} · 📸 ${counts.photos} ${t('fotiek')} · 🎥 ${counts.videos} ${t('videí')}`;
+  const text = `${introText}\n\n${tagline}\n\n${statsText}`; // celý text (pre vyhľadávanie a pod.)
 
   const newPost = {
     id: Date.now(), name: currentUser.name, authorId: currentUser.uid, createdAt: Date.now(),
-    text, photos: images.slice(0,10), video:null, link:null, linkTitle:'', linkImage:null, file:null,
+    text, vizitkaIntro: introText, vizitkaTagline: tagline, vizitkaStatsText: statsText,
+    photos: images.slice(0,10), video:null, link:null, linkTitle:'', linkImage:null, file:null,
     img:null, likes:0, liked:false, views:0, comments:[], open:false, isVizitka:true
   };
   posts.push(newPost);
@@ -7185,7 +7193,7 @@ function buildPostCard(p, opts={}){
           <button class="cancel-edit-btn" onclick="cancelEditPost(${p.id})">${t('Zrušiť')}</button>
         </div>
       </div>
-      ` : (p.text ? `<div class="post-text">${escapeHtml(p.text)}</div><div class="post-text-translation" id="post-tr-${p.id}"></div>` : '')}
+      ` : (p.isVizitka ? buildVizitkaTextBlock(p, p.id) : (p.text ? `<div class="post-text">${escapeHtml(p.text)}</div><div class="post-text-translation" id="post-tr-${p.id}"></div>` : ''))}
       ${p.video ? `<div class="post-video-wrap">
         <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" ${isIOSDevice()?'muted':''} controls playsinline webkit-playsinline preload="metadata" onplay="registerFeedVideoView(${p.id});stopFeedAutoScroll()" onpause="resumeFeedAutoScrollIfNeeded()" onended="resumeFeedAutoScrollIfNeeded()" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
@@ -7653,6 +7661,22 @@ function buildVizitkaFeedGallery(photos){
   return `<div class="vizitka-gallery vizitka-feed-gallery">
     ${photos.map(src=>`<img src="${src}" onclick="openLightbox('${src}')">`).join('')}
   </div>`;
+}
+
+function buildVizitkaTextBlock(p, postId){
+  // Staršie zdieľané vizitky (pred touto úpravou) mali všetko v jednom poli
+  // "text" oddelené prázdnym riadkom - ak chýbajú nové polia, rozdeľ ho tak,
+  // nech aj tie staršie vyzerajú rovnako (s modrým štítkom pre "kto som").
+  let intro = p.vizitkaIntro, tagline = p.vizitkaTagline, stats = p.vizitkaStatsText;
+  if(tagline === undefined && p.text){
+    const parts = p.text.split('\n\n');
+    if(intro === undefined) intro = parts[0] || '';
+    if(tagline === undefined) tagline = parts[1] || '';
+    if(stats === undefined) stats = parts[2] || '';
+  }
+  return `<div class="post-text">${escapeHtml(intro || '')}</div>
+    <div class="post-vizitka-badge">${escapeHtml(tagline || '')}</div>
+    <div class="post-vizitka-stats">${escapeHtml(stats || '')}</div>`;
 }
 
 async function handlePostVideo(event){
