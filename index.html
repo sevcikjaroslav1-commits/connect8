@@ -1210,17 +1210,11 @@
 
   /* ---------- VIDEO ---------- */
   #view-video{background:var(--mode-video-soft);margin:-20px -16px -40px;padding:0;min-height:calc(100vh - var(--topbar-h, 58px));min-height:calc(100dvh - var(--topbar-h, 58px));position:relative;}
-  /* Karta videa je posunutá o VIDEO_TOP_GAP nižšie (margin-top), aby bočné
-     tlačidlo "Pridať video" (hore v pravom stĺpci) nebolo schované/orezané
-     pod riadkom "Môj profil/Priatelia/Používatelia". Výška je o ten istý
-     kus zmenšená, nech sa karta stále zmestí presne do voľného priestoru. */
   .video-scroller{
-    --video-top-gap: 26px;
-    margin-top:var(--video-top-gap);
-    height:calc(100vh - var(--topbar-h, 58px) - var(--video-top-gap));height:calc(100dvh - var(--topbar-h, 58px) - var(--video-top-gap));overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
+    height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;
   }
   .video-card{
-    height:calc(100vh - var(--topbar-h, 58px) - var(--video-top-gap, 26px));height:calc(100dvh - var(--topbar-h, 58px) - var(--video-top-gap, 26px));scroll-snap-align:start;position:relative;
+    height:calc(100vh - var(--topbar-h, 58px));height:calc(100dvh - var(--topbar-h, 58px));scroll-snap-align:start;position:relative;
     display:flex;align-items:flex-end;
     background:linear-gradient(160deg, var(--vc1,#3a1030), var(--vc2,#160a14));
     color:#fff;
