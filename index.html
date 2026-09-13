@@ -1447,6 +1447,21 @@
   .vizitka-card.vizitka-capturing .vizitka-close,
   .vizitka-card.vizitka-capturing .vizitka-actions,
   .vizitka-card.vizitka-capturing .vizitka-shared-note{display:none !important;}
+  /* Overlay so používateľ vidí, že sa niečo deje (príprava obrázka na zdieľanie),
+     namiesto toho aby vyzeralo, že appka "zamrzla". html2canvas ho pri snímaní
+     ignoruje (pozri ignoreElements nižšie), takže sa na výslednej fotke nezobrazí. */
+  .vizitka-share-overlay{
+    position:absolute;inset:0;z-index:5;border-radius:22px;
+    background:rgba(15,8,26,.85);display:none;flex-direction:column;
+    align-items:center;justify-content:center;gap:10px;color:#e8def7;font-size:13px;font-weight:600;text-align:center;padding:0 20px;
+  }
+  .vizitka-share-overlay.show{display:flex;}
+  .vizitka-share-overlay .spinner{width:26px;height:26px;border-color:rgba(255,255,255,.25);border-top-color:#a44cff;}
+  /* Adresa connect8.eu sa zobrazí len počas snímania (vypáli sa priamo do
+     obrázka), inak je skrytá - bežne ju vidno len na samotnej vizitke v appke. */
+  .vizitka-watermark{display:none;text-align:center;font-size:11.5px;font-weight:700;letter-spacing:.03em;
+    color:#c9a8ff;margin-top:2px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);}
+  .vizitka-card.vizitka-capturing .vizitka-watermark{display:block;}
   .btn-share-further{
     position:relative;padding:7px 40px 7px 14px;border-radius:12px;font-weight:700;font-size:13.5px;
     background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border:none;cursor:pointer;
@@ -2829,6 +2844,10 @@
 
         <div class="vizitka-modal" id="vizitka-modal">
           <div class="vizitka-card">
+            <div class="vizitka-share-overlay" id="vizitka-share-overlay">
+              <div class="spinner"></div>
+              <span>Pripravujem obrázok na zdieľanie…</span>
+            </div>
             <button class="vizitka-close" onclick="closeVizitkaModal()">✕</button>
             <div class="vizitka-top">
               <div class="vizitka-avatar" id="vizitka-avatar">?</div>
@@ -2838,11 +2857,12 @@
             <div class="vizitka-stats" id="vizitka-stats"></div>
             <div class="vizitka-gallery-title">Zdieľaný obsah</div>
             <div class="vizitka-gallery" id="vizitka-gallery"></div>
+            <div class="vizitka-watermark">📇 connect8.eu</div>
             <div class="vizitka-actions">
               <button class="btn-close2" onclick="closeVizitkaModal()">Zavrieť</button>
               <button class="btn-share" id="vizitka-share-btn" onclick="shareVizitkaToFeed()">📤 Zdieľať do feedu</button>
               <div></div>
-              <button class="btn-share-further" onclick="shareVizitkaFurther()">
+              <button class="btn-share-further" id="vizitka-share-further-btn" onclick="shareVizitkaFurther()">
                 <span>Zdieľať ďalej</span>
                 <span class="invite-ring">
                   <span class="invite-ring-inner">
@@ -5529,16 +5549,33 @@ function loadHtml2Canvas(){
 // galéria) - presne to, čo je vidieť v okne vizitky, len bez tlačidiel a krížika.
 // Ak sa to z nejakého dôvodu nepodarí (napr. výpadok CDN), ako núdzové
 // riešenie sa použije aspoň samotná profilová fotka.
+// Pomocná funkcia: "pretečie" (reject) danú promise, ak sa nestihne vybaviť
+// do timeoutMs. Toto je kľúčové - html2canvas vie na niektorých telefónoch
+// "zaseknúť" na dlhšie (napr. keď sa nejaký obrázok v galérii nenačíta kvôli
+// CORS/výpadku siete) a bez tohto by appka pôsobila, že "sa nič nedeje".
+function withTimeout(promise, timeoutMs){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs))
+  ]);
+}
+
 async function getVizitkaShareImageBlob(){
   try{
-    await loadHtml2Canvas();
+    await withTimeout(loadHtml2Canvas(), 6000);
     if(typeof html2canvas !== 'function') throw new Error('html2canvas sa nenačítal');
     const card = document.querySelector('#vizitka-modal .vizitka-card');
     if(!card) throw new Error('vizitka-card sa nenašla');
     card.classList.add('vizitka-capturing');
     try{
-      const canvas = await html2canvas(card, {backgroundColor:'#1a0f2b', useCORS:true, scale:2});
-      const blob = await new Promise(res=>canvas.toBlob(res, 'image/png'));
+      const canvas = await withTimeout(html2canvas(card, {
+        backgroundColor:'#1a0f2b',
+        useCORS:true,
+        scale:2,
+        imageTimeout:4000, // nečakať 15s (default) na nedostupný obrázok, ale max 4s
+        ignoreElements:(el)=> el.id === 'vizitka-share-overlay'
+      }), 9000);
+      const blob = await withTimeout(new Promise(res=>canvas.toBlob(res, 'image/png')), 3000);
       if(blob) return blob;
     } finally {
       card.classList.remove('vizitka-capturing');
@@ -5567,24 +5604,42 @@ async function getVizitkaShareImageBlob(){
 // nepodporuje (typicky počítač), otvoríme aspoň rovnakú ponuku ako doteraz,
 // s holou adresou connect8.eu bez pozývacieho textu.
 async function shareVizitkaFurther(){
-  const blob = await getVizitkaShareImageBlob();
+  const overlay = document.getElementById('vizitka-share-overlay');
+  const btn = document.getElementById('vizitka-share-further-btn');
+  if(overlay) overlay.classList.add('show');
+  if(btn) btn.disabled = true;
 
-  if(blob && navigator.share){
-    try{
-      const file = new File([blob], 'vizitka.png', {type: blob.type || 'image/png'});
-      if(navigator.canShare && navigator.canShare({files:[file]})){
-        closeVizitkaModal();
-        await navigator.share({files:[file], url: INVITE_URL});
-        return;
+  try{
+    const blob = await getVizitkaShareImageBlob();
+
+    if(blob && navigator.share){
+      try{
+        const file = new File([blob], 'vizitka.png', {type: blob.type || 'image/png'});
+        if(navigator.canShare && navigator.canShare({files:[file]})){
+          closeVizitkaModal();
+          // POZOR: zámerne sa NEPOSIELA aj "url" spolu so súbormi - viaceré appky
+          // (WhatsApp, Messenger a i.) sa vtedy z ponuky vyfiltrujú, lebo neviem
+          // prijať kombináciu súbor+text naraz, takže by sa zobrazila prázdna
+          // tabuľka. Adresa connect8.eu je namiesto toho vypálená priamo do
+          // obrázka (pozri .vizitka-watermark), takže cestuje s ním všade.
+          await navigator.share({files:[file]});
+          return;
+        }
+      }catch(e){
+        // Sem spadne aj bežné zrušenie ponuky používateľom (AbortError) - v tom
+        // prípade zámerne NEOTVÁRAME záložnú ponuku, lebo si to sám zavrel.
+        if(e && e.name === 'AbortError') return;
+        console.error('Natívne zdieľanie vizitky sa nepodarilo, prepínam na záložnú ponuku:', e);
       }
-    }catch(e){
-      console.error('Natívne zdieľanie vizitky sa nepodarilo, prepínam na záložnú ponuku:', e);
     }
-  }
 
-  vizitkaShareMode = true;
-  closeVizitkaModal();
-  openInviteModal();
+    vizitkaShareMode = true;
+    closeVizitkaModal();
+    openInviteModal();
+  } finally {
+    if(overlay) overlay.classList.remove('show');
+    if(btn) btn.disabled = false;
+  }
 }
 
 function openLegalModal(name){
