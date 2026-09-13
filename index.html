@@ -1442,11 +1442,10 @@
   .vizitka-actions .btn-share{background:linear-gradient(135deg,#6a4cff,#a44cff);color:#fff;}
   .vizitka-actions .btn-share:disabled{opacity:.5;}
   .vizitka-shared-note{font-size:11.5px;color:#8ee69b;text-align:center;margin-top:10px;display:none;}
-  /* Pri vytváraní obrázka vizitky (na zdieľanie) dočasne skryjeme tlačidlá a krížik,
-     nech snímka obsahuje len samotnú vizitku (avatar, meno, popis, štatistiky, galériu) */
-  .vizitka-card.vizitka-capturing .vizitka-close,
-  .vizitka-card.vizitka-capturing .vizitka-actions,
-  .vizitka-card.vizitka-capturing .vizitka-shared-note{display:none !important;}
+  /* Poznámka: tlačidlá/krížik/overlay sa do zdieľanej fotky vizitky NEDOSTANÚ -
+     html2canvas ich pri snímaní preskočí cez ignoreElements (JS), takže sa
+     netreba pred snímaním nič vizuálne skrývať (to by pri príprave obrázka
+     na pozadí spôsobilo rušivé "blikanie" tlačidiel). */
   /* Overlay so používateľ vidí, že sa niečo deje (príprava obrázka na zdieľanie),
      namiesto toho aby vyzeralo, že appka "zamrzla". html2canvas ho pri snímaní
      ignoruje (pozri ignoreElements nižšie), takže sa na výslednej fotke nezobrazí. */
@@ -1457,11 +1456,10 @@
   }
   .vizitka-share-overlay.show{display:flex;}
   .vizitka-share-overlay .spinner{width:26px;height:26px;border-color:rgba(255,255,255,.25);border-top-color:#a44cff;}
-  /* Adresa connect8.eu sa zobrazí len počas snímania (vypáli sa priamo do
-     obrázka), inak je skrytá - bežne ju vidno len na samotnej vizitke v appke. */
-  .vizitka-watermark{display:none;text-align:center;font-size:11.5px;font-weight:700;letter-spacing:.03em;
+  /* Adresa connect8.eu je teraz trvalou súčasťou vizitky (nie len počas
+     odfotenia) - vidno ju priamo v appke aj na zdieľanom obrázku. */
+  .vizitka-watermark{display:block;text-align:center;font-size:11.5px;font-weight:700;letter-spacing:.03em;
     color:#c9a8ff;margin-top:2px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);}
-  .vizitka-card.vizitka-capturing .vizitka-watermark{display:block;}
   .btn-share-further{
     position:relative;padding:7px 40px 7px 14px;border-radius:12px;font-weight:700;font-size:13.5px;
     background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border:none;cursor:pointer;
@@ -4430,6 +4428,7 @@ function classifyVizitka(corpus, counts){
 }
 
 let currentVizitkaData = null;
+let vizitkaShareImagePromise = null; // pripravuje sa vopred, pozri openVizitkaModal()
 
 function openVizitkaModal(){
   if(!currentUser) return;
@@ -4462,6 +4461,15 @@ function openVizitkaModal(){
   if(shareBtn){ shareBtn.disabled = false; shareBtn.textContent = '📤 ' + t('Zdieľať do feedu'); }
 
   document.getElementById('vizitka-modal').classList.add('open');
+
+  // Obrázok na zdieľanie pripravíme HNEĎ TERAZ na pozadí, nie až keď
+  // používateľ klikne na "Zdieľať ďalej". Vďaka tomu je pri kliknutí blob
+  // spravidla už hotový a navigator.share() sa zavolá prakticky okamžite -
+  // inak medzi kliknutím a zavolaním natívneho zdieľania ubehne pár sekúnd
+  // (kým html2canvas dobehne) a prehliadač medzitým stratí platnosť
+  // používateľovho gesta, takže natívna ponuka (WhatsApp, Messenger...) sa
+  // vôbec neukáže a appka potichu spadne na záložný odkaz bez fotky.
+  vizitkaShareImagePromise = getVizitkaShareImageBlob();
 }
 
 function closeVizitkaModal(){
@@ -5566,20 +5574,21 @@ async function getVizitkaShareImageBlob(){
     if(typeof html2canvas !== 'function') throw new Error('html2canvas sa nenačítal');
     const card = document.querySelector('#vizitka-modal .vizitka-card');
     if(!card) throw new Error('vizitka-card sa nenašla');
-    card.classList.add('vizitka-capturing');
-    try{
-      const canvas = await withTimeout(html2canvas(card, {
-        backgroundColor:'#1a0f2b',
-        useCORS:true,
-        scale:2,
-        imageTimeout:4000, // nečakať 15s (default) na nedostupný obrázok, ale max 4s
-        ignoreElements:(el)=> el.id === 'vizitka-share-overlay'
-      }), 9000);
-      const blob = await withTimeout(new Promise(res=>canvas.toBlob(res, 'image/png')), 3000);
-      if(blob) return blob;
-    } finally {
-      card.classList.remove('vizitka-capturing');
-    }
+    const canvas = await withTimeout(html2canvas(card, {
+      backgroundColor:'#1a0f2b',
+      useCORS:true,
+      scale:2,
+      imageTimeout:4000, // nečakať 15s (default) na nedostupný obrázok, ale max 4s
+      // Tlačidlá a krížik sa do zdieľanej fotky nemajú dostať - namiesto
+      // dočasného skrývania (čo by pri príprave na pozadí bolo vidno ako
+      // "blikanie" tlačidiel) ich html2canvas jednoducho pri snímaní ignoruje.
+      ignoreElements:(el)=> el.id === 'vizitka-share-overlay'
+        || el.classList.contains('vizitka-close')
+        || el.classList.contains('vizitka-actions')
+        || el.classList.contains('vizitka-shared-note')
+    }), 9000);
+    const blob = await withTimeout(new Promise(res=>canvas.toBlob(res, 'image/png')), 3000);
+    if(blob) return blob;
   }catch(e){
     console.error('Vytvorenie obrázka celej vizitky zlyhalo, skúsim aspoň profilovú fotku:', e);
   }
@@ -5610,7 +5619,9 @@ async function shareVizitkaFurther(){
   if(btn) btn.disabled = true;
 
   try{
-    const blob = await getVizitkaShareImageBlob();
+    // Použi obrázok pripravený vopred (spustené hneď pri otvorení vizitky) -
+    // ak by z nejakého dôvodu ešte nebežal, pripraví sa teraz.
+    const blob = await (vizitkaShareImagePromise || getVizitkaShareImageBlob());
 
     if(blob && navigator.share){
       try{
