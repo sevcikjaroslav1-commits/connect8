@@ -1023,18 +1023,38 @@
   .post-actions button.liked{color:var(--mode-feed);}
   .comments{margin-top:10px;border-top:1px solid var(--line);padding-top:10px;display:none;}
   .comments.open{display:block;}
-  .comment{font-size:13px;margin-bottom:6px;display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap;}
-  .comment-text{flex:1;min-width:0;}
+  .comment{font-size:13px;margin-bottom:8px;display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap;}
+  .comment-body{flex:1;min-width:0;}
+  .comment-text{display:block;}
+  .comment-img{display:block;max-width:160px;max-height:160px;border-radius:10px;margin-top:4px;cursor:pointer;object-fit:cover;}
   .comment-like-btn{
     background:transparent;border:none;font-size:11.5px;color:var(--text-dim);cursor:pointer;
     padding:1px 4px;display:inline-flex;align-items:center;gap:3px;flex-shrink:0;
   }
   .comment-like-btn.liked{color:var(--mode-feed);font-weight:700;}
   .comment-like-btn:hover{color:var(--mode-feed);}
+  .comment-edit-btn,.comment-del-btn{
+    background:transparent;border:none;font-size:11.5px;color:var(--text-dim);cursor:pointer;
+    padding:1px 4px;flex-shrink:0;
+  }
+  .comment-edit-btn:hover{color:var(--accent);}
+  .comment-del-btn:hover{color:#e0245e;}
   .comment b{font-weight:700;}
-  .comment-input{display:flex;gap:8px;margin-top:8px;}
+  .comment-input{display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap;}
   .comment-input input{flex:1;border:1px solid var(--line);border-radius:16px;padding:8px 12px;font-size:13px;outline:none;}
   .comment-input button{background:var(--accent-soft);color:var(--accent);padding:0 14px;border-radius:16px;font-weight:600;font-size:12px;}
+  .comment-input .file-btn{padding:0 10px;height:34px;border-radius:16px;font-size:14px;flex-shrink:0;}
+  .comment-img-preview{width:100%;margin-top:6px;}
+  .comment-img-preview:empty{display:none;}
+  .comment-img-preview .img-preview-item{height:64px;width:64px;display:inline-block;}
+  .comment-edit-box{width:100%;background:var(--bg);border-radius:10px;padding:8px;margin-bottom:6px;}
+  .comment-edit-box textarea{
+    width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;
+    font-family:inherit;resize:vertical;min-height:44px;outline:none;background:var(--card);color:var(--text);
+  }
+  .comment-edit-box .post-edit-img-grid{grid-template-columns:repeat(4,1fr);margin-top:6px;}
+  .comment-edit-box .post-edit-img-actions{margin:6px 0;}
+  .comment-edit-box .post-text-edit-actions{margin-bottom:0;}
 
   /* ---------- MARKETPLACE ---------- */
   .market-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
@@ -7239,11 +7259,13 @@ function buildPostCard(p, opts={}){
         <button onclick="openShareModal(${p.id})">↗ ${t('Zdieľať')}</button>
       </div>
       ${showComments ? `<div class="comments ${p.open?'open':''}" id="comments-${p.id}">
-        ${p.comments.map((c,ci)=>`<div class="comment"><span class="comment-text"><b>${escapeHtml(c.name)}:</b> ${escapeHtml(c.text)}</span><button class="comment-like-btn ${getLikedBy(c).includes(currentUser.uid)?'liked':''}" onclick="toggleCommentLike(${p.id},${ci})">👍${c.likes?' '+c.likes:''}</button></div>`).join('')}
+        ${p.comments.map((c,ci)=>buildCommentHtml(p,c,ci)).join('')}
         <div class="comment-input">
-          <input type="text" id="cinput-${p.id}" placeholder="${t('Napíš komentár...')}">
+          <label class="file-btn">📷<input type="file" accept="image/*" onchange="handleCommentImage(${p.id}, event)"></label>
+          <input type="text" id="cinput-${p.id}" placeholder="${t('Napíš komentár...')}" onkeydown="if(event.key==='Enter') addComment(${p.id})">
           <button onclick="addComment(${p.id})">${t('Odoslať')}</button>
         </div>
+        <div class="comment-img-preview" id="comment-img-preview-${p.id}">${buildCommentImgPreviewHtml(p.id)}</div>
       </div>` : ''}
     `;
 }
@@ -8063,14 +8085,16 @@ function toggleCommentLike(postId, commentIndex){
 function addComment(id){
   const input = document.getElementById('cinput-'+id);
   const text = input.value.trim();
-  if(!text) return;
+  const img = pendingCommentImages[id] || null;
+  if(!text && !img) return;
   const modErr = moderationError(text);
   if(modErr){ alert(modErr); return; }
   const p = findPostById(id);
-  const newComment = {name:currentUser.name, text};
+  const newComment = {name:currentUser.name, authorId:currentUser.uid, text, img};
   p.comments.push(newComment);
   p.open = true;
   input.value = '';
+  delete pendingCommentImages[id];
   renderPosts();
   updateDoc(postDoc(p.id), {comments: p.comments}, 'príspevok - komentár')
     .then(()=>bumpRateLimit('lastCommentAt'))
@@ -8080,6 +8104,149 @@ function addComment(id){
       if(idx>=0) p.comments.splice(idx,1);
       handleCreateRejection(err, null, 'komentár', renderPosts);
     });
+}
+
+// --- Obrázok pripojený k rozpísanému komentáru (kým sa neodošle) ---
+let pendingCommentImages = {}; // postId -> URL nahratej fotky (Cloudinary)
+
+function buildCommentImgPreviewHtml(postId){
+  const url = pendingCommentImages[postId];
+  if(!url) return '';
+  return `<div class="img-preview-item"><img src="${escapeHtml(url)}"><div class="remove-x" onclick="removeCommentImage(${postId})">✕</div></div>`;
+}
+
+async function handleCommentImage(postId, event){
+  const file = (event.target.files || [])[0];
+  event.target.value = '';
+  if(!file) return;
+  if(!checkFileSizeOk(file, MAX_IMAGE_SIZE, 'Fotka')) return;
+  try{
+    const url = await processImageFile(file, 1000, 0.75);
+    pendingCommentImages[postId] = url;
+    const box = document.getElementById(`comment-img-preview-${postId}`);
+    if(box) box.innerHTML = buildCommentImgPreviewHtml(postId);
+  }catch(e){
+    console.error('Fotku ku komentáru sa nepodarilo spracovať:', e);
+    alert('Fotku sa nepodarilo nahrať. Skús to prosím znova.');
+  }
+}
+
+function removeCommentImage(postId){
+  delete pendingCommentImages[postId];
+  const box = document.getElementById(`comment-img-preview-${postId}`);
+  if(box) box.innerHTML = '';
+}
+
+// --- Vykreslenie jedného komentára (bežný stav aj editačný režim) ---
+let editingCommentKey = null;      // `${postId}:${commentIndex}` komentára, ktorý sa práve upravuje
+let editingCommentImage = null;    // pracovná fotka rozpracovanej úpravy (alebo null)
+
+function buildCommentEditImgHtml(postId, ci){
+  if(!editingCommentImage) return '';
+  return `<div class="img-preview-item"><img src="${escapeHtml(editingCommentImage)}"><div class="remove-x" onclick="removeEditCommentImage(${postId},${ci})">✕</div></div>`;
+}
+
+function buildCommentHtml(p, c, ci){
+  const isOwnComment = (c.authorId ? c.authorId===currentUser.uid : c.name===currentUser.name);
+  if(editingCommentKey === `${p.id}:${ci}`){
+    return `<div class="comment-edit-box">
+      <textarea id="comment-edit-text-${p.id}-${ci}">${escapeHtml(c.text || '')}</textarea>
+      <div class="post-edit-img-grid" id="comment-edit-img-grid-${p.id}-${ci}">${buildCommentEditImgHtml(p.id, ci)}</div>
+      <div class="post-edit-img-actions">
+        <label class="file-btn">📷 ${t('Pridať/vymeniť fotku')}<input type="file" accept="image/*" onchange="handleEditCommentImage(${p.id}, ${ci}, event)"></label>
+      </div>
+      <div class="post-text-edit-actions">
+        <button class="save-edit-btn" onclick="saveEditComment(${p.id}, ${ci})">${t('Uložiť')}</button>
+        <button class="cancel-edit-btn" onclick="cancelEditComment()">${t('Zrušiť')}</button>
+      </div>
+    </div>`;
+  }
+  return `<div class="comment">
+    <div class="comment-body">
+      <span class="comment-text"><b>${escapeHtml(c.name)}:</b> ${escapeHtml(c.text || '')}</span>
+      ${c.img ? `<img class="comment-img" src="${c.img}" onclick="openLightbox('${c.img}')">` : ''}
+    </div>
+    <button class="comment-like-btn ${getLikedBy(c).includes(currentUser.uid)?'liked':''}" onclick="toggleCommentLike(${p.id},${ci})">👍${c.likes?' '+c.likes:''}</button>
+    ${isOwnComment ? `<button class="comment-edit-btn" onclick="startEditComment(${p.id},${ci})" title="${t('Upraviť komentár')}">✏️</button><button class="comment-del-btn" onclick="deleteComment(${p.id},${ci})" title="${t('Vymazať komentár')}">🗑️</button>` : ''}
+  </div>`;
+}
+
+function startEditComment(postId, ci){
+  const p = findPostById(postId);
+  if(!p) return;
+  const c = p.comments[ci];
+  if(!c) return;
+  editingCommentKey = `${postId}:${ci}`;
+  editingCommentImage = c.img || null;
+  renderPosts();
+  setTimeout(()=>{
+    const ta = document.getElementById(`comment-edit-text-${postId}-${ci}`);
+    if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  }, 0);
+}
+
+function cancelEditComment(){
+  editingCommentKey = null;
+  editingCommentImage = null;
+  renderPosts();
+}
+
+async function handleEditCommentImage(postId, ci, event){
+  const file = (event.target.files || [])[0];
+  event.target.value = '';
+  if(!file) return;
+  if(!checkFileSizeOk(file, MAX_IMAGE_SIZE, 'Fotka')) return;
+  try{
+    const url = await processImageFile(file, 1000, 0.75);
+    editingCommentImage = url;
+    const grid = document.getElementById(`comment-edit-img-grid-${postId}-${ci}`);
+    if(grid) grid.innerHTML = buildCommentEditImgHtml(postId, ci);
+  }catch(e){
+    console.error('Fotku ku komentáru sa nepodarilo spracovať:', e);
+    alert('Fotku sa nepodarilo nahrať. Skús to prosím znova.');
+  }
+}
+
+function removeEditCommentImage(postId, ci){
+  editingCommentImage = null;
+  const grid = document.getElementById(`comment-edit-img-grid-${postId}-${ci}`);
+  if(grid) grid.innerHTML = '';
+}
+
+function saveEditComment(postId, ci){
+  const p = findPostById(postId);
+  if(!p) return;
+  const c = p.comments[ci];
+  if(!c) return;
+  const ta = document.getElementById(`comment-edit-text-${postId}-${ci}`);
+  if(!ta) return;
+  const newText = ta.value.trim();
+  const newImg = editingCommentImage;
+  if(!newText && !newImg){
+    alert(t('Komentár nemôže byť prázdny.'));
+    return;
+  }
+  const modErr = moderationError(newText);
+  if(modErr){ alert(modErr); return; }
+  c.text = newText;
+  c.img = newImg;
+  c.editedAt = Date.now();
+  editingCommentKey = null;
+  editingCommentImage = null;
+  renderPosts();
+  updateDoc(postDoc(p.id), {comments: p.comments}, 'príspevok - úprava komentára')
+    .catch(()=>{ alert(t('Úprava komentára sa nepodarila uložiť.')); });
+}
+
+function deleteComment(postId, ci){
+  const p = findPostById(postId);
+  if(!p) return;
+  if(!confirm(t('Naozaj chceš vymazať tento komentár?'))) return;
+  p.comments.splice(ci, 1);
+  if(editingCommentKey === `${postId}:${ci}`){ editingCommentKey = null; editingCommentImage = null; }
+  renderPosts();
+  updateDoc(postDoc(p.id), {comments: p.comments}, 'príspevok - vymazanie komentára')
+    .catch(()=>{ alert(t('Vymazanie komentára sa nepodarilo uložiť.')); });
 }
 
 /* ---------------- MARKETPLACE ---------------- */
@@ -10030,6 +10197,14 @@ const UI_DICT_EN = {
   "upravené":"edited",
   "Príspevok nemôže byť prázdny.":"The post cannot be empty.",
   "Úprava príspevku sa nepodarila uložiť.":"Failed to save the post edit.",
+  "Foto":"Photo",
+  "Pridať/vymeniť fotku":"Add/replace photo",
+  "Upraviť komentár":"Edit comment",
+  "Vymazať komentár":"Delete comment",
+  "Naozaj chceš vymazať tento komentár?":"Are you sure you want to delete this comment?",
+  "Komentár nemôže byť prázdny.":"The comment cannot be empty.",
+  "Úprava komentára sa nepodarila uložiť.":"Failed to save the comment edit.",
+  "Vymazanie komentára sa nepodarilo uložiť.":"Failed to save the comment deletion.",
   "Vymazať produkt":"Delete product",
   "Zmazať":"Delete",
   "Zrušiť":"Cancel",
