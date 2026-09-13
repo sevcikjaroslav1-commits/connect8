@@ -1364,6 +1364,60 @@
   }
   .delete-account-btn:hover{background:#D63C3C;color:#fff;}
 
+  /* ---------- ELEKTRONICKÁ VIZITKA ---------- */
+  .vizitka-btn{
+    margin-top:10px;padding:9px 16px;border-radius:12px;background:linear-gradient(135deg,#6a4cff,#a44cff);
+    color:#fff;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;
+    box-shadow:0 4px 12px rgba(106,76,255,.3);
+  }
+  .vizitka-btn:hover{filter:brightness(1.08);}
+  .vizitka-modal{
+    position:fixed;inset:0;z-index:300;background:rgba(10,10,14,.72);backdrop-filter:blur(3px);
+    display:none;align-items:center;justify-content:center;padding:20px;
+  }
+  .vizitka-modal.open{display:flex;}
+  .vizitka-card{
+    width:100%;max-width:360px;max-height:88vh;overflow-y:auto;border-radius:22px;
+    background:linear-gradient(160deg,#221033,#120a1e);color:#fff;padding:22px 20px 20px;
+    box-shadow:0 20px 50px rgba(0,0,0,.4);position:relative;
+  }
+  .vizitka-close{
+    position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;
+    background:rgba(255,255,255,.12);color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;
+  }
+  .vizitka-top{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:16px;}
+  .vizitka-avatar{
+    width:74px;height:74px;border-radius:50%;background:linear-gradient(135deg,#a44cff,#6a4cff);
+    display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;
+    border:3px solid rgba(255,255,255,.25);background-size:cover;background-position:center;margin-bottom:10px;
+  }
+  .vizitka-name{font-size:17px;font-weight:800;}
+  .vizitka-tagline{
+    margin-top:6px;font-size:14.5px;font-weight:700;color:#c9a8ff;background:rgba(164,76,255,.15);
+    padding:6px 14px;border-radius:20px;display:inline-block;
+  }
+  .vizitka-stats{
+    display:flex;justify-content:center;gap:14px;margin:14px 0 16px;font-size:11.5px;color:#cfc4e0;
+    border-top:1px solid rgba(255,255,255,.1);border-bottom:1px solid rgba(255,255,255,.1);padding:10px 0;
+  }
+  .vizitka-stats b{display:block;font-size:15px;color:#fff;}
+  .vizitka-gallery-title{font-size:11.5px;color:#cfc4e0;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;}
+  .vizitka-gallery{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:18px;}
+  .vizitka-gallery img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;}
+  .vizitka-feed-gallery{margin:0 0 12px;}
+  .vizitka-feed-gallery img{cursor:zoom-in;}
+  .vizitka-gallery .vizitka-video-thumb{
+    width:100%;aspect-ratio:1;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;
+    background:linear-gradient(160deg,#3a1030,#160a14);
+  }
+  .vizitka-empty{font-size:12.5px;color:#cfc4e0;text-align:center;padding:10px 0 4px;}
+  .vizitka-actions{display:flex;gap:8px;}
+  .vizitka-actions button{flex:1;padding:11px 0;border-radius:12px;font-weight:700;font-size:13.5px;}
+  .vizitka-actions .btn-close2{background:rgba(255,255,255,.12);color:#fff;}
+  .vizitka-actions .btn-share{background:linear-gradient(135deg,#6a4cff,#a44cff);color:#fff;}
+  .vizitka-actions .btn-share:disabled{opacity:.5;}
+  .vizitka-shared-note{font-size:11.5px;color:#8ee69b;text-align:center;margin-top:10px;display:none;}
+
   .chat-modal, .conv-modal{
     display:none;position:fixed;inset:0;z-index:600;background:rgba(10,10,14,.55);
     align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);
@@ -2710,6 +2764,7 @@
                 <button class="block-btn" id="profile-block-btn" onclick="toggleBlockFromProfile()" style="display:none;">🚫 Zablokovať</button>
               </div>
               <div class="profile-stats" id="profile-stats">0 príspevkov · 0 fotiek</div>
+              <button class="vizitka-btn" id="vizitka-btn" onclick="openVizitkaModal()" style="display:none;">🪪 Vytvoriť vizitku</button>
               <div class="last-online-row" id="last-online-setting-row" style="display:none;">
                 <span class="last-online-label" onclick="toggleShowLastOnline()">Naposledy online</span>
                 <label class="toggle-switch">
@@ -2729,6 +2784,25 @@
 
           <button class="delete-account-btn" id="delete-account-btn" onclick="deleteMyAccount()" style="display:none;">🗑️ Zrušiť účet v Connect8</button>
         </section>
+
+        <div class="vizitka-modal" id="vizitka-modal">
+          <div class="vizitka-card">
+            <button class="vizitka-close" onclick="closeVizitkaModal()">✕</button>
+            <div class="vizitka-top">
+              <div class="vizitka-avatar" id="vizitka-avatar">?</div>
+              <div class="vizitka-name" id="vizitka-name">Používateľ</div>
+              <div class="vizitka-tagline" id="vizitka-tagline">🪪 Člen Connect8</div>
+            </div>
+            <div class="vizitka-stats" id="vizitka-stats"></div>
+            <div class="vizitka-gallery-title">Zdieľaný obsah</div>
+            <div class="vizitka-gallery" id="vizitka-gallery"></div>
+            <div class="vizitka-actions">
+              <button class="btn-close2" onclick="closeVizitkaModal()">Zavrieť</button>
+              <button class="btn-share" id="vizitka-share-btn" onclick="shareVizitkaToFeed()">📤 Zdieľať do feedu</button>
+            </div>
+            <div class="vizitka-shared-note" id="vizitka-shared-note">✓ Vizitka bola zdieľaná do feedu.</div>
+          </div>
+        </div>
 
         <!-- POUŽÍVATELIA -->
         <section class="view" id="view-users">
@@ -4124,7 +4198,7 @@ function renderProfile(){
   const postsSource = (profileUser.uid && ownPostsCache[profileUser.uid]) ? ownPostsCache[profileUser.uid] : posts;
   const myPosts = postsSource.filter(p=> p.authorId ? p.authorId===profileUser.uid : p.name===profileUser.name);
   loadOwnPostsIfNeeded(profileUser);
-  const allPhotos = myPosts.reduce((acc,p)=> acc.concat(getPostPhotos(p)), []);
+  const allPhotos = myPosts.filter(p=>!p.isVizitka).reduce((acc,p)=> acc.concat(getPostPhotos(p)), []);
 
   applyProfileAvatar(document.getElementById('profile-avatar'), profileUser);
   document.getElementById('profile-name').textContent = profileUser.name;
@@ -4135,6 +4209,9 @@ function renderProfile(){
 
   const deleteBtn = document.getElementById('delete-account-btn');
   if(deleteBtn) deleteBtn.style.display = isOwnProfile ? 'inline-flex' : 'none';
+
+  const vizitkaBtn = document.getElementById('vizitka-btn');
+  if(vizitkaBtn) vizitkaBtn.style.display = isOwnProfile ? 'inline-flex' : 'none';
 
   const backBtn = document.getElementById('profile-back-btn');
   if(backBtn) backBtn.textContent = isOwnProfile ? t('← Späť do Feedu') : t('← Späť na Používateľov');
@@ -4200,6 +4277,147 @@ function renderProfile(){
   }
   if(!isOwnProfile && profileUser.uid) loadShowLastOnlineIfNeeded(profileUser);
   updateProfileLastOnlineTime();
+}
+
+/* ==================================================================
+   ELEKTRONICKÁ VIZITKA
+   Na základe toho, čo používateľ zdieľal (texty príspevkov, popisky
+   videí, názvy/popisy vecí na predaj), sa jednoduchým rozpoznávaním
+   kľúčových slov odhadne, "aký typ človeka" je, a vygeneruje sa mu
+   vizuálna vizitka s ukážkou jeho obsahu. Dá sa zdieľať do Feedu.
+   Beží to celé len v prehliadači (žiadne externé volanie), takže
+   funguje aj bez zapnutého AI.
+================================================================== */
+const VIZITKA_ARCHETYPES = [
+  { label:'Technologický nadšenec 💻', trait:'technológiám', keywords:['technológi','technologi','gadget','aplikáci','aplikaci','počítač','pocitac','notebook','mobil','android','iphone','robot','umelá inteligencia','umela inteligencia',' ai ','kód','kod','programova','hardvér','hardver','softvér','softver','elektronik'] },
+  { label:'Cestovateľ ✈️', trait:'cestovaniu', keywords:['cesta','výlet','vylet','dovolenk','letisko','hory','more','pláž','plaz','túra','tura','zahran','krajina','cestovan'] },
+  { label:'Gurmán 🍽️', trait:'dobrému jedlu', keywords:['jedlo','recept','reštauráci','restauraci','varenie','káva','kava','torta','pečen','pecen','gastro','kuchyň','kuchyn'] },
+  { label:'Športovec 🏋️', trait:'športu', keywords:['beh','fitness','posilň','posiln','bicykel','futbal','tréning','trening','maratón','maraton','šport','sport','cvičen','cvicen','joga'] },
+  { label:'Hudobný nadšenec 🎵', trait:'hudbe', keywords:['hudb','koncert','pieseň','piesen','skladb','dj','kapel','album','gitar','spev'] },
+  { label:'Filmový fanúšik 🎬', trait:'filmom', keywords:['film','seriál','serial','kino','netflix','herec','réžia','rezia','scéna','scena'] },
+  { label:'Tvorca a umelec 🎨', trait:'umeniu a tvorbe', keywords:['foto','kresb','umeni','dizajn','maľb','malb','tvorb','fotograf'] },
+  { label:'Milovník zvierat 🐾', trait:'zvieratám', keywords:['pes ','psík','psik','mačk','mack','zviera','zvierat'] },
+  { label:'Šikovný predajca 🛒', trait:'obchodovaniu', keywords:['predaj','predávam','predavam','cena','zľav','zlav','ponuk','marketplace','tovar'] },
+];
+
+function collectVizitkaContent(){
+  const uid = currentUser.uid, name = currentUser.name;
+  const myPosts = posts.filter(p=> p.authorId ? p.authorId===uid : p.name===name);
+  const myVideos = (typeof videos!=='undefined' ? videos : []).filter(v=> v.authorId ? v.authorId===uid : v.name===name);
+  const myProducts = (typeof products!=='undefined' ? products : []).filter(pr=> pr.authorId ? pr.authorId===uid : pr.seller===name);
+
+  const textParts = [];
+  myPosts.forEach(p=>{ if(p.text) textParts.push(p.text); if(p.linkTitle) textParts.push(p.linkTitle); });
+  myVideos.forEach(v=>{ if(v.caption) textParts.push(v.caption); });
+  myProducts.forEach(pr=>{ if(pr.title) textParts.push(pr.title); if(pr.desc) textParts.push(pr.desc); });
+  const corpus = ' ' + textParts.join(' ').toLowerCase() + ' ';
+
+  const photos = [];
+  myPosts.forEach(p=> getPostPhotos(p).forEach(src=>photos.push(src)));
+  myProducts.forEach(pr=> (pr.photos||[]).forEach(src=>photos.push(src)));
+
+  return { myPosts, myVideos, myProducts, corpus, photos };
+}
+
+function classifyVizitka(corpus, counts){
+  const scored = VIZITKA_ARCHETYPES.map(arch=>{
+    let score = 0;
+    arch.keywords.forEach(kw=>{
+      let idx = 0;
+      while((idx = corpus.indexOf(kw, idx)) !== -1){ score++; idx += kw.length; }
+    });
+    return { arch, score };
+  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
+
+  if(!scored.length){
+    // nedostatok textu na presné vyhodnotenie - odhadni aspoň podľa typu obsahu
+    if(counts.videos > counts.posts && counts.videos > 0) return 'Tvorca videí 🎥';
+    if(counts.products > 0) return 'Aktívny obchodník na Connect8 🛍️';
+    if(counts.photos >= 3) return 'Vizuálny rozprávač 📸';
+    return 'Aktívny člen komunity Connect8 🌟';
+  }
+
+  const primary = scored[0].arch;
+  // sekundárne vlastnosti - ďalšie kategórie, ktoré sa v zdieľanom obsahu tiež
+  // výraznejšie objavili (nie len náhodná jedna zmienka), max. 2 navyše.
+  const secondaryTraits = scored.slice(1).filter(x=>x.score>=2).slice(0,2).map(x=>x.arch.trait);
+
+  if(!secondaryTraits.length) return primary.label;
+  const traitsText = secondaryTraits.length===1
+    ? secondaryTraits[0]
+    : secondaryTraits.slice(0,-1).join(', ') + ' a ' + secondaryTraits[secondaryTraits.length-1];
+  return `${primary.label} s láskou k ${traitsText}`;
+}
+
+let currentVizitkaData = null;
+
+function openVizitkaModal(){
+  if(!currentUser) return;
+  const data = collectVizitkaContent();
+  const counts = { posts:data.myPosts.length, photos:data.photos.length, videos:data.myVideos.length, products:data.myProducts.length };
+  const tagline = classifyVizitka(data.corpus, counts);
+
+  applyProfileAvatar(document.getElementById('vizitka-avatar'), currentUser);
+  document.getElementById('vizitka-name').textContent = currentUser.name;
+  document.getElementById('vizitka-tagline').textContent = tagline;
+  document.getElementById('vizitka-stats').innerHTML =
+    `<div><b>${counts.posts}</b>${t('príspevkov')}</div>` +
+    `<div><b>${counts.photos}</b>${t('fotiek')}</div>` +
+    `<div><b>${counts.videos}</b>${t('videí')}</div>`;
+
+  const sampleImgs = data.photos.slice(0,10);
+  const gallery = document.getElementById('vizitka-gallery');
+  let html = sampleImgs.map(src=>`<img src="${src}">`).join('');
+  if(sampleImgs.length < 10 && data.myVideos.length){
+    const remain = 10 - sampleImgs.length;
+    html += data.myVideos.slice(0, remain).map(()=>`<div class="vizitka-video-thumb">🎬</div>`).join('');
+  }
+  gallery.innerHTML = html || `<div class="vizitka-empty">${t('Zatiaľ nemáš zdieľaný žiadny obsah - pridaj príspevky, fotky alebo videá a vizitka bude výstižnejšia.')}</div>`;
+
+  currentVizitkaData = { tagline, counts, images: sampleImgs };
+
+  const note = document.getElementById('vizitka-shared-note');
+  if(note) note.style.display = 'none';
+  const shareBtn = document.getElementById('vizitka-share-btn');
+  if(shareBtn){ shareBtn.disabled = false; shareBtn.textContent = '📤 ' + t('Zdieľať do feedu'); }
+
+  document.getElementById('vizitka-modal').classList.add('open');
+}
+
+function closeVizitkaModal(){
+  const modal = document.getElementById('vizitka-modal');
+  if(modal) modal.classList.remove('open');
+}
+
+async function shareVizitkaToFeed(){
+  if(!currentUser || !currentVizitkaData) return;
+  const btn = document.getElementById('vizitka-share-btn');
+  if(btn){ btn.disabled = true; btn.textContent = t('Zdieľam...'); }
+
+  const { tagline, counts, images } = currentVizitkaData;
+  const text = `🪪 ${t('Moja elektronická vizitka na Connect8')}\n\n${tagline}\n\n📝 ${counts.posts} ${t('príspevkov')} · 📸 ${counts.photos} ${t('fotiek')} · 🎥 ${counts.videos} ${t('videí')}`;
+
+  const newPost = {
+    id: Date.now(), name: currentUser.name, authorId: currentUser.uid, createdAt: Date.now(),
+    text, photos: images.slice(0,10), video:null, link:null, linkTitle:'', linkImage:null, file:null,
+    img:null, likes:0, liked:false, views:0, comments:[], open:false, isVizitka:true
+  };
+  posts.push(newPost);
+  if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid].push(newPost);
+  renderPosts();
+  try{
+    await savePost(newPost);
+    bumpRateLimit('lastPostAt');
+    const note = document.getElementById('vizitka-shared-note');
+    if(note) note.style.display = 'block';
+    if(btn) btn.textContent = '✓ ' + t('Zdieľané');
+  }catch(err){
+    posts = posts.filter(p=>p.id!==newPost.id);
+    if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid] = ownPostsCache[currentUser.uid].filter(p=>p.id!==newPost.id);
+    renderPosts();
+    if(btn){ btn.disabled = false; btn.textContent = '📤 ' + t('Zdieľať do feedu'); }
+    handleCreateRejection(err, null, t('príspevok'), renderPosts);
+  }
 }
 
 function buildCallButtonRow(u){
@@ -6972,7 +7190,7 @@ function buildPostCard(p, opts={}){
         <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" ${isIOSDevice()?'muted':''} controls playsinline webkit-playsinline preload="metadata" onplay="registerFeedVideoView(${p.id});stopFeedAutoScroll()" onpause="resumeFeedAutoScrollIfNeeded()" onended="resumeFeedAutoScrollIfNeeded()" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
       </div>` : ''}
-      ${(!isEditing && getPostPhotos(p).length) ? buildPostImgGrid(getPostPhotos(p)) : ''}
+      ${(!isEditing && getPostPhotos(p).length) ? (p.isVizitka ? buildVizitkaFeedGallery(getPostPhotos(p)) : buildPostImgGrid(getPostPhotos(p))) : ''}
       ${p.file ? `
       <a class="post-file-card" href="${escapeHtml(p.file.url)}" target="_blank" rel="noopener noreferrer" download="${escapeHtml(p.file.name)}">
         <div class="file-icon">📎</div>
@@ -7426,6 +7644,14 @@ function buildPostImgGrid(photos){
         <img src="${src}">
         ${(i===shown.length-1 && extra>0) ? `<div class="more-overlay">+${extra}</div>` : ''}
       </div>`).join('')}
+  </div>`;
+}
+
+function buildVizitkaFeedGallery(photos){
+  // Rovnaká malá mriežka štvorčekov, akú vidno na samotnej vizitke v profile -
+  // zdieľaná vizitka vo feede má vyzerať rovnako, nie ako bežný 4-obrázkový grid.
+  return `<div class="vizitka-gallery vizitka-feed-gallery">
+    ${photos.map(src=>`<img src="${src}" onclick="openLightbox('${src}')">`).join('')}
   </div>`;
 }
 
@@ -9628,6 +9854,21 @@ const LEGAL_DICT_EN = {
 };
 
 const UI_DICT_EN = {
+  // vizitka
+  "🪪 Vytvoriť vizitku":"🪪 Create business card",
+  "📤 Zdieľať do feedu":"📤 Share to feed",
+  "✓ Vizitka bola zdieľaná do feedu.":"✓ Your business card was shared to the feed.",
+  "Zdieľaný obsah":"Shared content",
+  "Vytvoriť vizitku":"Create business card",
+  "príspevkov":"posts",
+  "fotiek":"photos",
+  "videí":"videos",
+  "Zdieľať do feedu":"Share to feed",
+  "Zdieľam...":"Sharing...",
+  "Zdieľané":"Shared",
+  "Moja elektronická vizitka na Connect8":"My digital business card on Connect8",
+  "Zatiaľ nemáš zdieľaný žiadny obsah - pridaj príspevky, fotky alebo videá a vizitka bude výstižnejšia.":"You haven't shared any content yet - add posts, photos or videos to make your card more accurate.",
+  "príspevok":"post",
   // topbar / navigácia
   "Feed":"Feed",
   "Videá":"Videos",
