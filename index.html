@@ -3165,6 +3165,19 @@ function optimizeCloudinaryVideoUrl(url){
   return url.replace('/video/upload/', '/video/upload/w_720,c_limit,q_auto,f_mp4,vc_h264/');
 }
 
+// Rovnaký princíp ako vyššie, len pre obrázky - použité pri príprave vizitky
+// na zdieľanie (pozri getVizitkaShareImageBlob). Galéria na vizitke ukazuje
+// len malé miniatúry, no bez tejto úpravy by sa reálne sťahovali originálne
+// fotky v plnej veľkosti (môže byť aj niekoľko MB každá) - pri 10 fotkách to
+// vedelo trvať tak dlho, že príprava obrázka na zdieľanie stihla vypršať
+// (timeout), a appka potom potichu poslala len profilovú fotku ako náhradu.
+function optimizeCloudinaryImageUrl(url, width){
+  if(!url || typeof url !== 'string') return url;
+  if(!url.includes('res.cloudinary.com') || !url.includes('/image/upload/')) return url; // nie je to Cloudinary obrázok
+  if(/\/upload\/[^/]*w_\d/.test(url)) return url; // šírka už je nastavená, nepridávaj druhýkrát
+  return url.replace('/image/upload/', `/image/upload/w_${width},c_limit,q_auto,f_auto/`);
+}
+
 const LOCAL_STORAGE_KEY = "connect_app_state_v1";
 
 function getStateSnapshot(){
@@ -4446,7 +4459,9 @@ function openVizitkaModal(){
 
   const sampleImgs = data.photos.slice(0,10);
   const gallery = document.getElementById('vizitka-gallery');
-  let html = sampleImgs.map(src=>`<img src="${src}">`).join('');
+  // w_240: malé miniatúry stačia (mriežka ich aj tak zobrazuje maličké) -
+  // podstatne rýchlejšie sťahovanie/spracovanie pri príprave zdieľanej fotky.
+  let html = sampleImgs.map(src=>`<img src="${optimizeCloudinaryImageUrl(src, 240)}">`).join('');
   if(sampleImgs.length < 10 && data.myVideos.length){
     const remain = 10 - sampleImgs.length;
     html += data.myVideos.slice(0, remain).map(()=>`<div class="vizitka-video-thumb">🎬</div>`).join('');
@@ -5570,7 +5585,7 @@ function withTimeout(promise, timeoutMs){
 
 async function getVizitkaShareImageBlob(){
   try{
-    await withTimeout(loadHtml2Canvas(), 6000);
+    await withTimeout(loadHtml2Canvas(), 8000);
     if(typeof html2canvas !== 'function') throw new Error('html2canvas sa nenačítal');
     const card = document.querySelector('#vizitka-modal .vizitka-card');
     if(!card) throw new Error('vizitka-card sa nenašla');
@@ -5578,7 +5593,7 @@ async function getVizitkaShareImageBlob(){
       backgroundColor:'#1a0f2b',
       useCORS:true,
       scale:2,
-      imageTimeout:4000, // nečakať 15s (default) na nedostupný obrázok, ale max 4s
+      imageTimeout:8000, // aj tak sú miniatúry teraz malé (w_240), stihne to aj na pomalšom pripojení
       // Tlačidlá a krížik sa do zdieľanej fotky nemajú dostať - namiesto
       // dočasného skrývania (čo by pri príprave na pozadí bolo vidno ako
       // "blikanie" tlačidiel) ich html2canvas jednoducho pri snímaní ignoruje.
@@ -5586,8 +5601,8 @@ async function getVizitkaShareImageBlob(){
         || el.classList.contains('vizitka-close')
         || el.classList.contains('vizitka-actions')
         || el.classList.contains('vizitka-shared-note')
-    }), 9000);
-    const blob = await withTimeout(new Promise(res=>canvas.toBlob(res, 'image/png')), 3000);
+    }), 15000);
+    const blob = await withTimeout(new Promise(res=>canvas.toBlob(res, 'image/png')), 5000);
     if(blob) return blob;
   }catch(e){
     console.error('Vytvorenie obrázka celej vizitky zlyhalo, skúsim aspoň profilovú fotku:', e);
