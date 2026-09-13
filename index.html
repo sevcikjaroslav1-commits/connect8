@@ -1436,12 +1436,24 @@
     background:linear-gradient(160deg,#3a1030,#160a14);
   }
   .vizitka-empty{font-size:12.5px;color:#cfc4e0;text-align:center;padding:10px 0 4px;}
-  .vizitka-actions{display:flex;gap:8px;}
-  .vizitka-actions button{flex:1;padding:11px 0;border-radius:12px;font-weight:700;font-size:13.5px;}
+  .vizitka-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .vizitka-actions button{padding:11px 0;border-radius:12px;font-weight:700;font-size:13.5px;}
   .vizitka-actions .btn-close2{background:rgba(255,255,255,.12);color:#fff;}
   .vizitka-actions .btn-share{background:linear-gradient(135deg,#6a4cff,#a44cff);color:#fff;}
   .vizitka-actions .btn-share:disabled{opacity:.5;}
   .vizitka-shared-note{font-size:11.5px;color:#8ee69b;text-align:center;margin-top:10px;display:none;}
+  .btn-share-further{
+    position:relative;padding:7px 40px 7px 14px;border-radius:12px;font-weight:700;font-size:13.5px;
+    background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:.15s;
+  }
+  .btn-share-further:hover{filter:brightness(1.08);}
+  .btn-share-further .invite-ring{
+    position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    width:24px;height:24px;padding:2px;flex-shrink:0;
+  }
+  .btn-share-further .invite-ring-inner{background:#0e3d20;}
+  .btn-share-further .invite-ring-inner svg{width:12px;height:12px;}
 
   .chat-modal, .conv-modal{
     display:none;position:fixed;inset:0;z-index:600;background:rgba(10,10,14,.55);
@@ -2824,6 +2836,15 @@
             <div class="vizitka-actions">
               <button class="btn-close2" onclick="closeVizitkaModal()">Zavrieť</button>
               <button class="btn-share" id="vizitka-share-btn" onclick="shareVizitkaToFeed()">📤 Zdieľať do feedu</button>
+              <div></div>
+              <button class="btn-share-further" onclick="closeVizitkaModal();openInviteModal()">
+                <span>Zdieľať ďalej</span>
+                <span class="invite-ring">
+                  <span class="invite-ring-inner">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+                  </span>
+                </span>
+              </button>
             </div>
             <div class="vizitka-shared-note" id="vizitka-shared-note">✓ Vizitka bola zdieľaná do feedu.</div>
           </div>
