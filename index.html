@@ -1442,13 +1442,12 @@
   .vizitka-actions .btn-share{background:linear-gradient(135deg,#6a4cff,#a44cff);color:#fff;}
   .vizitka-actions .btn-share:disabled{opacity:.5;}
   .vizitka-shared-note{font-size:11.5px;color:#8ee69b;text-align:center;margin-top:10px;display:none;}
-  /* Poznámka: tlačidlá/krížik/overlay sa do zdieľanej fotky vizitky NEDOSTANÚ -
-     html2canvas ich pri snímaní preskočí cez ignoreElements (JS), takže sa
-     netreba pred snímaním nič vizuálne skrývať (to by pri príprave obrázka
-     na pozadí spôsobilo rušivé "blikanie" tlačidiel). */
+  /* Poznámka: obrázok vizitky na zdieľanie sa kreslí priamo z dát cez Canvas
+     API (pozri drawVizitkaToCanvas v JS), nie odfotením tohto DOM elementu -
+     tlačidlá/krížik/overlay sa teda do zdieľanej fotky ani nedostanú, keďže
+     sa nekreslia. */
   /* Overlay so používateľ vidí, že sa niečo deje (príprava obrázka na zdieľanie),
-     namiesto toho aby vyzeralo, že appka "zamrzla". html2canvas ho pri snímaní
-     ignoruje (pozri ignoreElements nižšie), takže sa na výslednej fotke nezobrazí. */
+     namiesto toho aby vyzeralo, že appka "zamrzla". */
   .vizitka-share-overlay{
     position:absolute;inset:0;z-index:5;border-radius:22px;
     background:rgba(15,8,26,.85);display:none;flex-direction:column;
@@ -5552,30 +5551,8 @@ function closeInviteModal(){
   vizitkaShareMode = false;
 }
 
-// html2canvas sa načíta až keď je naozaj potrebný (pri zdieľaní vizitky ďalej),
-// nech sa zbytočne nespomaľuje prvé načítanie appky.
-let html2canvasLoadPromise = null;
-function loadHtml2Canvas(){
-  if(typeof html2canvas === 'function') return Promise.resolve();
-  if(html2canvasLoadPromise) return html2canvasLoadPromise;
-  html2canvasLoadPromise = new Promise((resolve, reject)=>{
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-  return html2canvasLoadPromise;
-}
-
-// Vytvorí PNG obrázok CELEJ vizitkovej karty (avatar, meno, popis, štatistiky,
-// galéria) - presne to, čo je vidieť v okne vizitky, len bez tlačidiel a krížika.
-// Ak sa to z nejakého dôvodu nepodarí (napr. výpadok CDN), ako núdzové
-// riešenie sa použije aspoň samotná profilová fotka.
 // Pomocná funkcia: "pretečie" (reject) danú promise, ak sa nestihne vybaviť
-// do timeoutMs. Toto je kľúčové - html2canvas vie na niektorých telefónoch
-// "zaseknúť" na dlhšie (napr. keď sa nejaký obrázok v galérii nenačíta kvôli
-// CORS/výpadku siete) a bez tohto by appka pôsobila, že "sa nič nedeje".
+// do timeoutMs - aby appka nikdy nepôsobila, že "sa nič nedeje".
 function withTimeout(promise, timeoutMs){
   return Promise.race([
     promise,
@@ -5583,29 +5560,240 @@ function withTimeout(promise, timeoutMs){
   ]);
 }
 
+// ============================================================
+// Vizitka na zdieľanie sa kreslí PRIAMO z dát cez Canvas API
+// (meno, popis, štatistiky, fotky) - NEODFOTÍ sa živá stránka.
+// Predošlý prístup (html2canvas odfotenie DOM elementu) bol
+// krehký: záležalo na tom, či sa všetky obrázky v galérii stihnú
+// načítať cez CDN, na CORS hlavičkách, na výkone telefónu atď. -
+// a keď čo i len jedna fotka zlyhala/trvala dlho, vedelo zlyhať
+// zachytenie celej karty. Kreslenie z vlastných dát je spoľahlivé:
+// každá fotka v galérii sa načítava samostatne a zlyhanie jednej
+// jednoducho vynechá danú dlaždicu, zvyšok vizitky sa nakreslí
+// normálne, takže obrázok sa vytvorí prakticky vždy.
+// ============================================================
+
+function loadImageForCanvas(url, timeoutMs){
+  return new Promise((resolve)=>{
+    if(!url){ resolve(null); return; }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    let done = false;
+    const finish = (result)=>{ if(done) return; done = true; resolve(result); };
+    const timer = setTimeout(()=>finish(null), timeoutMs);
+    img.onload = ()=>{ clearTimeout(timer); finish(img); };
+    img.onerror = ()=>{ clearTimeout(timer); finish(null); };
+    img.src = url;
+  });
+}
+
+function drawRoundedRectPath(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+}
+
+// Ekvivalent CSS "object-fit:cover" - obrázok sa oreže, nedeformuje.
+function drawCoverImage(ctx, img, x, y, w, h){
+  const ir = img.width / img.height;
+  const dr = w / h;
+  let sx, sy, sw, sh;
+  if(ir > dr){ sh = img.height; sw = sh * dr; sx = (img.width - sw) / 2; sy = 0; }
+  else { sw = img.width; sh = sw / dr; sx = 0; sy = (img.height - sh) / 2; }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+}
+
+async function drawVizitkaToCanvas(){
+  if(document.fonts && document.fonts.ready){
+    try{ await Promise.race([document.fonts.ready, new Promise(r=>setTimeout(r, 1200))]); }catch(e){}
+  }
+
+  const name = (currentUser && currentUser.name) || '';
+  const tagline = (currentVizitkaData && currentVizitkaData.tagline) || '';
+  const counts = (currentVizitkaData && currentVizitkaData.counts) || {posts:0, photos:0, videos:0};
+  const photoUrls = (currentVizitkaData && currentVizitkaData.images) || [];
+
+  const S = 2; // scale pre ostrejší (retina) výstup
+  const W = 360;
+  const PAD = 20;
+  const contentW = W - PAD*2;
+
+  // Avatar a galéria sa sťahujú súbežne - zlyhanie/pomalosť jednej fotky
+  // nezablokuje ostatné (pozri loadImageForCanvas: nikdy nezamietne, len
+  // po timeoute vráti null a daná dlaždica sa jednoducho vynechá).
+  const avatarUrl = currentUser && currentUser.photoURL;
+  const galleryPhotos = photoUrls.slice(0, 10);
+  const loaded = await Promise.all([
+    loadImageForCanvas(avatarUrl, 6000),
+    ...galleryPhotos.map(u=>loadImageForCanvas(optimizeCloudinaryImageUrl(u, 240), 6000))
+  ]);
+  const avatarImg = loaded[0];
+  const galleryImgs = loaded.slice(1).filter(Boolean);
+
+  const remainSlots = Math.max(0, 10 - galleryPhotos.length);
+  const videoSlots = Math.min(remainSlots, counts.videos || 0);
+  const totalGalleryTiles = galleryImgs.length + videoSlots;
+  const galleryEmpty = totalGalleryTiles === 0;
+  const tileGap = 5;
+  const tileSize = (contentW - tileGap*4) / 5;
+  const galleryRows = galleryEmpty ? 0 : Math.ceil(totalGalleryTiles / 5);
+
+  // -- Výpočet celkovej výšky karty --
+  let y = PAD;
+  y += 74 + 10;               // avatar + margin
+  y += 20 + 6;                 // meno + margin
+  y += 28 + 16;                 // tagline pill + margin
+  y += 10 + 15 + 4 + 13 + 10;  // štatistiky (padding+číslo+medzera+popis+padding)
+  y += 12 + 8;                 // nadpis galérie + margin
+  y += galleryEmpty ? (30 + 18) : (galleryRows*tileSize + (galleryRows-1)*tileGap + 18);
+  y += 12 + 14;                // vodoznak (padding-top + výška textu)
+  const H = Math.round(y);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(W * S);
+  canvas.height = Math.round(H * S);
+  const ctx = canvas.getContext('2d');
+  ctx.scale(S, S);
+
+  // Pozadie karty
+  drawRoundedRectPath(ctx, 0, 0, W, H, 22);
+  const bg = ctx.createLinearGradient(0, 0, W*0.3, H);
+  bg.addColorStop(0, '#221033');
+  bg.addColorStop(1, '#120a1e');
+  ctx.fillStyle = bg;
+  ctx.fill();
+
+  // Avatar
+  const avR = 37;
+  const avCx = W/2, avCy = PAD + avR;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(avCx, avCy, avR, 0, Math.PI*2); ctx.closePath(); ctx.clip();
+  if(avatarImg){
+    drawCoverImage(ctx, avatarImg, avCx-avR, avCy-avR, avR*2, avR*2);
+  } else {
+    const grad = ctx.createLinearGradient(avCx-avR, avCy-avR, avCx+avR, avCy+avR);
+    grad.addColorStop(0, '#a44cff'); grad.addColorStop(1, '#6a4cff');
+    ctx.fillStyle = grad;
+    ctx.fillRect(avCx-avR, avCy-avR, avR*2, avR*2);
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 26px Inter, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(initials(name), avCx, avCy+1);
+  }
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(avCx, avCy, avR, 0, Math.PI*2);
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.stroke();
+
+  let cy = avCy + avR + 10;
+
+  // Meno
+  ctx.fillStyle = '#fff';
+  ctx.font = '800 17px Inter, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(name, W/2, cy + 15);
+  cy += 20 + 6;
+
+  // Tagline (pilulka)
+  ctx.font = '700 14.5px Inter, sans-serif';
+  const pillPadX = 14, pillH = 28;
+  const pillW = Math.min(contentW, ctx.measureText(tagline).width + pillPadX*2);
+  drawRoundedRectPath(ctx, W/2 - pillW/2, cy, pillW, pillH, pillH/2);
+  ctx.fillStyle = 'rgba(164,76,255,.15)'; ctx.fill();
+  ctx.fillStyle = '#c9a8ff'; ctx.textBaseline = 'middle';
+  ctx.fillText(tagline, W/2, cy + pillH/2 + 1);
+  cy += pillH + 16;
+
+  // Štatistiky
+  const statsTop = cy;
+  const statsH = 10 + 15 + 4 + 13 + 10;
+  ctx.strokeStyle = 'rgba(255,255,255,.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD, statsTop); ctx.lineTo(W-PAD, statsTop); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(PAD, statsTop+statsH); ctx.lineTo(W-PAD, statsTop+statsH); ctx.stroke();
+  const statCols = [
+    [String(counts.posts||0), t('príspevkov')],
+    [String(counts.photos||0), t('fotiek')],
+    [String(counts.videos||0), t('videí')]
+  ];
+  const colW = contentW / 3;
+  statCols.forEach((col, i)=>{
+    const cx = PAD + colW*i + colW/2;
+    ctx.fillStyle = '#fff';
+    ctx.font = '700 15px Inter, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(col[0], cx, statsTop + 10 + 14);
+    ctx.fillStyle = '#cfc4e0';
+    ctx.font = '500 11.5px Inter, sans-serif';
+    ctx.fillText(col[1], cx, statsTop + 10 + 14 + 4 + 11);
+  });
+  cy = statsTop + statsH + 12;
+
+  // Nadpis galérie
+  ctx.fillStyle = '#cfc4e0';
+  ctx.font = '700 11.5px Inter, sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText((t('Zdieľaný obsah')||'').toUpperCase(), PAD, cy + 10);
+  cy += 12 + 8;
+
+  // Galéria
+  if(galleryEmpty){
+    ctx.fillStyle = '#cfc4e0';
+    ctx.font = '500 12.5px Inter, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(t('Zatiaľ nemáš zdieľaný žiadny obsah'), W/2, cy + 18);
+    cy += 30 + 18;
+  } else {
+    let ti = 0;
+    galleryImgs.forEach((img)=>{
+      const col = ti % 5, row = Math.floor(ti/5);
+      const tx = PAD + col*(tileSize+tileGap), ty = cy + row*(tileSize+tileGap);
+      drawRoundedRectPath(ctx, tx, ty, tileSize, tileSize, 7);
+      ctx.save(); ctx.clip();
+      drawCoverImage(ctx, img, tx, ty, tileSize, tileSize);
+      ctx.restore();
+      ti++;
+    });
+    for(let v=0; v<videoSlots; v++){
+      const col = ti % 5, row = Math.floor(ti/5);
+      const tx = PAD + col*(tileSize+tileGap), ty = cy + row*(tileSize+tileGap);
+      drawRoundedRectPath(ctx, tx, ty, tileSize, tileSize, 7);
+      const grad = ctx.createLinearGradient(tx, ty, tx, ty+tileSize);
+      grad.addColorStop(0, '#3a1030'); grad.addColorStop(1, '#160a14');
+      ctx.fillStyle = grad; ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px Inter, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('🎬', tx+tileSize/2, ty+tileSize/2+1);
+      ti++;
+    }
+    cy += galleryRows*tileSize + (galleryRows-1)*tileGap + 18;
+  }
+
+  // Vodoznak
+  ctx.strokeStyle = 'rgba(255,255,255,.12)';
+  ctx.beginPath(); ctx.moveTo(PAD, cy); ctx.lineTo(W-PAD, cy); ctx.stroke();
+  ctx.fillStyle = '#c9a8ff';
+  ctx.font = '700 11.5px Inter, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('📇 connect8.eu', W/2, cy + 12 + 11);
+
+  return canvas;
+}
+
+// Vytvorí PNG obrázok CELEJ vizitky (avatar, meno, popis, štatistiky, galéria).
+// Nakreslí sa z dát cez Canvas API (pozri drawVizitkaToCanvas vyššie), takže
+// zlyhá len ak by zlyhalo úplne všetko (napr. canvas.toBlob) - vtedy sa ako
+// núdzové riešenie použije aspoň samotná profilová fotka.
 async function getVizitkaShareImageBlob(){
   try{
-    await withTimeout(loadHtml2Canvas(), 8000);
-    if(typeof html2canvas !== 'function') throw new Error('html2canvas sa nenačítal');
-    const card = document.querySelector('#vizitka-modal .vizitka-card');
-    if(!card) throw new Error('vizitka-card sa nenašla');
-    const canvas = await withTimeout(html2canvas(card, {
-      backgroundColor:'#1a0f2b',
-      useCORS:true,
-      scale:2,
-      imageTimeout:8000, // aj tak sú miniatúry teraz malé (w_240), stihne to aj na pomalšom pripojení
-      // Tlačidlá a krížik sa do zdieľanej fotky nemajú dostať - namiesto
-      // dočasného skrývania (čo by pri príprave na pozadí bolo vidno ako
-      // "blikanie" tlačidiel) ich html2canvas jednoducho pri snímaní ignoruje.
-      ignoreElements:(el)=> el.id === 'vizitka-share-overlay'
-        || el.classList.contains('vizitka-close')
-        || el.classList.contains('vizitka-actions')
-        || el.classList.contains('vizitka-shared-note')
-    }), 15000);
+    const canvas = await withTimeout(drawVizitkaToCanvas(), 12000);
     const blob = await withTimeout(new Promise(res=>canvas.toBlob(res, 'image/png')), 5000);
     if(blob) return blob;
   }catch(e){
-    console.error('Vytvorenie obrázka celej vizitky zlyhalo, skúsim aspoň profilovú fotku:', e);
+    console.error('Vytvorenie obrázka vizitky zlyhalo, skúsim aspoň profilovú fotku:', e);
   }
   const photoUrl = (currentUser && currentUser.photoURL)
     || (currentVizitkaData && currentVizitkaData.images && currentVizitkaData.images[0])
