@@ -3426,6 +3426,7 @@ function loadState(){
 
 
 let currentUser = null; // {uid, email, name}
+let currentUserIsAdmin = false; // true ak profil prihláseného používateľa má isAdmin:true vo Firestore
 
 // Kešované KOMPLETNÉ zoznamy vlastných príspevkov jednotlivých používateľov
 // (kľúč = uid). Feed si žive drží len posledných 80 príspevkov od všetkých
@@ -3598,6 +3599,7 @@ function doLogout(){
   pauseAllVideoSectionMedia(); // odhlásili sme sa - akékoľvek video na pozadí sa musí zastaviť
   if(FIREBASE_CONFIGURED && auth) auth.signOut();
   currentUser = null;
+  currentUserIsAdmin = false;
   document.getElementById('app').style.display = 'none';
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('login-email').value = '';
@@ -3684,6 +3686,7 @@ async function deleteMyAccount(){
     if(incomingCallsUnsub){ incomingCallsUnsub(); incomingCallsUnsub = null; }
     if(pc || currentCallDocId) endCall();
     currentUser = null;
+    currentUserIsAdmin = false;
     document.getElementById('app').style.display = 'none';
     document.getElementById('auth-screen').style.display = 'flex';
     document.getElementById('login-email').value = '';
@@ -6686,11 +6689,13 @@ if(FIREBASE_CONFIGURED){
       let name = user.displayName || user.email;
       let photoURL = null;
       let showLastOnline = false;
+      currentUserIsAdmin = false;
       try{
         const prof = await db.collection('profiles').doc(user.uid).get();
         if(prof.exists && prof.data().name) name = prof.data().name;
         if(prof.exists && prof.data().avatarPhoto) photoURL = prof.data().avatarPhoto;
         if(prof.exists) showLastOnline = !!prof.data().showLastOnline;
+        if(prof.exists) currentUserIsAdmin = prof.data().isAdmin === true;
       }catch(e){ console.error("Nepodarilo sa načítať profil:", e); }
       currentUser = { uid:user.uid, email:user.email, name, photoURL, showLastOnline };
       profileSettingsCache[user.uid] = showLastOnline;
@@ -7650,7 +7655,7 @@ function buildPostCard(p, opts={}){
             <button onclick="startEditPost(${p.id})">✏️ ${t('Upraviť')}</button>
           </div>
         </div>` : ''}
-        ${isOwnPost ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="${t('Vymazať príspevok')}">🗑️</button>` : ''}
+        ${(isOwnPost || currentUserIsAdmin) ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="${t('Vymazať príspevok')}">🗑️</button>` : ''}
       </div>
       ${isEditing ? `
       <div class="post-text-edit-box">
@@ -8840,7 +8845,7 @@ function renderProducts(){
     div.className = 'product';
     div.onclick = ()=>openProductDetail(pr.id);
     div.innerHTML = `
-      ${(pr.authorId ? pr.authorId===currentUser.uid : pr.seller===currentUser.name) ? `<button class="product-del-btn" onclick="event.stopPropagation();deleteProduct(${pr.id})" title="Vymazať produkt">🗑️</button>` : ''}
+      ${((pr.authorId ? pr.authorId===currentUser.uid : pr.seller===currentUser.name) || currentUserIsAdmin) ? `<button class="product-del-btn" onclick="event.stopPropagation();deleteProduct(${pr.id})" title="Vymazať produkt">🗑️</button>` : ''}
       <div class="product-img" style="position:relative;">${getProductPhotos(pr).length ? `<img src="${getProductPhotos(pr)[0]}">${getProductPhotos(pr).length>1 ? `<div class="product-photo-badge">📷 ${getProductPhotos(pr).length}</div>` : ''}` : pr.emoji}</div>
       <div class="product-body">
         <div class="product-price">${pr.price} €</div>
@@ -8920,7 +8925,7 @@ function renderProductDetail(){
     <div class="product-detail-actions">
       ${!isOwn ? `<button class="product-detail-msg-btn" onclick="messageProductSeller(${pr.id})">💬 Napísať predajcovi</button>` : ''}
       ${isOwn ? `<button class="product-detail-edit-btn" onclick="openEditProduct(${pr.id})">✏️ Upraviť</button>` : ''}
-      ${isOwn ? `<button class="product-detail-del-btn" onclick="deleteProduct(${pr.id})">🗑️ Vymazať inzerát</button>` : ''}
+      ${(isOwn || currentUserIsAdmin) ? `<button class="product-detail-del-btn" onclick="deleteProduct(${pr.id})">🗑️ Vymazať inzerát</button>` : ''}
     </div>
   `;
 }
@@ -9175,7 +9180,7 @@ function renderMovies(){
         <p class="movie-title">${escapeHtml(m.title)}</p>
         <div class="movie-meta">
           <span>${escapeHtml(m.name || '')}</span>
-          ${m.authorId === currentUser.uid ? `<button class="movie-del-btn" onclick="deleteMovie(${m.id})">🗑️</button>` : ''}
+          ${(m.authorId === currentUser.uid || currentUserIsAdmin) ? `<button class="movie-del-btn" onclick="deleteMovie(${m.id})">🗑️</button>` : ''}
         </div>
       </div>
     </div>
@@ -9230,7 +9235,7 @@ function renderVideos(){
         <div><button class="${getLikedBy(v).includes(currentUser.uid)?'liked':''}" onclick="toggleVideoLike(${v.id})">❤️</button><div class="count">${v.likes}</div></div>
         <div><button onclick="openVideoComments(${v.id})">💬</button><div class="count" id="chat-count-${v.id}">${(v.comments && v.comments.length) || 0}</div></div>
         <div><button onclick="openVideoShareModal(${v.id})">↗</button><div class="count">Zdieľať</div></div>
-        ${(v.authorId ? v.authorId===currentUser.uid : v.name===currentUser.name) ? `<div><button onclick="deleteVideo(${v.id})">🗑️</button><div class="count">Zmazať</div></div>` : ''}
+        ${((v.authorId ? v.authorId===currentUser.uid : v.name===currentUser.name) || currentUserIsAdmin) ? `<div><button onclick="deleteVideo(${v.id})">🗑️</button><div class="count">Zmazať</div></div>` : ''}
       </div>
     `;
     scroller.appendChild(div);
