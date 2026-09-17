@@ -4687,13 +4687,12 @@ async function renderFriendsList(){
   loading.textContent = t('Načítavam priateľov...');
   grid.appendChild(loading);
 
-  // Počkaj, kým sa naozaj dokončí načítanie zoznamu sledovaných z Firestore
-  // (mohlo byť ešte len rozbehnuté po prihlásení) — inak by sme tu čítali
-  // starý/prázdny followingSet a zoznam by pôsobil ako prázdny, hoci niekoho
-  // sleduješ.
-  if(followingLoadPromise){
-    try{ await followingLoadPromise; }catch(e){ /* chyba sa už zaloguje v loadFollowing() */ }
-  }
+  // Vždy si nanovo stiahni čerstvý zoznam sledovaných priamo z Firestore
+  // (nespoliehať sa na followingLoadPromise z prihlásenia - ten mohol byť
+  // v tejto chvíli už vybavený so starými/neúplnými dátami). Vďaka tomu sa
+  // Priatelia zobrazia správne hneď pri prvom otvorení, bez nutnosti F5.
+  followingLoadPromise = loadFollowing();
+  try{ await followingLoadPromise; }catch(e){ /* chyba sa už zaloguje v loadFollowing() */ }
   // Medzitým sa mohol užívateľ prepnúť inde — nemá zmysel dokončovať vykreslenie.
   const friendsView = document.getElementById('view-friends');
   if(!friendsView || !friendsView.classList.contains('active')) return;
