@@ -2355,9 +2355,9 @@
     </div>
 
     <div class="mode-dock">
-      <button class="active" data-mode="feed" onclick="switchMode('feed')"><span class="ind"></span>Feed</button>
+      <button class="active" data-mode="feed" onclick="switchMode('feed')"><span class="ind"></span>Plocha</button>
       <button data-mode="video" onclick="switchMode('video')"><span class="ind"></span>Videá</button>
-      <button data-mode="market" onclick="switchMode('market')"><span class="ind"></span>Marketplace</button>
+      <button data-mode="market" onclick="switchMode('market')"><span class="ind"></span>Kúpiť/Predať</button>
       <button data-mode="news" onclick="switchMode('news')"><span class="ind"></span>Správy</button>
       <button data-mode="movies" onclick="switchMode('movies')"><span class="ind"></span>Filmy</button>
       <button data-mode="games" onclick="openGamesDirect()"><span class="ind"></span>Hry</button>
@@ -8815,7 +8815,9 @@ function getFilteredProducts(){
   const max = parseFloat(document.getElementById('market-search-max').value);
   const filtering = isMarketFilterActive();
   const source = filtering ? (allProductsCache || products) : products;
+  const userCountry = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'us' : 'sk';
   return source.filter(pr=>{
+    if((pr.country || 'sk') !== userCountry) return false;
     if(activeMarketCategory && (pr.category || 'Ostatné') !== activeMarketCategory) return false;
     if(q && !pr.title.toLowerCase().includes(q)) return false;
     const price = parseFloat(pr.price);
@@ -9040,7 +9042,8 @@ function addProduct(){
     return;
   }
 
-  const newProduct = {id:Date.now(), createdAt: Date.now(), title, price, category, desc, seller:currentUser.name, authorId:currentUser.uid, photos:pendingProdImages.slice(), emoji: cat ? cat.emoji : '📦'};
+  const country = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'us' : 'sk';
+  const newProduct = {id:Date.now(), createdAt: Date.now(), title, price, category, desc, seller:currentUser.name, authorId:currentUser.uid, photos:pendingProdImages.slice(), emoji: cat ? cat.emoji : '📦', country};
   products.push(newProduct);
   document.getElementById('prod-title').value='';
   document.getElementById('prod-price').value='';
@@ -10517,9 +10520,9 @@ const UI_DICT_EN = {
   "Zatiaľ nemáš zdieľaný žiadny obsah - pridaj príspevky, fotky alebo videá a vizitka bude výstižnejšia.":"You haven't shared any content yet - add posts, photos or videos to make your card more accurate.",
   "príspevok":"post",
   // topbar / navigácia
-  "Feed":"Feed",
+  "Plocha":"Feed",
   "Videá":"Videos",
-  "Marketplace":"Marketplace",
+  "Kúpiť/Predať":"Marketplace",
   "Správy":"News",
   "Filmy":"Movies",
   "Hry":"Games",
@@ -10916,6 +10919,8 @@ function applyLanguage(){
   if(viewFriends && viewFriends.classList.contains('active')) renderFriendsList();
   const viewNews = document.getElementById('view-news');
   if(viewNews && viewNews.classList.contains('active')) loadNewsFeed(true);
+  const viewMarket = document.getElementById('view-market');
+  if(viewMarket && viewMarket.classList.contains('active')) renderProducts();
 }
 
 function setAppLanguage(lang){
