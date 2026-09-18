@@ -3411,7 +3411,13 @@ function loadState(){
         if(firstVideos){ firstVideos = false; markLoaded(); }
       });
 
-      db.collection('movies').orderBy('createdAt','desc').limit(120).onSnapshot((snap)=>{
+      // Limit znížený zo 120 na 40 (2026): pri každom pripojení/refreshi
+      // klienta sa tento onSnapshot listener naráta ako initial read za
+      // KAŽDÝ dokument v limite - 120 bolo pri realtime listeneri na
+      // zoznam filmov zbytočne veľa a zbytočne to naťahovalo dennú
+      // kvótu Firestore reads. 40 stále pokrýva prakticky celý bežný
+      // zoznam filmov/dokumentov naraz.
+      db.collection('movies').orderBy('createdAt','desc').limit(40).onSnapshot((snap)=>{
         movies = docsToArray(snap);
         movies.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
         if(document.getElementById('app').style.display === 'block') renderMovies();
@@ -4592,13 +4598,11 @@ async function renderUsersList(){
   }
 
   try{
-    const qs = await db.collection('profiles').get();
-    const users = [];
-    qs.forEach(doc=>{
-      const data = doc.data() || {};
-      if(data.deleted) return; // zmazaný účet - nezobrazovať v zozname
-      users.push({ id: doc.id, name: data.name || t('Používateľ'), photo: data.avatarPhoto || null, showLastOnline: !!data.showLastOnline });
-    });
+    // Zdieľaná cache s vyhľadávaním (loadAllUsersForSearch) - šetrí
+    // duplicitné reads nad celou kolekciou 'profiles'. Ak treba naozaj
+    // čerstvé dáta (napr. niekto práve zmenil meno/fotku), zavolaj
+    // predtým `allUsersCache = null;`.
+    const users = (await loadAllUsersForSearch()).map(u=>({...u, name: u.name === 'Používateľ' ? t('Používateľ') : u.name}));
     users.sort((a,b)=> a.name.localeCompare(b.name, 'sk'));
 
     grid.innerHTML = '';
@@ -4783,8 +4787,14 @@ async function renderFriendsList(){
   });
 }
 
-/* ---------------- TOP SEARCH (vyhľadávanie používateľov podľa mena) ---------------- */
-let allUsersCache = null; // {id, name, photo}[] - lazy načítané zo 'profiles'
+/* ---------------- TOP SEARCH (vyhľadávanie používateľov podľa mena) ----------------
+   allUsersCache slúži AJ pre vyhľadávanie AJ pre zoznam používateľov
+   (renderUsersList nižšie) - je to jediné miesto v appke, ktoré číta
+   celú kolekciu 'profiles' naraz. Predtým mali renderUsersList aj
+   loadAllUsersForSearch každý svoj vlastný .get() nad rovnakou
+   kolekciou, čo pri N používateľoch znamenalo zbytočne 2x N reads
+   namiesto 1x N. */
+let allUsersCache = null; // {id, name, photo, showLastOnline}[] - lazy načítané zo 'profiles'
 
 async function loadAllUsersForSearch(){
   if(allUsersCache) return allUsersCache;
@@ -4795,7 +4805,7 @@ async function loadAllUsersForSearch(){
     qs.forEach(doc=>{
       const data = doc.data() || {};
       if(data.deleted) return; // zmazaný účet - nezobrazovať vo vyhľadávaní
-      users.push({ id: doc.id, name: data.name || 'Používateľ', photo: data.avatarPhoto || null });
+      users.push({ id: doc.id, name: data.name || 'Používateľ', photo: data.avatarPhoto || null, showLastOnline: !!data.showLastOnline });
     });
     allUsersCache = users;
   }catch(e){
@@ -6855,9 +6865,22 @@ function startPresenceHeartbeat(){
     refreshLastOnlineDisplays();
   });
 
-  db.collection('profiles').get()
-    .then(qs=>{ totalUsersCount = qs.docs.filter(d=>!(d.data()||{}).deleted).length; updateUserStats(); })
-    .catch(e=>console.error("Nepodarilo sa spočítať používateľov:", e));
+  // Predtým sa tu robilo db.collection('profiles').get() - teda READ
+  // KAŽDÉHO jedného profilu len kvôli jednému číslu (počet
+  // používateľov), a to pri KAŽDOM prihlásení KAŽDÉHO používateľa.
+  // Pri N registrovaných profiloch a M prihláseniach za deň to bolo
+  // N×M reads len na túto jednu štatistiku. count() agregácia stojí
+  // vždy len 1 read bez ohľadu na to, koľko dokumentov kolekcia má.
+  // Keďže "deleted" pole majú nastavené len zmazané účty (bežné profily
+  // ho vôbec nemajú), spočítame zvlášť všetky a zvlášť zmazané a
+  // odčítame - to je stále len 2 reads namiesto N.
+  Promise.all([
+    db.collection('profiles').count().get(),
+    db.collection('profiles').where('deleted','==',true).count().get()
+  ]).then(([allSnap, deletedSnap])=>{
+    totalUsersCount = allSnap.data().count - deletedSnap.data().count;
+    updateUserStats();
+  }).catch(e=>console.error("Nepodarilo sa spočítať používateľov:", e));
 }
 
 /* ---------------- DYNAMICKÁ VÝŠKA TOPBARU (pre sekciu Videá) ----------------
