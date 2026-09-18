@@ -3417,7 +3417,14 @@ function loadState(){
       // zoznam filmov zbytočne veľa a zbytočne to naťahovalo dennú
       // kvótu Firestore reads. 40 stále pokrýva prakticky celý bežný
       // zoznam filmov/dokumentov naraz.
-      db.collection('movies').orderBy('createdAt','desc').limit(40).onSnapshot((snap)=>{
+      // DOČASNE vrátené na 120 (2026): pri limite 40 sa v spoločnom
+      // dotaze (film + dokument dokopy) mohla jedna kategória úplne
+      // vytlačiť druhú, ak sa v poslednom čase pridávalo viac
+      // dokumentov ako filmov. Správne riešenie je rozdeliť toto na
+      // dva samostatné dotazy (jeden per kategória) - to ale vyžaduje
+      // composite index (category + createdAt) vo Firestore, ktorý
+      // musí byť vytvorený PRED nasadením takého kódu.
+      db.collection('movies').orderBy('createdAt','desc').limit(120).onSnapshot((snap)=>{
         movies = docsToArray(snap);
         movies.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
         if(document.getElementById('app').style.display === 'block') renderMovies();
