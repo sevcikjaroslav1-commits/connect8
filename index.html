@@ -6865,20 +6865,20 @@ function startPresenceHeartbeat(){
     refreshLastOnlineDisplays();
   });
 
-  // Predtým sa tu robilo db.collection('profiles').get() - teda READ
-  // KAŽDÉHO jedného profilu len kvôli jednému číslu (počet
-  // používateľov), a to pri KAŽDOM prihlásení KAŽDÉHO používateľa.
-  // Pri N registrovaných profiloch a M prihláseniach za deň to bolo
-  // N×M reads len na túto jednu štatistiku. count() agregácia stojí
-  // vždy len 1 read bez ohľadu na to, koľko dokumentov kolekcia má.
-  // Keďže "deleted" pole majú nastavené len zmazané účty (bežné profily
-  // ho vôbec nemajú), spočítame zvlášť všetky a zvlášť zmazané a
-  // odčítame - to je stále len 2 reads namiesto N.
-  Promise.all([
-    db.collection('profiles').count().get(),
-    db.collection('profiles').where('deleted','==',true).count().get()
-  ]).then(([allSnap, deletedSnap])=>{
-    totalUsersCount = allSnap.data().count - deletedSnap.data().count;
+  // OPRAVA (bola tu chyba): predchádzajúca verzia používala
+  // `.count()` priamo na query objekte - táto metóda v tejto verzii
+  // Firebase compat SDK, ktorú appka načítava, NIE JE k dispozícii
+  // ako verejná funkcia a spôsobovala "Uncaught TypeError: .count is
+  // not a function", čo zhodilo celý enterApp() a appka zamrzla na
+  // "Načítavam Connect...". Namiesto toho teraz zdieľame už aj tak
+  // existujúcu cache z loadAllUsersForSearch() (pozri vyššie) - tá
+  // robí len JEDEN .get() nad celou kolekciou 'profiles' za session
+  // a zdieľa výsledok aj s vyhľadávaním, aj so zoznamom používateľov
+  // (renderUsersList). Predtým mali tieto tri miesta každé svoj
+  // vlastný .get(), teraz je to spoločné - z 3× N reads na 1× N reads
+  // za jednu session, bez akéhokoľvek rizika neistej API.
+  loadAllUsersForSearch().then(users=>{
+    totalUsersCount = users.length;
     updateUserStats();
   }).catch(e=>console.error("Nepodarilo sa spočítať používateľov:", e));
 }
