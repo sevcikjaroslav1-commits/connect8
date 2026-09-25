@@ -2385,12 +2385,12 @@
     </div>
 
     <div class="topbar-right">
-      <div class="header-lang-flag" id="header-lang-flag" title="Aktuálny jazyk appky"></div>
       <div class="header-clock" id="header-clock" title="Aktuálny čas a dátum" onclick="openCalendarModal()" style="cursor:pointer;">
         <div class="header-clock-time" id="header-clock-time">--:--</div>
         <div class="header-clock-date" id="header-clock-date">--.--.----</div>
         <div class="header-clock-name" id="header-clock-name">—</div>
       </div>
+      <div class="header-lang-flag" id="header-lang-flag" title="Aktuálny jazyk appky"></div>
       <button class="messenger-btn" onclick="openConvModal()" title="Správy">
         <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>
         <span class="badge-count" id="messenger-badge-dot">0</span>
@@ -2409,6 +2409,15 @@
     <button id="mobile-nav-friends" onclick="openFriendsList()">👥 Priatelia</button>
     <button id="mobile-nav-users" onclick="openUsersList()">🧑‍🤝‍🧑 Používatelia</button>
   </div>
+
+  <button class="invite-friends-btn" onclick="openInviteModal()" title="Pozvať priateľov">
+    <span class="invite-ring">
+      <span class="invite-ring-inner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+      </span>
+    </span>
+    <span class="invite-label">Pozvať</span>
+  </button>
 
   <button class="translator-btn" onclick="openTranslatorModal()" title="Tlmočník">
     <span class="invite-ring">
