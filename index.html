@@ -277,6 +277,12 @@
     .header-clock-date{font-size:9px;}
     .header-clock-name{font-size:9px;}
   }
+  .header-lang-flag{
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+    width:26px;height:26px;border-radius:6px;overflow:hidden;
+    box-shadow:0 0 0 1px var(--line);cursor:default;
+  }
+  .header-lang-flag svg{display:block;width:22px;height:15px;}
   .messenger-btn{
     position:relative;width:38px;height:38px;border-radius:50%;flex-shrink:0;
     background:linear-gradient(135deg,#1FAE5C,#3ECF7A);color:#fff;
@@ -1731,6 +1737,21 @@
           <path d="M30,0 V40 M0,20 H60" stroke="#fff" stroke-width="13"/>
           <path d="M30,0 V40 M0,20 H60" stroke="#C8102E" stroke-width="8"/>
         </svg> EN</span>
+        <span class="lang-flag" id="lang-flag-cz" onclick="setAppLanguage('cz')" title="Čeština"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
+          <rect width="60" height="40" fill="#fff"/>
+          <rect y="20" width="60" height="20" fill="#D7141A"/>
+          <path d="M0,0 L30,20 L0,40 Z" fill="#11457E"/>
+        </svg> CZ</span>
+        <span class="lang-flag" title="Magyarország"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
+          <rect width="60" height="40" fill="#fff"/>
+          <rect width="60" height="13.33" fill="#CD2A3E"/>
+          <rect y="26.67" width="60" height="13.33" fill="#436F4D"/>
+        </svg> HU</span>
+        <span class="lang-flag" title="Österreich"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
+          <rect width="60" height="40" fill="#fff"/>
+          <rect width="60" height="13.33" fill="#ED2939"/>
+          <rect y="26.67" width="60" height="13.33" fill="#ED2939"/>
+        </svg> AT</span>
         <span class="lang-flag" title="Deutsch"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
           <rect width="60" height="40" fill="#000"/>
           <rect y="13.33" width="60" height="13.34" fill="#DD0000"/>
@@ -2364,6 +2385,7 @@
     </div>
 
     <div class="topbar-right">
+      <div class="header-lang-flag" id="header-lang-flag" title="Aktuálny jazyk appky"></div>
       <div class="header-clock" id="header-clock" title="Aktuálny čas a dátum" onclick="openCalendarModal()" style="cursor:pointer;">
         <div class="header-clock-time" id="header-clock-time">--:--</div>
         <div class="header-clock-date" id="header-clock-date">--.--.----</div>
@@ -7045,15 +7067,24 @@ const NEWS_SOURCES = [
 // aktívna anglická vlajka (EN). Čerpajú sa presne rovnakým spôsobom
 // (RSS feed cez záložné proxy), len z iných adries.
 const NEWS_SOURCES_EN = [
-  { id:'nyt',   name:'The New York Times', urls:['https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml'] },
-  { id:'wsj',   name:'The Wall Street Journal', urls:['https://feeds.a.dj.com/rss/RSSWorldNews.xml','https://feeds.a.dj.com/rss/RSSUSnews.xml'] },
-  { id:'usatoday', name:'USA Today', urls:['http://rssfeeds.usatoday.com/usatoday-NewsTopStories','https://rssfeeds.usatoday.com/usatoday-NewsTopStories'] }
+  { id:'bbc',         name:'BBC',           urls:['https://feeds.bbci.co.uk/news/rss.xml'] },
+  { id:'dailymail',   name:'Daily Mail',    urls:['https://www.dailymail.co.uk/articles.rss'] },
+  { id:'independent', name:'The Independent', urls:['https://www.independent.co.uk/rss'] }
+];
+// České spravodajské zdroje - použijú sa namiesto tých vyššie, keď je
+// aktívna česká vlajka (CZ). Čerpajú sa presne rovnakým spôsobom
+// (RSS feed cez záložné proxy), len z iných adries.
+const NEWS_SOURCES_CZ = [
+  { id:'seznamzpravy', name:'Seznam Zprávy', urls:['https://www.seznamzpravy.cz/rss'] },
+  { id:'novinky',      name:'Novinky.cz',    urls:['https://www.novinky.cz/rss'] }
 ];
 function currentNewsSources(){
-  return currentLang === 'en' ? NEWS_SOURCES_EN : NEWS_SOURCES;
+  if(currentLang === 'en') return NEWS_SOURCES_EN;
+  if(currentLang === 'cz') return NEWS_SOURCES_CZ;
+  return NEWS_SOURCES;
 }
 const NEWS_REFRESH_MS = 15 * 60 * 1000; // 15 minút
-let newsCache = { sk: { items: [], ts: 0 }, en: { items: [], ts: 0 } };
+let newsCache = { sk: { items: [], ts: 0 }, en: { items: [], ts: 0 }, cz: { items: [], ts: 0 } };
 let newsLoading = false;
 
 // ---- Trvalá záloha v localStorage -----------------------------------
@@ -7126,6 +7157,13 @@ function stripHtml(html){
 function extractImageFromItem(itemEl, rawXml){
   const media = itemEl.getElementsByTagName('media:content')[0] || itemEl.getElementsByTagName('media:thumbnail')[0];
   if(media && media.getAttribute('url')) return media.getAttribute('url');
+  // Seznam.cz / Novinky.cz RSS (vlastné szn: rozšírenie) - obrázok je vo
+  // vnorenom <szn:image><szn:url>...</szn:url></szn:image>, nie ako atribút.
+  const sznImage = itemEl.getElementsByTagName('szn:image')[0];
+  if(sznImage){
+    const sznUrl = sznImage.getElementsByTagName('szn:url')[0];
+    if(sznUrl && sznUrl.textContent && sznUrl.textContent.trim()) return sznUrl.textContent.trim();
+  }
   const enclosure = itemEl.getElementsByTagName('enclosure')[0];
   if(enclosure && enclosure.getAttribute('type') && enclosure.getAttribute('type').startsWith('image') && enclosure.getAttribute('url')) return enclosure.getAttribute('url');
   if(enclosure && enclosure.getAttribute('url')) return enclosure.getAttribute('url');
@@ -7199,7 +7237,7 @@ function fetchOneComboViaRss2Json(source, url){
 }
 
 // Namiesto postupného skúšania "adresa 1 + proxy 1, adresa 1 + proxy 2, ..."
-// (čo pri pomalých/zahraničných zdrojoch ako NYT/WSJ vie ľahko presiahnuť
+// (čo pri pomalých/zahraničných zdrojoch ako BBC/Daily Mail vie ľahko presiahnuť
 // desiatky sekúnd a väčšinu proxy služieb minie zbytočne) teraz odpálime
 // VŠETKY kombinácie (adresa × proxy) súčasne a použijeme tú, čo odpovie
 // prvá s platným výsledkom. Toto je presne ten istý princíp, akým sa
@@ -7281,7 +7319,7 @@ async function loadNewsFeed(forceRefresh){
   const refreshBtn = document.getElementById('news-refresh-btn');
   if(!grid) return;
 
-  const lang = currentLang === 'en' ? 'en' : 'sk';
+  const lang = (currentLang === 'en' || currentLang === 'cz') ? currentLang : 'sk';
   const sources = currentNewsSources();
   const cacheSlot = newsCache[lang];
 
@@ -7308,7 +7346,7 @@ async function loadNewsFeed(forceRefresh){
     let all = [];
     // 1) Skús vlastný Cloudflare Worker - rýchly a spoľahlivý jeden request.
     // Worker pozná iba slovenské zdroje, takže pri EN vlajke ho preskočíme
-    // a rovno ideme cez záložné proxy s anglickými zdrojmi (NYT, WSJ, USA Today).
+    // a rovno ideme cez záložné proxy s anglickými zdrojmi (BBC, Daily Mail, The Independent).
     if(lang === 'sk'){
       try{
         const workerUrl = NEWS_WORKER_URL + (forceRefresh ? '?refresh=1' : '');
@@ -7375,7 +7413,7 @@ function renderNewsGrid(items){
   grid.innerHTML = items.map((it, idx)=>`
     <a class="news-row" id="news-card-${idx}" href="${it.link}" target="_blank" rel="noopener">
       <div class="news-row-thumb">
-        ${it.image ? `<img src="${it.image}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
+        ${it.image ? `<img src="${it.image}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
         <div class="news-noimg" style="${it.image ? 'display:none;' : 'display:flex;'}">📰</div>
       </div>
       <div class="news-row-body">
@@ -8838,13 +8876,22 @@ async function applyMarketFilters(){
   scrollToMarketResults();
 }
 
+// Mapuje jazyk appky na "krajinu" inzerátov v Marketplace - inzeráty sa
+// zobrazujú len používateľom v tej istej jazykovej verzii, v akej boli
+// vytvorené (napr. inzeráty vytvorené pod SK sa nezobrazujú pod CZ/EN
+// a naopak), podobne ako keby šlo o samostatné krajinové verzie appky.
+function marketCountryForLang(lang){
+  const map = { sk:'sk', en:'us', cz:'cz' };
+  return map[lang] || lang || 'sk';
+}
+
 function getFilteredProducts(){
   const q = (document.getElementById('market-search-q').value || '').trim().toLowerCase();
   const min = parseFloat(document.getElementById('market-search-min').value);
   const max = parseFloat(document.getElementById('market-search-max').value);
   const filtering = isMarketFilterActive();
   const source = filtering ? (allProductsCache || products) : products;
-  const userCountry = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'us' : 'sk';
+  const userCountry = marketCountryForLang(typeof currentLang !== 'undefined' ? currentLang : 'sk');
   return source.filter(pr=>{
     if((pr.country || 'sk') !== userCountry) return false;
     if(activeMarketCategory && (pr.category || 'Ostatné') !== activeMarketCategory) return false;
@@ -9071,7 +9118,7 @@ function addProduct(){
     return;
   }
 
-  const country = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'us' : 'sk';
+  const country = marketCountryForLang(typeof currentLang !== 'undefined' ? currentLang : 'sk');
   const newProduct = {id:Date.now(), createdAt: Date.now(), title, price, category, desc, seller:currentUser.name, authorId:currentUser.uid, photos:pendingProdImages.slice(), emoji: cat ? cat.emoji : '📦', country};
   products.push(newProduct);
   document.getElementById('prod-title').value='';
@@ -10532,6 +10579,233 @@ const LEGAL_DICT_EN = {
   "Snažíme sa odpovedať čo najskôr, môže to v niektorých prípadoch chvíľu trvať — ďakujeme za trpezlivosť.": "We try to respond as soon as possible; it may sometimes take a little while — thank you for your patience.",
 };
 
+// Český slovník pre právne dokumenty (rovnaký princíp ako LEGAL_DICT_EN
+// vyššie) - preklad sa zobrazí ako doplnkový kurzívou písaný riadok pod
+// pôvodným slovenským textom, aby oficiálne slovenské znenie zostalo
+// vždy zachované a viditeľné.
+const LEGAL_DICT_CZ = {
+  "Posledná aktualizácia: 5. septembra 2026": "Poslední aktualizace: 5. září 2026",
+  "1. Kto sme (prevádzkovateľ)": "1. Kdo jsme (provozovatel)",
+  "Prevádzkovateľom platformy Connect8 („Connect8\" alebo „appka\") a správcom osobných údajov je:": "Provozovatelem platformy Connect8 („Connect8“ nebo „aplikace“) a správcem osobních údajů je:",
+  "Jaroslav Ševčík, fyzická osoba": "Jaroslav Ševčík, fyzická osoba",
+  "Kontaktný e-mail pre otázky ohľadom ochrany súkromia: sevcikjaroslav1@gmail.com": "Kontaktní e-mail pro otázky ohledně ochrany soukromí: sevcikjaroslav1@gmail.com",
+  "Tieto zásady popisujú, aké osobné údaje o tebe (používateľovi) zbierame, prečo, ako ich chránime a aké máš práva.": "Tyto zásady popisují, jaké osobní údaje o tobě (uživateli) shromažďujeme, proč, jak je chráníme a jaká máš práva.",
+  "2. Aké údaje spracúvame": "2. Jaké údaje zpracováváme",
+  "2.1 Registrácia a profil": "2.1 Registrace a profil",
+  "Meno (zobrazované meno)": "Jméno (zobrazované jméno)",
+  "E-mailová adresa": "E-mailová adresa",
+  "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Heslo — ukládá se zabezpečeně přes Firebase Authentication, my ho v podobě čitelného textu nikdy nevidíme ani neukládáme",
+  "Profilová fotka (ak ju nahráš)": "Profilová fotka (pokud ji nahraješ)",
+  "2.2 Obsah, ktorý vytváraš": "2.2 Obsah, který vytváříš",
+  "Príspevky vo feede (text, obrázky, videá, súbory)": "Příspěvky ve feedu (text, obrázky, videa, soubory)",
+  "Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov": "Krátká videa (podobně jako TikTok) — včetně počtu zhlédnutí, lajků a komentářů",
+  "Komentáre a lajky pod príspevkami a videami": "Komentáře a lajky pod příspěvky a videi",
+  "Inzeráty v marketplace (názov, popis, cena, fotky tovaru)": "Inzeráty v tržišti (název, popis, cena, fotky zboží)",
+  "Odkazy na YouTube videá vložené k príspevku alebo do sekcie Filmy (prehrávanie beží priamo cez servery YouTube/Google)": "Odkazy na YouTube videa vložené k příspěvku nebo do sekce Filmy (přehrávání běží přímo přes servery YouTube/Google)",
+  "2.3 Komunikácia medzi používateľmi": "2.3 Komunikace mezi uživateli",
+  "Textové správy medzi používateľmi": "Textové zprávy mezi uživateli",
+  "Zvukové (hlasové) správy": "Zvukové (hlasové) zprávy",
+  "Súbory posielané v súkromných správach": "Soubory posílané v soukromých zprávách",
+  "Metadáta o hovoroch a videohovoroch (kto komu volal, kedy, ako dlho) — samotný zvuk/obraz hovoru sa neukladá, prenáša sa v reálnom čase priamo medzi zariadeniami (technológia WebRTC)": "Metadata o hovorech a videohovorech (kdo komu volal, kdy, jak dlouho) — samotný zvuk/obraz hovoru se neukládá, přenáší se v reálném čase přímo mezi zařízeními (technologie WebRTC)",
+  "2.4 Technické a prevádzkové údaje": "2.4 Technické a provozní údaje",
+  "Technické identifikátory potrebné na doručovanie push notifikácií (napr. o novej správe alebo hovore) cez Firebase Cloud Messaging": "Technické identifikátory potřebné pro doručování push notifikací (např. o nové zprávě nebo hovoru) přes Firebase Cloud Messaging",
+  "Základné technické údaje o zariadení/prehliadači potrebné na fungovanie appky": "Základní technické údaje o zařízení/prohlížeči potřebné pro fungování aplikace",
+  "Dátum registrácie, dátum poslednej aktivity": "Datum registrace, datum poslední aktivity",
+  "2.5 Čo nezbierame": "2.5 Co nesbíráme",
+  "Connect8 nezbiera polohu, neanalyzuje obsah tvojich súkromných správ na reklamné účely a nepoužíva nástroje na sledovanie správania naprieč inými webmi (napr. Google Analytics, reklamné pixely).": "Connect8 neshromažďuje polohu, neanalyzuje obsah tvých soukromých zpráv pro reklamní účely a nepoužívá nástroje pro sledování chování napříč jinými weby (např. Google Analytics, reklamní pixely).",
+  "3. Prečo tieto údaje spracúvame (účel a právny základ)": "3. Proč tyto údaje zpracováváme (účel a právní základ)",
+  "4. Tretie strany, ktoré nám pomáhajú": "4. Třetí strany, které nám pomáhají",
+  "Connect8 využíva na svoje fungovanie tieto externé služby (spracúvatelia údajov):": "Connect8 využívá pro své fungování tyto externí služby (zpracovatelé údajů):",
+  "Firebase (Google) — autentifikácia používateľov, ukladanie dát appky (príspevky, správy, profily) a push notifikácie. Viac: policies.google.com/privacy": "Firebase (Google) — autentizace uživatelů, ukládání dat aplikace (příspěvky, zprávy, profily) a push notifikace. Více: policies.google.com/privacy",
+  "Cloudinary — ukladanie a spracovanie nahraných obrázkov a videí. Viac: cloudinary.com/privacy": "Cloudinary — ukládání a zpracování nahraných obrázků a videí. Více: cloudinary.com/privacy",
+  "YouTube / Google — prehrávanie vložených YouTube videí sa riadi zásadami YouTube/Google, nie Connect8": "YouTube / Google — přehrávání vložených YouTube videí se řídí zásadami YouTube/Google, nikoli Connect8",
+  "Connect8 nepredáva tvoje osobné údaje tretím stranám na marketingové účely.": "Connect8 neprodává tvé osobní údaje třetím stranám pro marketingové účely.",
+  "5. Ako dlho údaje uchovávame": "5. Jak dlouho údaje uchováváme",
+  "Tvoje údaje uchovávame, kým máš aktívny účet. Po vymazaní účtu (bod 7) sa tvoj profil, príspevky, inzeráty a videá natrvalo odstránia z našich databáz. Súkromné správy a hlasové/textové konverzácie, ktoré si poslal iným používateľom, zostávajú uložené aj po vymazaní tvojho účtu, keďže sú súčasťou spoločnej histórie konverzácie s druhou osobou.": "Tvé údaje uchováváme, dokud máš aktivní účet. Po smazání účtu (bod 7) se tvůj profil, příspěvky, inzeráty a videa natrvalo odstraní z našich databází. Soukromé zprávy a hlasové/textové konverzace, které jsi poslal jiným uživatelům, zůstávají uložené i po smazání tvého účtu, protože jsou součástí společné historie konverzace s druhou osobou.",
+  "6. Zabezpečenie údajov": "6. Zabezpečení údajů",
+  "Heslá sú spravované cez Firebase Authentication a nie sú nikdy uložené v čitateľnej podobe. Prenos dát medzi tvojím zariadením a appkou je šifrovaný (HTTPS). Prístup k databáze appky je obmedzený len na nevyhnutné technické účely.": "Hesla jsou spravována přes Firebase Authentication a nikdy nejsou uložena v čitelné podobě. Přenos dat mezi tvým zařízením a aplikací je šifrovaný (HTTPS). Přístup k databázi aplikace je omezen jen na nezbytné technické účely.",
+  "7. Tvoje práva": "7. Tvá práva",
+  "Ako používateľ máš podľa GDPR najmä právo:": "Jako uživatel máš podle GDPR zejména právo:",
+  "na prístup k svojim osobným údajom,": "na přístup ke svým osobním údajům,",
+  "na opravu nesprávnych údajov (väčšinu si vieš upraviť priamo v nastaveniach profilu),": "na opravu nesprávných údajů (většinu si můžeš upravit přímo v nastavení profilu),",
+  "na vymazanie — svoj účet a s ním spojený obsah (príspevky, inzeráty, videá) môžeš kedykoľvek natrvalo vymazať priamo v appke, v nastaveniach profilu tlačidlom „Zrušiť účet\". Táto akcia je nevratná,": "na výmaz — svůj účet a s ním spojený obsah (příspěvky, inzeráty, videa) můžeš kdykoli natrvalo smazat přímo v aplikaci, v nastavení profilu tlačítkem „Zrušit účet“. Tato akce je nevratná,",
+  "na obmedzenie spracúvania a namietanie voči spracúvaniu,": "na omezení zpracování a vznesení námitky proti zpracování,",
+  "na prenosnosť údajov,": "na přenositelnost údajů,",
+  "podať sťažnosť na Úrad na ochranu osobných údajov SR (dataprotection.gov.sk), ak sa domnievaš, že tvoje údaje spracúvame v rozpore s GDPR.": "podat stížnost u slovenského Úřadu na ochranu osobních údajů (dataprotection.gov.sk), pokud se domníváš, že tvé údaje zpracováváme v rozporu s GDPR.",
+  "Na uplatnenie týchto práv nás môžeš kontaktovať na sevcikjaroslav1@gmail.com.": "Pro uplatnění těchto práv nás můžeš kontaktovat na sevcikjaroslav1@gmail.com.",
+  "8. Vek používateľov": "8. Věk uživatelů",
+  "Connect8 je určený pre používateľov od 15 rokov.": "Connect8 je určen pro uživatele od 15 let.",
+  "9. Zmeny týchto zásad": "9. Změny těchto zásad",
+  "Tieto zásady môžeme z času na čas aktualizovať, napríklad pri pridaní novej funkcie appky. O väčších zmenách ťa budeme informovať v appke.": "Tyto zásady můžeme čas od času aktualizovat, například při přidání nové funkce aplikace. O větších změnách tě budeme informovat v aplikaci.",
+  "Vitaj v Centre ochrany súkromia Connect8. Tu nájdeš prehľadné vysvetlenie, ako máš pod kontrolou svoje údaje a svoje súkromie priamo v appke.": "Vítej v Centru ochrany soukromí Connect8. Tady najdeš přehledné vysvětlení, jak máš pod kontrolou svoje údaje a svoje soukromí přímo v aplikaci.",
+  "Kto vidí tvoj obsah": "Kdo vidí tvůj obsah",
+  "Príspevky, videá, komentáre a inzeráty v marketplace, ktoré vytvoríš, sú viditeľné pre ostatných používateľov Connect8. Súkromné správy, hlasové správy, súbory a hovory/videohovory vidí iba osoba, ktorej ich pošleš — nie sú verejné a nezobrazujú sa vo feede.": "Příspěvky, videa, komentáře a inzeráty v tržišti, které vytvoříš, jsou viditelné pro ostatní uživatele Connect8. Soukromé zprávy, hlasové zprávy, soubory a hovory/videohovory vidí pouze osoba, které je pošleš — nejsou veřejné a nezobrazují se ve feedu.",
+  "Blokovanie používateľov": "Blokování uživatelů",
+  "Ak si neželáš, aby ti konkrétny používateľ mohol písať, volať alebo vidieť tvoj profil, môžeš ho kedykoľvek zablokovať priamo na jeho profile. Zablokovaný používateľ ťa nemôže kontaktovať a stratí prístup k tvojmu obsahu.": "Pokud si nepřeješ, aby ti konkrétní uživatel mohl psát, volat nebo vidět tvůj profil, můžeš ho kdykoli zablokovat přímo na jeho profilu. Zablokovaný uživatel tě nemůže kontaktovat a ztratí přístup k tvému obsahu.",
+  "Správa tvojho účtu": "Správa tvého účtu",
+  "Meno a profilovú fotku si vieš kedykoľvek upraviť v nastaveniach profilu.": "Jméno a profilovou fotku si můžeš kdykoli upravit v nastavení profilu.",
+  "Svoje jednotlivé príspevky, videá alebo inzeráty môžeš kedykoľvek vymazať sám (ikona 🗑️ pri danom obsahu).": "Svoje jednotlivé příspěvky, videa nebo inzeráty můžeš kdykoli smazat sám (ikona 🗑️ u daného obsahu).",
+  "Celý účet vrátane všetkého obsahu (príspevky, inzeráty, videá, profil) môžeš natrvalo vymazať tlačidlom „Zrušiť účet\" v nastaveniach profilu. Táto akcia je nevratná.": "Celý účet včetně veškerého obsahu (příspěvky, inzeráty, videa, profil) můžeš natrvalo smazat tlačítkem „Zrušit účet“ v nastavení profilu. Tato akce je nevratná.",
+  "Notifikácie": "Notifikace",
+  "Connect8 ti môže posielať push notifikácie o nových správach alebo hovoroch. Povolenie na notifikácie udeľuješ priamo cez nastavenia svojho prehliadača alebo zariadenia a kedykoľvek ho môžeš odvolať.": "Connect8 ti může posílat push notifikace o nových zprávách nebo hovorech. Povolení k notifikacím udílíš přímo přes nastavení svého prohlížeče nebo zařízení a kdykoli ho můžeš odvolat.",
+  "Bezpečnosť účtu": "Bezpečnost účtu",
+  "Tvoje heslo je spravované cez Firebase Authentication a nikdy sa neukladá v čitateľnej podobe. Odporúčame používať jedinečné a silné heslo a nezdieľať prihlasovacie údaje s nikým iným.": "Tvé heslo je spravováno přes Firebase Authentication a nikdy se neukládá v čitelné podobě. Doporučujeme používat jedinečné a silné heslo a nesdílet přihlašovací údaje s nikým jiným.",
+  "Kompletné zásady ochrany súkromia": "Kompletní zásady ochrany soukromí",
+  "Podrobný prehľad toho, aké údaje spracúvame, prečo, s kým ich zdieľame a aké máš práva podľa GDPR, nájdeš v dokumente Zásady ochrany súkromia.": "Podrobný přehled toho, jaké údaje zpracováváme, proč, s kým je sdílíme a jaká máš práva podle GDPR, najdeš v dokumentu Zásady ochrany soukromí.",
+  "Kontakt": "Kontakt",
+  "Máš otázku ohľadom svojich údajov alebo súkromia? Napíš na sevcikjaroslav1@gmail.com.": "Máš otázku ohledně svých údajů nebo soukromí? Napiš na sevcikjaroslav1@gmail.com.",
+  "Connect8 nepoužíva reklamné ani sledovacie cookies tretích strán. To, čo appka ukladá vo tvojom prehliadači, je len technické úložisko (local storage) potrebné na jej fungovanie:": "Connect8 nepoužívá reklamní ani sledovací cookies třetích stran. To, co aplikace ukládá ve tvém prohlížeči, je jen technické úložiště (local storage) potřebné pro její fungování:",
+  "Nevyhnutné (vždy aktívne)": "Nezbytné (vždy aktivní)",
+  "Prihlásenie — Firebase Authentication si v prehliadači uchováva prihlasovací stav, aby ťa appka nemusela pri každom otvorení odhlasovať.": "Přihlášení — Firebase Authentication si v prohlížeči uchovává přihlašovací stav, aby tě aplikace nemusela při každém otevření odhlašovat.",
+  "Offline režim — appka si ukladá stav (napr. rozpracovaný obsah) lokálne v prehliadači, aby fungovala aj bez pripojenia a dáta sa po zatvorení nestratili.": "Offline režim — aplikace si ukládá stav (např. rozpracovaný obsah) lokálně v prohlížeči, aby fungovala i bez připojení a data se po zavření neztratila.",
+  "Zapamätané zhliadnutia — appka si lokálne pamätá, ktoré videá si už videl, aby sa ti neopakovali zbytočne v odporúčaniach.": "Zapamatovaná zhlédnutí — aplikace si lokálně pamatuje, která videa jsi už viděl, aby se ti zbytečně neopakovala v doporučeních.",
+  "Tieto položky sú nevyhnutné pre základné fungovanie appky a nedajú sa jednotlivo vypnúť — dajú sa ale kedykoľvek vymazať tak, že v nastaveniach svojho prehliadača vymažeš dáta stránky Connect8 (napr. „Vymazať údaje o prehliadaní\" → „Súbory cookie a údaje stránok\").": "Tyto položky jsou nezbytné pro základní fungování aplikace a nedají se jednotlivě vypnout — dají se ale kdykoli smazat tak, že v nastavení svého prohlížeče smažeš data stránky Connect8 (např. „Vymazat data o prohlížení“ → „Soubory cookie a data stránek“).",
+  "Analytické a reklamné cookies": "Analytické a reklamní cookies",
+  "Connect8 aktuálne nepoužíva žiadne analytické (napr. Google Analytics) ani reklamné cookies, takže tu nie je nič na nastavovanie.": "Connect8 aktuálně nepoužívá žádné analytické (např. Google Analytics) ani reklamní cookies, takže tady není nic k nastavování.",
+  "Ako vymazať uložené dáta": "Jak smazat uložená data",
+  "Vymazanie dát prehliadača pre túto stránku ťa odhlási z účtu a appka stratí lokálne uložené offline dáta — tvoj účet a obsah na serveri (príspevky, správy, profil) tým dotknuté nie sú.": "Smazání dat prohlížeče pro tuto stránku tě odhlásí z účtu a aplikace ztratí lokálně uložená offline data — tvůj účet a obsah na serveru (příspěvky, zprávy, profil) tím dotčeny nejsou.",
+  "Viac o tom, aké údaje o tebe spracúvame celkovo, nájdeš v dokumente Zásady ochrany súkromia.": "Více o tom, jaké údaje o tobě zpracováváme celkově, najdeš v dokumentu Zásady ochrany soukromí.",
+  "Connect8 je slovenská sociálna platforma na vzájomnú komunikáciu, zdieľanie obsahu a nadväzovanie kontaktov.": "Connect8 je slovenská sociální platforma pro vzájemnou komunikaci, sdílení obsahu a navazování kontaktů.",
+  "Čo appka ponúka": "Co aplikace nabízí",
+  "Feed — zdieľanie príspevkov, ktoré môžeš lajkovať, komentovať a zdieľať": "Feed — sdílení příspěvků, které můžeš lajkovat, komentovat a sdílet",
+  "Videá — krátke vertikálne videá v štýle TikTok": "Videa — krátká vertikální videa ve stylu TikTok",
+  "Filmy — pozeranie schválených YouTube videí priamo v appke": "Filmy — sledování schválených YouTube videí přímo v aplikaci",
+  "Správy — textové a hlasové správy, posielanie súborov medzi používateľmi": "Zprávy — textové a hlasové zprávy, posílání souborů mezi uživateli",
+  "Hovory — audio aj videohovory medzi používateľmi": "Hovory — audio i videohovory mezi uživateli",
+  "Marketplace — predaj a nákup vecí, ktoré už nepotrebuješ, priamo medzi používateľmi": "Tržiště — prodej a nákup věcí, které už nepotřebuješ, přímo mezi uživateli",
+  "Podporované jazyky": "Podporované jazyky",
+  "Rozhranie appky je dostupné v slovenčine, angličtine, nemčine, poľštine, španielčine, francúzštine, portugalčine a taliančine.": "Rozhraní aplikace je dostupné ve slovenštině, angličtině, němčině, polštině, španělštině, francouzštině, portugalštině a italštině.",
+  "Prevádzkovateľ": "Provozovatel",
+  "Connect8 prevádzkuje Jaroslav Ševčík ako fyzická osoba. Kontakt: sevcikjaroslav1@gmail.com.": "Connect8 provozuje Jaroslav Ševčík jako fyzická osoba. Kontakt: sevcikjaroslav1@gmail.com.",
+  "Ďalšie informácie": "Další informace",
+  "Podrobnosti o spracúvaní údajov nájdeš v dokumente Zásady ochrany súkromia, prehľad ovládania súkromia v Centre ochrany súkromia.": "Podrobnosti o zpracování údajů najdeš v dokumentu Zásady ochrany soukromí, přehled ovládání soukromí v Centru ochrany soukromí.",
+  "1. Úvod": "1. Úvod",
+  "Tieto podmienky upravujú používanie platformy Connect8, ktorú ako fyzická osoba prevádzkuje Jaroslav Ševčík (kontakt: sevcikjaroslav1@gmail.com). Registráciou a používaním Connect8 súhlasíš s týmito podmienkami.": "Tyto podmínky upravují používání platformy Connect8, kterou jako fyzická osoba provozuje Jaroslav Ševčík (kontakt: sevcikjaroslav1@gmail.com). Registrací a používáním Connect8 souhlasíš s těmito podmínkami.",
+  "2. Kto môže Connect8 používať": "2. Kdo může Connect8 používat",
+  "Connect8 je určený pre používateľov od 15 rokov. Registráciou potvrdzuješ, že spĺňaš túto vekovú hranicu a že údaje, ktoré uvádzaš (meno, e-mail), sú pravdivé.": "Connect8 je určen pro uživatele od 15 let. Registrací potvrzuješ, že splňuješ tuto věkovou hranici a že údaje, které uvádíš (jméno, e-mail), jsou pravdivé.",
+  "3. Tvoj účet": "3. Tvůj účet",
+  "Za bezpečnosť svojho hesla a za všetku aktivitu na svojom účte zodpovedáš ty sám. Účet je osobný a neprevoditeľný na inú osobu. Svoj účet môžeš kedykoľvek natrvalo vymazať v nastaveniach profilu tlačidlom „Zrušiť účet\".": "Za bezpečnost svého hesla a za veškerou aktivitu na svém účtu odpovídáš ty sám. Účet je osobní a nepřevoditelný na jinou osobu. Svůj účet můžeš kdykoli natrvalo smazat v nastavení profilu tlačítkem „Zrušit účet“.",
+  "4. Obsah, ktorý zdieľaš": "4. Obsah, který sdílíš",
+  "Za príspevky, videá, komentáre, správy, súbory a inzeráty, ktoré na Connect8 zdieľaš, zodpovedáš výhradne ty. Nahrávaním obsahu potvrdzuješ, že naň máš potrebné práva a že jeho zdieľaním neporušuješ práva tretích strán ani platné zákony.": "Za příspěvky, videa, komentáře, zprávy, soubory a inzeráty, které na Connect8 sdílíš, odpovídáš výhradně ty. Nahráním obsahu potvrzuješ, že k němu máš potřebná práva a že jeho sdílením neporušuješ práva třetích stran ani platné zákony.",
+  "Zakázané je najmä zdieľať obsah, ktorý je nezákonný, urážlivý, podnecuje k násiliu alebo nenávisti, porušuje autorské práva, alebo obťažuje či ohrozuje iných používateľov.": "Zakázáno je zejména sdílet obsah, který je nezákonný, urážlivý, podněcuje k násilí nebo nenávisti, porušuje autorská práva, nebo obtěžuje či ohrožuje jiné uživatele.",
+  "5. Marketplace": "5. Tržiště",
+  "Marketplace slúži na sprostredkovanie ponúk medzi používateľmi navzájom. Connect8 nie je predávajúcim ani kupujúcim, nezaručuje kvalitu, dodanie ani pravosť ponúkaného tovaru a nie je zmluvnou stranou žiadnej transakcie medzi používateľmi. Dohoda o cene, platbe a odovzdaní tovaru je výlučne na dohode medzi predávajúcim a kupujúcim.": "Tržiště slouží ke zprostředkování nabídek mezi uživateli navzájem. Connect8 není prodávajícím ani kupujícím, nezaručuje kvalitu, dodání ani pravost nabízeného zboží a není smluvní stranou žádné transakce mezi uživateli. Dohoda o ceně, platbě a předání zboží je výhradně na dohodě mezi prodávajícím a kupujícím.",
+  "6. Správy, hovory a videohovory": "6. Zprávy, hovory a videohovory",
+  "Súkromné správy, hlasové správy, zdieľané súbory a hovory/videohovory slúžia na komunikáciu medzi používateľmi. Connect8 tento obsah pri prenose neupravuje ani neschvaľuje — používatelia sú povinní správať sa k sebe navzájom slušne a v súlade so zákonom.": "Soukromé zprávy, hlasové zprávy, sdílené soubory a hovory/videohovory slouží ke komunikaci mezi uživateli. Connect8 tento obsah při přenosu neupravuje ani neschvaluje — uživatelé jsou povinni chovat se k sobě navzájem slušně a v souladu se zákonem.",
+  "7. Filmy (YouTube obsah)": "7. Filmy (YouTube obsah)",
+  "Sekcia Filmy zobrazuje výhradne odkazy na videá hostované na YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Sekce Filmy zobrazuje výhradně odkazy na videa hostovaná na YouTube. Za obsah těchto videí odpovídá YouTube/Google a jejich tvůrci, nikoli Connect8.",
+  "8. Zablokovanie a zrušenie účtu": "8. Zablokování a zrušení účtu",
+  "Ak porušíš tieto podmienky, môžeme obmedziť alebo zrušiť tvoj prístup k Connect8. Rovnako máš možnosť kedykoľvek zablokovať iného používateľa, ktorý ťa obťažuje, alebo natrvalo zrušiť svoj vlastný účet.": "Pokud porušíš tyto podmínky, můžeme omezit nebo zrušit tvůj přístup ke Connect8. Stejně tak máš možnost kdykoli zablokovat jiného uživatele, který tě obtěžuje, nebo natrvalo zrušit svůj vlastní účet.",
+  "9. Obmedzenie zodpovednosti": "9. Omezení odpovědnosti",
+  "Connect8 je poskytovaný „tak ako je\", bez záruky nepretržitej dostupnosti alebo bezchybnej prevádzky. V rozsahu povolenom zákonom nezodpovedáme za škody vzniknuté používaním appky, obsahom nahraným používateľmi ani transakciami uskutočnenými cez marketplace.": "Connect8 je poskytován „tak jak je“, bez záruky nepřetržité dostupnosti nebo bezchybného provozu. V rozsahu povoleném zákonem neodpovídáme za škody vzniklé používáním aplikace, obsahem nahraným uživateli ani transakcemi uskutečněnými přes tržiště.",
+  "10. Zmeny podmienok": "10. Změny podmínek",
+  "Tieto podmienky môžeme z času na čas aktualizovať, napríklad pri pridaní novej funkcie appky. O väčších zmenách ťa budeme informovať priamo v appke.": "Tyto podmínky můžeme čas od času aktualizovat, například při přidání nové funkce aplikace. O větších změnách tě budeme informovat přímo v aplikaci.",
+  "11. Rozhodné právo": "11. Rozhodné právo",
+  "Tieto podmienky sa riadia právnym poriadkom Slovenskej republiky.": "Tyto podmínky se řídí právním řádem Slovenské republiky.",
+  "12. Kontakt": "12. Kontakt",
+  "Otázky ohľadom týchto podmienok posielaj na sevcikjaroslav1@gmail.com.": "Otázky ohledně těchto podmínek posílej na sevcikjaroslav1@gmail.com.",
+  "Connect8 je miesto na zdieľanie obsahu a komunikáciu s ostatnými. Aby tu bolo príjemne a bezpečne pre všetkých, dodržiavaj prosím tieto pravidlá.": "Connect8 je místo pro sdílení obsahu a komunikaci s ostatními. Aby tu bylo příjemně a bezpečně pro všechny, dodržuj prosím tato pravidla.",
+  "Správaj sa k ostatným s rešpektom": "Chovej se k ostatním s respektem",
+  "Nezdieľaj obsah, ktorý je urážlivý, ponižujúci, podnecuje k nenávisti alebo násiliu voči jednotlivcom či skupinám. Obťažovanie, vyhrážanie a šikanovanie iných používateľov (v príspevkoch, komentároch, správach aj hovoroch) je zakázané.": "Nesdílej obsah, který je urážlivý, ponižující, podněcuje k nenávisti nebo násilí vůči jednotlivcům či skupinám. Obtěžování, vyhrožování a šikanování jiných uživatelů (v příspěvcích, komentářích, zprávách i hovorech) je zakázáno.",
+  "Zdieľaj len zákonný obsah": "Sdílej jen zákonný obsah",
+  "Je zakázané zdieľať obsah, ktorý porušuje zákony Slovenskej republiky alebo autorské práva tretích strán (napr. cudzie fotky, videá alebo hudbu bez súhlasu autora).": "Je zakázáno sdílet obsah, který porušuje zákony Slovenské republiky nebo autorská práva třetích stran (např. cizí fotky, videa nebo hudbu bez souhlasu autora).",
+  "Buď sám sebou": "Buď sám sebou",
+  "Nevytváraj falošné profily ani sa nevydávaj za inú osobu. Používaj svoje skutočné meno a fotku, prípadne prezývku, ktorá nikoho neuvádza do omylu.": "Nevytvářej falešné profily, ani se nevydávej za jinou osobu. Používej svoje skutečné jméno a fotku, případně přezdívku, která nikoho neuvádí v omyl.",
+  "Žiadny spam": "Žádný spam",
+  "Nezasielaj hromadné nevyžiadané správy, opakovane rovnaký obsah ani podvodné odkazy iným používateľom.": "Nezasílej hromadné nevyžádané zprávy, opakovaně stejný obsah ani podvodné odkazy jiným uživatelům.",
+  "Marketplace — poctivo": "Tržiště — poctivě",
+  "V inzerátoch uvádzaj pravdivý popis a stav tovaru. Podvodné alebo klamlivé ponuky sú zakázané. Connect8 nie je stranou transakcie medzi predávajúcim a kupujúcim — viac v Podmienkach používania.": "V inzerátech uváděj pravdivý popis a stav zboží. Podvodné nebo klamavé nabídky jsou zakázány. Connect8 není stranou transakce mezi prodávajícím a kupujícím — více v Podmínkách používání.",
+  "Ochrana mladších používateľov": "Ochrana mladších uživatelů",
+  "Connect8 je určený pre používateľov od 15 rokov. Obsah sexuálnej povahy, obsah ohrozujúci maloletých alebo akýkoľvek pokus o kontaktovanie maloletých s nevhodným úmyslom je prísne zakázaný.": "Connect8 je určen pro uživatele od 15 let. Obsah sexuální povahy, obsah ohrožující nezletilé nebo jakýkoli pokus o kontaktování nezletilých s nevhodným úmyslem je přísně zakázán.",
+  "Čo sa stane pri porušení pravidiel": "Co se stane při porušení pravidel",
+  "Ak niekto tieto pravidlá poruší, môžeš ho kedykoľvek zablokovať priamo na jeho profile — stratí tak možnosť ťa kontaktovať alebo vidieť tvoj obsah. Pri závažnom alebo opakovanom porušení môže byť dotknutému používateľovi obmedzený alebo zrušený prístup k Connect8.": "Pokud někdo tato pravidla poruší, můžeš ho kdykoli zablokovat přímo na jeho profilu — ztratí tak možnost tě kontaktovat nebo vidět tvůj obsah. Při závažném nebo opakovaném porušení může být dotčenému uživateli omezen nebo zrušen přístup ke Connect8.",
+  "Nahlásenie problému": "Nahlášení problému",
+  "Ak si sa stretol s obsahom alebo správaním, ktoré porušuje tieto pravidlá, napíš nám na sevcikjaroslav1@gmail.com.": "Pokud jsi se setkal s obsahem nebo chováním, které porušuje tato pravidla, napiš nám na sevcikjaroslav1@gmail.com.",
+  "Connect8 rešpektuje duševné vlastníctvo iných a očakáva to isté od svojich používateľov.": "Connect8 respektuje duševní vlastnictví druhých a očekává totéž od svých uživatelů.",
+  "Zodpovednosť za nahrávaný obsah": "Odpovědnost za nahrávaný obsah",
+  "Nahrávaním príspevku, videa, fotky, súboru alebo inzerátu na Connect8 potvrdzuješ, že si autorom daného obsahu alebo že naň máš potrebné práva/súhlas na jeho zdieľanie. Nahrávanie cudzích fotiek, videí, hudby alebo textu bez súhlasu autora je zakázané.": "Nahráním příspěvku, videa, fotky, souboru nebo inzerátu na Connect8 potvrzuješ, že jsi autorem daného obsahu nebo že k němu máš potřebná práva/souhlas k jeho sdílení. Nahrávání cizích fotek, videí, hudby nebo textu bez souhlasu autora je zakázáno.",
+  "Vloženie YouTube videa": "Vložení YouTube videa",
+  "Vkladanie odkazu na YouTube video (v príspevku alebo v sekcii Filmy) nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.": "Vkládání odkazu na YouTube video (v příspěvku nebo v sekci Filmy) nekopíruje samotné video — přehrávání běží přímo přes YouTube a řídí se jeho podmínkami a autorskými právy tvůrce videa.",
+  "Nahlásenie porušenia autorských práv": "Nahlášení porušení autorských práv",
+  "Ak si vlastníkom autorských práv a myslíš si, že tvoje dielo bolo na Connect8 zdieľané bez tvojho súhlasu, napíš na sevcikjaroslav1@gmail.com a prilož:": "Pokud jsi vlastníkem autorských práv a myslíš si, že tvé dílo bylo na Connect8 sdíleno bez tvého souhlasu, napiš na sevcikjaroslav1@gmail.com a přilož:",
+  "presný popis alebo odkaz na sporný obsah (napr. odkaz na príspevok/video/inzerát),": "přesný popis nebo odkaz na sporný obsah (např. odkaz na příspěvek/video/inzerát),",
+  "popis diela, ktorého sa autorské právo týka, a dôkaz, že si jeho autorom alebo držiteľom práv,": "popis díla, kterého se autorské právo týká, a důkaz, že jsi jeho autorem nebo držitelem práv,",
+  "svoje kontaktné údaje,": "svoje kontaktní údaje,",
+  "vyhlásenie, že žiadosť podávaš v dobrej viere a údaje v nej sú pravdivé.": "prohlášení, že žádost podáváš v dobré víře a údaje v ní jsou pravdivé.",
+  "Čo nasleduje po nahlásení": "Co následuje po nahlášení",
+  "Oprávnene nahlásený obsah bude odstránený. Pri opakovanom porušovaní autorských práv môže byť účet používateľa obmedzený alebo zrušený.": "Oprávněně nahlášený obsah bude odstraněn. Při opakovaném porušování autorských práv může být účet uživatele omezen nebo zrušen.",
+  "Ak si presvedčený, že tvoj obsah bol odstránený neprávom": "Pokud jsi přesvědčen, že tvůj obsah byl odstraněn neprávem",
+  "Ak sa domnievaš, že tvoj obsah bol odstránený omylom alebo neoprávnene (napr. si mal na jeho zdieľanie súhlas), napíš na sevcikjaroslav1@gmail.com s vysvetlením a doložením svojich práv — situáciu preveríme.": "Pokud se domníváš, že tvůj obsah byl odstraněn omylem nebo neoprávněně (např. jsi měl k jeho sdílení souhlas), napiš na sevcikjaroslav1@gmail.com s vysvětlením a doložením svých práv — situaci prověříme.",
+  "Connect8 aktuálne nezobrazuje žiadne platené reklamy tretích strán. Tieto pravidlá sa vzťahujú najmä na inzeráty v Marketplace a na propagáciu vlastného obsahu či produktov, ktorú používatelia zdieľajú vo feede.": "Connect8 aktuálně nezobrazuje žádné placené reklamy třetích stran. Tato pravidla se vztahují zejména na inzeráty v Tržišti a na propagaci vlastního obsahu či produktů, kterou uživatelé sdílejí ve feedu.",
+  "Čo je „reklama\" na Connect8": "Co je „reklama“ na Connect8",
+  "Za reklamný/propagačný obsah sa považuje najmä: inzerát v Marketplace, príspevok propagujúci vlastný tovar, službu alebo iný účet/stránku.": "Za reklamní/propagační obsah se považuje zejména: inzerát v Tržišti, příspěvek propagující vlastní zboží, službu nebo jiný účet/stránku.",
+  "Pravidlá pre inzeráty a propagačný obsah": "Pravidla pro inzeráty a propagační obsah",
+  "Popis a fotky musia pravdivo zodpovedať skutočnému stavu ponúkaného tovaru — žiadne klamlivé alebo zavádzajúce tvrdenia.": "Popis a fotky musí pravdivě odpovídat skutečnému stavu nabízeného zboží — žádná klamavá ani zavádějící tvrzení.",
+  "Uvedená cena musí byť reálna ponuka, nie návnada na prilákanie pozornosti bez úmyslu predať za danú sumu.": "Uvedená cena musí být reálná nabídka, ne návnada na přilákání pozornosti bez úmyslu prodat za danou částku.",
+  "Je zakázané opakovane (spamovo) zverejňovať rovnaký inzerát alebo propagačný príspevok.": "Je zakázáno opakovaně (spamově) zveřejňovat stejný inzerát nebo propagační příspěvek.",
+  "Zakázaný obsah v inzerátoch": "Zakázaný obsah v inzerátech",
+  "V Marketplace ani v propagačnom obsahu nie je dovolené ponúkať:": "V Tržišti ani v propagačním obsahu není dovoleno nabízet:",
+  "nelegálny tovar alebo služby (napr. zbrane, drogy, falšované doklady),": "nelegální zboží nebo služby (např. zbraně, drogy, padělané doklady),",
+  "falzifikáty a napodobeniny značkového tovaru,": "padělky a napodobeniny značkového zboží,",
+  "tovar alebo služby porušujúce autorské práva tretích strán,": "zboží nebo služby porušující autorská práva třetích stran,",
+  "obsah pre dospelých alebo sexuálne služby,": "obsah pro dospělé nebo sexuální služby,",
+  "podvodné schémy (napr. pyramídové hry, garantované rýchle zbohatnutie).": "podvodná schémata (např. pyramidové hry, garantované rychlé zbohatnutí).",
+  "Zodpovednosť": "Odpovědnost",
+  "Za obsah a pravdivosť svojho inzerátu alebo propagačného príspevku zodpovedá výhradne používateľ, ktorý ho zverejnil — pozri aj Podmienky používania, časť o Marketplace.": "Za obsah a pravdivost svého inzerátu nebo propagačního příspěvku odpovídá výhradně uživatel, který ho zveřejnil — viz také Podmínky používání, část o Tržišti.",
+  "Nahlásenie porušenia": "Nahlášení porušení",
+  "Ak si narazil na inzerát alebo propagačný obsah, ktorý porušuje tieto pravidlá, napíš na sevcikjaroslav1@gmail.com.": "Pokud jsi narazil na inzerát nebo propagační obsah, který porušuje tato pravidla, napiš na sevcikjaroslav1@gmail.com.",
+  "Tvoj účet je pre nás dôležitý. Tu je prehľad, ako je zabezpečený a čo môžeš urobiť pre jeho ochranu.": "Tvůj účet je pro nás důležitý. Tady je přehled, jak je zabezpečen a co můžeš udělat pro jeho ochranu.",
+  "Ako spravujeme tvoje heslo": "Jak spravujeme tvé heslo",
+  "Prihlásenie do Connect8 zabezpečuje Firebase Authentication (Google). Tvoje heslo sa nikdy neukladá v čitateľnej podobe — my sami k nemu nemáme prístup.": "Přihlášení do Connect8 zajišťuje Firebase Authentication (Google). Tvé heslo se nikdy neukládá v čitelné podobě — my sami k němu nemáme přístup.",
+  "Šifrovaný prenos dát": "Šifrovaný přenos dat",
+  "Všetka komunikácia medzi tvojím zariadením a appkou prebieha cez šifrené pripojenie (HTTPS).": "Veškerá komunikace mezi tvým zařízením a aplikací probíhá přes šifrované připojení (HTTPS).",
+  "Potvrdenie hesla pri citlivých akciách": "Potvrzení hesla u citlivých akcí",
+  "Pri vymazaní účtu ťa appka môže požiadať o opätovné zadanie hesla — ide o bezpečnostnú poistku, aby účet nemohol natrvalo vymazať niekto iný, ak si zabudol odhlásiť sa na cudzom zariadení.": "Při mazání účtu tě aplikace může požádat o opětovné zadání hesla — jde o bezpečnostní pojistku, aby účet nemohl natrvalo smazat někdo jiný, pokud jsi zapomněl odhlásit se na cizím zařízení.",
+  "Blokovanie nežiaducich používateľov": "Blokování nežádoucích uživatelů",
+  "Ak ťa niekto obťažuje alebo sa ti nepáči jeho správanie, môžeš ho kedykoľvek zablokovať priamo na jeho profile. Zablokovaný používateľ ťa nemôže kontaktovať, volať ti ani vidieť tvoj obsah.": "Pokud tě někdo obtěžuje nebo se ti nelíbí jeho chování, můžeš ho kdykoli zablokovat přímo na jeho profilu. Zablokovaný uživatel tě nemůže kontaktovat, volat ti ani vidět tvůj obsah.",
+  "Čo môžeš urobiť ty": "Co můžeš udělat ty",
+  "Používaj jedinečné, silné heslo, ktoré nepoužívaš na iných stránkach.": "Používej jedinečné, silné heslo, které nepoužíváš na jiných stránkách.",
+  "Nezdieľaj svoje prihlasovacie údaje s nikým iným.": "Nesdílej svoje přihlašovací údaje s nikým jiným.",
+  "Na verejných alebo cudzích zariadeniach sa po skončení vždy odhlás.": "Na veřejných nebo cizích zařízeních se po skončení vždy odhlas.",
+  "Ak si všimneš podozrivú aktivitu na svojom účte, zmeň si heslo čo najskôr.": "Pokud si všimneš podezřelou aktivitu na svém účtu, změň si heslo co nejdříve.",
+  "Máš podozrenie na zneužitie účtu?": "Máš podezření na zneužití účtu?",
+  "Napíš nám na sevcikjaroslav1@gmail.com a popíš, čo sa stalo — pomôžeme ti to vyriešiť.": "Napiš nám na sevcikjaroslav1@gmail.com a popiš, co se stalo — pomůžeme ti to vyřešit.",
+  "Connect8 je slovenská sociálna platforma, ktorú prevádzkuje Jaroslav Ševčík ako samostatná fyzická osoba.": "Connect8 je slovenská sociální platforma, kterou provozuje Jaroslav Ševčík jako samostatná fyzická osoba.",
+  "Prečo Connect8 vzniklo": "Proč Connect8 vzniklo",
+  "Cieľom je ponúknuť jednoduchú, prehľadnú a rýchlu alternatívu k veľkým zahraničným sociálnym sieťam — miesto, kde môžeš zdieľať príspevky, videá aj komunikovať s priateľmi, bez zbytočného balastu.": "Cílem je nabídnout jednoduchou, přehlednou a rychlou alternativu k velkým zahraničním sociálním sítím — místo, kde můžeš sdílet příspěvky, videa i komunikovat s přáteli, bez zbytečného balastu.",
+  "Čo appku odlišuje": "Co aplikaci odlišuje",
+  "Žiadne reklamy tretích strán a žiadne sledovacie nástroje naprieč inými webmi (napr. Google Analytics, reklamné pixely).": "Žádné reklamy třetích stran a žádné sledovací nástroje napříč jinými weby (např. Google Analytics, reklamní pixely).",
+  "Funguje priamo v prehliadači — netreba nič inštalovať.": "Funguje přímo v prohlížeči — není třeba nic instalovat.",
+  "Rozhranie dostupné vo viacerých jazykoch vrátane slovenčiny.": "Rozhraní dostupné ve více jazycích včetně slovenštiny.",
+  "Neustály vývoj": "Neustálý vývoj",
+  "Connect8 sa priebežne vyvíja a dopĺňa o nové funkcie — takže sa môžeš stretnúť s drobnými zmenami či vylepšeniami.": "Connect8 se průběžně vyvíjí a doplňuje o nové funkce — takže se můžeš setkat s drobnými změnami či vylepšeními.",
+  "Máš nápad alebo pripomienku?": "Máš nápad nebo připomínku?",
+  "Budeme radi za akúkoľvek spätnú väzbu — napíš na sevcikjaroslav1@gmail.com.": "Budeme rádi za jakoukoli zpětnou vazbu — napiš na sevcikjaroslav1@gmail.com.",
+  "Tu nájdeš odpovede na najčastejšie otázky o používaní Connect8. Ak tu odpoveď nenájdeš, napíš nám priamo — kontakt je na konci stránky.": "Tady najdeš odpovědi na nejčastější otázky o používání Connect8. Pokud tady odpověď nenajdeš, napiš nám přímo — kontakt je na konci stránky.",
+  "Registrácia a prihlásenie": "Registrace a přihlášení",
+  "Účet si vytvoríš v záložke „Registrácia\" na úvodnej stránke — stačí meno, e-mail a heslo. Prihlásenie beží cez Firebase Authentication, takže heslo sa nikdy neukladá v čitateľnej podobe.": "Účet si vytvoříš v záložce „Registrace“ na úvodní stránce — stačí jméno, e-mail a heslo. Přihlášení běží přes Firebase Authentication, takže heslo se nikdy neukládá v čitelné podobě.",
+  "Príspevky, videá a marketplace": "Příspěvky, videa a tržiště",
+  "Vo Feede môžeš pridávať príspevky (text, fotky, video, súbory alebo odkaz), vo Videách nahrávať krátke vertikálne videá a v Marketplace zverejňovať alebo hľadať inzeráty. Vlastný obsah vieš kedykoľvek zmazať ikonou 🗑️ priamo pri ňom.": "Ve Feedu můžeš přidávat příspěvky (text, fotky, video, soubory nebo odkaz), ve Videích nahrávat krátká vertikální videa a v Tržišti zveřejňovat nebo hledat inzeráty. Vlastní obsah můžeš kdykoli smazat ikonou 🗑️ přímo u něj.",
+  "Správy a hovory": "Zprávy a hovory",
+  "V sekcii Správy si môžeš s ostatnými písať textové aj hlasové správy a posielať si súbory. Priamo z profilu používateľa vieš spustiť aj audio alebo videohovor.": "V sekci Zprávy si můžeš s ostatními psát textové i hlasové zprávy a posílat si soubory. Přímo z profilu uživatele můžeš spustit i audio nebo videohovor.",
+  "Obťažuje ťa niekto?": "Obtěžuje tě někdo?",
+  "Na profile daného používateľa klikni na tlačidlo „🚫 Zablokovať\" — po zablokovaní ťa už nemôže kontaktovať, volať ti ani vidieť tvoj obsah. Kedykoľvek ho môžeš rovnakým tlačidlom aj odblokovať.": "Na profilu daného uživatele klikni na tlačítko „🚫 Zablokovat“ — po zablokování tě už nemůže kontaktovat, volat ti ani vidět tvůj obsah. Kdykoli ho můžeš stejným tlačítkem i odblokovat.",
+  "Zrušenie účtu": "Zrušení účtu",
+  "Svoj účet aj s celým obsahom (príspevky, inzeráty, videá, profil) môžeš natrvalo vymazať v nastaveniach profilu tlačidlom „Zrušiť účet\". Táto akcia je nevratná.": "Svůj účet i s celým obsahem (příspěvky, inzeráty, videa, profil) můžeš natrvalo smazat v nastavení profilu tlačítkem „Zrušit účet“. Tato akce je nevratná.",
+  "Potrebuješ ďalšiu pomoc?": "Potřebuješ další pomoc?",
+  "Napíš nám na sevcikjaroslav1@gmail.com — odpovieme čo najskôr.": "Napiš nám na sevcikjaroslav1@gmail.com — odpovíme co nejdříve.",
+  "Connect8 prevádzkuje Jaroslav Ševčík ako fyzická osoba.": "Connect8 provozuje Jaroslav Ševčík jako fyzická osoba.",
+  "E-mail": "E-mail",
+  "Na akékoľvek otázky, nahlásenia problému alebo pripomienky nám napíš na sevcikjaroslav1@gmail.com.": "Na jakékoli otázky, nahlášení problému nebo připomínky nám napiš na sevcikjaroslav1@gmail.com.",
+  "Čo nám napíš": "Co nám napsat",
+  "Technický problém alebo chybu v appke": "Technický problém nebo chybu v aplikaci",
+  "Nahlásenie obsahu alebo správania, ktoré porušuje pravidlá appky": "Nahlášení obsahu nebo chování, které porušuje pravidla aplikace",
+  "Otázky ohľadom svojich osobných údajov a súkromia": "Otázky ohledně svých osobních údajů a soukromí",
+  "Nápady na vylepšenie alebo novú funkciu": "Nápady na vylepšení nebo novou funkci",
+  "Odpoveď": "Odpověď",
+  "Snažíme sa odpovedať čo najskôr, môže to v niektorých prípadoch chvíľu trvať — ďakujeme za trpezlivosť.": "Snažíme se odpovědět co nejdříve, může to v některých případech chvíli trvat — děkujeme za trpělivost.",
+};
+
 const UI_DICT_EN = {
   // vizitka
   "🪪 Vytvoriť vizitku":"🪪 Create business card",
@@ -10855,13 +11129,60 @@ const UI_DICT_EN = {
   "Adrenaline na CrazyGames":"Adrenaline on CrazyGames",
 };
 
+// Český slovník - pokrýva texty na prednej (prihlasovacej) stránke:
+// hero, prihlasovací/registračný formulár, features, pätička a nadpisy
+// právnych modálov. Zvyšok appky (po prihlásení) zostáva zámerne
+// neprekladaný do CZ, keďže si to používateľ vyžiadal len pre úvodnú
+// stránku.
+const UI_DICT_CZ = {
+  // hero / úvodná stránka
+  "Feed, videá, marketplace aj správy — všetko na jednej platforme, postavenej pre komunitu okolo teba.":"Feed, videa, tržiště i zprávy — všechno na jedné platformě, postavené pro komunitu kolem tebe.",
+  "Platforma na vzájomnú komunikáciu, zdieľanie obsahu a nadväzovanie kontaktov.":"Platforma pro vzájemnou komunikaci, sdílení obsahu a navazování kontaktů.",
+  // prihlasovací / registračný formulár
+  "Prihlásenie":"Přihlášení",
+  "Registrácia":"Registrace",
+  "E-mail":"E-mail",
+  "Heslo":"Heslo",
+  "Meno":"Jméno",
+  "Prihlásiť sa":"Přihlásit se",
+  "Vytvoriť účet":"Vytvořit účet",
+  "tvoj@email.sk":"tvuj@email.cz",
+  "Jaro Novák":"Jan Novák",
+  "min. 6 znakov":"min. 6 znaků",
+  "Pripoj sa aj ty a":"Připoj se i ty a",
+  "pozvi aj svojich priateľov":"pozvi i své přátele",
+  // features
+  "Videá":"Videa",
+  "Správy":"Zprávy",
+  "Príspevky priateľov, novinky a odkazy na jednom mieste, v reálnom čase.":"Příspěvky přátel, novinky a odkazy na jednom místě, v reálném čase.",
+  "Krátke vertikálne videá — nahraj, sleduj a reaguj jedným ťuknutím.":"Krátká vertikální videa — nahraj, sleduj a reaguj jedním klepnutím.",
+  "Predaj a nájdi veci v okolí, roztriedené podľa kategórií a ceny.":"Prodávej a najdi věci v okolí, roztříděné podle kategorií a ceny.",
+  "Textové aj hlasové správy, hovory a videohovory s priateľmi.":"Textové i hlasové zprávy, hovory a videohovory s přáteli.",
+  // pätička / právne
+  "© Connect8 Všetky práva vyhradené.":"© Connect8 Všechna práva vyhrazena.",
+  "Zásady ochrany súkromia":"Zásady ochrany soukromí",
+  "Centrum ochrany súkromia":"Centrum ochrany soukromí",
+  "Nastavenia cookies":"Nastavení cookies",
+  "Informácie":"Informace",
+  "Podmienky":"Podmínky",
+  "Podmienky používania":"Podmínky používání",
+  "Komunitné pravidlá":"Komunitní pravidla",
+  "Pravidlá k autorským právam":"Pravidla k autorským právům",
+  "Pravidlá pre reklamu":"Pravidla pro reklamu",
+  "Bezpečnosť účtu":"Bezpečnost účtu",
+  "O nás":"O nás",
+  "Pomoc":"Pomoc",
+  "Kontakt":"Kontakt",
+};
+
 // Vráti anglický preklad pevného textu (ak existuje v slovníku), inak
 // vráti pôvodný slovenský text nezmenený. Volá sa priamo z JS šablón
 // (napr. buildPostCard) pre časti, ktoré obsahujú aj dynamický obsah
 // (počty, mená a pod.), ktoré sa nedajú prekladať ako celý text uzla.
 function t(text){
-  if(currentLang !== 'en') return text;
-  return UI_DICT_EN.hasOwnProperty(text) ? UI_DICT_EN[text] : text;
+  if(currentLang === 'en') return UI_DICT_EN.hasOwnProperty(text) ? UI_DICT_EN[text] : text;
+  if(currentLang === 'cz') return UI_DICT_CZ.hasOwnProperty(text) ? UI_DICT_CZ[text] : text;
+  return text;
 }
 
 // Uloží pôvodný (SK) text uzla, aby sme sa vždy vedeli korektne vrátiť
@@ -10876,6 +11197,8 @@ function translateTextNode(node){
   if(!trimmed) return;
   if(currentLang === 'en' && UI_DICT_EN.hasOwnProperty(trimmed)){
     node.nodeValue = original.replace(trimmed, UI_DICT_EN[trimmed]);
+  } else if(currentLang === 'cz' && UI_DICT_CZ.hasOwnProperty(trimmed)){
+    node.nodeValue = original.replace(trimmed, UI_DICT_CZ[trimmed]);
   } else {
     node.nodeValue = original;
   }
@@ -10891,6 +11214,8 @@ function translateElementAttrs(el){
     const trimmed = (original || '').trim();
     if(currentLang === 'en' && UI_DICT_EN.hasOwnProperty(trimmed)){
       el.setAttribute(attr, UI_DICT_EN[trimmed]);
+    } else if(currentLang === 'cz' && UI_DICT_CZ.hasOwnProperty(trimmed)){
+      el.setAttribute(attr, UI_DICT_CZ[trimmed]);
     } else if(original !== null && original !== undefined){
       el.setAttribute(attr, original);
     }
@@ -10922,10 +11247,36 @@ function translateStaticDom(root){
   }
 }
 
+// Malé zástavky (rovnaká kresba ako pri veľkých vlajkách na prihlasovacej
+// stránke) pre malý indikátor jazyka v hornej lište appky - ten je viditeľný
+// aj po prihlásení, aby bolo vždy jasné, pod akým jazykom je používateľ
+// prihlásený.
+const HEADER_FLAG_SVG = {
+  sk: '<rect width="60" height="40" fill="#fff"/><rect y="13.33" width="60" height="13.34" fill="#0033A0"/><rect y="26.67" width="60" height="13.33" fill="#EE1C25"/><path d="M10,6 C10,6 5,10 5,20 C5,30 10,34 10,34 C10,34 15,30 15,20 C15,10 10,6 10,6 Z" fill="#fff"/><path d="M10,9 C10,9 7,12.5 7,20 C7,27.5 10,31 10,31 C10,31 13,27.5 13,20 C13,12.5 10,9 10,9 Z" fill="#EE1C25"/><rect x="7" y="18" width="6" height="2" fill="#fff"/><rect x="7.5" y="15" width="2" height="8" fill="#fff"/><rect x="10.5" y="15" width="2" height="8" fill="#fff"/>',
+  en: '<rect width="60" height="40" fill="#012169"/><path d="M0,0 L60,40 M60,0 L0,40" stroke="#fff" stroke-width="8"/><path d="M0,0 L60,40 M60,0 L0,40" stroke="#C8102E" stroke-width="4.5"/><path d="M30,0 V40 M0,20 H60" stroke="#fff" stroke-width="13"/><path d="M30,0 V40 M0,20 H60" stroke="#C8102E" stroke-width="8"/>',
+  cz: '<rect width="60" height="40" fill="#fff"/><rect y="20" width="60" height="20" fill="#D7141A"/><path d="M0,0 L30,20 L0,40 Z" fill="#11457E"/>',
+  hu: '<rect width="60" height="40" fill="#fff"/><rect width="60" height="13.33" fill="#CD2A3E"/><rect y="26.67" width="60" height="13.33" fill="#436F4D"/>',
+  at: '<rect width="60" height="40" fill="#fff"/><rect width="60" height="13.33" fill="#ED2939"/><rect y="26.67" width="60" height="13.33" fill="#ED2939"/>',
+  de: '<rect width="60" height="40" fill="#000"/><rect y="13.33" width="60" height="13.34" fill="#DD0000"/><rect y="26.67" width="60" height="13.33" fill="#FFCE00"/>',
+  pl: '<rect width="60" height="40" fill="#fff"/><rect y="20" width="60" height="20" fill="#DC143C"/>',
+  es: '<rect width="60" height="40" fill="#AA151B"/><rect y="10" width="60" height="20" fill="#F1BF00"/>',
+  fr: '<rect width="60" height="40" fill="#fff"/><rect width="20" height="40" fill="#0055A4"/><rect x="40" width="20" height="40" fill="#EF4135"/>',
+  pt: '<rect width="60" height="40" fill="#FF0000"/><rect width="24" height="40" fill="#046A38"/><circle cx="24" cy="20" r="8" fill="#FFCC00" stroke="#046A38" stroke-width="1"/>',
+  it: '<rect width="60" height="40" fill="#fff"/><rect width="20" height="40" fill="#009246"/><rect x="40" width="20" height="40" fill="#CE2B37"/>'
+};
+
+function updateHeaderLangFlag(){
+  const el = document.getElementById('header-lang-flag');
+  if(!el) return;
+  const inner = HEADER_FLAG_SVG[currentLang] || HEADER_FLAG_SVG.sk;
+  el.innerHTML = '<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>';
+}
+
 function updateLangFlagUI(){
   document.querySelectorAll('.lang-flag').forEach(f=> f.classList.remove('active'));
   const active = document.getElementById('lang-flag-' + currentLang);
   if(active) active.classList.add('active');
+  updateHeaderLangFlag();
 }
 
 // Voláme pri štarte appky aj pri prekliknutí vlajky. Prejde celý
@@ -11000,25 +11351,27 @@ async function machineTranslate(text, targetLang){
 // externé MyMemory API, takže sa nikdy nemôže minúť denný free limit
 // a preklad je vždy okamžitý.
 function autoTranslateLegalModal(name){
-  if(currentLang !== 'en') return;
+  if(currentLang !== 'en' && currentLang !== 'cz') return;
   const body = document.querySelector('#legal-modal-' + name + ' .legal-sheet-body');
   if(!body) return;
+  const dict = currentLang === 'en' ? LEGAL_DICT_EN : LEGAL_DICT_CZ;
+  const lineClass = currentLang === 'en' ? 'legal-en-line' : 'legal-cz-line';
   const targets = body.querySelectorAll('p, li, h2, h3');
   targets.forEach(el=>{
-    if(el.dataset.translated === '1') return;
-    if(el.querySelector('.legal-en-line')) return;
+    if(el.dataset.translatedLang === currentLang) return;
+    if(el.querySelector('.' + lineClass)) return;
     const original = el.dataset.origText || el.textContent;
     el.dataset.origText = original;
     if(!original.trim()) return;
     const trimmed = original.trim();
-    const translated = LEGAL_DICT_EN.hasOwnProperty(trimmed) ? LEGAL_DICT_EN[trimmed] : null;
+    const translated = dict.hasOwnProperty(trimmed) ? dict[trimmed] : null;
     if(translated){
       const line = document.createElement('div');
-      line.className = 'legal-en-line';
+      line.className = lineClass;
       line.style.cssText = 'color:var(--muted,#8a93a6);font-style:italic;margin-top:2px;';
       line.textContent = translated;
       el.appendChild(line);
-      el.dataset.translated = '1';
+      el.dataset.translatedLang = currentLang;
     }
   });
 }
