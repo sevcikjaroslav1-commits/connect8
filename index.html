@@ -1742,11 +1742,11 @@
           <rect y="20" width="60" height="20" fill="#D7141A"/>
           <path d="M0,0 L30,20 L0,40 Z" fill="#11457E"/>
         </svg> CZ</span>
-        <span class="lang-flag" title="Polski"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
+        <span class="lang-flag" id="lang-flag-pl" onclick="setAppLanguage('pl')" title="Polski"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
           <rect width="60" height="40" fill="#fff"/>
           <rect y="20" width="60" height="20" fill="#DC143C"/>
         </svg> PL</span>
-        <span class="lang-flag" title="Magyarország"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
+        <span class="lang-flag" id="lang-flag-hu" onclick="setAppLanguage('hu')" title="Magyarország"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
           <rect width="60" height="40" fill="#fff"/>
           <rect width="60" height="13.33" fill="#CD2A3E"/>
           <rect y="26.67" width="60" height="13.33" fill="#436F4D"/>
@@ -4040,9 +4040,260 @@ const UK_NAMEDAYS = {
   "12-27":"John the Evangelist", "12-28":"Holy Innocents"
 };
 
+// Poľský meninový (imieninowy) kalendár - používa sa namiesto SK_NAMEDAYS,
+// keď je aktívna poľská vlajka (currentLang === 'pl').
+const PL_NAMEDAYS = {
+  "01-01":"Mieczysław", "01-02":"Bazyli, Grzegorz", "01-03":"Danuta, Genowefa", "01-04":"Angelika, Eugeniusz",
+  "01-05":"Edward, Szymon", "01-06":"Kacper, Melchior, Baltazar", "01-07":"Julian, Rajmund", "01-08":"Seweryn, Erhard",
+  "01-09":"Adrian, Marceli", "01-10":"Wilhelm, Dobrosław", "01-11":"Honorata, Matylda", "01-12":"Arkadiusz, Czesław",
+  "01-13":"Weronika, Gordian", "01-14":"Feliks, Hilary", "01-15":"Paweł, Izydor", "01-16":"Marcela, Włodzimierz",
+  "01-17":"Antoni, Rościsław", "01-18":"Piotr, Małgorzata", "01-19":"Henryk, Mariusz", "01-20":"Fabian, Sebastian",
+  "01-21":"Agnieszka, Jarosław", "01-22":"Wincenty, Anastazy", "01-23":"Rajmund, Ildefons", "01-24":"Feliks, Tymoteusz",
+  "01-25":"Miłosz, Paweł", "01-26":"Tymoteusz, Tytus", "01-27":"Anieli, Przybysław", "01-28":"Tomasz, Walery",
+  "01-29":"Franciszek, Zdzisław", "01-30":"Martyna, Hiacynta", "01-31":"Marcela, Jan",
+  "02-01":"Brygida, Ignacy", "02-02":"Matylda, Mirosława", "02-03":"Błażej, Oskar", "02-04":"Andrzej, Weronika",
+  "02-05":"Agata, Adelajda", "02-06":"Dorota, Bogdan", "02-07":"Ryszard, Teodora", "02-08":"Hieronim, Sebastian",
+  "02-09":"Eryk, Apolonia", "02-10":"Elwira, Scholastyka", "02-11":"Adolf, Lucjan", "02-12":"Damian, Radosław",
+  "02-13":"Grzegorz, Katarzyna", "02-14":"Walenty, Cyryl", "02-15":"Faustyn, Jowita", "02-16":"Danuta, Juliana",
+  "02-17":"Aleksy, Julian", "02-18":"Konstancja, Symeon", "02-19":"Konrad, Arnold", "02-20":"Leon, Ludomir",
+  "02-21":"Eleonora, Feliks", "02-22":"Małgorzata, Piotr", "02-23":"Roman, Damian", "02-24":"Maciej, Bogusz",
+  "02-25":"Cezary, Wiktor", "02-26":"Bogumił, Mirosław", "02-27":"Gabriel, Leonard", "02-28":"Ludomir, Wiliam",
+  "02-29":"Konstanty",
+  "03-01":"Albin, Antonina", "03-02":"Halszka, Heronim", "03-03":"Kunegunda, Maryna", "03-04":"Kazimierz, Adrian",
+  "03-05":"Aleksander, Fryderyk", "03-06":"Wiktor, Róża", "03-07":"Tomasz, Felicyta", "03-08":"Beata, Wincenty",
+  "03-09":"Franciszka, Dominika", "03-10":"Cyprian, Aleksandra", "03-11":"Konstanty, Benedykt", "03-12":"Grzegorz, Bernard",
+  "03-13":"Bożena, Krystyna", "03-14":"Matylda, Machabeusze", "03-15":"Ludwika, Klemens", "03-16":"Hilary, Abraham",
+  "03-17":"Zbigniew, Patryk", "03-18":"Edward, Cyryl", "03-19":"Józef, Bogdan", "03-20":"Aleksandra, Klaudia",
+  "03-21":"Lubomir, Benedykt", "03-22":"Katarzyna, Bogusław", "03-23":"Pelagia, Oktawian", "03-24":"Marek, Gabriel",
+  "03-25":"Maria, Wieńczysław", "03-26":"Emanuel, Teodor", "03-27":"Lidia, Ernest", "03-28":"Anzelm, Sykstus",
+  "03-29":"Wiktor, Eustachy", "03-30":"Amelia, Kwiryn", "03-31":"Kornelia, Benjamin",
+  "04-01":"Grażyna, Teodora", "04-02":"Franciszek, Władysław", "04-03":"Ryszard, Ireneusz", "04-04":"Izydor, Wacław",
+  "04-05":"Wincenty, Kleofas", "04-06":"Celestyn, Wilhelm", "04-07":"Donat, Rufin", "04-08":"Cezary, Julia",
+  "04-09":"Dymitr, Maria", "04-10":"Michał, Daniel", "04-11":"Filip, Izaak", "04-12":"Juliusz, Wiktor",
+  "04-13":"Przemysław, Marcin", "04-14":"Justyna, Bernarda", "04-15":"Anastazja, Wacław", "04-16":"Julia, Benedykt",
+  "04-17":"Rudolf, Klara", "04-18":"Apoloniusz, Bogusława", "04-19":"Adolf, Tymon", "04-20":"Czesław, Agnieszka",
+  "04-21":"Anzelm, Konrad", "04-22":"Kai, Łukasz", "04-23":"Wojciech, Jerzy", "04-24":"Jerzy, Horacy",
+  "04-25":"Marek, Jarosław", "04-26":"Marzena, Maria", "04-27":"Zyta, Teofil", "04-28":"Piotr, Walentyna",
+  "04-29":"Katarzyna, Piotr", "04-30":"Marian, Katarzyna",
+  "05-01":"Józef, Filip", "05-02":"Zygmunt, Atanazy", "05-03":"Mariusz", "05-04":"Florian, Monika",
+  "05-05":"Irena, Waldemar", "05-06":"Judyta, Jan", "05-07":"Gizela, Ludmiła", "05-08":"Stanisław, Wiktor",
+  "05-09":"Grzegorz, Karol", "05-10":"Izydor, Antonin", "05-11":"Mamert, Estera", "05-12":"Pankracy, Achilles",
+  "05-13":"Serwacy, Agnieszka", "05-14":"Bonifacy, Dobiesław", "05-15":"Zofia, Dionizy", "05-16":"Andrzej, Szymon",
+  "05-17":"Weronika, Sławomir", "05-18":"Alicja, Eryk", "05-19":"Iwo, Piotr", "05-20":"Bernardyn, Aleksander",
+  "05-21":"Wiktor, Tymoteusz", "05-22":"Rita, Julia", "05-23":"Iwona, Dezyderiusz", "05-24":"Joanna, Zdenek",
+  "05-25":"Magda, Grzegorz", "05-26":"Filip, Paulina", "05-27":"Jan, Magdalena", "05-28":"Jaromir, Augustyn",
+  "05-29":"Teodozja, Maksym", "05-30":"Ferdynand, Zyta", "05-31":"Anna, Petronela",
+  "06-01":"Jakub, Konrad", "06-02":"Marzena, Erazm", "06-03":"Leszek, Klotylda", "06-04":"Karol, Franciszek",
+  "06-05":"Waleria, Bonifacy", "06-06":"Norbert, Laura", "06-07":"Robert, Wiesław", "06-08":"Medard, Maksym",
+  "06-09":"Felicjan, Pelagia", "06-10":"Bogumiła, Małgorzata", "06-11":"Barnaba, Feliks", "06-12":"Jan, Onufry",
+  "06-13":"Antoni, Lucjan", "06-14":"Bazyli, Elizeusz", "06-15":"Wit, Jolanta", "06-16":"Aniela, Benon",
+  "06-17":"Adolf, Laura", "06-18":"Marek, Elżbieta", "06-19":"Gerwazy, Protazy", "06-20":"Bogna, Rafał",
+  "06-21":"Alicja, Alojzy", "06-22":"Paulin, Tomasz", "06-23":"Wanda, Zenon", "06-24":"Jan, Danuta",
+  "06-25":"Łucja, Wilhelm", "06-26":"Jan, Paweł", "06-27":"Maria, Władysław", "06-28":"Ireneusz, Leon",
+  "06-29":"Piotr, Paweł", "06-30":"Emilia, Lucyna",
+  "07-01":"Marian, Halina", "07-02":"Maria, Urban", "07-03":"Tomasz, Anatol", "07-04":"Elżbieta, Marta",
+  "07-05":"Antoni, Karolina", "07-06":"Dominika, Maria", "07-07":"Estera, Cyryl", "07-08":"Elżbieta, Edgar",
+  "07-09":"Weronika, Zenon", "07-10":"Filip, Amelia", "07-11":"Kalina, Olga", "07-12":"Jan, Wera",
+  "07-13":"Małgorzata, Henryk", "07-14":"Kamil, Marcelina", "07-15":"Henryk, Włodzimierz", "07-16":"Eustachy, Mariola",
+  "07-17":"Bogdan, Aleksy", "07-18":"Kamil, Szymon", "07-19":"Wincenty, Emilia", "07-20":"Czesław, Małgorzata",
+  "07-21":"Danuta, Wawrzyniec", "07-22":"Magdalena, Wawrzyniec", "07-23":"Bogna, Brygida", "07-24":"Kinga, Krystyna",
+  "07-25":"Krzysztof, Jakub", "07-26":"Anna, Joachim", "07-27":"Natalia, Lucja", "07-28":"Wiktor, Innocenty",
+  "07-29":"Marta, Olaf", "07-30":"Julia, Piotr", "07-31":"Ignacy, Justyn",
+  "08-01":"Justyn, Nadzieja", "08-02":"Gustaw, Kajetan", "08-03":"Lidia, Augustyn", "08-04":"Dominik, Jan",
+  "08-05":"Maria, Karolina", "08-06":"Jakub, Sylwia", "08-07":"Kajetan, Donata", "08-08":"Cyprian, Dominik",
+  "08-09":"Roman, Ryszard", "08-10":"Wawrzyniec, Filomena", "08-11":"Zuzanna, Klara", "08-12":"Hilaria, Innocenty",
+  "08-13":"Diana, Ignacy", "08-14":"Alfred, Maksymilian", "08-15":"Maria, Napoleon", "08-16":"Stefan, Roch",
+  "08-17":"Jacek, Miron", "08-18":"Bronisław, Helena", "08-19":"Julian, Jan", "08-20":"Bernard, Sabina",
+  "08-21":"Franciszek, Joanna", "08-22":"Maria, Cezary", "08-23":"Róża, Filip", "08-24":"Bartłomiej, Jerzy",
+  "08-25":"Ludwik, Józef", "08-26":"Aleksander, Bogna", "08-27":"Monika, Kalina", "08-28":"Augustyn, Patrycja",
+  "08-29":"Sabina, Racheal", "08-30":"Róża, Feliks", "08-31":"Bogdan, Rajmund",
+  "09-01":"Bronisław, Idzi", "09-02":"Julian, Stefan", "09-03":"Izabela, Szymon", "09-04":"Rozalia, Idzi",
+  "09-05":"Justynian, Wawrzyniec", "09-06":"Eugenia, Beata", "09-07":"Regina, Melchior", "09-08":"Maria, Adrian",
+  "09-09":"Piotr, Sergiusz", "09-10":"Łukasz, Mikołaj", "09-11":"Jacek, Feliks", "09-12":"Maria, Gwidon",
+  "09-13":"Eulogiusz, Aureliusz", "09-14":"Roksana, Bernard", "09-15":"Nikodem, Albin", "09-16":"Kornel, Edyta",
+  "09-17":"Justyna, Franciszek", "09-18":"Ireneusz, Józef", "09-19":"Konstancja, January", "09-20":"Filipina, Eustachy",
+  "09-21":"Mateusz, Hipolit", "09-22":"Tomasz, Maurycy", "09-23":"Bogusław, Tekla", "09-24":"Gerard, Teodor",
+  "09-25":"Aurelia, Kamil", "09-26":"Justyna, Kosma", "09-27":"Wincenty, Damian", "09-28":"Wacław, Marek",
+  "09-29":"Michał, Gabriel, Rafał", "09-30":"Hieronim, Zofia",
+  "10-01":"Danuta, Remigiusz", "10-02":"Teofil, Aniela", "10-03":"Teresa, Gerard", "10-04":"Franciszek, Rozalia",
+  "10-05":"Igor, Placyd", "10-06":"Bruno, Artur", "10-07":"Marek, Justyna", "10-08":"Pelagia, Ewa",
+  "10-09":"Dionizy, Wincenty", "10-10":"Franciszek, Daniel", "10-11":"Aldona, German", "10-12":"Maksymilian, Edwin",
+  "10-13":"Edward, Gerald", "10-14":"Kalikst, Bernard", "10-15":"Teresa, Jadwiga", "10-16":"Gaweł, Jadwiga",
+  "10-17":"Wiktor, Małgorzata", "10-18":"Łukasz, Julian", "10-19":"Michalina, Piotr", "10-20":"Kleopatra, Ireneusz",
+  "10-21":"Urszula, Hilary", "10-22":"Halka, Filip", "10-23":"Marlena, Jan", "10-24":"Rafał, Marcin",
+  "10-25":"Ingi, Bonifacy", "10-26":"Lucjan, Ewaryst", "10-27":"Iwona, Sabina", "10-28":"Szymon, Juda",
+  "10-29":"Przemysław, Zenobia", "10-30":"Zenobia, Edmund", "10-31":"Krystyna, Wolfgang",
+  "11-01":"Cecyliusz, Marek", "11-02":"Bohdan, Tobiasz", "11-03":"Sylwia, Hubert", "11-04":"Karol, Olgierd",
+  "11-05":"Elżbieta, Zachariasz", "11-06":"Feliks, Leonard", "11-07":"Antoni, Prokop", "11-08":"Bogdan, Klaudiusz",
+  "11-09":"Aleksandra, Teodor", "11-10":"Andrzej, Leon", "11-11":"Marcin, Bartłomiej", "11-12":"Renata, Emil",
+  "11-13":"Stanisław, Mikołaj", "11-14":"Wawrzyniec, Serafina", "11-15":"Albert, Leopold", "11-16":"Edmund, Gertruda",
+  "11-17":"Salome, Grzegorz", "11-18":"Klaudyna, Roman", "11-19":"Elżbieta, Paweł", "11-20":"Anatol, Rafał",
+  "11-21":"Janusz, Konrad", "11-22":"Cecylia, Jonatan", "11-23":"Adela, Klemens", "11-24":"Emilia, Flora",
+  "11-25":"Katarzyna, Erazm", "11-26":"Leonard, Konrad", "11-27":"Walerian, Wirginiusz", "11-28":"Zdzisław, Jakub",
+  "11-29":"Błażej, Fryderyk", "11-30":"Andrzej, Konstanty",
+  "12-01":"Blanka, Eligiusz", "12-02":"Balbina, Paulina", "12-03":"Franciszek, Kasjan", "12-04":"Barbara, Krystian",
+  "12-05":"Krystyna, Saba", "12-06":"Mikołaj, Emilian", "12-07":"Ambroży, Marcin", "12-08":"Maria, Wirginia",
+  "12-09":"Leokadia, Wiesław", "12-10":"Julia, Bożena", "12-11":"Damazy, Waldemar", "12-12":"Aleksander, Dagmara",
+  "12-13":"Łucja, Otylia", "12-14":"Alfred, Izydor", "12-15":"Celina, Waleriana", "12-16":"Alicja, Zdzisława",
+  "12-17":"Łazarz, Olimpia", "12-18":"Gracjan, Bogusław", "12-19":"Beniamin, Gabriela", "12-20":"Bogumiła, Dominik",
+  "12-21":"Tomasz, Piotr", "12-22":"Zenon, Franciszka", "12-23":"Wiktoria, Sławomir", "12-24":"Adam, Ewa",
+  "12-25":"Anastazja, Eugenia", "12-26":"Szczepan, Dionizy", "12-27":"Jan, Żaneta", "12-28":"Teofila, Cezary",
+  "12-29":"Tomasz, Dominik", "12-30":"Eugeniusz, Dawid", "12-31":"Sylwester, Melania",
+};
+
+// Poľské štátne sviatky - používajú sa namiesto slovenských, keď je aktívna
+// poľská vlajka (currentLang === 'pl'). Od roku 2025 je aj 24. december
+// (Wigilia) v Poľsku oficiálnym dňom pracovného pokoja.
+function getPolishHolidays(year){
+  const easter = getEasterSunday(year);
+  const easterMonday = new Date(easter); easterMonday.setDate(easter.getDate()+1);
+  const corpusChristi = new Date(easter); corpusChristi.setDate(easter.getDate()+60);
+  const fmt = d => `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const holidays = {};
+  holidays['01-01'] = 'Nowy Rok';
+  holidays['01-06'] = 'Święto Trzech Króli';
+  holidays[fmt(easterMonday)] = 'Poniedziałek Wielkanocny';
+  holidays['05-01'] = 'Święto Pracy';
+  holidays['05-03'] = 'Święto Konstytucji 3 Maja';
+  holidays[fmt(corpusChristi)] = 'Boże Ciało';
+  holidays['08-15'] = 'Wniebowzięcie Najświętszej Maryi Panny';
+  holidays['11-01'] = 'Wszystkich Świętych';
+  holidays['11-11'] = 'Narodowe Święto Niepodległości';
+  holidays['12-24'] = 'Wigilia';
+  holidays['12-25'] = 'Boże Narodzenie (pierwszy dzień)';
+  holidays['12-26'] = 'Boże Narodzenie (drugi dzień)';
+  return holidays;
+}
+
+// Maďarský meninový (névnap) kalendár - používa sa namiesto SK_NAMEDAYS,
+// keď je aktívna maďarská vlajka (currentLang === 'hu').
+const HU_NAMEDAYS = {
+  "01-01":"Fruzsina", "01-02":"Ábel", "01-03":"Genovéva, Benjámin", "01-04":"Titusz, Leona",
+  "01-05":"Simon", "01-06":"Boldizsár", "01-07":"Attila, Ramóna", "01-08":"Gyöngyvér",
+  "01-09":"Marcell", "01-10":"Melánia", "01-11":"Ágota", "01-12":"Ernő",
+  "01-13":"Veronika", "01-14":"Bódog", "01-15":"Lóránt, Loránd", "01-16":"Gusztáv",
+  "01-17":"Antal, Antónia", "01-18":"Piroska", "01-19":"Sára, Márió", "01-20":"Fábián, Sebestyén",
+  "01-21":"Ágnes", "01-22":"Vince, Artúr", "01-23":"Zelma, Rajmund", "01-24":"Timót",
+  "01-25":"Pál", "01-26":"Vanda, Paula", "01-27":"Angelika", "01-28":"Károly, Karola",
+  "01-29":"Adél", "01-30":"Martina, Gerda", "01-31":"Marcella",
+  "02-01":"Ignác", "02-02":"Karolina, Aida", "02-03":"Balázs", "02-04":"Ráhel, Csenge",
+  "02-05":"Ágota, Ingrid", "02-06":"Dóra, Dorottya", "02-07":"Tódor, Rómeó", "02-08":"Aranka",
+  "02-09":"Abigél, Alex", "02-10":"Elvira", "02-11":"Bertold, Marietta", "02-12":"Lívia, Lídia",
+  "02-13":"Ella, Linda", "02-14":"Bálint, Valentin", "02-15":"Kolos, Georgina", "02-16":"Julianna, Lilianna",
+  "02-17":"Donát", "02-18":"Bernadett", "02-19":"Zsuzsanna", "02-20":"Aladár, Álmos",
+  "02-21":"Eleonóra", "02-22":"Gerzson", "02-23":"Alfréd", "02-24":"Mátyás",
+  "02-25":"Géza", "02-26":"Edina", "02-27":"Ákos, Bátor", "02-28":"Elemér",
+  "02-29":"Rómeó",
+  "03-01":"Albin", "03-02":"Lujza", "03-03":"Kornélia", "03-04":"Kázmér",
+  "03-05":"Adorján, Adrián", "03-06":"Leonóra, Inez", "03-07":"Tamás", "03-08":"Zoltán",
+  "03-09":"Franciska, Fanni", "03-10":"Ildikó", "03-11":"Szilárd", "03-12":"Gergely",
+  "03-13":"Krisztián, Ajtony", "03-14":"Matild", "03-15":"Kristóf", "03-16":"Henrietta",
+  "03-17":"Gertrúd, Patrik", "03-18":"Sándor, Ede", "03-19":"József", "03-20":"Klaudia",
+  "03-21":"Benedek", "03-22":"Beáta, Izolda", "03-23":"Emőke", "03-24":"Gábor, Karina",
+  "03-25":"Irén, Írisz", "03-26":"Emánuel", "03-27":"Hajnalka", "03-28":"Gedeon, Johanna",
+  "03-29":"Auguszta", "03-30":"Zalán", "03-31":"Árpád",
+  "04-01":"Hugó", "04-02":"Áron", "04-03":"Buda, Richárd", "04-04":"Izidor",
+  "04-05":"Vince", "04-06":"Vilmos, Bíborka", "04-07":"Herman", "04-08":"Dénes",
+  "04-09":"Erhard", "04-10":"Zsolt", "04-11":"Leó, Szaniszló", "04-12":"Gyula",
+  "04-13":"Ida", "04-14":"Tibor", "04-15":"Anasztázia, Tas", "04-16":"Csongor",
+  "04-17":"Rudolf, Kelemen", "04-18":"Andrea, Ilma", "04-19":"Emma", "04-20":"Tivadar",
+  "04-21":"Konrád", "04-22":"Csilla, Noémi", "04-23":"Béla", "04-24":"György",
+  "04-25":"Márk", "04-26":"Ervin", "04-27":"Zita", "04-28":"Valéria",
+  "04-29":"Péter", "04-30":"Katalin, Kitti",
+  "05-01":"Fülöp, Jakab", "05-02":"Zsigmond", "05-03":"Tímea, Irma", "05-04":"Mónika, Flórián",
+  "05-05":"Györgyi", "05-06":"Ivett, Frida", "05-07":"Gizella", "05-08":"Mihály",
+  "05-09":"Gergely", "05-10":"Ármin, Pálma", "05-11":"Ferenc", "05-12":"Pongrác",
+  "05-13":"Szervác, Imola", "05-14":"Bonifác", "05-15":"Zsófia, Szonja", "05-16":"Botond",
+  "05-17":"Paszkál", "05-18":"Erik, Alexandra", "05-19":"Ivó, Milán", "05-20":"Bernát, Felícia",
+  "05-21":"Konstantin", "05-22":"Júlia, Rita", "05-23":"Dezső", "05-24":"Eszter, Eliza",
+  "05-25":"Orbán", "05-26":"Fülöp, Evelin", "05-27":"Hella", "05-28":"Emil, Csanád",
+  "05-29":"Magdolna", "05-30":"Janka, Zsanett", "05-31":"Angéla, Petronella",
+  "06-01":"Tünde", "06-02":"Kármen, Anita", "06-03":"Klotild", "06-04":"Bulcsú",
+  "06-05":"Fatime", "06-06":"Norbert, Cintia", "06-07":"Róbert", "06-08":"Medárd",
+  "06-09":"Félix", "06-10":"Margit, Gitta", "06-11":"Barnabás", "06-12":"Villő",
+  "06-13":"Antal, Anett", "06-14":"Vazul", "06-15":"Jolán, Vid", "06-16":"Jusztin",
+  "06-17":"Laura, Alida", "06-18":"Arnold, Levente", "06-19":"Gyárfás", "06-20":"Rafael",
+  "06-21":"Alajos, Leila", "06-22":"Paulina", "06-23":"Zoltán, Iván", "06-24":"Iván",
+  "06-25":"Vilmos", "06-26":"János, Pál", "06-27":"László", "06-28":"Levente, Irén",
+  "06-29":"Péter, Pál", "06-30":"Pál",
+  "07-01":"Tihamér, Annamária", "07-02":"Ottó", "07-03":"Kornél, Soma", "07-04":"Ulrik",
+  "07-05":"Emese, Sarolta", "07-06":"Csaba", "07-07":"Apollónia", "07-08":"Ellák",
+  "07-09":"Lukrécia", "07-10":"Amália", "07-11":"Nóra, Lili", "07-12":"Dalma",
+  "07-13":"Jenő", "07-14":"Örs, Stella", "07-15":"Henrik, Roland", "07-16":"Valter",
+  "07-17":"Endre, Elek", "07-18":"Frigyes", "07-19":"Emília", "07-20":"Illés",
+  "07-21":"Dániel, Daniella", "07-22":"Magdolna", "07-23":"Lenke", "07-24":"Kinga, Kincső",
+  "07-25":"Kristóf, Jakab", "07-26":"Anna, Anikó", "07-27":"Olga, Liliána", "07-28":"Szabolcs",
+  "07-29":"Márta, Flóra", "07-30":"Judit, Xénia", "07-31":"Oszkár",
+  "08-01":"Boglárka", "08-02":"Lehel", "08-03":"Hermina", "08-04":"Domonkos, Dominika",
+  "08-05":"Krisztina", "08-06":"Berta, Bertalan", "08-07":"Ibolya", "08-08":"László",
+  "08-09":"Emőd", "08-10":"Lőrinc", "08-11":"Zsuzsanna, Tiborc", "08-12":"Klára",
+  "08-13":"Ipoly", "08-14":"Marcell", "08-15":"Mária", "08-16":"Ábrahám",
+  "08-17":"Jácint", "08-18":"Ilona", "08-19":"Huba", "08-20":"István",
+  "08-21":"Sámuel, Hajna", "08-22":"Menyhért, Mirjam", "08-23":"Bence", "08-24":"Bertalan",
+  "08-25":"Lajos, Patrícia", "08-26":"Izsó", "08-27":"Gáspár", "08-28":"Ágoston",
+  "08-29":"Beatrix, Erna", "08-30":"Rózsa", "08-31":"Erika, Bella",
+  "09-01":"Egyed, Egon", "09-02":"Rebeka, Dorina", "09-03":"Hilda", "09-04":"Rozália",
+  "09-05":"Viktor, Lőrinc", "09-06":"Zakariás", "09-07":"Regina", "09-08":"Mária, Adrienn",
+  "09-09":"Ádám", "09-10":"Nikolett, Hunor", "09-11":"Teodóra", "09-12":"Mária",
+  "09-13":"Kornél", "09-14":"Szeréna, Roxána", "09-15":"Enikő, Loránd", "09-16":"Edit",
+  "09-17":"Zsófia", "09-18":"Diána", "09-19":"Vilhelmina", "09-20":"Friderika",
+  "09-21":"Máté, Mirella", "09-22":"Móric", "09-23":"Tekla", "09-24":"Gellért, Mercédesz",
+  "09-25":"Eufrozina, Kende", "09-26":"Jusztina", "09-27":"Adalbert", "09-28":"Vencel",
+  "09-29":"Mihály", "09-30":"Jeromos",
+  "10-01":"Malvin", "10-02":"Petra", "10-03":"Helga", "10-04":"Ferenc",
+  "10-05":"Aurél", "10-06":"Brúnó, Renáta", "10-07":"Amália", "10-08":"Koppány",
+  "10-09":"Dénes", "10-10":"Gedeon", "10-11":"Brigitta", "10-12":"Miksa",
+  "10-13":"Kálmán, Ede", "10-14":"Helén", "10-15":"Teréz", "10-16":"Gál",
+  "10-17":"Hedvig", "10-18":"Lukács", "10-19":"Nándor", "10-20":"Vendel",
+  "10-21":"Orsolya", "10-22":"Előd", "10-23":"Gyöngyi", "10-24":"Salamon",
+  "10-25":"Blanka, Bianka", "10-26":"Dömötör", "10-27":"Szabina", "10-28":"Simon, Szimonetta",
+  "10-29":"Nárcisz", "10-30":"Alfonz", "10-31":"Farkas",
+  "11-01":"Marianna", "11-02":"Achilles", "11-03":"Győző", "11-04":"Károly",
+  "11-05":"Imre", "11-06":"Lénárd", "11-07":"Rezső", "11-08":"Zsombor",
+  "11-09":"Tivadar", "11-10":"Réka, Ariadné", "11-11":"Márton", "11-12":"Jónás, Renátó",
+  "11-13":"Szilvia", "11-14":"Aliz", "11-15":"Albert, Lipót", "11-16":"Ödön",
+  "11-17":"Hortenzia, Gergő", "11-18":"Jenő", "11-19":"Erzsébet", "11-20":"Jolán",
+  "11-21":"Olivér", "11-22":"Cecília", "11-23":"Kelemen, Klementina", "11-24":"Emma",
+  "11-25":"Katalin", "11-26":"Virág", "11-27":"Virgil", "11-28":"Stefánia",
+  "11-29":"Taksony", "11-30":"András, Andor",
+  "12-01":"Elza", "12-02":"Melinda, Vivien", "12-03":"Ferenc, Olívia", "12-04":"Borbála, Barbara",
+  "12-05":"Vilma", "12-06":"Miklós", "12-07":"Ambrus", "12-08":"Mária",
+  "12-09":"Natália", "12-10":"Judit", "12-11":"Árpád", "12-12":"Gabriella",
+  "12-13":"Luca, Otília", "12-14":"Szilárda", "12-15":"Valér", "12-16":"Etelka, Aletta",
+  "12-17":"Lázár, Olimpia", "12-18":"Auguszta", "12-19":"Viola", "12-20":"Teofil",
+  "12-21":"Tamás", "12-22":"Zénó", "12-23":"Viktória", "12-24":"Ádám, Éva",
+  "12-25":"Eugénia", "12-26":"István", "12-27":"János", "12-28":"Kamilla",
+  "12-29":"Tamás, Tamara", "12-30":"Dávid", "12-31":"Szilveszter",
+};
+
+// Maďarské štátne sviatky - používajú sa namiesto slovenských, keď je
+// aktívna maďarská vlajka (currentLang === 'hu').
+function getHungarianHolidays(year){
+  const easter = getEasterSunday(year);
+  const goodFriday = new Date(easter); goodFriday.setDate(easter.getDate()-2);
+  const easterMonday = new Date(easter); easterMonday.setDate(easter.getDate()+1);
+  const whitMonday = new Date(easter); whitMonday.setDate(easter.getDate()+50);
+  const fmt = d => `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const holidays = {};
+  holidays['01-01'] = 'Újév';
+  holidays['03-15'] = 'Nemzeti ünnep (1848-as forradalom)';
+  holidays[fmt(goodFriday)] = 'Nagypéntek';
+  holidays[fmt(easterMonday)] = 'Húsvéthétfő';
+  holidays['05-01'] = 'A munka ünnepe';
+  holidays[fmt(whitMonday)] = 'Pünkösdhétfő';
+  holidays['08-20'] = 'Az államalapítás ünnepe';
+  holidays['10-23'] = 'Nemzeti ünnep (1956-os forradalom)';
+  holidays['11-01'] = 'Mindenszentek';
+  holidays['12-25'] = 'Karácsony';
+  holidays['12-26'] = 'Karácsony másnapja';
+  return holidays;
+}
+
 function currentNamedaysAndHolidays(){
   if(currentLang === 'cz') return { namedays: CZ_NAMEDAYS, getHolidays: getCzechHolidays };
   if(currentLang === 'en') return { namedays: UK_NAMEDAYS, getHolidays: getUKHolidays };
+  if(currentLang === 'pl') return { namedays: PL_NAMEDAYS, getHolidays: getPolishHolidays };
+  if(currentLang === 'hu') return { namedays: HU_NAMEDAYS, getHolidays: getHungarianHolidays };
   return { namedays: SK_NAMEDAYS, getHolidays: getSlovakHolidays };
 }
 
@@ -7275,13 +7526,31 @@ const NEWS_SOURCES_CZ = [
   { id:'seznamzpravy', name:'Seznam Zprávy', urls:['https://www.seznamzpravy.cz/rss'] },
   { id:'novinky',      name:'Novinky.cz',    urls:['https://www.novinky.cz/rss'] }
 ];
+// Poľské spravodajské zdroje - použijú sa namiesto tých vyššie, keď je
+// aktívna poľská vlajka (PL). Čerpajú sa presne rovnakým spôsobom
+// (RSS feed cez záložné proxy), len z iných adries.
+const NEWS_SOURCES_PL = [
+  { id:'onet',   name:'Onet.pl',   urls:['https://wiadomosci.onet.pl/.rss'] },
+  { id:'wp',     name:'WP.pl',     urls:['https://wiadomosci.wp.pl/rss.xml'] },
+  { id:'interia',name:'Interia.pl',urls:['https://fakty.interia.pl/feed'] }
+];
+// Maďarské spravodajské zdroje - použijú sa namiesto tých vyššie, keď je
+// aktívna maďarská vlajka (HU). Čerpajú sa presne rovnakým spôsobom
+// (RSS feed cez záložné proxy), len z iných adries.
+const NEWS_SOURCES_HU = [
+  { id:'index',  name:'Index.hu',  urls:['https://index.hu/24ora/rss/'] },
+  { id:'origo',  name:'Origo.hu',  urls:['https://www.origo.hu/rss/origo.xml'] },
+  { id:'hvg',     name:'HVG.hu',    urls:['https://hvg.hu/rss'] }
+];
 function currentNewsSources(){
   if(currentLang === 'en') return NEWS_SOURCES_EN;
   if(currentLang === 'cz') return NEWS_SOURCES_CZ;
+  if(currentLang === 'pl') return NEWS_SOURCES_PL;
+  if(currentLang === 'hu') return NEWS_SOURCES_HU;
   return NEWS_SOURCES;
 }
 const NEWS_REFRESH_MS = 15 * 60 * 1000; // 15 minút
-let newsCache = { sk: { items: [], ts: 0 }, en: { items: [], ts: 0 }, cz: { items: [], ts: 0 } };
+let newsCache = { sk: { items: [], ts: 0 }, en: { items: [], ts: 0 }, cz: { items: [], ts: 0 }, pl: { items: [], ts: 0 }, hu: { items: [], ts: 0 } };
 let newsLoading = false;
 
 // ---- Trvalá záloha v localStorage -----------------------------------
@@ -7532,7 +7801,7 @@ async function loadNewsFeed(forceRefresh){
   const refreshBtn = document.getElementById('news-refresh-btn');
   if(!grid) return;
 
-  const lang = (currentLang === 'en' || currentLang === 'cz') ? currentLang : 'sk';
+  const lang = (currentLang === 'en' || currentLang === 'cz' || currentLang === 'pl' || currentLang === 'hu') ? currentLang : 'sk';
   const sources = currentNewsSources();
   const cacheSlot = newsCache[lang];
 
@@ -11055,6 +11324,455 @@ const LEGAL_DICT_CZ = {
   "Snažíme sa odpovedať čo najskôr, môže to v niektorých prípadoch chvíľu trvať — ďakujeme za trpezlivosť.": "Snažíme se odpovědět co nejdříve, může to v některých případech chvíli trvat — děkujeme za trpělivost.",
 };
 
+// Rovnaký princíp ako LEGAL_DICT_EN/LEGAL_DICT_CZ vyššie (preklad textu
+// právnych dokumentov po odsekoch/nadpisoch), len pre poľštinu.
+const LEGAL_DICT_PL = {
+  "Posledná aktualizácia: 5. septembra 2026": "Ostatnia aktualizacja: 5 września 2026",
+  "1. Kto sme (prevádzkovateľ)": "1. Kim jesteśmy (administrator)",
+  "Prevádzkovateľom platformy Connect8 („Connect8\" alebo „appka\") a správcom osobných údajov je:": "Administratorem platformy Connect8 („Connect8” lub „aplikacja”) i administratorem danych osobowych jest:",
+  "Jaroslav Ševčík, fyzická osoba": "Jaroslav Ševčík, osoba fizyczna",
+  "Kontaktný e-mail pre otázky ohľadom ochrany súkromia: sevcikjaroslav1@gmail.com": "Kontaktowy e-mail w sprawach ochrony prywatności: sevcikjaroslav1@gmail.com",
+  "Tieto zásady popisujú, aké osobné údaje o tebe (používateľovi) zbierame, prečo, ako ich chránime a aké máš práva.": "Niniejsza polityka opisuje, jakie dane osobowe o tobie (użytkowniku) zbieramy, dlaczego, jak je chronimy i jakie masz prawa.",
+  "2. Aké údaje spracúvame": "2. Jakie dane przetwarzamy",
+  "2.1 Registrácia a profil": "2.1 Rejestracja i profil",
+  "Meno (zobrazované meno)": "Imię (wyświetlana nazwa)",
+  "E-mailová adresa": "Adres e-mail",
+  "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Hasło — jest przechowywane bezpiecznie za pośrednictwem Firebase Authentication, my sami nigdy nie widzimy go ani nie przechowujemy w postaci czytelnego tekstu",
+  "Profilová fotka (ak ju nahráš)": "Zdjęcie profilowe (jeśli je dodasz)",
+  "2.2 Obsah, ktorý vytváraš": "2.2 Treści, które tworzysz",
+  "Príspevky vo feede (text, obrázky, videá, súbory)": "Posty na kanale (tekst, obrazy, filmy, pliki)",
+  "Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov": "Krótkie filmy (podobnie jak TikTok) — łącznie z liczbą wyświetleń, polubień i komentarzy",
+  "Komentáre a lajky pod príspevkami a videami": "Komentarze i polubienia pod postami i filmami",
+  "Inzeráty v marketplace (názov, popis, cena, fotky tovaru)": "Ogłoszenia na rynku (nazwa, opis, cena, zdjęcia towaru)",
+  "Odkazy na YouTube videá vložené k príspevku alebo do sekcie Filmy (prehrávanie beží priamo cez servery YouTube/Google)": "Linki do filmów YouTube dodane do posta lub do sekcji Filmy (odtwarzanie odbywa się bezpośrednio przez serwery YouTube/Google)",
+  "2.3 Komunikácia medzi používateľmi": "2.3 Komunikacja między użytkownikami",
+  "Textové správy medzi používateľmi": "Wiadomości tekstowe między użytkownikami",
+  "Zvukové (hlasové) správy": "Wiadomości głosowe",
+  "Súbory posielané v súkromných správach": "Pliki wysyłane w prywatnych wiadomościach",
+  "Metadáta o hovoroch a videohovoroch (kto komu volal, kedy, ako dlho) — samotný zvuk/obraz hovoru sa neukladá, prenáša sa v reálnom čase priamo medzi zariadeniami (technológia WebRTC)": "Metadane o połączeniach i rozmowach wideo (kto do kogo dzwonił, kiedy, jak długo) — samo audio/wideo połączenia nie jest zapisywane, jest przesyłane w czasie rzeczywistym bezpośrednio między urządzeniami (technologia WebRTC)",
+  "2.4 Technické a prevádzkové údaje": "2.4 Dane techniczne i eksploatacyjne",
+  "Technické identifikátory potrebné na doručovanie push notifikácií (napr. o novej správe alebo hovore) cez Firebase Cloud Messaging": "Identyfikatory techniczne potrzebne do dostarczania powiadomień push (np. o nowej wiadomości lub połączeniu) przez Firebase Cloud Messaging",
+  "Základné technické údaje o zariadení/prehliadači potrebné na fungovanie appky": "Podstawowe dane techniczne o urządzeniu/przeglądarce potrzebne do działania aplikacji",
+  "Dátum registrácie, dátum poslednej aktivity": "Data rejestracji, data ostatniej aktywności",
+  "2.5 Čo nezbierame": "2.5 Czego nie zbieramy",
+  "Connect8 nezbiera polohu, neanalyzuje obsah tvojich súkromných správ na reklamné účely a nepoužíva nástroje na sledovanie správania naprieč inými webmi (napr. Google Analytics, reklamné pixely).": "Connect8 nie zbiera lokalizacji, nie analizuje treści twoich prywatnych wiadomości do celów reklamowych i nie używa narzędzi do śledzenia zachowań na innych stronach (np. Google Analytics, piksele reklamowe).",
+  "3. Prečo tieto údaje spracúvame (účel a právny základ)": "3. Dlaczego przetwarzamy te dane (cel i podstawa prawna)",
+  "4. Tretie strany, ktoré nám pomáhajú": "4. Strony trzecie, które nam pomagają",
+  "Connect8 využíva na svoje fungovanie tieto externé služby (spracúvatelia údajov):": "Connect8 korzysta w swoim działaniu z następujących zewnętrznych usług (podmiotów przetwarzających dane):",
+  "Firebase (Google) — autentifikácia používateľov, ukladanie dát appky (príspevky, správy, profily) a push notifikácie. Viac: policies.google.com/privacy": "Firebase (Google) — uwierzytelnianie użytkowników, przechowywanie danych aplikacji (posty, wiadomości, profile) i powiadomienia push. Więcej: policies.google.com/privacy",
+  "Cloudinary — ukladanie a spracovanie nahraných obrázkov a videí. Viac: cloudinary.com/privacy": "Cloudinary — przechowywanie i przetwarzanie przesłanych obrazów i filmów. Więcej: cloudinary.com/privacy",
+  "YouTube / Google — prehrávanie vložených YouTube videí sa riadi zásadami YouTube/Google, nie Connect8": "YouTube / Google — odtwarzanie osadzonych filmów YouTube podlega zasadom YouTube/Google, a nie Connect8",
+  "Connect8 nepredáva tvoje osobné údaje tretím stranám na marketingové účely.": "Connect8 nie sprzedaje twoich danych osobowych stronom trzecim do celów marketingowych.",
+  "5. Ako dlho údaje uchovávame": "5. Jak długo przechowujemy dane",
+  "Tvoje údaje uchovávame, kým máš aktívny účet. Po vymazaní účtu (bod 7) sa tvoj profil, príspevky, inzeráty a videá natrvalo odstránia z našich databáz. Súkromné správy a hlasové/textové konverzácie, ktoré si poslal iným používateľom, zostávajú uložené aj po vymazaní tvojho účtu, keďže sú súčasťou spoločnej histórie konverzácie s druhou osobou.": "Twoje dane przechowujemy, dopóki masz aktywne konto. Po usunięciu konta (punkt 7) twój profil, posty, ogłoszenia i filmy zostają trwale usunięte z naszych baz danych. Prywatne wiadomości oraz konwersacje głosowe/tekstowe wysłane innym użytkownikom pozostają zapisane nawet po usunięciu twojego konta, ponieważ są częścią wspólnej historii konwersacji z drugą osobą.",
+  "6. Zabezpečenie údajov": "6. Zabezpieczenie danych",
+  "Heslá sú spravované cez Firebase Authentication a nie sú nikdy uložené v čitateľnej podobe. Prenos dát medzi tvojím zariadením a appkou je šifrovaný (HTTPS). Prístup k databáze appky je obmedzený len na nevyhnutné technické účely.": "Hasła są zarządzane przez Firebase Authentication i nigdy nie są przechowywane w czytelnej postaci. Transmisja danych między twoim urządzeniem a aplikacją jest szyfrowana (HTTPS). Dostęp do bazy danych aplikacji jest ograniczony wyłącznie do niezbędnych celów technicznych.",
+  "7. Tvoje práva": "7. Twoje prawa",
+  "Ako používateľ máš podľa GDPR najmä právo:": "Jako użytkownik masz zgodnie z RODO przede wszystkim prawo:",
+  "na prístup k svojim osobným údajom,": "do dostępu do swoich danych osobowych,",
+  "na opravu nesprávnych údajov (väčšinu si vieš upraviť priamo v nastaveniach profilu),": "do sprostowania nieprawidłowych danych (większość możesz poprawić bezpośrednio w ustawieniach profilu),",
+  "na vymazanie — svoj účet a s ním spojený obsah (príspevky, inzeráty, videá) môžeš kedykoľvek natrvalo vymazať priamo v appke, v nastaveniach profilu tlačidlom „Zrušiť účet\". Táto akcia je nevratná,": "do usunięcia — swoje konto i powiązane z nim treści (posty, ogłoszenia, filmy) możesz w każdej chwili trwale usunąć bezpośrednio w aplikacji, w ustawieniach profilu przyciskiem „Usuń konto”. Ta czynność jest nieodwracalna,",
+  "na obmedzenie spracúvania a namietanie voči spracúvaniu,": "do ograniczenia przetwarzania i wniesienia sprzeciwu wobec przetwarzania,",
+  "na prenosnosť údajov,": "do przenoszenia danych,",
+  "podať sťažnosť na Úrad na ochranu osobných údajov SR (dataprotection.gov.sk), ak sa domnievaš, že tvoje údaje spracúvame v rozpore s GDPR.": "złożyć skargę do słowackiego Urzędu Ochrony Danych Osobowych (dataprotection.gov.sk), jeśli uważasz, że przetwarzamy twoje dane niezgodnie z RODO.",
+  "Na uplatnenie týchto práv nás môžeš kontaktovať na sevcikjaroslav1@gmail.com.": "W celu skorzystania z tych praw możesz się z nami skontaktować pod adresem sevcikjaroslav1@gmail.com.",
+  "8. Vek používateľov": "8. Wiek użytkowników",
+  "Connect8 je určený pre používateľov od 15 rokov.": "Connect8 jest przeznaczony dla użytkowników od 15 roku życia.",
+  "9. Zmeny týchto zásad": "9. Zmiany niniejszej polityki",
+  "Tieto zásady môžeme z času na čas aktualizovať, napríklad pri pridaní novej funkcie appky. O väčších zmenách ťa budeme informovať v appke.": "Niniejszą politykę możemy od czasu do czasu aktualizować, na przykład przy dodaniu nowej funkcji aplikacji. O większych zmianach poinformujemy cię w aplikacji.",
+  "Vitaj v Centre ochrany súkromia Connect8. Tu nájdeš prehľadné vysvetlenie, ako máš pod kontrolou svoje údaje a svoje súkromie priamo v appke.": "Witaj w Centrum Ochrony Prywatności Connect8. Tutaj znajdziesz przejrzyste wyjaśnienie, jak masz pod kontrolą swoje dane i swoją prywatność bezpośrednio w aplikacji.",
+  "Kto vidí tvoj obsah": "Kto widzi twoje treści",
+  "Príspevky, videá, komentáre a inzeráty v marketplace, ktoré vytvoríš, sú viditeľné pre ostatných používateľov Connect8. Súkromné správy, hlasové správy, súbory a hovory/videohovory vidí iba osoba, ktorej ich pošleš — nie sú verejné a nezobrazujú sa vo feede.": "Posty, filmy, komentarze i ogłoszenia na rynku, które tworzysz, są widoczne dla pozostałych użytkowników Connect8. Prywatne wiadomości, wiadomości głosowe, pliki oraz połączenia/rozmowy wideo widzi tylko osoba, której je wyślesz — nie są publiczne i nie pojawiają się na kanale.",
+  "Blokovanie používateľov": "Blokowanie użytkowników",
+  "Ak si neželáš, aby ti konkrétny používateľ mohol písať, volať alebo vidieť tvoj profil, môžeš ho kedykoľvek zablokovať priamo na jeho profile. Zablokovaný používateľ ťa nemôže kontaktovať a stratí prístup k tvojmu obsahu.": "Jeśli nie chcesz, aby konkretny użytkownik mógł do ciebie pisać, dzwonić lub widzieć twój profil, możesz go w każdej chwili zablokować bezpośrednio na jego profilu. Zablokowany użytkownik nie może cię kontaktować i traci dostęp do twoich treści.",
+  "Správa tvojho účtu": "Zarządzanie kontem",
+  "Meno a profilovú fotku si vieš kedykoľvek upraviť v nastaveniach profilu.": "Imię i zdjęcie profilowe możesz w każdej chwili edytować w ustawieniach profilu.",
+  "Svoje jednotlivé príspevky, videá alebo inzeráty môžeš kedykoľvek vymazať sám (ikona 🗑️ pri danom obsahu).": "Swoje poszczególne posty, filmy lub ogłoszenia możesz w każdej chwili usunąć samodzielnie (ikona 🗑️ przy danej treści).",
+  "Celý účet vrátane všetkého obsahu (príspevky, inzeráty, videá, profil) môžeš natrvalo vymazať tlačidlom „Zrušiť účet\" v nastaveniach profilu. Táto akcia je nevratná.": "Całe konto wraz z całą zawartością (posty, ogłoszenia, filmy, profil) możesz trwale usunąć przyciskiem „Usuń konto” w ustawieniach profilu. Ta czynność jest nieodwracalna.",
+  "Notifikácie": "Powiadomienia",
+  "Connect8 ti môže posielať push notifikácie o nových správach alebo hovoroch. Povolenie na notifikácie udeľuješ priamo cez nastavenia svojho prehliadača alebo zariadenia a kedykoľvek ho môžeš odvolať.": "Connect8 może wysyłać ci powiadomienia push o nowych wiadomościach lub połączeniach. Zgodę na powiadomienia udzielasz bezpośrednio w ustawieniach swojej przeglądarki lub urządzenia i możesz ją w każdej chwili cofnąć.",
+  "Bezpečnosť účtu": "Bezpieczeństwo konta",
+  "Tvoje heslo je spravované cez Firebase Authentication a nikdy sa neukladá v čitateľnej podobe. Odporúčame používať jedinečné a silné heslo a nezdieľať prihlasovacie údaje s nikým iným.": "Twoje hasło jest zarządzane przez Firebase Authentication i nigdy nie jest przechowywane w czytelnej postaci. Zalecamy używanie unikalnego i silnego hasła oraz nieudostępnianie danych logowania nikomu innemu.",
+  "Kompletné zásady ochrany súkromia": "Pełna polityka prywatności",
+  "Podrobný prehľad toho, aké údaje spracúvame, prečo, s kým ich zdieľame a aké máš práva podľa GDPR, nájdeš v dokumente Zásady ochrany súkromia.": "Szczegółowy przegląd tego, jakie dane przetwarzamy, dlaczego, z kim je udostępniamy i jakie masz prawa zgodnie z RODO, znajdziesz w dokumencie Polityka prywatności.",
+  "Kontakt": "Kontakt",
+  "Máš otázku ohľadom svojich údajov alebo súkromia? Napíš na sevcikjaroslav1@gmail.com.": "Masz pytanie dotyczące swoich danych lub prywatności? Napisz na sevcikjaroslav1@gmail.com.",
+  "Connect8 nepoužíva reklamné ani sledovacie cookies tretích strán. To, čo appka ukladá vo tvojom prehliadači, je len technické úložisko (local storage) potrebné na jej fungovanie:": "Connect8 nie używa reklamowych ani śledzących plików cookie stron trzecich. To, co aplikacja przechowuje w twojej przeglądarce, to tylko techniczne przechowywanie (local storage) potrzebne do jej działania:",
+  "Nevyhnutné (vždy aktívne)": "Niezbędne (zawsze aktywne)",
+  "Prihlásenie — Firebase Authentication si v prehliadači uchováva prihlasovací stav, aby ťa appka nemusela pri každom otvorení odhlasovať.": "Logowanie — Firebase Authentication przechowuje w przeglądarce stan zalogowania, aby aplikacja nie musiała cię wylogowywać przy każdym otwarciu.",
+  "Offline režim — appka si ukladá stav (napr. rozpracovaný obsah) lokálne v prehliadači, aby fungovala aj bez pripojenia a dáta sa po zatvorení nestratili.": "Tryb offline — aplikacja zapisuje stan (np. rozpoczętą treść) lokalnie w przeglądarce, aby działała nawet bez połączenia i dane nie zostały utracone po zamknięciu.",
+  "Zapamätané zhliadnutia — appka si lokálne pamätá, ktoré videá si už videl, aby sa ti neopakovali zbytočne v odporúčaniach.": "Zapamiętane obejrzenia — aplikacja zapamiętuje lokalnie, które filmy już obejrzałeś, aby niepotrzebnie się nie powtarzały w rekomendacjach.",
+  "Tieto položky sú nevyhnutné pre základné fungovanie appky a nedajú sa jednotlivo vypnúť — dajú sa ale kedykoľvek vymazať tak, že v nastaveniach svojho prehliadača vymažeš dáta stránky Connect8 (napr. „Vymazať údaje o prehliadaní\" → „Súbory cookie a údaje stránok\").": "Te elementy są niezbędne do podstawowego działania aplikacji i nie da się ich wyłączyć pojedynczo — można je jednak w każdej chwili usunąć, usuwając w ustawieniach swojej przeglądarki dane strony Connect8 (np. „Wyczyść dane przeglądania” → „Pliki cookie i dane witryn”).",
+  "Analytické a reklamné cookies": "Analityczne i reklamowe pliki cookie",
+  "Connect8 aktuálne nepoužíva žiadne analytické (napr. Google Analytics) ani reklamné cookies, takže tu nie je nič na nastavovanie.": "Connect8 obecnie nie używa żadnych analitycznych (np. Google Analytics) ani reklamowych plików cookie, więc nie ma tu nic do ustawienia.",
+  "Ako vymazať uložené dáta": "Jak usunąć zapisane dane",
+  "Vymazanie dát prehliadača pre túto stránku ťa odhlási z účtu a appka stratí lokálne uložené offline dáta — tvoj účet a obsah na serveri (príspevky, správy, profil) tým dotknuté nie sú.": "Usunięcie danych przeglądarki dla tej strony wyloguje cię z konta, a aplikacja utraci lokalnie zapisane dane offline — twoje konto i treści na serwerze (posty, wiadomości, profil) nie są tym dotknięte.",
+  "Viac o tom, aké údaje o tebe spracúvame celkovo, nájdeš v dokumente Zásady ochrany súkromia.": "Więcej o tym, jakie dane o tobie przetwarzamy ogółem, znajdziesz w dokumencie Polityka prywatności.",
+  "Connect8 je slovenská sociálna platforma na vzájomnú komunikáciu, zdieľanie obsahu a nadväzovanie kontaktov.": "Connect8 to słowacka platforma społecznościowa do wzajemnej komunikacji, udostępniania treści i nawiązywania kontaktów.",
+  "Čo appka ponúka": "Co oferuje aplikacja",
+  "Feed — zdieľanie príspevkov, ktoré môžeš lajkovať, komentovať a zdieľať": "Kanał — udostępnianie postów, które możesz polubić, komentować i udostępniać",
+  "Videá — krátke vertikálne videá v štýle TikTok": "Filmy — krótkie pionowe filmy w stylu TikTok",
+  "Filmy — pozeranie schválených YouTube videí priamo v appke": "Filmy — oglądanie zatwierdzonych filmów YouTube bezpośrednio w aplikacji",
+  "Správy — textové a hlasové správy, posielanie súborov medzi používateľmi": "Wiadomości — wiadomości tekstowe i głosowe, wysyłanie plików między użytkownikami",
+  "Hovory — audio aj videohovory medzi používateľmi": "Połączenia — połączenia audio i wideo między użytkownikami",
+  "Marketplace — predaj a nákup vecí, ktoré už nepotrebuješ, priamo medzi používateľmi": "Rynek — sprzedaż i kupno rzeczy, których już nie potrzebujesz, bezpośrednio między użytkownikami",
+  "Podporované jazyky": "Obsługiwane języki",
+  "Rozhranie appky je dostupné v slovenčine, angličtine, nemčine, poľštine, španielčine, francúzštine, portugalčine a taliančine.": "Interfejs aplikacji jest dostępny w językach: słowackim, angielskim, niemieckim, polskim, hiszpańskim, francuskim, portugalskim i włoskim.",
+  "Prevádzkovateľ": "Administrator",
+  "Connect8 prevádzkuje Jaroslav Ševčík ako fyzická osoba. Kontakt: sevcikjaroslav1@gmail.com.": "Connect8 prowadzi Jaroslav Ševčík jako osoba fizyczna. Kontakt: sevcikjaroslav1@gmail.com.",
+  "Ďalšie informácie": "Dalsze informacje",
+  "Podrobnosti o spracúvaní údajov nájdeš v dokumente Zásady ochrany súkromia, prehľad ovládania súkromia v Centre ochrany súkromia.": "Szczegóły dotyczące przetwarzania danych znajdziesz w dokumencie Polityka prywatności, przegląd zarządzania prywatnością w Centrum Ochrony Prywatności.",
+  "1. Úvod": "1. Wstęp",
+  "Tieto podmienky upravujú používanie platformy Connect8, ktorú ako fyzická osoba prevádzkuje Jaroslav Ševčík (kontakt: sevcikjaroslav1@gmail.com). Registráciou a používaním Connect8 súhlasíš s týmito podmienkami.": "Niniejsze warunki regulują korzystanie z platformy Connect8, którą jako osoba fizyczna prowadzi Jaroslav Ševčík (kontakt: sevcikjaroslav1@gmail.com). Rejestrując się i korzystając z Connect8, akceptujesz niniejsze warunki.",
+  "2. Kto môže Connect8 používať": "2. Kto może korzystać z Connect8",
+  "Connect8 je určený pre používateľov od 15 rokov. Registráciou potvrdzuješ, že spĺňaš túto vekovú hranicu a že údaje, ktoré uvádzaš (meno, e-mail), sú pravdivé.": "Connect8 jest przeznaczony dla użytkowników od 15 roku życia. Rejestrując się, potwierdzasz, że spełniasz tę granicę wiekową i że podane przez ciebie dane (imię, e-mail) są prawdziwe.",
+  "3. Tvoj účet": "3. Twoje konto",
+  "Za bezpečnosť svojho hesla a za všetku aktivitu na svojom účte zodpovedáš ty sám. Účet je osobný a neprevoditeľný na inú osobu. Svoj účet môžeš kedykoľvek natrvalo vymazať v nastaveniach profilu tlačidlom „Zrušiť účet\".": "Za bezpieczeństwo swojego hasła i za wszelką aktywność na swoim koncie odpowiadasz wyłącznie ty. Konto jest osobiste i nieprzenoszalne na inną osobę. Swoje konto możesz w każdej chwili trwale usunąć w ustawieniach profilu przyciskiem „Usuń konto”.",
+  "4. Obsah, ktorý zdieľaš": "4. Treści, które udostępniasz",
+  "Za príspevky, videá, komentáre, správy, súbory a inzeráty, ktoré na Connect8 zdieľaš, zodpovedáš výhradne ty. Nahrávaním obsahu potvrdzuješ, že naň máš potrebné práva a že jeho zdieľaním neporušuješ práva tretích strán ani platné zákony.": "Za posty, filmy, komentarze, wiadomości, pliki i ogłoszenia, które udostępniasz na Connect8, odpowiadasz wyłącznie ty. Przesyłając treści, potwierdzasz, że masz do nich niezbędne prawa i że ich udostępnianie nie narusza praw osób trzecich ani obowiązujących przepisów.",
+  "Zakázané je najmä zdieľať obsah, ktorý je nezákonný, urážlivý, podnecuje k násiliu alebo nenávisti, porušuje autorské práva, alebo obťažuje či ohrozuje iných používateľov.": "Zabronione jest w szczególności udostępnianie treści, które są nielegalne, obraźliwe, podżegają do przemocy lub nienawiści, naruszają prawa autorskie lub nękają bądź zagrażają innym użytkownikom.",
+  "5. Marketplace": "5. Rynek",
+  "Marketplace slúži na sprostredkovanie ponúk medzi používateľmi navzájom. Connect8 nie je predávajúcim ani kupujúcim, nezaručuje kvalitu, dodanie ani pravosť ponúkaného tovaru a nie je zmluvnou stranou žiadnej transakcie medzi používateľmi. Dohoda o cene, platbe a odovzdaní tovaru je výlučne na dohode medzi predávajúcim a kupujúcim.": "Rynek służy do pośredniczenia w ofertach między użytkownikami nawzajem. Connect8 nie jest sprzedawcą ani kupującym, nie gwarantuje jakości, dostawy ani autentyczności oferowanego towaru i nie jest stroną żadnej transakcji między użytkownikami. Ustalenie ceny, płatności i przekazania towaru zależy wyłącznie od porozumienia między sprzedawcą a kupującym.",
+  "6. Správy, hovory a videohovory": "6. Wiadomości, połączenia i rozmowy wideo",
+  "Súkromné správy, hlasové správy, zdieľané súbory a hovory/videohovory slúžia na komunikáciu medzi používateľmi. Connect8 tento obsah pri prenose neupravuje ani neschvaľuje — používatelia sú povinní správať sa k sebe navzájom slušne a v súlade so zákonom.": "Prywatne wiadomości, wiadomości głosowe, udostępniane pliki oraz połączenia/rozmowy wideo służą do komunikacji między użytkownikami. Connect8 nie modyfikuje ani nie zatwierdza tej treści podczas przesyłania — użytkownicy są zobowiązani zachowywać się wobec siebie uczciwie i zgodnie z prawem.",
+  "7. Filmy (YouTube obsah)": "7. Filmy (treści z YouTube)",
+  "Sekcia Filmy zobrazuje výhradne odkazy na videá hostované na YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Sekcja Filmy wyświetla wyłącznie linki do filmów hostowanych na YouTube. Za treść tych filmów odpowiada YouTube/Google oraz ich twórcy, a nie Connect8.",
+  "8. Zablokovanie a zrušenie účtu": "8. Zablokowanie i usunięcie konta",
+  "Ak porušíš tieto podmienky, môžeme obmedziť alebo zrušiť tvoj prístup k Connect8. Rovnako máš možnosť kedykoľvek zablokovať iného používateľa, ktorý ťa obťažuje, alebo natrvalo zrušiť svoj vlastný účet.": "Jeśli naruszysz niniejsze warunki, możemy ograniczyć lub usunąć twój dostęp do Connect8. Masz również możliwość w każdej chwili zablokować innego użytkownika, który cię niepokoi, lub trwale usunąć swoje własne konto.",
+  "9. Obmedzenie zodpovednosti": "9. Ograniczenie odpowiedzialności",
+  "Connect8 je poskytovaný „tak ako je\", bez záruky nepretržitej dostupnosti alebo bezchybnej prevádzky. V rozsahu povolenom zákonom nezodpovedáme za škody vzniknuté používaním appky, obsahom nahraným používateľmi ani transakciami uskutočnenými cez marketplace.": "Connect8 jest udostępniany „tak jak jest”, bez gwarancji nieprzerwanej dostępności lub bezbłędnego działania. W zakresie dozwolonym przez prawo nie ponosimy odpowiedzialności za szkody wynikające z korzystania z aplikacji, treści przesłanych przez użytkowników ani transakcji dokonanych przez rynek.",
+  "10. Zmeny podmienok": "10. Zmiany warunków",
+  "Tieto podmienky môžeme z času na čas aktualizovať, napríklad pri pridaní novej funkcie appky. O väčších zmenách ťa budeme informovať priamo v appke.": "Niniejsze warunki możemy od czasu do czasu aktualizować, na przykład przy dodaniu nowej funkcji aplikacji. O większych zmianach poinformujemy cię bezpośrednio w aplikacji.",
+  "11. Rozhodné právo": "11. Prawo właściwe",
+  "Tieto podmienky sa riadia právnym poriadkom Slovenskej republiky.": "Niniejsze warunki podlegają porządkowi prawnemu Republiki Słowackiej.",
+  "12. Kontakt": "12. Kontakt",
+  "Otázky ohľadom týchto podmienok posielaj na sevcikjaroslav1@gmail.com.": "Pytania dotyczące niniejszych warunków przesyłaj na sevcikjaroslav1@gmail.com.",
+  "Connect8 je miesto na zdieľanie obsahu a komunikáciu s ostatnými. Aby tu bolo príjemne a bezpečne pre všetkých, dodržiavaj prosím tieto pravidlá.": "Connect8 to miejsce do udostępniania treści i komunikowania się z innymi. Aby było tu przyjemnie i bezpiecznie dla wszystkich, przestrzegaj proszę tych zasad.",
+  "Správaj sa k ostatným s rešpektom": "Zachowuj się wobec innych z szacunkiem",
+  "Nezdieľaj obsah, ktorý je urážlivý, ponižujúci, podnecuje k nenávisti alebo násiliu voči jednotlivcom či skupinám. Obťažovanie, vyhrážanie a šikanovanie iných používateľov (v príspevkoch, komentároch, správach aj hovoroch) je zakázané.": "Nie udostępniaj treści, które są obraźliwe, poniżające, podżegają do nienawiści lub przemocy wobec jednostek czy grup. Nękanie, grożenie i zastraszanie innych użytkowników (w postach, komentarzach, wiadomościach i połączeniach) jest zabronione.",
+  "Zdieľaj len zákonný obsah": "Udostępniaj tylko legalne treści",
+  "Je zakázané zdieľať obsah, ktorý porušuje zákony Slovenskej republiky alebo autorské práva tretích strán (napr. cudzie fotky, videá alebo hudbu bez súhlasu autora).": "Zabronione jest udostępnianie treści, które naruszają przepisy Republiki Słowackiej lub prawa autorskie osób trzecich (np. cudze zdjęcia, filmy lub muzykę bez zgody autora).",
+  "Buď sám sebou": "Bądź sobą",
+  "Nevytváraj falošné profily ani sa nevydávaj za inú osobu. Používaj svoje skutočné meno a fotku, prípadne prezývku, ktorá nikoho neuvádza do omylu.": "Nie twórz fałszywych profili ani nie podszywaj się pod inną osobę. Używaj swojego prawdziwego imienia i zdjęcia, ewentualnie pseudonimu, który nikogo nie wprowadza w błąd.",
+  "Žiadny spam": "Żadnego spamu",
+  "Nezasielaj hromadné nevyžiadané správy, opakovane rovnaký obsah ani podvodné odkazy iným používateľom.": "Nie wysyłaj masowych, niechcianych wiadomości, powtarzającej się tej samej treści ani fałszywych linków innym użytkownikom.",
+  "Marketplace — poctivo": "Rynek — uczciwie",
+  "V inzerátoch uvádzaj pravdivý popis a stav tovaru. Podvodné alebo klamlivé ponuky sú zakázané. Connect8 nie je stranou transakcie medzi predávajúcim a kupujúcim — viac v Podmienkach používania.": "W ogłoszeniach podawaj prawdziwy opis i stan towaru. Oszukańcze lub wprowadzające w błąd oferty są zabronione. Connect8 nie jest stroną transakcji między sprzedawcą a kupującym — więcej w Warunkach korzystania.",
+  "Ochrana mladších používateľov": "Ochrona młodszych użytkowników",
+  "Connect8 je určený pre používateľov od 15 rokov. Obsah sexuálnej povahy, obsah ohrozujúci maloletých alebo akýkoľvek pokus o kontaktovanie maloletých s nevhodným úmyslom je prísne zakázaný.": "Connect8 jest przeznaczony dla użytkowników od 15 roku życia. Treści o charakterze seksualnym, treści zagrażające małoletnim lub jakakolwiek próba kontaktu z małoletnimi w niewłaściwym celu są surowo zabronione.",
+  "Čo sa stane pri porušení pravidiel": "Co się dzieje w przypadku naruszenia zasad",
+  "Ak niekto tieto pravidlá poruší, môžeš ho kedykoľvek zablokovať priamo na jeho profile — stratí tak možnosť ťa kontaktovať alebo vidieť tvoj obsah. Pri závažnom alebo opakovanom porušení môže byť dotknutému používateľovi obmedzený alebo zrušený prístup k Connect8.": "Jeśli ktoś naruszy te zasady, możesz go w każdej chwili zablokować bezpośrednio na jego profilu — straci wtedy możliwość kontaktowania się z tobą lub widzenia twoich treści. W przypadku poważnego lub powtarzającego się naruszenia dostęp danego użytkownika do Connect8 może zostać ograniczony lub zablokowany.",
+  "Nahlásenie problému": "Zgłoszenie problemu",
+  "Ak si sa stretol s obsahom alebo správaním, ktoré porušuje tieto pravidlá, napíš nám na sevcikjaroslav1@gmail.com.": "Jeśli spotkałeś się z treścią lub zachowaniem, które narusza te zasady, napisz do nas na sevcikjaroslav1@gmail.com.",
+  "Connect8 rešpektuje duševné vlastníctvo iných a očakáva to isté od svojich používateľov.": "Connect8 szanuje własność intelektualną innych i oczekuje tego samego od swoich użytkowników.",
+  "Zodpovednosť za nahrávaný obsah": "Odpowiedzialność za przesyłane treści",
+  "Nahrávaním príspevku, videa, fotky, súboru alebo inzerátu na Connect8 potvrdzuješ, že si autorom daného obsahu alebo že naň máš potrebné práva/súhlas na jeho zdieľanie. Nahrávanie cudzích fotiek, videí, hudby alebo textu bez súhlasu autora je zakázané.": "Przesyłając post, film, zdjęcie, plik lub ogłoszenie na Connect8, potwierdzasz, że jesteś autorem danej treści lub że masz niezbędne prawa/zgodę na jej udostępnianie. Przesyłanie cudzych zdjęć, filmów, muzyki lub tekstu bez zgody autora jest zabronione.",
+  "Vloženie YouTube videa": "Osadzenie filmu YouTube",
+  "Vkladanie odkazu na YouTube video (v príspevku alebo v sekcii Filmy) nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.": "Osadzenie linku do filmu YouTube (w poście lub w sekcji Filmy) nie kopiuje samego filmu — odtwarzanie odbywa się bezpośrednio przez YouTube i podlega jego warunkom oraz prawom autorskim twórcy filmu.",
+  "Nahlásenie porušenia autorských práv": "Zgłoszenie naruszenia praw autorskich",
+  "Ak si vlastníkom autorských práv a myslíš si, že tvoje dielo bolo na Connect8 zdieľané bez tvojho súhlasu, napíš na sevcikjaroslav1@gmail.com a prilož:": "Jeśli jesteś właścicielem praw autorskich i uważasz, że twoje dzieło zostało udostępnione na Connect8 bez twojej zgody, napisz na sevcikjaroslav1@gmail.com i załącz:",
+  "presný popis alebo odkaz na sporný obsah (napr. odkaz na príspevok/video/inzerát),": "dokładny opis lub link do spornej treści (np. link do posta/filmu/ogłoszenia),",
+  "popis diela, ktorého sa autorské právo týka, a dôkaz, že si jeho autorom alebo držiteľom práv,": "opis dzieła, którego dotyczy prawo autorskie, oraz dowód, że jesteś jego autorem lub posiadaczem praw,",
+  "svoje kontaktné údaje,": "swoje dane kontaktowe,",
+  "vyhlásenie, že žiadosť podávaš v dobrej viere a údaje v nej sú pravdivé.": "oświadczenie, że składasz wniosek w dobrej wierze, a zawarte w nim dane są prawdziwe.",
+  "Čo nasleduje po nahlásení": "Co następuje po zgłoszeniu",
+  "Oprávnene nahlásený obsah bude odstránený. Pri opakovanom porušovaní autorských práv môže byť účet používateľa obmedzený alebo zrušený.": "Zasadnie zgłoszona treść zostanie usunięta. W przypadku powtarzającego się naruszania praw autorskich konto użytkownika może zostać ograniczone lub usunięte.",
+  "Ak si presvedčený, že tvoj obsah bol odstránený neprávom": "Jeśli jesteś przekonany, że twoja treść została usunięta niesłusznie",
+  "Ak sa domnievaš, že tvoj obsah bol odstránený omylom alebo neoprávnene (napr. si mal na jeho zdieľanie súhlas), napíš na sevcikjaroslav1@gmail.com s vysvetlením a doložením svojich práv — situáciu preveríme.": "Jeśli uważasz, że twoja treść została usunięta przez pomyłkę lub bezprawnie (np. miałeś zgodę na jej udostępnienie), napisz na sevcikjaroslav1@gmail.com z wyjaśnieniem i udokumentowaniem swoich praw — sprawę sprawdzimy.",
+  "Connect8 aktuálne nezobrazuje žiadne platené reklamy tretích strán. Tieto pravidlá sa vzťahujú najmä na inzeráty v Marketplace a na propagáciu vlastného obsahu či produktov, ktorú používatelia zdieľajú vo feede.": "Connect8 obecnie nie wyświetla żadnych płatnych reklam stron trzecich. Niniejsze zasady dotyczą przede wszystkim ogłoszeń na Rynku oraz promocji własnych treści czy produktów, którą użytkownicy udostępniają na kanale.",
+  "Čo je „reklama\" na Connect8": "Czym jest „reklama” na Connect8",
+  "Za reklamný/propagačný obsah sa považuje najmä: inzerát v Marketplace, príspevok propagujúci vlastný tovar, službu alebo iný účet/stránku.": "Za treść reklamową/promocyjną uważa się przede wszystkim: ogłoszenie na Rynku, post promujący własny towar, usługę lub inne konto/stronę.",
+  "Pravidlá pre inzeráty a propagačný obsah": "Zasady dotyczące ogłoszeń i treści promocyjnych",
+  "Popis a fotky musia pravdivo zodpovedať skutočnému stavu ponúkaného tovaru — žiadne klamlivé alebo zavádzajúce tvrdenia.": "Opis i zdjęcia muszą prawdziwie odpowiadać rzeczywistemu stanowi oferowanego towaru — żadnych fałszywych ani wprowadzających w błąd twierdzeń.",
+  "Uvedená cena musí byť reálna ponuka, nie návnada na prilákanie pozornosti bez úmyslu predať za danú sumu.": "Podana cena musi być realną ofertą, a nie przynętą mającą przyciągnąć uwagę bez zamiaru sprzedaży za tę kwotę.",
+  "Je zakázané opakovane (spamovo) zverejňovať rovnaký inzerát alebo propagačný príspevok.": "Zabronione jest powtarzające się (spamowe) publikowanie tego samego ogłoszenia lub posta promocyjnego.",
+  "Zakázaný obsah v inzerátoch": "Zakazane treści w ogłoszeniach",
+  "V Marketplace ani v propagačnom obsahu nie je dovolené ponúkať:": "Na Rynku ani w treściach promocyjnych nie wolno oferować:",
+  "nelegálny tovar alebo služby (napr. zbrane, drogy, falšované doklady),": "nielegalnego towaru lub usług (np. broni, narkotyków, sfałszowanych dokumentów),",
+  "falzifikáty a napodobeniny značkového tovaru,": "podróbek i imitacji towarów markowych,",
+  "tovar alebo služby porušujúce autorské práva tretích strán,": "towarów lub usług naruszających prawa autorskie osób trzecich,",
+  "obsah pre dospelých alebo sexuálne služby,": "treści dla dorosłych lub usług seksualnych,",
+  "podvodné schémy (napr. pyramídové hry, garantované rýchle zbohatnutie).": "oszukańczych schematów (np. gier piramidalnych, gwarantowanego szybkiego wzbogacenia się).",
+  "Zodpovednosť": "Odpowiedzialność",
+  "Za obsah a pravdivosť svojho inzerátu alebo propagačného príspevku zodpovedá výhradne používateľ, ktorý ho zverejnil — pozri aj Podmienky používania, časť o Marketplace.": "Za treść i prawdziwość swojego ogłoszenia lub posta promocyjnego odpowiada wyłącznie użytkownik, który go opublikował — zobacz też Warunki korzystania, część o Rynku.",
+  "Nahlásenie porušenia": "Zgłoszenie naruszenia",
+  "Ak si narazil na inzerát alebo propagačný obsah, ktorý porušuje tieto pravidlá, napíš na sevcikjaroslav1@gmail.com.": "Jeśli natknąłeś się na ogłoszenie lub treść promocyjną, która narusza te zasady, napisz na sevcikjaroslav1@gmail.com.",
+  "Tvoj účet je pre nás dôležitý. Tu je prehľad, ako je zabezpečený a čo môžeš urobiť pre jeho ochranu.": "Twoje konto jest dla nas ważne. Oto przegląd, jak jest zabezpieczone i co możesz zrobić dla jego ochrony.",
+  "Ako spravujeme tvoje heslo": "Jak zarządzamy twoim hasłem",
+  "Prihlásenie do Connect8 zabezpečuje Firebase Authentication (Google). Tvoje heslo sa nikdy neukladá v čitateľnej podobe — my sami k nemu nemáme prístup.": "Logowanie do Connect8 zapewnia Firebase Authentication (Google). Twoje hasło nigdy nie jest przechowywane w czytelnej postaci — my sami nie mamy do niego dostępu.",
+  "Šifrovaný prenos dát": "Szyfrowana transmisja danych",
+  "Všetka komunikácia medzi tvojím zariadením a appkou prebieha cez šifrené pripojenie (HTTPS).": "Cała komunikacja między twoim urządzeniem a aplikacją odbywa się przez szyfrowane połączenie (HTTPS).",
+  "Potvrdenie hesla pri citlivých akciách": "Potwierdzenie hasła przy wrażliwych działaniach",
+  "Pri vymazaní účtu ťa appka môže požiadať o opätovné zadanie hesla — ide o bezpečnostnú poistku, aby účet nemohol natrvalo vymazať niekto iný, ak si zabudol odhlásiť sa na cudzom zariadení.": "Przy usuwaniu konta aplikacja może poprosić cię o ponowne podanie hasła — to zabezpieczenie, aby konto nie mogło zostać trwale usunięte przez kogoś innego, jeśli zapomniałeś się wylogować na obcym urządzeniu.",
+  "Blokovanie nežiaducich používateľov": "Blokowanie niepożądanych użytkowników",
+  "Ak ťa niekto obťažuje alebo sa ti nepáči jeho správanie, môžeš ho kedykoľvek zablokovať priamo na jeho profile. Zablokovaný používateľ ťa nemôže kontaktovať, volať ti ani vidieť tvoj obsah.": "Jeśli ktoś cię niepokoi lub nie podoba ci się jego zachowanie, możesz go w każdej chwili zablokować bezpośrednio na jego profilu. Zablokowany użytkownik nie może cię kontaktować, dzwonić do ciebie ani widzieć twoich treści.",
+  "Čo môžeš urobiť ty": "Co możesz zrobić ty",
+  "Používaj jedinečné, silné heslo, ktoré nepoužívaš na iných stránkach.": "Używaj unikalnego, silnego hasła, którego nie używasz na innych stronach.",
+  "Nezdieľaj svoje prihlasovacie údaje s nikým iným.": "Nie udostępniaj swoich danych logowania nikomu innemu.",
+  "Na verejných alebo cudzích zariadeniach sa po skončení vždy odhlás.": "Na publicznych lub obcych urządzeniach zawsze wylogowuj się po zakończeniu.",
+  "Ak si všimneš podozrivú aktivitu na svojom účte, zmeň si heslo čo najskôr.": "Jeśli zauważysz podejrzaną aktywność na swoim koncie, jak najszybciej zmień hasło.",
+  "Máš podozrenie na zneužitie účtu?": "Podejrzewasz nadużycie konta?",
+  "Napíš nám na sevcikjaroslav1@gmail.com a popíš, čo sa stalo — pomôžeme ti to vyriešiť.": "Napisz do nas na sevcikjaroslav1@gmail.com i opisz, co się stało — pomożemy ci to rozwiązać.",
+  "Connect8 je slovenská sociálna platforma, ktorú prevádzkuje Jaroslav Ševčík ako samostatná fyzická osoba.": "Connect8 to słowacka platforma społecznościowa prowadzona przez Jaroslava Ševčíka jako samodzielną osobę fizyczną.",
+  "Prečo Connect8 vzniklo": "Dlaczego powstało Connect8",
+  "Cieľom je ponúknuť jednoduchú, prehľadnú a rýchlu alternatívu k veľkým zahraničným sociálnym sieťam — miesto, kde môžeš zdieľať príspevky, videá aj komunikovať s priateľmi, bez zbytočného balastu.": "Celem jest zaoferowanie prostej, przejrzystej i szybkiej alternatywy dla dużych zagranicznych sieci społecznościowych — miejsca, gdzie możesz udostępniać posty, filmy i komunikować się z przyjaciółmi, bez zbędnego balastu.",
+  "Čo appku odlišuje": "Co wyróżnia aplikację",
+  "Žiadne reklamy tretích strán a žiadne sledovacie nástroje naprieč inými webmi (napr. Google Analytics, reklamné pixely).": "Żadnych reklam stron trzecich i żadnych narzędzi śledzących na innych stronach (np. Google Analytics, piksele reklamowe).",
+  "Funguje priamo v prehliadači — netreba nič inštalovať.": "Działa bezpośrednio w przeglądarce — nie trzeba niczego instalować.",
+  "Rozhranie dostupné vo viacerých jazykoch vrátane slovenčiny.": "Interfejs dostępny w kilku językach, w tym po słowacku.",
+  "Neustály vývoj": "Ciągły rozwój",
+  "Connect8 sa priebežne vyvíja a dopĺňa o nové funkcie — takže sa môžeš stretnúť s drobnými zmenami či vylepšeniami.": "Connect8 jest stale rozwijany i uzupełniany o nowe funkcje — więc możesz spotkać się z drobnymi zmianami czy ulepszeniami.",
+  "Máš nápad alebo pripomienku?": "Masz pomysł lub uwagę?",
+  "Budeme radi za akúkoľvek spätnú väzbu — napíš na sevcikjaroslav1@gmail.com.": "Będziemy wdzięczni za każdą opinię — napisz na sevcikjaroslav1@gmail.com.",
+  "Tu nájdeš odpovede na najčastejšie otázky o používaní Connect8. Ak tu odpoveď nenájdeš, napíš nám priamo — kontakt je na konci stránky.": "Tutaj znajdziesz odpowiedzi na najczęstsze pytania dotyczące korzystania z Connect8. Jeśli nie znajdziesz tu odpowiedzi, napisz do nas bezpośrednio — kontakt znajduje się na końcu strony.",
+  "Registrácia a prihlásenie": "Rejestracja i logowanie",
+  "Účet si vytvoríš v záložke „Registrácia\" na úvodnej stránke — stačí meno, e-mail a heslo. Prihlásenie beží cez Firebase Authentication, takže heslo sa nikdy neukladá v čitateľnej podobe.": "Konto założysz w zakładce „Rejestracja” na stronie głównej — wystarczy imię, e-mail i hasło. Logowanie odbywa się przez Firebase Authentication, więc hasło nigdy nie jest przechowywane w czytelnej postaci.",
+  "Príspevky, videá a marketplace": "Posty, filmy i rynek",
+  "Vo Feede môžeš pridávať príspevky (text, fotky, video, súbory alebo odkaz), vo Videách nahrávať krátke vertikálne videá a v Marketplace zverejňovať alebo hľadať inzeráty. Vlastný obsah vieš kedykoľvek zmazať ikonou 🗑️ priamo pri ňom.": "Na Kanale możesz dodawać posty (tekst, zdjęcia, wideo, pliki lub link), w Filmach nagrywać krótkie pionowe filmy, a na Rynku publikować lub szukać ogłoszeń. Własną treść możesz w każdej chwili usunąć ikoną 🗑️ bezpośrednio przy niej.",
+  "Správy a hovory": "Wiadomości i połączenia",
+  "V sekcii Správy si môžeš s ostatnými písať textové aj hlasové správy a posielať si súbory. Priamo z profilu používateľa vieš spustiť aj audio alebo videohovor.": "W sekcji Wiadomości możesz pisać z innymi wiadomości tekstowe i głosowe oraz wysyłać pliki. Bezpośrednio z profilu użytkownika możesz też uruchomić połączenie audio lub wideo.",
+  "Obťažuje ťa niekto?": "Ktoś cię niepokoi?",
+  "Na profile daného používateľa klikni na tlačidlo „🚫 Zablokovať\" — po zablokovaní ťa už nemôže kontaktovať, volať ti ani vidieť tvoj obsah. Kedykoľvek ho môžeš rovnakým tlačidlom aj odblokovať.": "Na profilu danego użytkownika kliknij przycisk „🚫 Zablokuj” — po zablokowaniu nie może już cię kontaktować, dzwonić do ciebie ani widzieć twoich treści. W każdej chwili możesz go tym samym przyciskiem odblokować.",
+  "Zrušenie účtu": "Usunięcie konta",
+  "Svoj účet aj s celým obsahom (príspevky, inzeráty, videá, profil) môžeš natrvalo vymazať v nastaveniach profilu tlačidlom „Zrušiť účet\". Táto akcia je nevratná.": "Swoje konto wraz z całą zawartością (posty, ogłoszenia, filmy, profil) możesz trwale usunąć w ustawieniach profilu przyciskiem „Usuń konto”. Ta czynność jest nieodwracalna.",
+  "Potrebuješ ďalšiu pomoc?": "Potrzebujesz dalszej pomocy?",
+  "Napíš nám na sevcikjaroslav1@gmail.com — odpovieme čo najskôr.": "Napisz do nas na sevcikjaroslav1@gmail.com — odpowiemy najszybciej, jak to możliwe.",
+  "Connect8 prevádzkuje Jaroslav Ševčík ako fyzická osoba.": "Connect8 prowadzi Jaroslav Ševčík jako osoba fizyczna.",
+  "E-mail": "E-mail",
+  "Na akékoľvek otázky, nahlásenia problému alebo pripomienky nám napíš na sevcikjaroslav1@gmail.com.": "W przypadku jakichkolwiek pytań, zgłoszeń problemów lub uwag napisz do nas na sevcikjaroslav1@gmail.com.",
+  "Čo nám napíš": "Co do nas napisać",
+  "Technický problém alebo chybu v appke": "Problem techniczny lub błąd w aplikacji",
+  "Nahlásenie obsahu alebo správania, ktoré porušuje pravidlá appky": "Zgłoszenie treści lub zachowania, które narusza zasady aplikacji",
+  "Otázky ohľadom svojich osobných údajov a súkromia": "Pytania dotyczące swoich danych osobowych i prywatności",
+  "Nápady na vylepšenie alebo novú funkciu": "Pomysły na ulepszenie lub nową funkcję",
+  "Odpoveď": "Odpowiedź",
+  "Snažíme sa odpovedať čo najskôr, môže to v niektorých prípadoch chvíľu trvať — ďakujeme za trpezlivosť.": "Staramy się odpowiadać jak najszybciej, w niektórych przypadkach może to jednak chwilę potrwać — dziękujemy za cierpliwość.",
+};
+
+// Rovnaký princíp ako LEGAL_DICT_EN/CZ/PL vyššie, len pre maďarčinu.
+const LEGAL_DICT_HU = {
+  "Posledná aktualizácia: 5. septembra 2026": "Utolsó frissítés: 2026. szeptember 5.",
+  "1. Kto sme (prevádzkovateľ)": "1. Kik vagyunk (adatkezelő)",
+  "Prevádzkovateľom platformy Connect8 („Connect8\" alebo „appka\") a správcom osobných údajov je:": "A Connect8 platform („Connect8” vagy „alkalmazás”) üzemeltetője és a személyes adatok kezelője:",
+  "Jaroslav Ševčík, fyzická osoba": "Jaroslav Ševčík, magánszemély",
+  "Kontaktný e-mail pre otázky ohľadom ochrany súkromia: sevcikjaroslav1@gmail.com": "Az adatvédelemmel kapcsolatos kérdésekhez tartozó e-mail cím: sevcikjaroslav1@gmail.com",
+  "Tieto zásady popisujú, aké osobné údaje o tebe (používateľovi) zbierame, prečo, ako ich chránime a aké máš práva.": "Ez az irányelv leírja, milyen személyes adatokat gyűjtünk rólad (a felhasználóról), miért, hogyan védjük őket, és milyen jogaid vannak.",
+  "2. Aké údaje spracúvame": "2. Milyen adatokat kezelünk",
+  "2.1 Registrácia a profil": "2.1 Regisztráció és profil",
+  "Meno (zobrazované meno)": "Név (megjelenített név)",
+  "E-mailová adresa": "E-mail cím",
+  "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Jelszó — biztonságosan a Firebase Authentication szolgáltatáson keresztül tárolódik, azt olvasható formában soha nem látjuk és nem tároljuk",
+  "Profilová fotka (ak ju nahráš)": "Profilkép (ha feltöltöd)",
+  "2.2 Obsah, ktorý vytváraš": "2.2 Az általad létrehozott tartalom",
+  "Príspevky vo feede (text, obrázky, videá, súbory)": "Bejegyzések a hírfolyamban (szöveg, képek, videók, fájlok)",
+  "Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov": "Rövid videók (a TikTokhoz hasonlóan) — beleértve a megtekintések, kedvelések és hozzászólások számát",
+  "Komentáre a lajky pod príspevkami a videami": "Hozzászólások és kedvelések a bejegyzések és videók alatt",
+  "Inzeráty v marketplace (názov, popis, cena, fotky tovaru)": "Hirdetések a piactéren (név, leírás, ár, termékfotók)",
+  "Odkazy na YouTube videá vložené k príspevku alebo do sekcie Filmy (prehrávanie beží priamo cez servery YouTube/Google)": "A bejegyzéshez vagy a Filmek szekcióhoz csatolt YouTube-videók linkjei (a lejátszás közvetlenül a YouTube/Google szerverein keresztül történik)",
+  "2.3 Komunikácia medzi používateľmi": "2.3 Kommunikáció a felhasználók között",
+  "Textové správy medzi používateľmi": "Szöveges üzenetek a felhasználók között",
+  "Zvukové (hlasové) správy": "Hangüzenetek",
+  "Súbory posielané v súkromných správach": "Privát üzenetekben küldött fájlok",
+  "Metadáta o hovoroch a videohovoroch (kto komu volal, kedy, ako dlho) — samotný zvuk/obraz hovoru sa neukladá, prenáša sa v reálnom čase priamo medzi zariadeniami (technológia WebRTC)": "Metaadatok a hívásokról és videohívásokról (ki kit hívott, mikor, meddig) — magát a hívás hangját/képét nem tároljuk, az valós időben, közvetlenül az eszközök között kerül továbbításra (WebRTC technológia)",
+  "2.4 Technické a prevádzkové údaje": "2.4 Technikai és üzemeltetési adatok",
+  "Technické identifikátory potrebné na doručovanie push notifikácií (napr. o novej správe alebo hovore) cez Firebase Cloud Messaging": "A push értesítések (pl. új üzenetről vagy hívásról) kézbesítéséhez szükséges technikai azonosítók a Firebase Cloud Messagingen keresztül",
+  "Základné technické údaje o zariadení/prehliadači potrebné na fungovanie appky": "Az alkalmazás működéséhez szükséges alapvető technikai adatok az eszközről/böngészőről",
+  "Dátum registrácie, dátum poslednej aktivity": "Regisztráció dátuma, utolsó aktivitás dátuma",
+  "2.5 Čo nezbierame": "2.5 Amit nem gyűjtünk",
+  "Connect8 nezbiera polohu, neanalyzuje obsah tvojich súkromných správ na reklamné účely a nepoužíva nástroje na sledovanie správania naprieč inými webmi (napr. Google Analytics, reklamné pixely).": "A Connect8 nem gyűjti a helyzetedet, nem elemzi a privát üzeneteid tartalmát reklámcélokra, és nem használ eszközöket a más weboldalakon való viselkedésed nyomon követésére (pl. Google Analytics, reklámpixelek).",
+  "3. Prečo tieto údaje spracúvame (účel a právny základ)": "3. Miért kezeljük ezeket az adatokat (cél és jogalap)",
+  "4. Tretie strany, ktoré nám pomáhajú": "4. Harmadik felek, akik segítenek nekünk",
+  "Connect8 využíva na svoje fungovanie tieto externé služby (spracúvatelia údajov):": "A Connect8 a működéséhez az alábbi külső szolgáltatásokat (adatfeldolgozókat) használja:",
+  "Firebase (Google) — autentifikácia používateľov, ukladanie dát appky (príspevky, správy, profily) a push notifikácie. Viac: policies.google.com/privacy": "Firebase (Google) — felhasználó-hitelesítés, az alkalmazás adatainak tárolása (bejegyzések, üzenetek, profilok) és push értesítések. Bővebben: policies.google.com/privacy",
+  "Cloudinary — ukladanie a spracovanie nahraných obrázkov a videí. Viac: cloudinary.com/privacy": "Cloudinary — a feltöltött képek és videók tárolása és feldolgozása. Bővebben: cloudinary.com/privacy",
+  "YouTube / Google — prehrávanie vložených YouTube videí sa riadi zásadami YouTube/Google, nie Connect8": "YouTube / Google — a beágyazott YouTube-videók lejátszására a YouTube/Google szabályai vonatkoznak, nem a Connect8-é",
+  "Connect8 nepredáva tvoje osobné údaje tretím stranám na marketingové účely.": "A Connect8 nem adja el a személyes adataidat harmadik feleknek marketingcélokra.",
+  "5. Ako dlho údaje uchovávame": "5. Meddig őrizzük meg az adatokat",
+  "Tvoje údaje uchovávame, kým máš aktívny účet. Po vymazaní účtu (bod 7) sa tvoj profil, príspevky, inzeráty a videá natrvalo odstránia z našich databáz. Súkromné správy a hlasové/textové konverzácie, ktoré si poslal iným používateľom, zostávajú uložené aj po vymazaní tvojho účtu, keďže sú súčasťou spoločnej histórie konverzácie s druhou osobou.": "Az adataidat addig őrizzük meg, amíg a fiókod aktív. A fiók törlése (7. pont) után a profilod, bejegyzéseid, hirdetéseid és videóid véglegesen törlődnek az adatbázisainkból. A más felhasználóknak küldött privát üzenetek és hang-/szöveges beszélgetések a fiókod törlése után is megmaradnak, mivel részei a másik személlyel folytatott közös beszélgetés történetének.",
+  "6. Zabezpečenie údajov": "6. Az adatok biztonsága",
+  "Heslá sú spravované cez Firebase Authentication a nie sú nikdy uložené v čitateľnej podobe. Prenos dát medzi tvojím zariadením a appkou je šifrovaný (HTTPS). Prístup k databáze appky je obmedzený len na nevyhnutné technické účely.": "A jelszavakat a Firebase Authentication kezeli, és soha nem tárolódnak olvasható formában. Az eszközöd és az alkalmazás közötti adatátvitel titkosított (HTTPS). Az alkalmazás adatbázisához való hozzáférés csak a szükséges technikai célokra korlátozódik.",
+  "7. Tvoje práva": "7. A te jogaid",
+  "Ako používateľ máš podľa GDPR najmä právo:": "Felhasználóként a GDPR értelmében különösen az alábbi jogaid vannak:",
+  "na prístup k svojim osobným údajom,": "hozzáférés a személyes adataidhoz,",
+  "na opravu nesprávnych údajov (väčšinu si vieš upraviť priamo v nastaveniach profilu),": "a helytelen adatok helyesbítése (a legtöbbet közvetlenül a profilbeállításokban módosíthatod),",
+  "na vymazanie — svoj účet a s ním spojený obsah (príspevky, inzeráty, videá) môžeš kedykoľvek natrvalo vymazať priamo v appke, v nastaveniach profilu tlačidlom „Zrušiť účet\". Táto akcia je nevratná,": "a törléshez — a fiókodat és a hozzá kapcsolódó tartalmat (bejegyzések, hirdetések, videók) bármikor véglegesen törölheted közvetlenül az alkalmazásban, a profilbeállításokban a „Fiók törlése” gombbal. Ez a művelet visszavonhatatlan,",
+  "na obmedzenie spracúvania a namietanie voči spracúvaniu,": "az adatkezelés korlátozásához és az adatkezelés elleni tiltakozáshoz,",
+  "na prenosnosť údajov,": "az adathordozhatósághoz,",
+  "podať sťažnosť na Úrad na ochranu osobných údajov SR (dataprotection.gov.sk), ak sa domnievaš, že tvoje údaje spracúvame v rozpore s GDPR.": "panaszt tehetsz a Szlovák Adatvédelmi Hatóságnál (dataprotection.gov.sk), ha úgy véled, hogy az adataidat a GDPR-ral ellentétesen kezeljük.",
+  "Na uplatnenie týchto práv nás môžeš kontaktovať na sevcikjaroslav1@gmail.com.": "E jogok gyakorlásához a sevcikjaroslav1@gmail.com címen léphetsz velünk kapcsolatba.",
+  "8. Vek používateľov": "8. A felhasználók életkora",
+  "Connect8 je určený pre používateľov od 15 rokov.": "A Connect8 15 éves kortól használható.",
+  "9. Zmeny týchto zásad": "9. Ezen irányelv módosításai",
+  "Tieto zásady môžeme z času na čas aktualizovať, napríklad pri pridaní novej funkcie appky. O väčších zmenách ťa budeme informovať v appke.": "Ezt az irányelvet időről időre frissíthetjük, például egy új alkalmazásfunkció hozzáadásakor. A nagyobb változásokról az alkalmazásban tájékoztatunk.",
+  "Vitaj v Centre ochrany súkromia Connect8. Tu nájdeš prehľadné vysvetlenie, ako máš pod kontrolou svoje údaje a svoje súkromie priamo v appke.": "Üdvözlünk a Connect8 Adatvédelmi Központjában. Itt áttekinthető magyarázatot találsz arról, hogyan tartod kézben az adataidat és a magánéletedet közvetlenül az alkalmazásban.",
+  "Kto vidí tvoj obsah": "Ki látja a tartalmadat",
+  "Príspevky, videá, komentáre a inzeráty v marketplace, ktoré vytvoríš, sú viditeľné pre ostatných používateľov Connect8. Súkromné správy, hlasové správy, súbory a hovory/videohovory vidí iba osoba, ktorej ich pošleš — nie sú verejné a nezobrazujú sa vo feede.": "Az általad létrehozott bejegyzéseket, videókat, hozzászólásokat és piactéri hirdetéseket a Connect8 többi felhasználója is látja. A privát üzeneteket, hangüzeneteket, fájlokat és hívásokat/videohívásokat csak az a személy látja, akinek elküldöd őket — ezek nem nyilvánosak, és nem jelennek meg a hírfolyamban.",
+  "Blokovanie používateľov": "Felhasználók blokkolása",
+  "Ak si neželáš, aby ti konkrétny používateľ mohol písať, volať alebo vidieť tvoj profil, môžeš ho kedykoľvek zablokovať priamo na jeho profile. Zablokovaný používateľ ťa nemôže kontaktovať a stratí prístup k tvojmu obsahu.": "Ha nem szeretnéd, hogy egy adott felhasználó írhasson neked, hívhasson téged, vagy láthassa a profilodat, bármikor blokkolhatod közvetlenül a profilján. A blokkolt felhasználó nem tud kapcsolatba lépni veled, és elveszíti a hozzáférést a tartalmadhoz.",
+  "Správa tvojho účtu": "Fiókod kezelése",
+  "Meno a profilovú fotku si vieš kedykoľvek upraviť v nastaveniach profilu.": "A nevedet és a profilképedet bármikor módosíthatod a profilbeállításokban.",
+  "Svoje jednotlivé príspevky, videá alebo inzeráty môžeš kedykoľvek vymazať sám (ikona 🗑️ pri danom obsahu).": "Az egyes bejegyzéseidet, videóidat vagy hirdetéseidet bármikor magad is törölheted (🗑️ ikon az adott tartalomnál).",
+  "Celý účet vrátane všetkého obsahu (príspevky, inzeráty, videá, profil) môžeš natrvalo vymazať tlačidlom „Zrušiť účet\" v nastaveniach profilu. Táto akcia je nevratná.": "A teljes fiókodat az összes tartalommal együtt (bejegyzések, hirdetések, videók, profil) véglegesen törölheted a „Fiók törlése” gombbal a profilbeállításokban. Ez a művelet visszavonhatatlan.",
+  "Notifikácie": "Értesítések",
+  "Connect8 ti môže posielať push notifikácie o nových správach alebo hovoroch. Povolenie na notifikácie udeľuješ priamo cez nastavenia svojho prehliadača alebo zariadenia a kedykoľvek ho môžeš odvolať.": "A Connect8 push értesítéseket küldhet neked új üzenetekről vagy hívásokról. Az értesítésekhez szükséges engedélyt közvetlenül a böngésződ vagy eszközöd beállításaiban adod meg, és bármikor visszavonhatod.",
+  "Bezpečnosť účtu": "Fiókbiztonság",
+  "Tvoje heslo je spravované cez Firebase Authentication a nikdy sa neukladá v čitateľnej podobe. Odporúčame používať jedinečné a silné heslo a nezdieľať prihlasovacie údaje s nikým iným.": "A jelszavadat a Firebase Authentication kezeli, és soha nem tárolódik olvasható formában. Javasoljuk, hogy egyedi és erős jelszót használj, és a bejelentkezési adataidat ne oszd meg senki mással.",
+  "Kompletné zásady ochrany súkromia": "Teljes adatvédelmi irányelv",
+  "Podrobný prehľad toho, aké údaje spracúvame, prečo, s kým ich zdieľame a aké máš práva podľa GDPR, nájdeš v dokumente Zásady ochrany súkromia.": "Részletes áttekintést arról, milyen adatokat kezelünk, miért, kivel osztjuk meg őket, és milyen jogaid vannak a GDPR szerint, az Adatvédelmi irányelvek dokumentumban találsz.",
+  "Kontakt": "Kapcsolat",
+  "Máš otázku ohľadom svojich údajov alebo súkromia? Napíš na sevcikjaroslav1@gmail.com.": "Kérdésed van az adataiddal vagy a magánéleteddel kapcsolatban? Írj a sevcikjaroslav1@gmail.com címre.",
+  "Connect8 nepoužíva reklamné ani sledovacie cookies tretích strán. To, čo appka ukladá vo tvojom prehliadači, je len technické úložisko (local storage) potrebné na jej fungovanie:": "A Connect8 nem használ harmadik féltől származó reklám- vagy nyomkövető cookie-kat. Amit az alkalmazás a böngésződben tárol, az csak a működéséhez szükséges technikai tárhely (local storage):",
+  "Nevyhnutné (vždy aktívne)": "Elengedhetetlen (mindig aktív)",
+  "Prihlásenie — Firebase Authentication si v prehliadači uchováva prihlasovací stav, aby ťa appka nemusela pri každom otvorení odhlasovať.": "Bejelentkezés — a Firebase Authentication a böngésződben tárolja a bejelentkezési állapotot, hogy az alkalmazásnak ne kelljen minden megnyitáskor kijelentkeztetnie.",
+  "Offline režim — appka si ukladá stav (napr. rozpracovaný obsah) lokálne v prehliadači, aby fungovala aj bez pripojenia a dáta sa po zatvorení nestratili.": "Offline mód — az alkalmazás lokálisan tárolja az állapotot (pl. a folyamatban lévő tartalmat) a böngészőben, hogy kapcsolat nélkül is működjön, és az adatok bezáráskor ne vesszenek el.",
+  "Zapamätané zhliadnutia — appka si lokálne pamätá, ktoré videá si už videl, aby sa ti neopakovali zbytočne v odporúčaniach.": "Megjegyzett megtekintések — az alkalmazás lokálisan megjegyzi, mely videókat láttad már, hogy azok ne ismétlődjenek feleslegesen az ajánlásokban.",
+  "Tieto položky sú nevyhnutné pre základné fungovanie appky a nedajú sa jednotlivo vypnúť — dajú sa ale kedykoľvek vymazať tak, že v nastaveniach svojho prehliadača vymažeš dáta stránky Connect8 (napr. „Vymazať údaje o prehliadaní\" → „Súbory cookie a údaje stránok\").": "Ezek az elemek elengedhetetlenek az alkalmazás alapvető működéséhez, és egyenként nem kapcsolhatók ki — bármikor törölhetők azonban úgy, hogy a böngésződ beállításaiban törlöd a Connect8 oldal adatait (pl. „Böngészési adatok törlése” → „Cookie-k és webhelyadatok”).",
+  "Analytické a reklamné cookies": "Analitikai és reklám cookie-k",
+  "Connect8 aktuálne nepoužíva žiadne analytické (napr. Google Analytics) ani reklamné cookies, takže tu nie je nič na nastavovanie.": "A Connect8 jelenleg nem használ sem analitikai (pl. Google Analytics), sem reklám cookie-kat, így itt nincs mit beállítani.",
+  "Ako vymazať uložené dáta": "Hogyan törölhetők a tárolt adatok",
+  "Vymazanie dát prehliadača pre túto stránku ťa odhlási z účtu a appka stratí lokálne uložené offline dáta — tvoj účet a obsah na serveri (príspevky, správy, profil) tým dotknuté nie sú.": "Az oldalra vonatkozó böngészőadatok törlése kijelentkeztet a fiókodból, és az alkalmazás elveszíti a lokálisan tárolt offline adatokat — a fiókodat és a szerveren lévő tartalmat (bejegyzések, üzenetek, profil) ez nem érinti.",
+  "Viac o tom, aké údaje o tebe spracúvame celkovo, nájdeš v dokumente Zásady ochrany súkromia.": "Bővebben arról, milyen adatokat kezelünk rólad összességében, az Adatvédelmi irányelvek dokumentumban olvashatsz.",
+  "Connect8 je slovenská sociálna platforma na vzájomnú komunikáciu, zdieľanie obsahu a nadväzovanie kontaktov.": "A Connect8 egy szlovák közösségi platform az egymással való kommunikációra, tartalommegosztásra és kapcsolatépítésre.",
+  "Čo appka ponúka": "Amit az alkalmazás kínál",
+  "Feed — zdieľanie príspevkov, ktoré môžeš lajkovať, komentovať a zdieľať": "Hírfolyam — bejegyzések megosztása, amelyeket kedvelhetsz, kommentelhetsz és megoszthatsz",
+  "Videá — krátke vertikálne videá v štýle TikTok": "Videók — rövid, függőleges videók TikTok stílusban",
+  "Filmy — pozeranie schválených YouTube videí priamo v appke": "Filmek — jóváhagyott YouTube-videók megtekintése közvetlenül az alkalmazásban",
+  "Správy — textové a hlasové správy, posielanie súborov medzi používateľmi": "Üzenetek — szöveges és hangüzenetek, fájlküldés a felhasználók között",
+  "Hovory — audio aj videohovory medzi používateľmi": "Hívások — audio- és videohívások a felhasználók között",
+  "Marketplace — predaj a nákup vecí, ktoré už nepotrebuješ, priamo medzi používateľmi": "Piactér — a már nem szükséges dolgok eladása és vásárlása közvetlenül a felhasználók között",
+  "Podporované jazyky": "Támogatott nyelvek",
+  "Rozhranie appky je dostupné v slovenčine, angličtine, nemčine, poľštine, španielčine, francúzštine, portugalčine a taliančine.": "Az alkalmazás felülete elérhető szlovák, angol, német, lengyel, spanyol, francia, portugál és olasz nyelven.",
+  "Prevádzkovateľ": "Üzemeltető",
+  "Connect8 prevádzkuje Jaroslav Ševčík ako fyzická osoba. Kontakt: sevcikjaroslav1@gmail.com.": "A Connect8-at Jaroslav Ševčík üzemelteti magánszemélyként. Kapcsolat: sevcikjaroslav1@gmail.com.",
+  "Ďalšie informácie": "További információk",
+  "Podrobnosti o spracúvaní údajov nájdeš v dokumente Zásady ochrany súkromia, prehľad ovládania súkromia v Centre ochrany súkromia.": "Az adatkezelés részleteit az Adatvédelmi irányelvek dokumentumban, a magánélet kezelésének áttekintését az Adatvédelmi Központban találod.",
+  "1. Úvod": "1. Bevezetés",
+  "Tieto podmienky upravujú používanie platformy Connect8, ktorú ako fyzická osoba prevádzkuje Jaroslav Ševčík (kontakt: sevcikjaroslav1@gmail.com). Registráciou a používaním Connect8 súhlasíš s týmito podmienkami.": "Ezek a feltételek szabályozzák a Connect8 platform használatát, amelyet Jaroslav Ševčík magánszemélyként üzemeltet (kapcsolat: sevcikjaroslav1@gmail.com). A Connect8 regisztrálásával és használatával elfogadod ezeket a feltételeket.",
+  "2. Kto môže Connect8 používať": "2. Ki használhatja a Connect8-at",
+  "Connect8 je určený pre používateľov od 15 rokov. Registráciou potvrdzuješ, že spĺňaš túto vekovú hranicu a že údaje, ktoré uvádzaš (meno, e-mail), sú pravdivé.": "A Connect8 15 éves kortól használható. A regisztrációval megerősíted, hogy megfelelsz ennek a korhatárnak, és hogy a megadott adatok (név, e-mail) valósak.",
+  "3. Tvoj účet": "3. A fiókod",
+  "Za bezpečnosť svojho hesla a za všetku aktivitu na svojom účte zodpovedáš ty sám. Účet je osobný a neprevoditeľný na inú osobu. Svoj účet môžeš kedykoľvek natrvalo vymazať v nastaveniach profilu tlačidlom „Zrušiť účet\".": "A jelszavad biztonságáért és a fiókodon végzett minden tevékenységért egyedül te felelsz. A fiók személyes és másra nem ruházható át. A fiókodat bármikor véglegesen törölheted a profilbeállításokban a „Fiók törlése” gombbal.",
+  "4. Obsah, ktorý zdieľaš": "4. Az általad megosztott tartalom",
+  "Za príspevky, videá, komentáre, správy, súbory a inzeráty, ktoré na Connect8 zdieľaš, zodpovedáš výhradne ty. Nahrávaním obsahu potvrdzuješ, že naň máš potrebné práva a že jeho zdieľaním neporušuješ práva tretích strán ani platné zákony.": "A Connect8-on megosztott bejegyzésekért, videókért, hozzászólásokért, üzenetekért, fájlokért és hirdetésekért kizárólag te felelsz. A tartalom feltöltésével megerősíted, hogy rendelkezel a szükséges jogokkal, és hogy a megosztás nem sérti harmadik felek jogait vagy a hatályos jogszabályokat.",
+  "Zakázané je najmä zdieľať obsah, ktorý je nezákonný, urážlivý, podnecuje k násiliu alebo nenávisti, porušuje autorské práva, alebo obťažuje či ohrozuje iných používateľov.": "Tilos különösen olyan tartalmat megosztani, amely jogellenes, sértő, erőszakra vagy gyűlöletre uszít, szerzői jogokat sért, vagy zaklat, illetve veszélyeztet más felhasználókat.",
+  "5. Marketplace": "5. Piactér",
+  "Marketplace slúži na sprostredkovanie ponúk medzi používateľmi navzájom. Connect8 nie je predávajúcim ani kupujúcim, nezaručuje kvalitu, dodanie ani pravosť ponúkaného tovaru a nie je zmluvnou stranou žiadnej transakcie medzi používateľmi. Dohoda o cene, platbe a odovzdaní tovaru je výlučne na dohode medzi predávajúcim a kupujúcim.": "A Piactér a felhasználók közötti ajánlatok közvetítésére szolgál. A Connect8 nem eladó és nem vevő, nem garantálja a kínált áru minőségét, kiszállítását vagy eredetiségét, és nem szerződő fele a felhasználók közötti egyetlen tranzakciónak sem. Az árról, a fizetésről és az áru átadásáról kizárólag az eladó és a vevő állapodik meg.",
+  "6. Správy, hovory a videohovory": "6. Üzenetek, hívások és videohívások",
+  "Súkromné správy, hlasové správy, zdieľané súbory a hovory/videohovory slúžia na komunikáciu medzi používateľmi. Connect8 tento obsah pri prenose neupravuje ani neschvaľuje — používatelia sú povinní správať sa k sebe navzájom slušne a v súlade so zákonom.": "A privát üzenetek, hangüzenetek, megosztott fájlok és hívások/videohívások a felhasználók közötti kommunikációt szolgálják. A Connect8 ezt a tartalmat továbbítás közben nem módosítja és nem hagyja jóvá — a felhasználók kötelesek egymással tisztességesen és a törvénynek megfelelően bánni.",
+  "7. Filmy (YouTube obsah)": "7. Filmek (YouTube-tartalom)",
+  "Sekcia Filmy zobrazuje výhradne odkazy na videá hostované na YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "A Filmek szekció kizárólag a YouTube-on tárolt videókra mutató linkeket jelenít meg. Ezen videók tartalmáért a YouTube/Google és azok készítői felelnek, nem a Connect8.",
+  "8. Zablokovanie a zrušenie účtu": "8. Fiók blokkolása és megszüntetése",
+  "Ak porušíš tieto podmienky, môžeme obmedziť alebo zrušiť tvoj prístup k Connect8. Rovnako máš možnosť kedykoľvek zablokovať iného používateľa, ktorý ťa obťažuje, alebo natrvalo zrušiť svoj vlastný účet.": "Ha megsérted ezeket a feltételeket, korlátozhatjuk vagy megszüntethetjük a Connect8-hoz való hozzáférésedet. Ugyanígy bármikor blokkolhatod a téged zaklató másik felhasználót, vagy véglegesen megszüntetheted a saját fiókodat.",
+  "9. Obmedzenie zodpovednosti": "9. A felelősség korlátozása",
+  "Connect8 je poskytovaný „tak ako je\", bez záruky nepretržitej dostupnosti alebo bezchybnej prevádzky. V rozsahu povolenom zákonom nezodpovedáme za škody vzniknuté používaním appky, obsahom nahraným používateľmi ani transakciami uskutočnenými cez marketplace.": "A Connect8 „ahogy van” alapon kerül biztosításra, a folyamatos elérhetőségre vagy hibamentes működésre vonatkozó garancia nélkül. A törvény által megengedett mértékben nem vállalunk felelősséget az alkalmazás használatából, a felhasználók által feltöltött tartalomból vagy a piactéren keresztül lebonyolított tranzakciókból eredő károkért.",
+  "10. Zmeny podmienok": "10. A feltételek módosítása",
+  "Tieto podmienky môžeme z času na čas aktualizovať, napríklad pri pridaní novej funkcie appky. O väčších zmenách ťa budeme informovať priamo v appke.": "Ezeket a feltételeket időről időre frissíthetjük, például egy új alkalmazásfunkció hozzáadásakor. A nagyobb változásokról közvetlenül az alkalmazásban tájékoztatunk.",
+  "11. Rozhodné právo": "11. Irányadó jog",
+  "Tieto podmienky sa riadia právnym poriadkom Slovenskej republiky.": "Ezekre a feltételekre a Szlovák Köztársaság jogrendje az irányadó.",
+  "12. Kontakt": "12. Kapcsolat",
+  "Otázky ohľadom týchto podmienok posielaj na sevcikjaroslav1@gmail.com.": "A feltételekkel kapcsolatos kérdéseidet a sevcikjaroslav1@gmail.com címre küldd.",
+  "Connect8 je miesto na zdieľanie obsahu a komunikáciu s ostatnými. Aby tu bolo príjemne a bezpečne pre všetkých, dodržiavaj prosím tieto pravidlá.": "A Connect8 egy hely a tartalommegosztásra és a másokkal való kommunikációra. Hogy mindenki számára kellemes és biztonságos legyen, kérjük, tartsd be az alábbi szabályokat.",
+  "Správaj sa k ostatným s rešpektom": "Viselkedj tisztelettel másokkal",
+  "Nezdieľaj obsah, ktorý je urážlivý, ponižujúci, podnecuje k nenávisti alebo násiliu voči jednotlivcom či skupinám. Obťažovanie, vyhrážanie a šikanovanie iných používateľov (v príspevkoch, komentároch, správach aj hovoroch) je zakázané.": "Ne oszd meg olyan tartalmat, amely sértő, megalázó, gyűlöletre vagy erőszakra uszít egyének vagy csoportok ellen. Más felhasználók zaklatása, fenyegetése és zaklatása (bejegyzésekben, hozzászólásokban, üzenetekben és hívásokban) tilos.",
+  "Zdieľaj len zákonný obsah": "Csak jogszerű tartalmat oszts meg",
+  "Je zakázané zdieľať obsah, ktorý porušuje zákony Slovenskej republiky alebo autorské práva tretích strán (napr. cudzie fotky, videá alebo hudbu bez súhlasu autora).": "Tilos olyan tartalmat megosztani, amely sérti a Szlovák Köztársaság törvényeit vagy harmadik felek szerzői jogait (pl. mások fotóit, videóit vagy zenéjét a szerző engedélye nélkül).",
+  "Buď sám sebou": "Légy önmagad",
+  "Nevytváraj falošné profily ani sa nevydávaj za inú osobu. Používaj svoje skutočné meno a fotku, prípadne prezývku, ktorá nikoho neuvádza do omylu.": "Ne hozz létre hamis profilokat, és ne adj ki magad más személynek. Használd a valódi nevedet és fotódat, vagy egy olyan becenevet, amely senkit sem téveszt meg.",
+  "Žiadny spam": "Semmi spam",
+  "Nezasielaj hromadné nevyžiadané správy, opakovane rovnaký obsah ani podvodné odkazy iným používateľom.": "Ne küldj tömeges, nem kért üzeneteket, ismétlődő tartalmat vagy csaló linkeket más felhasználóknak.",
+  "Marketplace — poctivo": "Piactér — tisztességesen",
+  "V inzerátoch uvádzaj pravdivý popis a stav tovaru. Podvodné alebo klamlivé ponuky sú zakázané. Connect8 nie je stranou transakcie medzi predávajúcim a kupujúcim — viac v Podmienkach používania.": "A hirdetésekben add meg az áru valós leírását és állapotát. A csaló vagy megtévesztő ajánlatok tilosak. A Connect8 nem fele az eladó és a vevő közötti tranzakciónak — bővebben a Felhasználási feltételekben.",
+  "Ochrana mladších používateľov": "A fiatalabb felhasználók védelme",
+  "Connect8 je určený pre používateľov od 15 rokov. Obsah sexuálnej povahy, obsah ohrozujúci maloletých alebo akýkoľvek pokus o kontaktovanie maloletých s nevhodným úmyslom je prísne zakázaný.": "A Connect8 15 éves kortól használható. A szexuális jellegű tartalom, a kiskorúakat veszélyeztető tartalom vagy a kiskorúakkal való, nem megfelelő szándékú kapcsolatfelvétel bármilyen kísérlete szigorúan tilos.",
+  "Čo sa stane pri porušení pravidiel": "Mi történik a szabályok megsértése esetén",
+  "Ak niekto tieto pravidlá poruší, môžeš ho kedykoľvek zablokovať priamo na jeho profile — stratí tak možnosť ťa kontaktovať alebo vidieť tvoj obsah. Pri závažnom alebo opakovanom porušení môže byť dotknutému používateľovi obmedzený alebo zrušený prístup k Connect8.": "Ha valaki megsérti ezeket a szabályokat, bármikor blokkolhatod közvetlenül a profilján — így elveszíti a lehetőséget, hogy kapcsolatba lépjen veled, vagy lássa a tartalmadat. Súlyos vagy ismételt szabálysértés esetén az érintett felhasználó hozzáférése a Connect8-hoz korlátozható vagy megszüntethető.",
+  "Nahlásenie problému": "Probléma bejelentése",
+  "Ak si sa stretol s obsahom alebo správaním, ktoré porušuje tieto pravidlá, napíš nám na sevcikjaroslav1@gmail.com.": "Ha olyan tartalommal vagy viselkedéssel találkoztál, amely megsérti ezeket a szabályokat, írj nekünk a sevcikjaroslav1@gmail.com címre.",
+  "Connect8 rešpektuje duševné vlastníctvo iných a očakáva to isté od svojich používateľov.": "A Connect8 tiszteletben tartja mások szellemi tulajdonát, és ugyanezt várja el a felhasználóitól.",
+  "Zodpovednosť za nahrávaný obsah": "Felelősség a feltöltött tartalomért",
+  "Nahrávaním príspevku, videa, fotky, súboru alebo inzerátu na Connect8 potvrdzuješ, že si autorom daného obsahu alebo že naň máš potrebné práva/súhlas na jeho zdieľanie. Nahrávanie cudzích fotiek, videí, hudby alebo textu bez súhlasu autora je zakázané.": "Egy bejegyzés, videó, fotó, fájl vagy hirdetés Connect8-ra való feltöltésével megerősíted, hogy a tartalom szerzője vagy, vagy rendelkezel a szükséges jogokkal/engedéllyel a megosztásához. Mások fotóinak, videóinak, zenéjének vagy szövegének feltöltése a szerző engedélye nélkül tilos.",
+  "Vloženie YouTube videa": "YouTube-videó beágyazása",
+  "Vkladanie odkazu na YouTube video (v príspevku alebo v sekcii Filmy) nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.": "Egy YouTube-videóra mutató link beszúrása (egy bejegyzésben vagy a Filmek szekcióban) nem másolja magát a videót — a lejátszás közvetlenül a YouTube-on keresztül történik, és a videó készítőjének feltételei és szerzői jogai vonatkoznak rá.",
+  "Nahlásenie porušenia autorských práv": "Szerzői jogsértés bejelentése",
+  "Ak si vlastníkom autorských práv a myslíš si, že tvoje dielo bolo na Connect8 zdieľané bez tvojho súhlasu, napíš na sevcikjaroslav1@gmail.com a prilož:": "Ha te vagy a szerzői jog tulajdonosa, és úgy gondolod, hogy a műved az engedélyed nélkül került megosztásra a Connect8-on, írj a sevcikjaroslav1@gmail.com címre, és csatold:",
+  "presný popis alebo odkaz na sporný obsah (napr. odkaz na príspevok/video/inzerát),": "a vitatott tartalom pontos leírását vagy linkjét (pl. a bejegyzésre/videóra/hirdetésre mutató linket),",
+  "popis diela, ktorého sa autorské právo týka, a dôkaz, že si jeho autorom alebo držiteľom práv,": "a szerzői joggal érintett mű leírását, valamint annak bizonyítékát, hogy te vagy a szerzője vagy a jogok tulajdonosa,",
+  "svoje kontaktné údaje,": "az elérhetőségi adataidat,",
+  "vyhlásenie, že žiadosť podávaš v dobrej viere a údaje v nej sú pravdivé.": "nyilatkozatot arról, hogy a kérelmet jóhiszeműen nyújtod be, és a benne foglalt adatok valósak.",
+  "Čo nasleduje po nahlásení": "Mi történik a bejelentés után",
+  "Oprávnene nahlásený obsah bude odstránený. Pri opakovanom porušovaní autorských práv môže byť účet používateľa obmedzený alebo zrušený.": "A jogosan bejelentett tartalmat eltávolítjuk. Ismételt szerzői jogsértés esetén a felhasználó fiókja korlátozható vagy megszüntethető.",
+  "Ak si presvedčený, že tvoj obsah bol odstránený neprávom": "Ha úgy gondolod, hogy a tartalmadat jogtalanul távolították el",
+  "Ak sa domnievaš, že tvoj obsah bol odstránený omylom alebo neoprávnene (napr. si mal na jeho zdieľanie súhlas), napíš na sevcikjaroslav1@gmail.com s vysvetlením a doložením svojich práv — situáciu preveríme.": "Ha úgy véled, hogy a tartalmadat tévedésből vagy jogtalanul távolították el (pl. rendelkeztél engedéllyel a megosztásához), írj a sevcikjaroslav1@gmail.com címre a magyarázattal és a jogaid igazolásával — a helyzetet kivizsgáljuk.",
+  "Connect8 aktuálne nezobrazuje žiadne platené reklamy tretích strán. Tieto pravidlá sa vzťahujú najmä na inzeráty v Marketplace a na propagáciu vlastného obsahu či produktov, ktorú používatelia zdieľajú vo feede.": "A Connect8 jelenleg nem jelenít meg harmadik féltől származó fizetett reklámokat. Ezek a szabályok elsősorban a Piactér hirdetéseire és a felhasználók által a hírfolyamban megosztott saját tartalom vagy termékek promóciójára vonatkoznak.",
+  "Čo je „reklama\" na Connect8": "Mi számít „reklámnak” a Connect8-on",
+  "Za reklamný/propagačný obsah sa považuje najmä: inzerát v Marketplace, príspevok propagujúci vlastný tovar, službu alebo iný účet/stránku.": "Reklám-/promóciós tartalomnak minősül különösen: piactéri hirdetés, saját árut, szolgáltatást vagy más fiókot/oldalt promótáló bejegyzés.",
+  "Pravidlá pre inzeráty a propagačný obsah": "Szabályok a hirdetésekre és promóciós tartalomra",
+  "Popis a fotky musia pravdivo zodpovedať skutočnému stavu ponúkaného tovaru — žiadne klamlivé alebo zavádzajúce tvrdenia.": "A leírásnak és a fotóknak hűen kell tükrözniük a kínált áru valós állapotát — semmilyen megtévesztő vagy félrevezető állítás nem megengedett.",
+  "Uvedená cena musí byť reálna ponuka, nie návnada na prilákanie pozornosti bez úmyslu predať za danú sumu.": "A megadott árnak valós ajánlatnak kell lennie, nem a figyelem felkeltésére szolgáló csalinak, azzal a szándékkal, hogy nem is akarod azon az áron eladni.",
+  "Je zakázané opakovane (spamovo) zverejňovať rovnaký inzerát alebo propagačný príspevok.": "Tilos ugyanazt a hirdetést vagy promóciós bejegyzést ismételten (spamszerűen) közzétenni.",
+  "Zakázaný obsah v inzerátoch": "Tiltott tartalom a hirdetésekben",
+  "V Marketplace ani v propagačnom obsahu nie je dovolené ponúkať:": "A Piactéren és a promóciós tartalomban nem szabad kínálni:",
+  "nelegálny tovar alebo služby (napr. zbrane, drogy, falšované doklady),": "illegális árut vagy szolgáltatásokat (pl. fegyverek, drogok, hamis okmányok),",
+  "falzifikáty a napodobeniny značkového tovaru,": "márkás áruk hamisítványait és utánzatait,",
+  "tovar alebo služby porušujúce autorské práva tretích strán,": "harmadik felek szerzői jogait sértő árut vagy szolgáltatásokat,",
+  "obsah pre dospelých alebo sexuálne služby,": "felnőtt tartalmat vagy szexuális szolgáltatásokat,",
+  "podvodné schémy (napr. pyramídové hry, garantované rýchle zbohatnutie).": "csalárd rendszereket (pl. piramisjátékok, garantált gyors meggazdagodás).",
+  "Zodpovednosť": "Felelősség",
+  "Za obsah a pravdivosť svojho inzerátu alebo propagačného príspevku zodpovedá výhradne používateľ, ktorý ho zverejnil — pozri aj Podmienky používania, časť o Marketplace.": "A hirdetés vagy promóciós bejegyzés tartalmáért és valóságtartalmáért kizárólag az azt közzétevő felhasználó felel — lásd még a Felhasználási feltételek Piactérről szóló részét.",
+  "Nahlásenie porušenia": "Szabálysértés bejelentése",
+  "Ak si narazil na inzerát alebo propagačný obsah, ktorý porušuje tieto pravidlá, napíš na sevcikjaroslav1@gmail.com.": "Ha olyan hirdetésbe vagy promóciós tartalomba ütköztél, amely megsérti ezeket a szabályokat, írj a sevcikjaroslav1@gmail.com címre.",
+  "Tvoj účet je pre nás dôležitý. Tu je prehľad, ako je zabezpečený a čo môžeš urobiť pre jeho ochranu.": "A fiókod fontos számunkra. Íme egy áttekintés arról, hogyan van biztosítva, és mit tehetsz a védelméért.",
+  "Ako spravujeme tvoje heslo": "Hogyan kezeljük a jelszavadat",
+  "Prihlásenie do Connect8 zabezpečuje Firebase Authentication (Google). Tvoje heslo sa nikdy neukladá v čitateľnej podobe — my sami k nemu nemáme prístup.": "A Connect8-ba való bejelentkezést a Firebase Authentication (Google) biztosítja. A jelszavad soha nem tárolódik olvasható formában — ahhoz mi magunk sem férünk hozzá.",
+  "Šifrovaný prenos dát": "Titkosított adatátvitel",
+  "Všetka komunikácia medzi tvojím zariadením a appkou prebieha cez šifrené pripojenie (HTTPS).": "Az eszközöd és az alkalmazás közötti minden kommunikáció titkosított kapcsolaton (HTTPS) keresztül zajlik.",
+  "Potvrdenie hesla pri citlivých akciách": "Jelszó megerősítése érzékeny műveleteknél",
+  "Pri vymazaní účtu ťa appka môže požiadať o opätovné zadanie hesla — ide o bezpečnostnú poistku, aby účet nemohol natrvalo vymazať niekto iný, ak si zabudol odhlásiť sa na cudzom zariadení.": "A fiók törlésekor az alkalmazás kérheti a jelszó ismételt megadását — ez egy biztonsági intézkedés, hogy a fiókot ne törölhesse véglegesen valaki más, ha elfelejtettél kijelentkezni egy idegen eszközön.",
+  "Blokovanie nežiaducich používateľov": "Nemkívánatos felhasználók blokkolása",
+  "Ak ťa niekto obťažuje alebo sa ti nepáči jeho správanie, môžeš ho kedykoľvek zablokovať priamo na jeho profile. Zablokovaný používateľ ťa nemôže kontaktovať, volať ti ani vidieť tvoj obsah.": "Ha valaki zaklat téged, vagy nem tetszik a viselkedése, bármikor blokkolhatod közvetlenül a profilján. A blokkolt felhasználó nem tud kapcsolatba lépni veled, nem hívhat, és nem láthatja a tartalmadat.",
+  "Čo môžeš urobiť ty": "Amit te tehetsz",
+  "Používaj jedinečné, silné heslo, ktoré nepoužívaš na iných stránkach.": "Használj egyedi, erős jelszót, amelyet más oldalakon nem használsz.",
+  "Nezdieľaj svoje prihlasovacie údaje s nikým iným.": "Ne oszd meg a bejelentkezési adataidat senki mással.",
+  "Na verejných alebo cudzích zariadeniach sa po skončení vždy odhlás.": "Nyilvános vagy idegen eszközökön a végén mindig jelentkezz ki.",
+  "Ak si všimneš podozrivú aktivitu na svojom účte, zmeň si heslo čo najskôr.": "Ha gyanús tevékenységet veszel észre a fiókodon, a lehető leghamarabb változtasd meg a jelszavadat.",
+  "Máš podozrenie na zneužitie účtu?": "Gyanítod, hogy visszaéltek a fiókoddal?",
+  "Napíš nám na sevcikjaroslav1@gmail.com a popíš, čo sa stalo — pomôžeme ti to vyriešiť.": "Írj nekünk a sevcikjaroslav1@gmail.com címre, és írd le, mi történt — segítünk megoldani.",
+  "Connect8 je slovenská sociálna platforma, ktorú prevádzkuje Jaroslav Ševčík ako samostatná fyzická osoba.": "A Connect8 egy szlovák közösségi platform, amelyet Jaroslav Ševčík önálló magánszemélyként üzemeltet.",
+  "Prečo Connect8 vzniklo": "Miért jött létre a Connect8",
+  "Cieľom je ponúknuť jednoduchú, prehľadnú a rýchlu alternatívu k veľkým zahraničným sociálnym sieťam — miesto, kde môžeš zdieľať príspevky, videá aj komunikovať s priateľmi, bez zbytočného balastu.": "A cél egy egyszerű, átlátható és gyors alternatíva kínálása a nagy külföldi közösségi hálózatokkal szemben — egy hely, ahol megoszthatsz bejegyzéseket, videókat, és kommunikálhatsz a barátaiddal, felesleges felesleg nélkül.",
+  "Čo appku odlišuje": "Ami megkülönbözteti az alkalmazást",
+  "Žiadne reklamy tretích strán a žiadne sledovacie nástroje naprieč inými webmi (napr. Google Analytics, reklamné pixely).": "Nincsenek harmadik féltől származó reklámok, és nincsenek más weboldalakon átívelő nyomkövető eszközök (pl. Google Analytics, reklámpixelek).",
+  "Funguje priamo v prehliadači — netreba nič inštalovať.": "Közvetlenül a böngészőben működik — nem kell semmit telepíteni.",
+  "Rozhranie dostupné vo viacerých jazykoch vrátane slovenčiny.": "A felület több nyelven is elérhető, beleértve a szlovákot.",
+  "Neustály vývoj": "Folyamatos fejlesztés",
+  "Connect8 sa priebežne vyvíja a dopĺňa o nové funkcie — takže sa môžeš stretnúť s drobnými zmenami či vylepšeniami.": "A Connect8 folyamatosan fejlődik, és új funkciókkal bővül — így apró változásokkal vagy fejlesztésekkel találkozhatsz.",
+  "Máš nápad alebo pripomienku?": "Van egy ötleted vagy észrevételed?",
+  "Budeme radi za akúkoľvek spätnú väzbu — napíš na sevcikjaroslav1@gmail.com.": "Örülünk bármilyen visszajelzésnek — írj a sevcikjaroslav1@gmail.com címre.",
+  "Tu nájdeš odpovede na najčastejšie otázky o používaní Connect8. Ak tu odpoveď nenájdeš, napíš nám priamo — kontakt je na konci stránky.": "Itt találod a Connect8 használatával kapcsolatos leggyakoribb kérdések válaszait. Ha nem találod meg a választ, írj nekünk közvetlenül — az elérhetőség az oldal alján található.",
+  "Registrácia a prihlásenie": "Regisztráció és bejelentkezés",
+  "Účet si vytvoríš v záložke „Registrácia\" na úvodnej stránke — stačí meno, e-mail a heslo. Prihlásenie beží cez Firebase Authentication, takže heslo sa nikdy neukladá v čitateľnej podobe.": "Fiókot a kezdőlapon található „Regisztráció” fülön hozhatsz létre — csak név, e-mail és jelszó szükséges. A bejelentkezés a Firebase Authenticationen keresztül történik, így a jelszó soha nem tárolódik olvasható formában.",
+  "Príspevky, videá a marketplace": "Bejegyzések, videók és piactér",
+  "Vo Feede môžeš pridávať príspevky (text, fotky, video, súbory alebo odkaz), vo Videách nahrávať krátke vertikálne videá a v Marketplace zverejňovať alebo hľadať inzeráty. Vlastný obsah vieš kedykoľvek zmazať ikonou 🗑️ priamo pri ňom.": "A Hírfolyamban bejegyzéseket adhatsz hozzá (szöveg, fotók, videó, fájlok vagy link), a Videókban rövid függőleges videókat tölthetsz fel, a Piactéren pedig hirdetéseket tehetsz közzé vagy kereshetsz. A saját tartalmadat bármikor törölheted a 🗑️ ikonnal közvetlenül mellette.",
+  "Správy a hovory": "Üzenetek és hívások",
+  "V sekcii Správy si môžeš s ostatnými písať textové aj hlasové správy a posielať si súbory. Priamo z profilu používateľa vieš spustiť aj audio alebo videohovor.": "Az Üzenetek szekcióban másokkal szöveges és hangüzeneteket válthatsz, és fájlokat küldhetsz. Közvetlenül a felhasználó profiljából audio- vagy videohívást is indíthatsz.",
+  "Obťažuje ťa niekto?": "Zaklat téged valaki?",
+  "Na profile daného používateľa klikni na tlačidlo „🚫 Zablokovať\" — po zablokovaní ťa už nemôže kontaktovať, volať ti ani vidieť tvoj obsah. Kedykoľvek ho môžeš rovnakým tlačidlom aj odblokovať.": "Az adott felhasználó profilján kattints a „🚫 Blokkolás” gombra — a blokkolás után már nem tud kapcsolatba lépni veled, nem hívhat, és nem láthatja a tartalmadat. Bármikor feloldhatod a blokkolást ugyanezzel a gombbal.",
+  "Zrušenie účtu": "Fiók megszüntetése",
+  "Svoj účet aj s celým obsahom (príspevky, inzeráty, videá, profil) môžeš natrvalo vymazať v nastaveniach profilu tlačidlom „Zrušiť účet\". Táto akcia je nevratná.": "A fiókodat a teljes tartalommal együtt (bejegyzések, hirdetések, videók, profil) véglegesen törölheted a profilbeállításokban a „Fiók törlése” gombbal. Ez a művelet visszavonhatatlan.",
+  "Potrebuješ ďalšiu pomoc?": "További segítségre van szükséged?",
+  "Napíš nám na sevcikjaroslav1@gmail.com — odpovieme čo najskôr.": "Írj nekünk a sevcikjaroslav1@gmail.com címre — a lehető leghamarabb válaszolunk.",
+  "Connect8 prevádzkuje Jaroslav Ševčík ako fyzická osoba.": "A Connect8-at Jaroslav Ševčík üzemelteti magánszemélyként.",
+  "E-mail": "E-mail",
+  "Na akékoľvek otázky, nahlásenia problému alebo pripomienky nám napíš na sevcikjaroslav1@gmail.com.": "Bármilyen kérdéssel, problémabejelentéssel vagy észrevétellel írj nekünk a sevcikjaroslav1@gmail.com címre.",
+  "Čo nám napíš": "Amit írhatsz nekünk",
+  "Technický problém alebo chybu v appke": "Technikai problémát vagy hibát az alkalmazásban",
+  "Nahlásenie obsahu alebo správania, ktoré porušuje pravidlá appky": "Az alkalmazás szabályait sértő tartalom vagy viselkedés bejelentését",
+  "Otázky ohľadom svojich osobných údajov a súkromia": "Kérdéseket a személyes adataiddal és a magánéleteddel kapcsolatban",
+  "Nápady na vylepšenie alebo novú funkciu": "Ötleteket fejlesztésre vagy új funkcióra",
+  "Odpoveď": "Válasz",
+  "Snažíme sa odpovedať čo najskôr, môže to v niektorých prípadoch chvíľu trvať — ďakujeme za trpezlivosť.": "Igyekszünk minél hamarabb válaszolni, ez néhány esetben eltarthat egy ideig — köszönjük a türelmet.",
+};
+
 const UI_DICT_EN = {
   // vizitka
   "🪪 Vytvoriť vizitku":"🪪 Create business card",
@@ -11383,7 +12101,7 @@ const UI_DICT_EN = {
 // Český slovník - pokrýva texty na prednej (prihlasovacej) stránke:
 // hero, prihlasovací/registračný formulár, features, pätička a nadpisy
 // právnych modálov. Zvyšok appky (po prihlásení) zostáva zámerne
-// neprekladaný do CZ, keďže si to používateľ vyžiadal len pre úvodnú
+// neprekladaný do CZ/PL, keďže si to používateľ vyžiadal len pre úvodnú
 // stránku.
 const UI_DICT_CZ = {
   // hero / úvodná stránka
@@ -11433,6 +12151,297 @@ const UI_DICT_CZ = {
   "🧑‍🤝‍🧑 Používatelia":"🧑‍🤝‍🧑 Uživatelé",
 };
 
+// Rovnaký princíp ako UI_DICT_CZ vyššie, len pre poľštinu (aktivuje sa
+// kliknutím na PL vlajku na úvodnej/prihlasovacej stránke).
+const UI_DICT_PL = {
+  // hero / úvodná stránka
+  "Feed, videá, marketplace aj správy — všetko na jednej platforme, postavenej pre komunitu okolo teba.":"Kanał, filmy, rynek i wiadomości — wszystko na jednej platformie, stworzonej dla społeczności wokół ciebie.",
+  "Platforma na vzájomnú komunikáciu, zdieľanie obsahu a nadväzovanie kontaktov.":"Platforma do wzajemnej komunikacji, udostępniania treści i nawiązywania kontaktów.",
+  // prihlasovací / registračný formulár
+  "Prihlásenie":"Logowanie",
+  "Registrácia":"Rejestracja",
+  "E-mail":"E-mail",
+  "Heslo":"Hasło",
+  "Meno":"Imię",
+  "Prihlásiť sa":"Zaloguj się",
+  "Vytvoriť účet":"Utwórz konto",
+  "tvoj@email.sk":"twoj@email.pl",
+  "Jaro Novák":"Jan Kowalski",
+  "min. 6 znakov":"min. 6 znaków",
+  "Pripoj sa aj ty a":"Dołącz i ty, i",
+  "pozvi aj svojich priateľov":"zaproś swoich znajomych",
+  // features
+  "Videá":"Wideo",
+  "Správy":"Wiadomości",
+  "Príspevky priateľov, novinky a odkazy na jednom mieste, v reálnom čase.":"Posty znajomych, nowości i linki w jednym miejscu, w czasie rzeczywistym.",
+  "Krátke vertikálne videá — nahraj, sleduj a reaguj jedným ťuknutím.":"Krótkie pionowe filmy — nagraj, oglądaj i reaguj jednym dotknięciem.",
+  "Predaj a nájdi veci v okolí, roztriedené podľa kategórií a ceny.":"Sprzedawaj i znajdź rzeczy w okolicy, posegregowane według kategorii i ceny.",
+  "Textové aj hlasové správy, hovory a videohovory s priateľmi.":"Wiadomości tekstowe i głosowe, połączenia i rozmowy wideo ze znajomymi.",
+  // pätička / právne
+  "© Connect8 Všetky práva vyhradené.":"© Connect8 Wszelkie prawa zastrzeżone.",
+  "Zásady ochrany súkromia":"Polityka prywatności",
+  "Centrum ochrany súkromia":"Centrum prywatności",
+  "Nastavenia cookies":"Ustawienia plików cookie",
+  "Informácie":"Informacje",
+  "Podmienky":"Warunki",
+  "Podmienky používania":"Warunki korzystania",
+  "Komunitné pravidlá":"Zasady społeczności",
+  "Pravidlá k autorským právam":"Zasady dotyczące praw autorskich",
+  "Pravidlá pre reklamu":"Zasady dotyczące reklam",
+  "Bezpečnosť účtu":"Bezpieczeństwo konta",
+  "O nás":"O nas",
+  "Pomoc":"Pomoc",
+  "Kontakt":"Kontakt",
+  // topbar / navigácia po prihlásení
+  "Plocha":"Tablica",
+  "Kúp/Predaj":"Kup/Sprzedaj",
+  "Filmy":"Filmy",
+  "Hry":"Gry",
+  "Odhlásiť":"Wyloguj",
+  "Priatelia":"Znajomi",
+  "Používatelia":"Użytkownicy",
+  "Používateľ":"Użytkownik",
+  "Môj profil":"Mój profil",
+  "👥 Priatelia":"👥 Znajomi",
+  "🧑‍🤝‍🧑 Používatelia":"🧑‍🤝‍🧑 Użytkownicy",
+  // Kúp/Predaj (Marketplace)
+  "Čo hľadáš?":"Czego szukasz?",
+  "Nový inzerát":"Nowe ogłoszenie",
+  "Najnovšie inzeráty":"Najnowsze ogłoszenia",
+  "Pridať do ponuky":"Dodaj do oferty",
+  "Názov (napr. Bicykel)":"Nazwa (np. Rower)",
+  "Popis produktu...":"Opis produktu...",
+  "Cena (€)":"Cena (€)",
+  "Cena od":"Cena od",
+  "do":"do",
+  "Kategórie":"Kategorie",
+  "Všetky rubriky":"Wszystkie kategorie",
+  "Predávajúci":"Sprzedający",
+  "Tento inzerát už neexistuje.":"To ogłoszenie już nie istnieje.",
+  "+ Pridaj inzerát":"+ Dodaj ogłoszenie",
+  "📷 Fotky":"📷 Zdjęcia",
+  "📎 Súbor":"📎 Plik",
+  "🔗 Odkaz":"🔗 Link",
+  "📷 Fotky produktu (max 5)":"📷 Zdjęcia produktu (maks. 5)",
+  "Vymazať produkt":"Usuń produkt",
+  "Zmazať":"Usuń",
+  "Zrušiť úpravu":"Anuluj edycję",
+  "Pridať":"Dodaj",
+  "Upraviť":"Edytuj",
+  "Pridať/vymeniť fotky":"Dodaj/zmień zdjęcia",
+  "Pridať/vymeniť fotku":"Dodaj/zmień zdjęcie",
+  "Uložiť":"Zapisz",
+  "Zrušiť":"Anuluj",
+  "Foto":"Zdjęcie",
+  "Zatiaľ žiadne fotky.":"Na razie brak zdjęć.",
+  "Žiadny používateľ sa nenašiel.":"Nie znaleziono użytkownika.",
+  // Kategórie (výber pri pridávaní inzerátu)
+  "Auto":"Auto",
+  "Škoda, Fiat, VW...":"Škoda, Fiat, VW...",
+  "Deti":"Dzieci",
+  "Autosedačky, Kočíky...":"Foteliki, Wózki...",
+  "Dom a záhrada":"Dom i ogród",
+  "Kosačky, Kotle, Bojlery...":"Kosiarki, Kotły, Bojlery...",
+  "Elektro":"Elektronika",
+  "Autorádiá, Chladničky...":"Radia samochodowe, Lodówki...",
+  "Fotoaparáty, Videokamery...":"Aparaty, Kamery...",
+  "Bicie nástroje, Skúšobne...":"Perkusja, Sale prób...",
+  "Knihy":"Książki",
+  "Beletria, Učebnice...":"Beletrystyka, Podręczniki...",
+  "Mobily":"Telefony",
+  "Apple, Google, Samsung...":"Apple, Google, Samsung...",
+  "Motocykle":"Motocykle",
+  "Cestné motocykle, Skútre...":"Motocykle szosowe, Skutery...",
+  "Nábytok":"Meble",
+  "Kuchyne, Sedacie súpravy...":"Kuchnie, Sofy...",
+  "Oblečenie":"Odzież",
+  "Obuv, Šperky, Hodinky...":"Obuwie, Biżuteria, Zegarki...",
+  "Ostatné":"Inne",
+  "Starožitnosti, Zberateľstvo...":"Antyki, Kolekcjonerstwo...",
+  "Notebooky, Počítače...":"Laptopy, Komputery...",
+  "Práca":"Praca",
+  "Administratíva, Brigády...":"Administracja, Dorywcze...",
+  "Reality":"Nieruchomości",
+  "Byty predaj, Domy...":"Mieszkania na sprzedaż, Domy...",
+  "Služby":"Usługi",
+  "Doučovanie, Ubytovanie...":"Korepetycje, Noclegi...",
+  "Stroje":"Maszyny",
+  "Drevoobrábacie, Kovoobrábacie...":"Do obróbki drewna, Do obróbki metalu...",
+  "Šport":"Sport",
+  "Horské bicykle, Lyže...":"Rowery górskie, Narty...",
+  "Vstupenky":"Bilety",
+  "Letenky, Hudba, Koncerty...":"Loty, Muzyka, Koncerty...",
+  "Zvieratá":"Zwierzęta",
+  "Psy, Mačky, Kone...":"Psy, Koty, Konie...",
+  // Kategórie - ikonové chipy (filter nad zoznamom inzerátov)
+  "🚗 Auto":"🚗 Auto",
+  "🍼 Deti":"🍼 Dzieci",
+  "🏡 Dom a záhrada":"🏡 Dom i ogród",
+  "🔌 Elektro":"🔌 Elektronika",
+  "📷 Foto":"📷 Foto",
+  "🎵 Hudba":"🎵 Muzyka",
+  "📚 Knihy":"📚 Książki",
+  "📱 Mobily":"📱 Telefony",
+  "🏍️ Motocykle":"🏍️ Motocykle",
+  "🛋️ Nábytok":"🛋️ Meble",
+  "👕 Oblečenie":"👕 Odzież",
+  "📦 Ostatné":"📦 Inne",
+  "💻 PC":"💻 PC",
+  "💼 Práca":"💼 Praca",
+  "🏠 Reality":"🏠 Nieruchomości",
+  "🛠️ Služby":"🛠️ Usługi",
+  "⚙️ Stroje":"⚙️ Maszyny",
+  "⚽ Šport":"⚽ Sport",
+  "🎫 Vstupenky":"🎫 Bilety",
+  "🐾 Zvieratá":"🐾 Zwierzęta",
+};
+
+// hero, prihlasovací/registračný formulár, features, pätička a nadpisy
+// právnych modálov - preklad pre maďarskú vlajku (HU), zatiaľ len pre
+// úvodnú/prihlasovaciu stránku, rovnako ako to bolo pôvodne pri CZ/PL.
+const UI_DICT_HU = {
+  // hero / úvodná stránka
+  "Feed, videá, marketplace aj správy — všetko na jednej platforme, postavenej pre komunitu okolo teba.":"Hírfolyam, videók, piactér és hírek — minden egy platformon, a körülötted lévő közösség számára.",
+  "Platforma na vzájomnú komunikáciu, zdieľanie obsahu a nadväzovanie kontaktov.":"Platform az egymással való kommunikációra, tartalmak megosztására és kapcsolatok kialakítására.",
+  // prihlasovací / registračný formulár
+  "Prihlásenie":"Bejelentkezés",
+  "Registrácia":"Regisztráció",
+  "E-mail":"E-mail",
+  "Heslo":"Jelszó",
+  "Meno":"Név",
+  "Prihlásiť sa":"Bejelentkezés",
+  "Vytvoriť účet":"Fiók létrehozása",
+  "tvoj@email.sk":"te@email.hu",
+  "Jaro Novák":"Kovács János",
+  "min. 6 znakov":"min. 6 karakter",
+  "Pripoj sa aj ty a":"Csatlakozz te is, és",
+  "pozvi aj svojich priateľov":"hívd meg a barátaidat is",
+  // features
+  "Videá":"Videók",
+  "Správy":"Hírek",
+  "Príspevky priateľov, novinky a odkazy na jednom mieste, v reálnom čase.":"Barátaid bejegyzései, hírek és linkek egy helyen, valós időben.",
+  "Krátke vertikálne videá — nahraj, sleduj a reaguj jedným ťuknutím.":"Rövid függőleges videók — töltsd fel, nézd meg és reagálj egyetlen érintéssel.",
+  "Predaj a nájdi veci v okolí, roztriedené podľa kategórií a ceny.":"Adj el és találj dolgokat a közeledben, kategóriák és ár szerint rendezve.",
+  "Textové aj hlasové správy, hovory a videohovory s priateľmi.":"Szöveges és hangüzenetek, hívások és videohívások a barátaiddal.",
+  // pätička / právne
+  "© Connect8 Všetky práva vyhradené.":"© Connect8 Minden jog fenntartva.",
+  "Zásady ochrany súkromia":"Adatvédelmi irányelvek",
+  "Centrum ochrany súkromia":"Adatvédelmi központ",
+  "Nastavenia cookies":"Cookie-beállítások",
+  "Informácie":"Információk",
+  "Podmienky":"Feltételek",
+  "Podmienky používania":"Felhasználási feltételek",
+  "Komunitné pravidlá":"Közösségi irányelvek",
+  "Pravidlá k autorským právam":"Szerzői jogi szabályok",
+  "Pravidlá pre reklamu":"Hirdetési szabályok",
+  "Bezpečnosť účtu":"Fiókbiztonság",
+  "O nás":"Rólunk",
+  "Pomoc":"Súgó",
+  "Kontakt":"Kapcsolat",
+  // topbar / navigácia po prihlásení
+  "Plocha":"Kezdőlap",
+  "Kúp/Predaj":"Piactér",
+  "Filmy":"Filmek",
+  "Hry":"Játékok",
+  "Odhlásiť":"Kijelentkezés",
+  "Priatelia":"Barátok",
+  "Používatelia":"Felhasználók",
+  "Používateľ":"Felhasználó",
+  "Môj profil":"Profilom",
+  "👥 Priatelia":"👥 Barátok",
+  "🧑‍🤝‍🧑 Používatelia":"🧑‍🤝‍🧑 Felhasználók",
+  // Kúp/Predaj (Marketplace)
+  "Čo hľadáš?":"Mit keresel?",
+  "Nový inzerát":"Új hirdetés",
+  "Najnovšie inzeráty":"Legújabb hirdetések",
+  "Pridať do ponuky":"Hozzáadás a kínálathoz",
+  "Názov (napr. Bicykel)":"Név (pl. Bicikli)",
+  "Popis produktu...":"Termékleírás...",
+  "Cena (€)":"Ár (€)",
+  "Cena od":"Ár -tól",
+  "do":"-ig",
+  "Kategórie":"Kategóriák",
+  "Všetky rubriky":"Összes kategória",
+  "Predávajúci":"Eladó",
+  "Tento inzerát už neexistuje.":"Ez a hirdetés már nem létezik.",
+  "+ Pridaj inzerát":"+ Hirdetés feladása",
+  "📷 Fotky":"📷 Fotók",
+  "📎 Súbor":"📎 Fájl",
+  "🔗 Odkaz":"🔗 Link",
+  "📷 Fotky produktu (max 5)":"📷 Termékfotók (max. 5)",
+  "Vymazať produkt":"Termék törlése",
+  "Zmazať":"Törlés",
+  "Zrušiť úpravu":"Szerkesztés megszakítása",
+  "Pridať":"Hozzáadás",
+  "Upraviť":"Szerkesztés",
+  "Pridať/vymeniť fotky":"Fotók hozzáadása/cseréje",
+  "Pridať/vymeniť fotku":"Fotó hozzáadása/cseréje",
+  "Uložiť":"Mentés",
+  "Zrušiť":"Mégse",
+  "Foto":"Fotó",
+  "Zatiaľ žiadne fotky.":"Még nincsenek fotók.",
+  "Žiadny používateľ sa nenašiel.":"Nem található felhasználó.",
+  // Kategórie (výber pri pridávaní inzerátu)
+  "Auto":"Autó",
+  "Škoda, Fiat, VW...":"Škoda, Fiat, VW...",
+  "Deti":"Gyerek",
+  "Autosedačky, Kočíky...":"Gyerekülések, Babakocsik...",
+  "Dom a záhrada":"Ház és kert",
+  "Kosačky, Kotle, Bojlery...":"Fűnyírók, Kazánok, Bojlerek...",
+  "Elektro":"Elektronika",
+  "Autorádiá, Chladničky...":"Autórádiók, Hűtőszekrények...",
+  "Fotoaparáty, Videokamery...":"Fényképezőgépek, Videokamerák...",
+  "Bicie nástroje, Skúšobne...":"Dobfelszerelések, Próbatermek...",
+  "Knihy":"Könyvek",
+  "Beletria, Učebnice...":"Szépirodalom, Tankönyvek...",
+  "Mobily":"Telefonok",
+  "Apple, Google, Samsung...":"Apple, Google, Samsung...",
+  "Motocykle":"Motorkerékpárok",
+  "Cestné motocykle, Skútre...":"Országúti motorok, Robogók...",
+  "Nábytok":"Bútor",
+  "Kuchyne, Sedacie súpravy...":"Konyhák, Ülőgarnitúrák...",
+  "Oblečenie":"Ruházat",
+  "Obuv, Šperky, Hodinky...":"Cipők, Ékszerek, Órák...",
+  "Ostatné":"Egyéb",
+  "Starožitnosti, Zberateľstvo...":"Antikvitások, Gyűjtemények...",
+  "Notebooky, Počítače...":"Laptopok, Számítógépek...",
+  "Práca":"Munka",
+  "Administratíva, Brigády...":"Adminisztráció, Alkalmi munkák...",
+  "Reality":"Ingatlan",
+  "Byty predaj, Domy...":"Lakás eladó, Házak...",
+  "Služby":"Szolgáltatások",
+  "Doučovanie, Ubytovanie...":"Korrepetálás, Szállás...",
+  "Stroje":"Gépek",
+  "Drevoobrábacie, Kovoobrábacie...":"Famegmunkáló, Fémmegmunkáló...",
+  "Šport":"Sport",
+  "Horské bicykle, Lyže...":"Hegyi kerékpárok, Síelés...",
+  "Vstupenky":"Jegyek",
+  "Letenky, Hudba, Koncerty...":"Repülőjegyek, Zene, Koncertek...",
+  "Zvieratá":"Állatok",
+  "Psy, Mačky, Kone...":"Kutyák, Macskák, Lovak...",
+  // Kategórie - ikonové chipy (filter nad zoznamom inzerátov)
+  "🚗 Auto":"🚗 Autó",
+  "🍼 Deti":"🍼 Gyerek",
+  "🏡 Dom a záhrada":"🏡 Ház és kert",
+  "🔌 Elektro":"🔌 Elektronika",
+  "📷 Foto":"📷 Fotó",
+  "🎵 Hudba":"🎵 Zene",
+  "📚 Knihy":"📚 Könyvek",
+  "📱 Mobily":"📱 Telefonok",
+  "🏍️ Motocykle":"🏍️ Motorkerékpárok",
+  "🛋️ Nábytok":"🛋️ Bútor",
+  "👕 Oblečenie":"👕 Ruházat",
+  "📦 Ostatné":"📦 Egyéb",
+  "💻 PC":"💻 PC",
+  "💼 Práca":"💼 Munka",
+  "🏠 Reality":"🏠 Ingatlan",
+  "🛠️ Služby":"🛠️ Szolgáltatások",
+  "⚙️ Stroje":"⚙️ Gépek",
+  "⚽ Šport":"⚽ Sport",
+  "🎫 Vstupenky":"🎫 Jegyek",
+  "🐾 Zvieratá":"🐾 Állatok",
+};
+
 // Vráti anglický preklad pevného textu (ak existuje v slovníku), inak
 // vráti pôvodný slovenský text nezmenený. Volá sa priamo z JS šablón
 // (napr. buildPostCard) pre časti, ktoré obsahujú aj dynamický obsah
@@ -11440,6 +12449,8 @@ const UI_DICT_CZ = {
 function t(text){
   if(currentLang === 'en') return UI_DICT_EN.hasOwnProperty(text) ? UI_DICT_EN[text] : text;
   if(currentLang === 'cz') return UI_DICT_CZ.hasOwnProperty(text) ? UI_DICT_CZ[text] : text;
+  if(currentLang === 'pl') return UI_DICT_PL.hasOwnProperty(text) ? UI_DICT_PL[text] : text;
+  if(currentLang === 'hu') return UI_DICT_HU.hasOwnProperty(text) ? UI_DICT_HU[text] : text;
   return text;
 }
 
@@ -11457,6 +12468,10 @@ function translateTextNode(node){
     node.nodeValue = original.replace(trimmed, UI_DICT_EN[trimmed]);
   } else if(currentLang === 'cz' && UI_DICT_CZ.hasOwnProperty(trimmed)){
     node.nodeValue = original.replace(trimmed, UI_DICT_CZ[trimmed]);
+  } else if(currentLang === 'pl' && UI_DICT_PL.hasOwnProperty(trimmed)){
+    node.nodeValue = original.replace(trimmed, UI_DICT_PL[trimmed]);
+  } else if(currentLang === 'hu' && UI_DICT_HU.hasOwnProperty(trimmed)){
+    node.nodeValue = original.replace(trimmed, UI_DICT_HU[trimmed]);
   } else {
     node.nodeValue = original;
   }
@@ -11474,6 +12489,10 @@ function translateElementAttrs(el){
       el.setAttribute(attr, UI_DICT_EN[trimmed]);
     } else if(currentLang === 'cz' && UI_DICT_CZ.hasOwnProperty(trimmed)){
       el.setAttribute(attr, UI_DICT_CZ[trimmed]);
+    } else if(currentLang === 'pl' && UI_DICT_PL.hasOwnProperty(trimmed)){
+      el.setAttribute(attr, UI_DICT_PL[trimmed]);
+    } else if(currentLang === 'hu' && UI_DICT_HU.hasOwnProperty(trimmed)){
+      el.setAttribute(attr, UI_DICT_HU[trimmed]);
     } else if(original !== null && original !== undefined){
       el.setAttribute(attr, original);
     }
@@ -11611,11 +12630,11 @@ async function machineTranslate(text, targetLang){
 // externé MyMemory API, takže sa nikdy nemôže minúť denný free limit
 // a preklad je vždy okamžitý.
 function autoTranslateLegalModal(name){
-  if(currentLang !== 'en' && currentLang !== 'cz') return;
+  if(currentLang !== 'en' && currentLang !== 'cz' && currentLang !== 'pl' && currentLang !== 'hu') return;
   const body = document.querySelector('#legal-modal-' + name + ' .legal-sheet-body');
   if(!body) return;
-  const dict = currentLang === 'en' ? LEGAL_DICT_EN : LEGAL_DICT_CZ;
-  const lineClass = currentLang === 'en' ? 'legal-en-line' : 'legal-cz-line';
+  const dict = currentLang === 'en' ? LEGAL_DICT_EN : (currentLang === 'cz' ? LEGAL_DICT_CZ : (currentLang === 'pl' ? LEGAL_DICT_PL : LEGAL_DICT_HU));
+  const lineClass = currentLang === 'en' ? 'legal-en-line' : (currentLang === 'cz' ? 'legal-cz-line' : (currentLang === 'pl' ? 'legal-pl-line' : 'legal-hu-line'));
   const targets = body.querySelectorAll('p, li, h2, h3');
   targets.forEach(el=>{
     if(el.dataset.translatedLang === currentLang) return;
@@ -11640,21 +12659,24 @@ function autoTranslateLegalModal(name){
 // preklad DO NOVÉHO riadku POD pôvodný text (ten sa nemení, ostáva presne
 // tak, ako ho autor napísal - platí to pre akýkoľvek jazyk príspevku).
 async function translateVisiblePosts(){
-  if(currentLang !== 'en') return;
+  if(currentLang !== 'en' && currentLang !== 'pl' && currentLang !== 'hu') return;
+  const targetLang = currentLang;
   const holders = document.querySelectorAll('.post-text-translation');
   for(const holder of holders){
-    if(holder.dataset.done === '1') continue;
+    if(holder.dataset.doneLang === targetLang) continue;
     const postEl = holder.closest('.post');
     const textEl = postEl ? postEl.querySelector('.post-text') : null;
     if(!textEl) continue;
     const original = textEl.textContent;
     if(!original || !original.trim()) continue;
-    holder.dataset.done = '1';
-    const translated = await machineTranslate(original, 'en');
-    if(currentLang !== 'en') return;
+    holder.dataset.doneLang = targetLang;
+    const translated = await machineTranslate(original, targetLang);
+    if(currentLang !== targetLang) return;
     if(translated && translated.trim().toLowerCase() !== original.trim().toLowerCase()){
       holder.textContent = '🌐 ' + translated;
       holder.style.cssText = 'color:var(--muted,#8a93a6);font-style:italic;font-size:13.5px;margin:-6px 0 12px;';
+    } else {
+      holder.textContent = '';
     }
   }
 }
