@@ -1736,7 +1736,7 @@
           <path d="M0,0 L60,40 M60,0 L0,40" stroke="#C8102E" stroke-width="4.5"/>
           <path d="M30,0 V40 M0,20 H60" stroke="#fff" stroke-width="13"/>
           <path d="M30,0 V40 M0,20 H60" stroke="#C8102E" stroke-width="8"/>
-        </svg> EN</span>
+        </svg> UK</span>
         <span class="lang-flag" id="lang-flag-cz" onclick="setAppLanguage('cz')" title="Čeština"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
           <rect width="60" height="40" fill="#fff"/>
           <rect y="20" width="60" height="20" fill="#D7141A"/>
@@ -3803,6 +3803,84 @@ const SK_NAMEDAYS = {
   "12-26":"Štefan", "12-27":"Filoména", "12-28":"Ivana, Ivona", "12-29":"Milada", "12-30":"Dávid", "12-31":"Silvester"
 };
 
+/* ---------------- CZ_NAMEDAYS — český meninový (jmenný) kalendár ----------------
+   Používa sa namiesto SK_NAMEDAYS, keď je aktívna česká vlajka (currentLang === 'cz'),
+   aby kalendár aj hlavičkové hodiny ukazovali české meniny namiesto slovenských. */
+const CZ_NAMEDAYS = {
+  "01-01":"", "01-02":"Karina", "01-03":"Radmila", "01-04":"Diana", "01-05":"Dalimil",
+  "01-06":"Tři králové", "01-07":"Vilma", "01-08":"Čestmír", "01-09":"Vladan", "01-10":"Břetislav",
+  "01-11":"Bohdana", "01-12":"Pravoslav", "01-13":"Edita", "01-14":"Radovan", "01-15":"Alice",
+  "01-16":"Ctirad", "01-17":"Drahoslav", "01-18":"Vladislav", "01-19":"Doubravka", "01-20":"Ilona",
+  "01-21":"Běla", "01-22":"Slavomír", "01-23":"Zdeněk", "01-24":"Milena", "01-25":"Miloš",
+  "01-26":"Zora", "01-27":"Ingrid", "01-28":"Otýlie", "01-29":"Zdislava", "01-30":"Robin", "01-31":"Marika",
+  "02-01":"Hynek", "02-02":"Nela", "02-03":"Blažej", "02-04":"Jarmila", "02-05":"Dobromila",
+  "02-06":"Vanda", "02-07":"Veronika", "02-08":"Milada", "02-09":"Apolena", "02-10":"Mojmír",
+  "02-11":"Božena", "02-12":"Slavěna", "02-13":"Věnceslav", "02-14":"Valentýn", "02-15":"Jiřina",
+  "02-16":"Ljuba", "02-17":"Miloslava", "02-18":"Gizela", "02-19":"Patrik", "02-20":"Oldřich",
+  "02-21":"Lenka", "02-22":"Petr", "02-23":"Svatopluk", "02-24":"Matěj", "02-25":"Liliana",
+  "02-26":"Dorota", "02-27":"Alexandr", "02-28":"Lumír", "02-29":"",
+  "03-01":"Bedřich", "03-02":"Anežka", "03-03":"Kamil", "03-04":"Stela", "03-05":"Kazimír",
+  "03-06":"Miroslav", "03-07":"Tomáš", "03-08":"Gabriela", "03-09":"Františka", "03-10":"Viktorie",
+  "03-11":"Anděla", "03-12":"Řehoř", "03-13":"Růžena", "03-14":"Rút, Matylda", "03-15":"Ida",
+  "03-16":"Elena, Herbert", "03-17":"Vlastimil", "03-18":"Eduard", "03-19":"Josef", "03-20":"Světlana",
+  "03-21":"Radek", "03-22":"Leona", "03-23":"Ivona", "03-24":"Gabriel", "03-25":"Marián",
+  "03-26":"Emanuel", "03-27":"Dita", "03-28":"Soňa", "03-29":"Taťána", "03-30":"Arnošt", "03-31":"Kvido",
+  "04-01":"Hugo", "04-02":"Erika", "04-03":"Richard", "04-04":"Ivana", "04-05":"Miroslava",
+  "04-06":"Vendula", "04-07":"Heřman, Hermína", "04-08":"Ema", "04-09":"Dušan", "04-10":"Darja",
+  "04-11":"Izabela", "04-12":"Julius", "04-13":"Aleš", "04-14":"Vincenc", "04-15":"Anastázie",
+  "04-16":"Irena", "04-17":"Rudolf", "04-18":"Valérie", "04-19":"Rostislav", "04-20":"Marcela",
+  "04-21":"Alexandra", "04-22":"Evženie", "04-23":"Vojtěch", "04-24":"Jiří", "04-25":"Marek",
+  "04-26":"Oto", "04-27":"Jaroslav", "04-28":"Vlastislav", "04-29":"Robert", "04-30":"Blahoslav",
+  "05-01":"", "05-02":"Zikmund", "05-03":"Alexej", "05-04":"Květoslav", "05-05":"Klaudie",
+  "05-06":"Radoslav", "05-07":"Stanislav", "05-08":"", "05-09":"Ctibor", "05-10":"Blažena",
+  "05-11":"Svatava", "05-12":"Pankrác", "05-13":"Servác", "05-14":"Bonifác", "05-15":"Žofie",
+  "05-16":"Přemysl", "05-17":"Aneta", "05-18":"Nataša", "05-19":"Ivo", "05-20":"Zbyšek",
+  "05-21":"Monika", "05-22":"Emil", "05-23":"Vladimír", "05-24":"Jana", "05-25":"Viola",
+  "05-26":"Filip", "05-27":"Valdemar", "05-28":"Vilém", "05-29":"Maxmilián", "05-30":"Ferdinand", "05-31":"Kamila",
+  "06-01":"Laura", "06-02":"Jarmil", "06-03":"Tamara", "06-04":"Dalibor", "06-05":"Dobroslav",
+  "06-06":"Norbert", "06-07":"Iveta", "06-08":"Medard", "06-09":"Stanislava", "06-10":"Gita",
+  "06-11":"Bruno", "06-12":"Antonie", "06-13":"Antonín", "06-14":"Roland", "06-15":"Vít",
+  "06-16":"Zbyněk", "06-17":"Adolf", "06-18":"Milan", "06-19":"Leoš", "06-20":"Květa",
+  "06-21":"Alois", "06-22":"Pavla", "06-23":"Zdeňka", "06-24":"Jan", "06-25":"Ivan",
+  "06-26":"Adriana", "06-27":"Ladislav", "06-28":"Lubomír", "06-29":"Petr a Pavel", "06-30":"Šárka",
+  "07-01":"Jaroslava", "07-02":"Patricie", "07-03":"Radomír", "07-04":"Prokop", "07-05":"Cyril a Metoděj",
+  "07-06":"", "07-07":"Bohuslava", "07-08":"Nora", "07-09":"Drahoslava", "07-10":"Libuše, Amálie",
+  "07-11":"Olga", "07-12":"Bořek", "07-13":"Markéta", "07-14":"Karolína", "07-15":"Jindřich",
+  "07-16":"Luboš", "07-17":"Martina", "07-18":"Drahomíra", "07-19":"Čeněk", "07-20":"Ilja",
+  "07-21":"Vítězslav", "07-22":"Magdaléna", "07-23":"Libor", "07-24":"Kristýna", "07-25":"Jakub",
+  "07-26":"Anna", "07-27":"Věroslav", "07-28":"Viktor", "07-29":"Marta", "07-30":"Bořivoj", "07-31":"Ignác",
+  "08-01":"Oskar", "08-02":"Gustav", "08-03":"Miluše", "08-04":"Dominik", "08-05":"Kristián",
+  "08-06":"Oldřiška", "08-07":"Lada", "08-08":"Soběslav", "08-09":"Roman", "08-10":"Vavřinec",
+  "08-11":"Zuzana", "08-12":"Klára", "08-13":"Alena", "08-14":"Alan", "08-15":"Hana",
+  "08-16":"Jáchym", "08-17":"Petra", "08-18":"Helena", "08-19":"Ludvík", "08-20":"Bernard",
+  "08-21":"Johana", "08-22":"Bohuslav", "08-23":"Sandra", "08-24":"Bartoloměj", "08-25":"Radim",
+  "08-26":"Luděk", "08-27":"Otakar", "08-28":"Augustýn", "08-29":"Evelína", "08-30":"Vladěna", "08-31":"Pavlína",
+  "09-01":"Linda, Samuel", "09-02":"Adéla", "09-03":"Bronislav", "09-04":"Jindřiška", "09-05":"Boris",
+  "09-06":"Boleslav", "09-07":"Regina", "09-08":"Mariana", "09-09":"Daniela", "09-10":"Irma",
+  "09-11":"Denisa", "09-12":"Marie", "09-13":"Lubor", "09-14":"Radka", "09-15":"Jolana",
+  "09-16":"Ludmila", "09-17":"Naděžda", "09-18":"Kryštof", "09-19":"Zita", "09-20":"Oleg",
+  "09-21":"Matouš", "09-22":"Darina", "09-23":"Berta", "09-24":"Jaromír", "09-25":"Zlata",
+  "09-26":"Andrea", "09-27":"Jonáš", "09-28":"Václav", "09-29":"Michal", "09-30":"Jeroným",
+  "10-01":"Igor", "10-02":"Olívie, Oliver", "10-03":"Bohumil", "10-04":"František", "10-05":"Eliška",
+  "10-06":"Hanuš", "10-07":"Justýna", "10-08":"Věra", "10-09":"Štefan, Sára", "10-10":"Marina",
+  "10-11":"Andrej", "10-12":"Marcel", "10-13":"Renáta", "10-14":"Agáta", "10-15":"Tereza",
+  "10-16":"Havel", "10-17":"Hedvika", "10-18":"Lukáš", "10-19":"Michaela", "10-20":"Vendelín",
+  "10-21":"Brigita", "10-22":"Sabina", "10-23":"Teodor", "10-24":"Nina", "10-25":"Beáta",
+  "10-26":"Erik", "10-27":"Šarlota, Zoe", "10-28":"", "10-29":"Silvie", "10-30":"Tadeáš", "10-31":"Štěpánka",
+  "11-01":"Felix", "11-02":"Dušičky", "11-03":"Hubert", "11-04":"Karel", "11-05":"Miriam",
+  "11-06":"Liběna", "11-07":"Saskie", "11-08":"Bohumír", "11-09":"Bohdan", "11-10":"Evžen",
+  "11-11":"Martin", "11-12":"Benedikt", "11-13":"Tibor", "11-14":"Sáva", "11-15":"Leopold",
+  "11-16":"Otmar", "11-17":"Mahulena", "11-18":"Romana", "11-19":"Alžběta", "11-20":"Nikola",
+  "11-21":"Albert", "11-22":"Cecílie", "11-23":"Klement", "11-24":"Emílie", "11-25":"Kateřina",
+  "11-26":"Artur", "11-27":"Xenie", "11-28":"René", "11-29":"Zina", "11-30":"Ondřej",
+  "12-01":"Iva", "12-02":"Blanka", "12-03":"Svatoslav", "12-04":"Barbora", "12-05":"Jitka",
+  "12-06":"Mikuláš", "12-07":"Ambrož", "12-08":"Květoslava", "12-09":"Vratislav", "12-10":"Julie",
+  "12-11":"Dana", "12-12":"Simona", "12-13":"Lucie", "12-14":"Lýdie", "12-15":"Radana",
+  "12-16":"Albína", "12-17":"Daniel", "12-18":"Miloslav", "12-19":"Ester", "12-20":"Dagmar",
+  "12-21":"Natálie", "12-22":"Šimon", "12-23":"Vlasta", "12-24":"Adam a Eva", "12-25":"",
+  "12-26":"Štěpán", "12-27":"Žaneta", "12-28":"Bohumila", "12-29":"Judita", "12-30":"David", "12-31":"Silvestr"
+};
+
 /* ---------------- KALENDÁR (mesiac, víkendy, slovenské štátne sviatky, meniny) ---------------- */
 let calendarViewDate = new Date();
 
@@ -3841,6 +3919,105 @@ function getSlovakHolidays(year){
   return holidays;
 }
 
+// České štátne sviatky - používajú sa namiesto tých slovenských, keď je
+// aktívna česká vlajka (currentLang === 'cz'). Zoznam zodpovedá oficiálnym
+// štátnym sviatkom a významným dňom ČR (odlišný od SK zoznamu - napr. ČR
+// nemá 6.1 ani 1.9 a 15.9, ale má navyše 6.7, 28.9, 28.10).
+function getCzechHolidays(year){
+  const easter = getEasterSunday(year);
+  const goodFriday = new Date(easter); goodFriday.setDate(easter.getDate()-2);
+  const easterMonday = new Date(easter); easterMonday.setDate(easter.getDate()+1);
+  const fmt = d => `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const holidays = {};
+  holidays['01-01'] = 'Nový rok, Den obnovy samostatného českého státu';
+  holidays[fmt(goodFriday)] = 'Velký pátek';
+  holidays[fmt(easterMonday)] = 'Velikonoční pondělí';
+  holidays['05-01'] = 'Svátek práce';
+  holidays['05-08'] = 'Den vítězství';
+  holidays['07-05'] = 'Den slovanských věrozvěstů Cyrila a Metoděje';
+  holidays['07-06'] = 'Den upálení mistra Jana Husa';
+  holidays['09-28'] = 'Den české státnosti';
+  holidays['10-28'] = 'Den vzniku samostatného československého státu';
+  holidays['11-17'] = 'Den boje za svobodu a demokracii';
+  holidays['12-24'] = 'Štědrý den';
+  holidays['12-25'] = '1. svátek vánoční';
+  holidays['12-26'] = '2. svátek vánoční';
+  return holidays;
+}
+
+// Vráti meninový kalendár aj funkciu na štátne sviatky podľa aktuálne
+// zvoleného jazyka appky - pri CZ vlajke české meniny a sviatky, inak
+// (SK aj ostatné jazyky, kde appka zatiaľ nemá vlastný kalendár) slovenské.
+// Britské štátne sviatky (bank holidays) - platia pre Anglicko a Wales
+// (najbežnejší variant; Škótsko a Severné Írsko majú pár odlišných dní).
+// Niektoré sú pohyblivé (n-tý pondelok v mesiaci) a niektoré sa pri páde
+// na víkend presúvajú na najbližší nasledujúci pracovný deň (substitute day).
+function getUKHolidays(year){
+  const fmt = d => `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  // Ak dátum pripadne na sobotu/nedeľu, posunie sa na najbližší pondelok
+  // (prípadne utorok, ak by pondelok bol už obsadený iným sviatkom - tu
+  // sa to nerieši, keďže Nový rok a Vianoce sa v praxi nekryjú).
+  const withSubstitute = (d) => {
+    const dow = d.getDay();
+    if(dow === 6) { const nd = new Date(d); nd.setDate(d.getDate()+2); return nd; }
+    if(dow === 0) { const nd = new Date(d); nd.setDate(d.getDate()+1); return nd; }
+    return d;
+  };
+  // Vráti dátum n-tého daného dňa v týždni (0=nedeľa...6=sobota) v mesiaci;
+  // n záporné číslo (napr. -1) znamená počítanie od konca mesiaca (posledný).
+  const nthWeekdayOfMonth = (year, monthIdx, weekday, n) => {
+    if(n > 0){
+      const first = new Date(year, monthIdx, 1);
+      let day = 1 + ((weekday - first.getDay() + 7) % 7) + (n-1)*7;
+      return new Date(year, monthIdx, day);
+    }
+    const last = new Date(year, monthIdx+1, 0);
+    let day = last.getDate() - ((last.getDay() - weekday + 7) % 7);
+    return new Date(year, monthIdx, day);
+  };
+
+  const easter = getEasterSunday(year);
+  const goodFriday = new Date(easter); goodFriday.setDate(easter.getDate()-2);
+  const easterMonday = new Date(easter); easterMonday.setDate(easter.getDate()+1);
+
+  const holidays = {};
+  holidays[fmt(withSubstitute(new Date(year, 0, 1)))] = "New Year's Day";
+  holidays[fmt(goodFriday)] = 'Good Friday';
+  holidays[fmt(easterMonday)] = 'Easter Monday';
+  holidays[fmt(nthWeekdayOfMonth(year, 4, 1, 1))] = 'Early May bank holiday';
+  holidays[fmt(nthWeekdayOfMonth(year, 4, 1, -1))] = 'Spring bank holiday';
+  holidays[fmt(nthWeekdayOfMonth(year, 7, 1, -1))] = 'Summer bank holiday';
+  // Vianočný deň a Boxing Day majú vlastné, presnejšie pravidlá presunu
+  // (keď 25.12. pripadne na víkend, posúvajú sa OBA dni, každý inak -
+  // jednoduché "posuň na najbližší pondelok" pre oba naráz by v niektorých
+  // rokoch skončilo kolíziou na tom istom dátume).
+  const christmas = new Date(year, 11, 25);
+  const boxing = new Date(year, 11, 26);
+  let christmasObserved = christmas, boxingObserved = boxing;
+  if(christmas.getDay() === 6){ // 25.12. je sobota
+    christmasObserved = new Date(year, 11, 27); // pondelok
+    boxingObserved = new Date(year, 11, 28); // utorok
+  } else if(christmas.getDay() === 0){ // 25.12. je nedeľa
+    christmasObserved = new Date(year, 11, 27); // utorok (26. je pondelok a ostáva Boxing Day)
+  } else if(boxing.getDay() === 6){ // 26.12. je sobota (25. je piatok)
+    boxingObserved = new Date(year, 11, 28); // pondelok
+  }
+  holidays[fmt(christmasObserved)] = 'Christmas Day';
+  holidays[fmt(boxingObserved)] = 'Boxing Day';
+  return holidays;
+}
+
+// Prázdny meninový kalendár pre UK - vo Veľkej Británii sa dátumy s
+// krstnými menami tradične nespájajú (na rozdiel od SK/CZ), takže tu
+// zámerne nie je žiadny obsah.
+const UK_NAMEDAYS = {};
+
+function currentNamedaysAndHolidays(){
+  if(currentLang === 'cz') return { namedays: CZ_NAMEDAYS, getHolidays: getCzechHolidays };
+  if(currentLang === 'en') return { namedays: UK_NAMEDAYS, getHolidays: getUKHolidays };
+  return { namedays: SK_NAMEDAYS, getHolidays: getSlovakHolidays };
+}
+
 function openCalendarModal(){
   calendarViewDate = new Date();
   renderCalendar();
@@ -3860,7 +4037,8 @@ function renderCalendar(){
   const month = calendarViewDate.getMonth();
   document.getElementById('calendar-month-title').textContent = `${MONTH_NAMES[month]} ${year}`;
 
-  const holidays = getSlovakHolidays(year);
+  const { namedays, getHolidays } = currentNamedaysAndHolidays();
+  const holidays = getHolidays(year);
   const firstDay = new Date(year, month, 1);
   const firstWeekdayIdx = (firstDay.getDay() + 6) % 7; // Po=0 ... Ne=6
   const daysInMonth = new Date(year, month+1, 0).getDate();
@@ -3890,7 +4068,7 @@ function renderCalendar(){
     const dow = dateObj.getDay();
     const isWeekend = dow === 0 || dow === 6;
     const mmdd = `${String(month+1).padStart(2,'0')}-${String(c.day).padStart(2,'0')}`;
-    const nameDay = SK_NAMEDAYS[mmdd] || '';
+    const nameDay = namedays[mmdd] || '';
     const holidayName = holidays[mmdd];
     const isToday = isTodayMonth && today.getDate() === c.day;
     let classes = 'cal-day';
@@ -3919,7 +4097,7 @@ function updateHeaderClock(){
   const monthNum = String(now.getMonth()+1).padStart(2,'0');
   dateEl.textContent = `${dd}.${now.getMonth()+1}.${now.getFullYear()}`;
 
-  const names = SK_NAMEDAYS[`${monthNum}-${dd}`] || '';
+  const names = currentNamedaysAndHolidays().namedays[`${monthNum}-${dd}`] || '';
   nameEl.textContent = names ? names : '—';
 }
 
@@ -11353,6 +11531,8 @@ function applyLanguage(){
   if(viewNews && viewNews.classList.contains('active')) loadNewsFeed(true);
   const viewMarket = document.getElementById('view-market');
   if(viewMarket && viewMarket.classList.contains('active')) renderProducts();
+  const calendarModal = document.getElementById('calendar-modal');
+  if(calendarModal && calendarModal.classList.contains('open')) renderCalendar();
 }
 
 function setAppLanguage(lang){
