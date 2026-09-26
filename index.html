@@ -41,7 +41,7 @@
   }
 
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;height:100%;overflow-x:hidden;max-width:100%;}
+  html,body{margin:0;padding:0;height:100%;}
   body{
     font-family:'Inter',sans-serif;
     background:var(--bg);
@@ -272,10 +272,10 @@
   .header-clock-date{font-size:10px;color:var(--text-dim);margin-top:1px;}
   .header-clock-name{font-size:10.5px;color:var(--accent);font-weight:600;margin-top:1px;}
   @media(max-width:700px){
-    .header-clock{min-width:0;max-width:88px;padding:2px 6px;}
+    .header-clock{min-width:0;padding:2px 6px;}
     .header-clock-time{font-size:12px;}
     .header-clock-date{font-size:9px;}
-    .header-clock-name{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+    .header-clock-name{font-size:9px;}
   }
   .header-lang-flag{
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -1668,7 +1668,6 @@
     .topbar-left{gap:8px;}
     .market-grid{grid-template-columns:1fr 1fr;}
     .topbar{flex-wrap:wrap;row-gap:10px;}
-    .topbar-right{flex-wrap:wrap;justify-content:flex-end;row-gap:6px;max-width:100%;}
     .user-stats{display:none;}
     .topbar > .mode-dock{
       order:3;width:100%;padding:4px;gap:2px;
@@ -1676,7 +1675,7 @@
       scrollbar-width:none;
     }
     .topbar > .mode-dock::-webkit-scrollbar{display:none;height:0;}
-    .topbar > .mode-dock button{flex:0 0 auto;min-width:0;padding:6px 7px;font-size:9px;gap:2px;white-space:nowrap;justify-content:center;}
+    .topbar > .mode-dock button{flex:0 0 auto;min-width:0;padding:7px 9px;font-size:10px;gap:3px;white-space:nowrap;justify-content:center;}
     .topbar > .mode-dock button .ind{display:none;}
     .mobile-quick-links{
       width:100%;display:flex;gap:4px;overflow-x:auto;padding:8px 16px 10px;
@@ -1695,7 +1694,7 @@
   }
 
   @media(max-width:360px){
-    .mode-dock button{font-size:8.5px;padding:6px 1px;}
+    .mode-dock button{font-size:9.5px;padding:6px 1px;}
   }
 </style>
 </head>
@@ -12872,7 +12871,7 @@ const UI_DICT_EN = {
   // topbar / navigácia
   "Plocha":"Feed",
   "Videá":"Videos",
-  "Kúp/Predaj":"Marketplace",
+  "Kúp/Predaj":"Market",
   "Správy":"News",
   "Filmy":"Movies",
   "Hry":"Games",
@@ -13252,7 +13251,7 @@ const UI_DICT_PL = {
   "pozvi aj svojich priateľov":"zaproś swoich znajomych",
   // features
   "Videá":"Wideo",
-  "Správy":"Wiadomości",
+  "Správy":"Wiad.",
   "Príspevky priateľov, novinky a odkazy na jednom mieste, v reálnom čase.":"Posty znajomych, nowości i linki w jednym miejscu, w czasie rzeczywistym.",
   "Krátke vertikálne videá — nahraj, sleduj a reaguj jedným ťuknutím.":"Krótkie pionowe filmy — nagraj, oglądaj i reaguj jednym dotknięciem.",
   "Predaj a nájdi veci v okolí, roztriedené podľa kategórií a ceny.":"Sprzedawaj i znajdź rzeczy w okolicy, posegregowane według kategorii i ceny.",
@@ -13274,7 +13273,7 @@ const UI_DICT_PL = {
   "Kontakt":"Kontakt",
   // topbar / navigácia po prihlásení
   "Plocha":"Tablica",
-  "Kúp/Predaj":"Kup/Sprzedaj",
+  "Kúp/Predaj":"Kup/Sprz.",
   "Filmy":"Filmy",
   "Hry":"Gry",
   "Odhlásiť":"Wyloguj",
@@ -13423,7 +13422,7 @@ const UI_DICT_HU = {
   "Kúp/Predaj":"Piactér",
   "Filmy":"Filmek",
   "Hry":"Játékok",
-  "Odhlásiť":"Kijelentkezés",
+  "Odhlásiť":"Kilépés",
   "Priatelia":"Barátok",
   "Používatelia":"Felhasználók",
   "Používateľ":"Felhasználó",
@@ -13544,7 +13543,7 @@ const UI_DICT_AT = {
   "pozvi aj svojich priateľov":"lade auch deine Freunde ein",
   // features
   "Videá":"Videos",
-  "Správy":"Nachrichten",
+  "Správy":"Nachr.",
   "Príspevky priateľov, novinky a odkazy na jednom mieste, v reálnom čase.":"Beiträge von Freunden, Neuigkeiten und Links an einem Ort, in Echtzeit.",
   "Krátke vertikálne videá — nahraj, sleduj a reaguj jedným ťuknutím.":"Kurze vertikale Videos — hochladen, ansehen und mit einem Tippen reagieren.",
   "Predaj a nájdi veci v okolí, roztriedené podľa kategórií a ceny.":"Verkaufe und finde Dinge in deiner Nähe, sortiert nach Kategorien und Preis.",
@@ -13565,8 +13564,8 @@ const UI_DICT_AT = {
   "Pomoc":"Hilfe",
   "Kontakt":"Kontakt",
   // topbar / navigácia po prihlásení
-  "Plocha":"Startseite",
-  "Kúp/Predaj":"Marktplatz",
+  "Plocha":"Start",
+  "Kúp/Predaj":"Markt",
   "Filmy":"Filme",
   "Hry":"Spiele",
   "Odhlásiť":"Abmelden",
@@ -13692,7 +13691,7 @@ const UI_DICT_DE = {
   "pozvi aj svojich priateľov":"lade auch deine Freunde ein",
   // features
   "Videá":"Videos",
-  "Správy":"Nachrichten",
+  "Správy":"Nachr.",
   "Príspevky priateľov, novinky a odkazy na jednom mieste, v reálnom čase.":"Beiträge von Freunden, Neuigkeiten und Links an einem Ort, in Echtzeit.",
   "Krátke vertikálne videá — nahraj, sleduj a reaguj jedným ťuknutím.":"Kurze vertikale Videos — hochladen, ansehen und mit einem Tippen reagieren.",
   "Predaj a nájdi veci v okolí, roztriedené podľa kategórií a ceny.":"Verkaufe und finde Dinge in deiner Nähe, sortiert nach Kategorien und Preis.",
@@ -13713,8 +13712,8 @@ const UI_DICT_DE = {
   "Pomoc":"Hilfe",
   "Kontakt":"Kontakt",
   // topbar / navigácia po prihlásení
-  "Plocha":"Startseite",
-  "Kúp/Predaj":"Marktplatz",
+  "Plocha":"Start",
+  "Kúp/Predaj":"Markt",
   "Filmy":"Filme",
   "Hry":"Spiele",
   "Odhlásiť":"Abmelden",
@@ -13838,7 +13837,7 @@ const UI_DICT_IT = {
   "pozvi aj svojich priateľov":"invita anche i tuoi amici",
   // features
   "Videá":"Video",
-  "Správy":"Messaggi",
+  "Správy":"Mess.",
   "Príspevky priateľov, novinky a odkazy na jednom mieste, v reálnom čase.":"Post degli amici, novità e link in un unico posto, in tempo reale.",
   "Krátke vertikálne videá — nahraj, sleduj a reaguj jedným ťuknutím.":"Brevi video verticali — carica, guarda e reagisci con un solo tocco.",
   "Predaj a nájdi veci v okolí, roztriedené podľa kategórií a ceny.":"Vendi e trova oggetti nella tua zona, ordinati per categoria e prezzo.",
@@ -13860,7 +13859,7 @@ const UI_DICT_IT = {
   "Kontakt":"Contatti",
   // topbar / navigácia po prihlásení
   "Plocha":"Bacheca",
-  "Kúp/Predaj":"Compra/Vendi",
+  "Kúp/Predaj":"Compra/V.",
   "Filmy":"Film",
   "Hry":"Giochi",
   "Odhlásiť":"Esci",
