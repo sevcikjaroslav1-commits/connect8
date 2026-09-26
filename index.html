@@ -1742,6 +1742,10 @@
           <rect y="20" width="60" height="20" fill="#D7141A"/>
           <path d="M0,0 L30,20 L0,40 Z" fill="#11457E"/>
         </svg> CZ</span>
+        <span class="lang-flag" title="Polski"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
+          <rect width="60" height="40" fill="#fff"/>
+          <rect y="20" width="60" height="20" fill="#DC143C"/>
+        </svg> PL</span>
         <span class="lang-flag" title="Magyarország"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
           <rect width="60" height="40" fill="#fff"/>
           <rect width="60" height="13.33" fill="#CD2A3E"/>
@@ -1757,10 +1761,6 @@
           <rect y="13.33" width="60" height="13.34" fill="#DD0000"/>
           <rect y="26.67" width="60" height="13.33" fill="#FFCE00"/>
         </svg> DE</span>
-        <span class="lang-flag" title="Polski"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
-          <rect width="60" height="40" fill="#fff"/>
-          <rect y="20" width="60" height="20" fill="#DC143C"/>
-        </svg> PL</span>
         <span class="lang-flag" title="Español"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
           <rect width="60" height="40" fill="#AA151B"/>
           <rect y="10" width="60" height="20" fill="#F1BF00"/>
@@ -7145,14 +7145,30 @@ function stripHtml(html){
   return (d.textContent || d.innerText || '').trim();
 }
 
+// Nájde priameho potomka daného elementu, ktorého lokálne meno (bez XML
+// namespace prefixu) zodpovedá zadanému reťazcu. Používame to namiesto
+// getElementsByTagName('prefix:meno'), pretože to zlyhá, ak zdroj použije
+// iný/žiadny namespace prefix, než aký očakávame (napr. "szn:image" verzus
+// len "image" s namespace deklarovaným inak) - localName ostáva rovnaké
+// bez ohľadu na to, aký prefix je pred dvojbodkou.
+function findChildByLocalName(el, localName){
+  if(!el || !el.children) return null;
+  for(const child of el.children){
+    if((child.localName || child.tagName || '').toLowerCase() === localName) return child;
+  }
+  return null;
+}
+
 function extractImageFromItem(itemEl, rawXml){
   const media = itemEl.getElementsByTagName('media:content')[0] || itemEl.getElementsByTagName('media:thumbnail')[0];
   if(media && media.getAttribute('url')) return media.getAttribute('url');
   // Seznam.cz / Novinky.cz RSS (vlastné szn: rozšírenie) - obrázok je vo
   // vnorenom <szn:image><szn:url>...</szn:url></szn:image>, nie ako atribút.
-  const sznImage = itemEl.getElementsByTagName('szn:image')[0];
+  // Skúsime najprv doslovný názov tagu a ak nič nenájde (napr. iný/chýbajúci
+  // namespace prefix v danom feede), skúsime to isté podľa localName.
+  let sznImage = itemEl.getElementsByTagName('szn:image')[0] || findChildByLocalName(itemEl, 'image');
   if(sznImage){
-    const sznUrl = sznImage.getElementsByTagName('szn:url')[0];
+    const sznUrl = sznImage.getElementsByTagName('szn:url')[0] || findChildByLocalName(sznImage, 'url');
     if(sznUrl && sznUrl.textContent && sznUrl.textContent.trim()) return sznUrl.textContent.trim();
   }
   const enclosure = itemEl.getElementsByTagName('enclosure')[0];
@@ -7397,6 +7413,42 @@ async function loadNewsFeed(forceRefresh){
   }
 }
 
+// Niektoré zdroje (napr. Seznam Zprávy / Novinky.cz) majú na svojich CDN
+// obrázkoch nastavenú ochranu proti hotlinkovaniu, ktorá vie odmietnuť
+// požiadavku bez akejkoľvek Referer hlavičky (čo `referrerpolicy="no-referrer"`
+// nižšie spôsobuje). Preto pri chybe načítania skúsime obrázok ešte raz,
+// tentoraz bez tohto obmedzenia (s predvolenou referrer politikou
+// prehliadača), a až keď zlyhá aj to, zobrazíme náhradnú ikonu.
+function handleNewsImgError(img){
+  if(!img.dataset.retried){
+    img.dataset.retried = '1';
+    img.removeAttribute('referrerpolicy');
+    img.src = img.src;
+    return;
+  }
+  img.style.display = 'none';
+  if(img.nextElementSibling) img.nextElementSibling.style.display = 'flex';
+}
+
+// Obrázky zo Seznam.cz / Novinky.cz (české zdroje) sú hostované na CDN
+// doméne sdn.cz, ktorá bežne odmieta priame "hotlinkovanie" z cudzích
+// domén (aj s referrerpolicy="no-referrer" - blokuje podľa iných signálov,
+// nielen podľa Referer hlavičky), takže priamy <img src="..."> na tieto
+// obrázky vedie k neustálemu zlyhaniu a zobrazeniu len 📰 ikony namiesto
+// fotky - presne to, čo sa deje len pri českej vlajke (BBC/Daily Mail/
+// Independent pre EN takéto obmedzenie nemajú). Riešime to tak, že tieto
+// konkrétne obrázky necháme dotiahnuť cez verejný obrázkový proxy
+// (images.weserv.nl), ktorý ich stiahne na serveri (bez nášho refereru)
+// a znova poskytne - presne rovnaký princíp, aký už appka používa pre
+// samotné RSS feedy cez NEWS_PROXIES.
+function proxyNewsImageUrl(url){
+  if(!url) return url;
+  if(url.indexOf('sdn.cz') !== -1){
+    return 'https://images.weserv.nl/?url=' + encodeURIComponent(url);
+  }
+  return url;
+}
+
 function renderNewsGrid(items){
   const grid = document.getElementById('news-grid');
   if(!grid) return;
@@ -7404,7 +7456,7 @@ function renderNewsGrid(items){
   grid.innerHTML = items.map((it, idx)=>`
     <a class="news-row" id="news-card-${idx}" href="${it.link}" target="_blank" rel="noopener">
       <div class="news-row-thumb">
-        ${it.image ? `<img src="${it.image}" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : ''}
+        ${it.image ? `<img src="${proxyNewsImageUrl(it.image)}" loading="lazy" referrerpolicy="no-referrer" onerror="handleNewsImgError(this)">` : ''}
         <div class="news-noimg" style="${it.image ? 'display:none;' : 'display:flex;'}">📰</div>
       </div>
       <div class="news-row-body">
@@ -11164,6 +11216,13 @@ const UI_DICT_CZ = {
   "O nás":"O nás",
   "Pomoc":"Pomoc",
   "Kontakt":"Kontakt",
+  // topbar / navigácia po prihlásení
+  "Priatelia":"Přátelé",
+  "Používatelia":"Uživatelé",
+  "Používateľ":"Uživatel",
+  "Môj profil":"Můj profil",
+  "👥 Priatelia":"👥 Přátelé",
+  "🧑‍🤝‍🧑 Používatelia":"🧑‍🤝‍🧑 Uživatelé",
 };
 
 // Vráti anglický preklad pevného textu (ak existuje v slovníku), inak
