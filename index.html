@@ -41,7 +41,7 @@
   }
 
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;height:100%;}
+  html,body{margin:0;padding:0;height:100%;overflow-x:hidden;max-width:100%;}
   body{
     font-family:'Inter',sans-serif;
     background:var(--bg);
@@ -272,10 +272,10 @@
   .header-clock-date{font-size:10px;color:var(--text-dim);margin-top:1px;}
   .header-clock-name{font-size:10.5px;color:var(--accent);font-weight:600;margin-top:1px;}
   @media(max-width:700px){
-    .header-clock{min-width:0;padding:2px 6px;}
+    .header-clock{min-width:0;max-width:88px;padding:2px 6px;}
     .header-clock-time{font-size:12px;}
     .header-clock-date{font-size:9px;}
-    .header-clock-name{font-size:9px;}
+    .header-clock-name{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
   }
   .header-lang-flag{
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -13276,7 +13276,7 @@ const UI_DICT_PL = {
   "Kúp/Predaj":"Kup/Sprz.",
   "Filmy":"Filmy",
   "Hry":"Gry",
-  "Odhlásiť":"Wyjdź",
+  "Odhlásiť":"Wyj.",
   "Priatelia":"Znajomi",
   "Používatelia":"Użytkownicy",
   "Používateľ":"Użytkownik",
@@ -13568,7 +13568,7 @@ const UI_DICT_AT = {
   "Kúp/Predaj":"Markt",
   "Filmy":"Filme",
   "Hry":"Spiele",
-  "Odhlásiť":"Logout",
+  "Odhlásiť":"Abm.",
   "Priatelia":"Freunde",
   "Používatelia":"Benutzer",
   "Používateľ":"Benutzer",
@@ -13716,7 +13716,7 @@ const UI_DICT_DE = {
   "Kúp/Predaj":"Markt",
   "Filmy":"Filme",
   "Hry":"Spiele",
-  "Odhlásiť":"Logout",
+  "Odhlásiť":"Abm.",
   "Priatelia":"Freunde",
   "Používatelia":"Benutzer",
   "Používateľ":"Benutzer",
