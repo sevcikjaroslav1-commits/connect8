@@ -4007,10 +4007,38 @@ function getUKHolidays(year){
   return holidays;
 }
 
-// Prázdny meninový kalendár pre UK - vo Veľkej Británii sa dátumy s
-// krstnými menami tradične nespájajú (na rozdiel od SK/CZ), takže tu
-// zámerne nie je žiadny obsah.
-const UK_NAMEDAYS = {};
+// Kalendár patrónov a svätých pre UK - vychádza z tradície anglikánskej
+// cirkvi (Church of England, tzv. Common Worship kalendár). Na rozdiel od
+// SK/CZ meninového kalendára, kde má meno KAŽDÝ deň v roku, anglická
+// tradícia priraďuje svätého/patróna len k časti dní - zvyšné dni
+// zámerne ostávajú bez záznamu (presne tak to funguje aj v skutočnosti).
+const UK_NAMEDAYS = {
+  "01-01":"Naming of Jesus", "01-06":"Epiphany", "01-13":"Hilary of Poitiers", "01-17":"Antony of Egypt",
+  "01-19":"Wulstan of Worcester", "01-21":"Agnes", "01-25":"Conversion of Paul",
+  "02-02":"Candlemas (Presentation of Christ)", "02-14":"Valentine", "02-24":"Matthias the Apostle",
+  "03-01":"David (patron of Wales)", "03-02":"Chad", "03-17":"Patrick (patron of Ireland)",
+  "03-19":"Joseph of Nazareth", "03-20":"Cuthbert", "03-25":"Annunciation (Lady Day)",
+  "04-23":"George (patron of England)", "04-25":"Mark the Evangelist", "04-29":"Catherine of Siena",
+  "05-01":"Philip and James", "05-19":"Dunstan", "05-26":"Augustine of Canterbury",
+  "05-31":"Visit of Mary to Elizabeth",
+  "06-01":"Justin", "06-05":"Boniface", "06-09":"Columba", "06-11":"Barnabas",
+  "06-22":"Alban (England's first martyr)", "06-24":"Birth of John the Baptist", "06-29":"Peter and Paul",
+  "07-03":"Thomas the Apostle", "07-15":"Swithun", "07-22":"Mary Magdalene", "07-25":"James the Apostle",
+  "07-26":"Anne", "07-29":"Martha",
+  "08-05":"Oswald, King and Martyr", "08-08":"Dominic", "08-15":"Mary the Virgin",
+  "08-24":"Bartholomew the Apostle", "08-27":"Monica", "08-28":"Augustine of Hippo", "08-31":"Aidan",
+  "09-08":"Birth of the Virgin Mary", "09-14":"Holy Cross Day", "09-21":"Matthew the Apostle",
+  "09-29":"Michael and All Angels (Michaelmas)", "09-30":"Jerome",
+  "10-01":"Remigius", "10-04":"Francis of Assisi", "10-06":"Faith", "10-09":"Denys",
+  "10-13":"Edward the Confessor", "10-15":"Teresa of Ávila", "10-17":"Ignatius of Antioch",
+  "10-18":"Luke the Evangelist", "10-19":"Frideswide", "10-25":"Crispin and Crispinian",
+  "10-28":"Simon and Jude",
+  "11-01":"All Saints' Day", "11-02":"All Souls' Day", "11-03":"Winifred", "11-11":"Martin of Tours",
+  "11-17":"Hugh of Lincoln", "11-20":"Edmund, King and Martyr", "11-22":"Cecilia", "11-23":"Clement",
+  "11-25":"Catherine of Alexandria", "11-30":"Andrew (patron of Scotland)",
+  "12-06":"Nicholas", "12-08":"Conception of Mary", "12-13":"Lucy", "12-26":"Stephen",
+  "12-27":"John the Evangelist", "12-28":"Holy Innocents"
+};
 
 function currentNamedaysAndHolidays(){
   if(currentLang === 'cz') return { namedays: CZ_NAMEDAYS, getHolidays: getCzechHolidays };
