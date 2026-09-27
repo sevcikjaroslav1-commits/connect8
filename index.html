@@ -1374,6 +1374,49 @@
 
   /* ---------- SPRÁVY (CHAT) ---------- */
   .profile-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  /* ---------- ZAPISOVACÍ KALENDÁR (v profile, len pre majiteľa) ---------- */
+  .pcal-card{background:#E8F2FF;border:1px solid #CFE2FF;border-radius:16px;padding:12px 14px 14px;max-width:360px;margin:18px 0 4px;}
+  .pcal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .pcal-title{font-size:15px;font-weight:700;}
+  .pcal-nav{display:flex;align-items:center;gap:6px;}
+  .pcal-nav button{background:var(--bg);color:var(--text);width:28px;height:28px;border-radius:50%;font-size:15px;line-height:1;}
+  .pcal-nav button:hover{background:var(--accent-soft);color:var(--accent);}
+  .pcal-month{font-size:13px;font-weight:600;min-width:112px;text-align:center;text-transform:capitalize;}
+  .pcal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .pcal-wd{font-size:10.5px;font-weight:700;color:var(--text-dim);text-align:center;padding:2px 0;}
+  .pcal-day{position:relative;aspect-ratio:1/1;border-radius:9px;background:rgba(255,255,255,.75);color:var(--text);font-size:12.5px;font-weight:600;display:flex;align-items:center;justify-content:center;border:1.5px solid transparent;transition:.12s;padding:0;}
+  .pcal-day:hover{border-color:var(--accent);}
+  .pcal-day.empty{background:transparent;pointer-events:none;}
+  .pcal-day.today{border-color:var(--accent);color:var(--accent);}
+  .pcal-day.has-entry{background:linear-gradient(135deg,#FF9F1C,#FF5E3A);color:#fff;box-shadow:0 0 0 2px rgba(255,120,40,.25),0 0 12px rgba(255,120,40,.55);animation:pcalGlow 2.2s ease-in-out infinite;}
+  .pcal-day.has-entry.today{border-color:#fff;}
+  @keyframes pcalGlow{0%,100%{box-shadow:0 0 0 2px rgba(255,120,40,.25),0 0 8px rgba(255,120,40,.45);}50%{box-shadow:0 0 0 2px rgba(255,120,40,.35),0 0 16px rgba(255,120,40,.8);}}
+  .pcal-day .pcal-ico{position:absolute;bottom:1px;right:3px;font-size:8.5px;line-height:1;}
+  .pcal-hint{font-size:11.5px;color:var(--text-dim);margin-top:8px;}
+  .pcal-modal{display:none;position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px;}
+  .pcal-modal.open{display:flex;}
+  .pcal-sheet{background:var(--surface);width:380px;max-width:100%;border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,.3);overflow:hidden;}
+  .pcal-sheet-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);}
+  .pcal-sheet-head h3{margin:0;font-size:16px;text-transform:capitalize;}
+  .pcal-sheet-head button{background:transparent;color:var(--text-dim);font-size:18px;}
+  .pcal-sheet-body{padding:14px 18px 18px;display:flex;flex-direction:column;gap:12px;}
+  .pcal-label{font-size:12.5px;font-weight:700;color:var(--text-dim);}
+  .pcal-text{width:100%;min-height:90px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;background:var(--bg);color:var(--text);}
+  .pcal-text:focus{outline:none;border-color:var(--accent);}
+  .pcal-voice-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .pcal-rec-btn{background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;}
+  .pcal-rec-btn.recording{background:#ff3b30;color:#fff;}
+  .pcal-rec-time{font-size:13px;font-weight:700;color:#ff3b30;font-variant-numeric:tabular-nums;}
+  .pcal-audio{width:100%;height:36px;}
+  .pcal-del-audio{background:transparent;color:#ff3b30;font-size:12.5px;font-weight:600;padding:4px 0;}
+  .pcal-actions{display:flex;gap:8px;justify-content:space-between;margin-top:4px;}
+  .pcal-save{background:var(--accent);color:#fff;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:700;}
+  .pcal-save:disabled{opacity:.6;cursor:default;}
+  .pcal-delete{background:transparent;color:#ff3b30;border:1px solid #ff3b30;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;}
+  /* ---------- PRIPOMIENKA Z KALENDÁRA ---------- */
+  .pcal-remind-list{display:flex;flex-direction:column;gap:10px;}
+  .pcal-remind-text{white-space:pre-wrap;font-size:14.5px;line-height:1.5;background:#E8F2FF;border-radius:12px;padding:10px 12px;color:var(--text);}
+  .pcal-remind-later{background:var(--bg);color:var(--text);border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;}
   /* Meno + tlačidlo "Pozvať" vedľa neho (v profile) */
   .profile-name-wrap{display:flex;align-items:center;gap:14px;flex-basis:100%;min-width:0;}
   .profile-name-wrap .profile-name{flex-basis:auto;min-width:0;overflow-wrap:anywhere;}
@@ -2864,6 +2907,20 @@
             </div>
           </div>
 
+          <!-- ZAPISOVACÍ KALENDÁR - vidí ho iba majiteľ profilu -->
+          <div class="pcal-card" id="profile-calendar" style="display:none;">
+            <div class="pcal-head">
+              <div class="pcal-title">📅 Zapisovací kalendár</div>
+              <div class="pcal-nav">
+                <button onclick="pcalChangeMonth(-1)" title="Predchádzajúci mesiac">‹</button>
+                <span class="pcal-month" id="pcal-month-label"></span>
+                <button onclick="pcalChangeMonth(1)" title="Ďalší mesiac">›</button>
+              </div>
+            </div>
+            <div class="pcal-grid" id="pcal-grid"></div>
+            <div class="pcal-hint">Klikni na deň a zapíš si, čo máš urobiť (text alebo hlasová správa do 1 min).</div>
+          </div>
+
           <div class="profile-section-title">📷 Fotky</div>
           <div class="profile-photos-grid" id="profile-photos-grid"></div>
 
@@ -2872,6 +2929,52 @@
 
           <button class="delete-account-btn" id="delete-account-btn" onclick="deleteMyAccount()" style="display:none;">🗑️ Zrušiť účet v Connect8</button>
         </section>
+
+        <div class="pcal-modal" id="pcal-remind-modal" onclick="if(event.target===this) closePcalReminder()">
+          <div class="pcal-sheet">
+            <div class="pcal-sheet-head">
+              <h3>📅 Dnes máš v kalendári</h3>
+              <button onclick="closePcalReminder()">✕</button>
+            </div>
+            <div class="pcal-sheet-body">
+              <div class="pcal-remind-list" id="pcal-remind-body"></div>
+              <div class="pcal-actions">
+                <button class="pcal-remind-later" onclick="closePcalReminder()">Neskôr</button>
+                <button class="pcal-save" onclick="pcalMarkTodayDone()">✓ Hotovo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pcal-modal" id="pcal-modal" onclick="if(event.target===this) closePcalModal()">
+          <div class="pcal-sheet">
+            <div class="pcal-sheet-head">
+              <h3 id="pcal-modal-title">Deň</h3>
+              <button onclick="closePcalModal()">✕</button>
+            </div>
+            <div class="pcal-sheet-body">
+              <div>
+                <div class="pcal-label">📝 Čo mám urobiť</div>
+                <textarea class="pcal-text" id="pcal-text" maxlength="2000" placeholder="Napíš si poznámku na tento deň..."></textarea>
+              </div>
+              <div>
+                <div class="pcal-label">🎤 Hlasová správa (max 1 min)</div>
+                <div class="pcal-voice-row" style="margin-top:6px;">
+                  <button class="pcal-rec-btn" id="pcal-rec-btn" onclick="pcalToggleRecording()">🎤 Nahrať</button>
+                  <span class="pcal-rec-time" id="pcal-rec-time" style="display:none;">0:00 / 1:00</span>
+                </div>
+                <div id="pcal-audio-wrap" style="display:none;margin-top:8px;">
+                  <audio class="pcal-audio" id="pcal-audio" controls preload="metadata"></audio>
+                  <button class="pcal-del-audio" onclick="pcalRemoveAudio()">🗑️ Odstrániť hlasovú správu</button>
+                </div>
+              </div>
+              <div class="pcal-actions">
+                <button class="pcal-delete" id="pcal-delete-btn" onclick="pcalDeleteEntry()">Vymazať záznam</button>
+                <button class="pcal-save" id="pcal-save-btn" onclick="pcalSaveEntry()">Uložiť</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="vizitka-modal" id="vizitka-modal">
           <div class="vizitka-card">
@@ -3633,6 +3736,7 @@ async function doRegister(){
 }
 
 function doLogout(){
+  if(typeof pcalUnsubscribe === 'function') pcalUnsubscribe();
   setPresenceOffline();
   if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; }
   if(conversationsUnsub){ conversationsUnsub(); conversationsUnsub = null; }
@@ -5193,6 +5297,11 @@ function renderProfile(){
   const profileInviteBtn = document.getElementById('profile-invite-btn');
   if(profileInviteBtn) profileInviteBtn.style.display = isOwnProfile ? 'flex' : 'none';
 
+  // Zapisovací kalendár - iba vo VLASTNOM profile (súkromný)
+  const pcalCard = document.getElementById('profile-calendar');
+  if(pcalCard) pcalCard.style.display = isOwnProfile ? 'block' : 'none';
+  if(isOwnProfile){ pcalSubscribe(); renderProfileCalendar(); }
+
   const backBtn = document.getElementById('profile-back-btn');
   if(backBtn) backBtn.textContent = isOwnProfile ? t('← Späť do Feedu') : t('← Späť na Používateľov');
 
@@ -5773,6 +5882,7 @@ function enterApp(){
   listenForIncomingCalls();
   warmProfilePhotosCache();
   handleSharedDeepLink();
+  pcalSubscribe(); // zapisovací kalendár - kvôli pripomienke "dnes máš niečo urobiť"
 }
 
 function handleSharedDeepLink(){
@@ -7310,6 +7420,350 @@ function uploadAudioBlobToCloudinary(blob){
     xhr.onerror = ()=>reject(new Error('Sieťová chyba pri nahrávaní'));
     xhr.send(formData);
   });
+}
+
+/* =================================================================
+   ZAPISOVACÍ KALENDÁR V PROFILE
+   Každý používateľ má svoj súkromný kalendár. Záznamy sú vo Firestore:
+     calendars/{uid}/entries/{YYYY-MM-DD}  ->  { date, text, audioUrl, audioDuration, updatedAt }
+   Hlasová správa (max 60 s) sa nahráva na Cloudinary rovnako ako
+   hlasové správy v chate (uploadAudioBlobToCloudinary).
+   Deň, ktorý má uložený text alebo hlasovú správu, v kalendári svieti.
+================================================================== */
+const PCAL_MAX_SECONDS = 60;
+let pcalViewYear = new Date().getFullYear();
+let pcalViewMonth = new Date().getMonth(); // 0-11
+let pcalEntries = {};          // { 'YYYY-MM-DD': {...} }
+let pcalUnsub = null;
+let pcalSubscribedUid = null;
+let pcalSelectedDate = null;
+let pcalRecorder = null, pcalChunks = [], pcalRecStart = 0, pcalRecTimer = null;
+let pcalNewBlob = null, pcalNewDuration = 0, pcalNewBlobUrl = null;
+let pcalRemoveExistingAudio = false;
+
+function pcalKey(y, m, d){
+  return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+}
+function pcalTodayKey(){
+  const n = new Date(); return pcalKey(n.getFullYear(), n.getMonth(), n.getDate());
+}
+function pcalLocale(){
+  const map = {en:'en-GB', cz:'cs-CZ', pl:'pl-PL', hu:'hu-HU', at:'de-AT', de:'de-DE', it:'it-IT'};
+  return (typeof currentLang !== 'undefined' && map[currentLang]) || 'sk-SK';
+}
+
+function pcalSubscribe(){
+  if(!currentUser || !db) return;
+  if(pcalUnsub && pcalSubscribedUid === currentUser.uid) return; // už počúvame
+  if(pcalUnsub){ pcalUnsub(); pcalUnsub = null; }
+  pcalSubscribedUid = currentUser.uid;
+  pcalEntries = {};
+  pcalUnsub = db.collection('calendars').doc(currentUser.uid).collection('entries')
+    .onSnapshot(snap=>{
+      pcalEntries = {};
+      snap.forEach(doc=>{ pcalEntries[doc.id] = doc.data(); });
+      renderProfileCalendar();
+      pcalCheckToday();
+    }, err=>console.error('Chyba pri načítaní kalendára:', err));
+}
+
+function pcalUnsubscribe(){
+  if(pcalUnsub){ pcalUnsub(); pcalUnsub = null; }
+  pcalSubscribedUid = null;
+  pcalEntries = {};
+  pcalRemindedKey = null;
+  closePcalReminder();
+}
+
+/* ---- PRIPOMIENKA ----
+   Keď má dnešný deň v kalendári záznam (text alebo hlasovú správu):
+   1) pri otvorení appky raz vyskočí okno "Dnes máš v kalendári"
+   2) príde systémové upozornenie prehliadača (ak ho používateľ povolil)
+   "Hotovo" = v daný deň už okno pri ďalšom otvorení appky nevyskočí.
+   Ak je appka otvorená cez polnoc, kontrola beží každú minútu, takže
+   pripomienka príde aj vtedy. "Hotovo" sa pamätá v localStorage (na
+   danom zariadení) - na inom zariadení sa pripomienka ukáže znova. */
+let pcalRemindedKey = null; // deň, pre ktorý už v tejto relácii vyskočilo okno
+
+function pcalDoneStorageKey(dayKey){
+  return 'connect_pcal_done_' + (currentUser ? currentUser.uid : '') + '_' + dayKey;
+}
+function pcalIsDone(dayKey){
+  try{ return localStorage.getItem(pcalDoneStorageKey(dayKey)) === '1'; }catch(e){ return false; }
+}
+function pcalTodayEntry(){
+  const e = pcalEntries[pcalTodayKey()];
+  if(!e) return null;
+  const hasText = !!(e.text && e.text.trim());
+  if(!hasText && !e.audioUrl) return null;
+  return e;
+}
+
+function pcalCheckToday(){
+  if(!currentUser) return;
+  const todayKey = pcalTodayKey();
+  const entry = pcalTodayEntry();
+  const active = !!entry && !pcalIsDone(todayKey);
+  if(!active) return;
+  if(pcalRemindedKey === todayKey) return; // v tejto relácii už sme pripomenuli
+  pcalRemindedKey = todayKey;
+  openPcalReminder(false);
+  pcalShowSystemNotification(entry);
+}
+
+function openPcalReminder(fromButton){
+  const entry = pcalTodayEntry();
+  if(!entry){ if(fromButton) openProfile(); return; }
+  const body = document.getElementById('pcal-remind-body');
+  let html = '';
+  if(entry.text && entry.text.trim()) html += `<div class="pcal-remind-text">${escapeHtml(entry.text)}</div>`;
+  if(entry.audioUrl) html += `<div><div class="pcal-label">🎤 ${t('Hlasová správa')}</div><audio class="pcal-audio" controls preload="metadata" src="${escapeHtml(entry.audioUrl)}"></audio></div>`;
+  body.innerHTML = html;
+  document.getElementById('pcal-remind-modal').classList.add('open');
+}
+
+function closePcalReminder(){
+  const modal = document.getElementById('pcal-remind-modal');
+  if(!modal) return;
+  modal.querySelectorAll('audio').forEach(a=>a.pause());
+  modal.classList.remove('open');
+}
+
+function pcalMarkTodayDone(){
+  try{ localStorage.setItem(pcalDoneStorageKey(pcalTodayKey()), '1'); }catch(e){}
+  closePcalReminder();
+  pcalCheckToday();
+}
+
+async function pcalShowSystemNotification(entry){
+  if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  const title = '📅 ' + t('Dnes máš v kalendári zapísané');
+  const text = (entry.text && entry.text.trim()) ? entry.text.trim().slice(0,140) : ('🎤 ' + t('Hlasová správa'));
+  const opts = { body: text, tag: 'pcal-' + pcalTodayKey(), icon: currentUser.photoURL || undefined };
+  try{
+    // na mobile (hlavne Android) funguje len cez service worker
+    const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+    if(reg && reg.showNotification){ await reg.showNotification(title, opts); return; }
+    new Notification(title, opts);
+  }catch(e){ console.warn('Upozornenie z kalendára sa nepodarilo zobraziť:', e); }
+}
+
+// Kontrola prechodu cez polnoc, kým je appka otvorená
+let pcalLastCheckedDay = pcalTodayKey();
+setInterval(()=>{
+  const k = pcalTodayKey();
+  if(k !== pcalLastCheckedDay){
+    pcalLastCheckedDay = k;
+    renderProfileCalendar();
+    pcalCheckToday();
+  }
+}, 60000);
+
+function pcalChangeMonth(delta){
+  pcalViewMonth += delta;
+  if(pcalViewMonth < 0){ pcalViewMonth = 11; pcalViewYear--; }
+  if(pcalViewMonth > 11){ pcalViewMonth = 0; pcalViewYear++; }
+  renderProfileCalendar();
+}
+
+function renderProfileCalendar(){
+  const grid = document.getElementById('pcal-grid');
+  const label = document.getElementById('pcal-month-label');
+  if(!grid || !label) return;
+  const loc = pcalLocale();
+  label.textContent = new Date(pcalViewYear, pcalViewMonth, 1).toLocaleDateString(loc, {month:'long', year:'numeric'});
+
+  // názvy dní od pondelka (1.1.2024 bol pondelok)
+  let html = '';
+  for(let i=0;i<7;i++){
+    const wd = new Date(2024, 0, 1+i).toLocaleDateString(loc, {weekday:'short'}).replace('.','');
+    html += `<div class="pcal-wd">${escapeHtml(wd.slice(0,2))}</div>`;
+  }
+  const firstDow = (new Date(pcalViewYear, pcalViewMonth, 1).getDay() + 6) % 7; // 0 = pondelok
+  const daysInMonth = new Date(pcalViewYear, pcalViewMonth+1, 0).getDate();
+  const todayKey = pcalTodayKey();
+  for(let i=0;i<firstDow;i++) html += `<div class="pcal-day empty"></div>`;
+  for(let d=1; d<=daysInMonth; d++){
+    const key = pcalKey(pcalViewYear, pcalViewMonth, d);
+    const e = pcalEntries[key];
+    const hasText = !!(e && e.text && e.text.trim());
+    const hasAudio = !!(e && e.audioUrl);
+    const cls = ['pcal-day'];
+    if(key === todayKey) cls.push('today');
+    if(hasText || hasAudio) cls.push('has-entry');
+    const ico = (hasAudio ? '🎤' : '') + (hasText ? '📝' : '');
+    const tip = hasText ? escapeHtml(e.text.slice(0,120)) : (hasAudio ? t('Hlasová správa') : '');
+    html += `<button class="${cls.join(' ')}" onclick="openPcalModal('${key}')" title="${tip}">${d}${ico ? `<span class="pcal-ico">${ico}</span>` : ''}</button>`;
+  }
+  grid.innerHTML = html;
+}
+
+function openPcalModal(key){
+  if(!currentUser) return;
+  pcalSelectedDate = key;
+  pcalResetRecordingState();
+  pcalRemoveExistingAudio = false;
+  const e = pcalEntries[key] || {};
+  const [y,m,d] = key.split('-').map(Number);
+  document.getElementById('pcal-modal-title').textContent =
+    new Date(y, m-1, d).toLocaleDateString(pcalLocale(), {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  document.getElementById('pcal-text').value = e.text || '';
+  pcalShowAudio(e.audioUrl || null);
+  document.getElementById('pcal-delete-btn').style.visibility = (e.text || e.audioUrl) ? 'visible' : 'hidden';
+  document.getElementById('pcal-save-btn').disabled = false;
+  document.getElementById('pcal-save-btn').textContent = t('Uložiť');
+  document.getElementById('pcal-modal').classList.add('open');
+}
+
+function closePcalModal(){
+  if(pcalRecorder && pcalRecorder.state === 'recording'){ pcalRecorder._cancel = true; pcalRecorder.stop(); }
+  const audio = document.getElementById('pcal-audio');
+  if(audio){ audio.pause(); }
+  pcalResetRecordingState();
+  document.getElementById('pcal-modal').classList.remove('open');
+  pcalSelectedDate = null;
+}
+
+function pcalResetRecordingState(){
+  clearInterval(pcalRecTimer);
+  if(pcalNewBlobUrl){ URL.revokeObjectURL(pcalNewBlobUrl); }
+  pcalNewBlob = null; pcalNewDuration = 0; pcalNewBlobUrl = null;
+  const btn = document.getElementById('pcal-rec-btn');
+  if(btn){ btn.classList.remove('recording'); btn.textContent = '🎤 ' + t('Nahrať'); }
+  const time = document.getElementById('pcal-rec-time');
+  if(time) time.style.display = 'none';
+}
+
+function pcalShowAudio(src){
+  const wrap = document.getElementById('pcal-audio-wrap');
+  const audio = document.getElementById('pcal-audio');
+  if(src){ audio.src = src; wrap.style.display = 'block'; }
+  else { audio.removeAttribute('src'); audio.load(); wrap.style.display = 'none'; }
+}
+
+async function pcalToggleRecording(){
+  if(pcalRecorder && pcalRecorder.state === 'recording'){ pcalRecorder.stop(); return; }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined'){
+    alert(t('Tvoj prehliadač nepodporuje nahrávanie zvuku.'));
+    return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    pcalChunks = [];
+    const rec = new MediaRecorder(stream);
+    pcalRecorder = rec;
+    rec.ondataavailable = (e)=>{ if(e.data && e.data.size > 0) pcalChunks.push(e.data); };
+    rec.onstop = ()=>{
+      stream.getTracks().forEach(tr=>tr.stop());
+      clearInterval(pcalRecTimer);
+      const btn = document.getElementById('pcal-rec-btn');
+      btn.classList.remove('recording'); btn.textContent = '🎤 ' + t('Nahrať znova');
+      document.getElementById('pcal-rec-time').style.display = 'none';
+      const elapsed = (Date.now() - pcalRecStart) / 1000;
+      if(rec._cancel || elapsed < 1 || !pcalChunks.length){ pcalChunks = []; return; }
+      if(pcalNewBlobUrl) URL.revokeObjectURL(pcalNewBlobUrl);
+      pcalNewBlob = new Blob(pcalChunks, { type: rec.mimeType || 'audio/webm' });
+      pcalNewDuration = Math.min(PCAL_MAX_SECONDS, Math.round(elapsed));
+      pcalNewBlobUrl = URL.createObjectURL(pcalNewBlob);
+      pcalShowAudio(pcalNewBlobUrl);
+    };
+    rec.start();
+    pcalRecStart = Date.now();
+    const btn = document.getElementById('pcal-rec-btn');
+    btn.classList.add('recording'); btn.textContent = '⏹ ' + t('Zastaviť');
+    const time = document.getElementById('pcal-rec-time');
+    time.style.display = 'inline'; time.textContent = '0:00 / 1:00';
+    pcalRecTimer = setInterval(()=>{
+      const secs = Math.floor((Date.now() - pcalRecStart) / 1000);
+      time.textContent = formatVoiceDuration(secs) + ' / 1:00';
+      if(secs >= PCAL_MAX_SECONDS && rec.state === 'recording') rec.stop();
+    }, 250);
+  }catch(e){
+    console.error('Chyba pri prístupe k mikrofónu:', e);
+    alert(t('Nepodarilo sa získať prístup k mikrofónu. Skontroluj povolenia prehliadača.'));
+  }
+}
+
+function pcalRemoveAudio(){
+  if(pcalNewBlob){
+    // mazanie práve nahratej (ešte neuloženej) správy
+    if(pcalNewBlobUrl) URL.revokeObjectURL(pcalNewBlobUrl);
+    pcalNewBlob = null; pcalNewBlobUrl = null; pcalNewDuration = 0;
+    const e = pcalEntries[pcalSelectedDate] || {};
+    pcalShowAudio(pcalRemoveExistingAudio ? null : (e.audioUrl || null));
+  } else {
+    pcalRemoveExistingAudio = true;
+    pcalShowAudio(null);
+  }
+  document.getElementById('pcal-rec-btn').textContent = '🎤 ' + t('Nahrať');
+}
+
+async function pcalSaveEntry(){
+  if(!currentUser || !db || !pcalSelectedDate) return;
+  if(pcalRecorder && pcalRecorder.state === 'recording'){
+    alert(t('Najprv zastav nahrávanie.'));
+    return;
+  }
+  const key = pcalSelectedDate;
+  const text = document.getElementById('pcal-text').value.trim();
+  const existing = pcalEntries[key] || {};
+  let audioUrl = pcalRemoveExistingAudio ? null : (existing.audioUrl || null);
+  let audioDuration = pcalRemoveExistingAudio ? null : (existing.audioDuration || null);
+  const saveBtn = document.getElementById('pcal-save-btn');
+  const ref = db.collection('calendars').doc(currentUser.uid).collection('entries').doc(key);
+
+  // Ak si práve zapisujem dnešok, okno pripomienky hneď nevyskočí
+  if(key === pcalTodayKey()) pcalRemindedKey = key;
+
+  // Povolenie systémových upozornení si vypýtame pri prvom ukladaní
+  // (prehliadače to dovolia len ako reakciu na kliknutie používateľa).
+  if('Notification' in window && Notification.permission === 'default'){
+    try{ Notification.requestPermission(); }catch(e){}
+  }
+
+  try{
+    saveBtn.disabled = true;
+    if(pcalNewBlob){
+      if(typeof checkFileSizeOk === 'function' && !checkFileSizeOk(pcalNewBlob, MAX_VOICE_SIZE, 'Hlasová správa')){ saveBtn.disabled = false; return; }
+      if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){
+        alert(t('Hlasové správy zatiaľ nie sú nastavené (chýba Cloudinary konfigurácia).'));
+        saveBtn.disabled = false; return;
+      }
+      saveBtn.textContent = t('Nahrávam...');
+      audioUrl = await uploadAudioBlobToCloudinary(pcalNewBlob);
+      audioDuration = pcalNewDuration;
+    }
+    saveBtn.textContent = t('Ukladám...');
+    if(!text && !audioUrl){
+      await ref.delete(); // nič nezostalo -> deň už nesvieti
+    } else {
+      await ref.set({
+        date: key,
+        text: text,
+        audioUrl: audioUrl || null,
+        audioDuration: audioDuration || null,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    closePcalModal();
+  }catch(e){
+    console.error('Chyba pri ukladaní do kalendára:', e);
+    alert(t('Záznam sa nepodarilo uložiť.'));
+    saveBtn.disabled = false;
+    saveBtn.textContent = t('Uložiť');
+  }
+}
+
+async function pcalDeleteEntry(){
+  if(!currentUser || !db || !pcalSelectedDate) return;
+  if(!confirm(t('Naozaj vymazať záznam pre tento deň?'))) return;
+  try{
+    await db.collection('calendars').doc(currentUser.uid).collection('entries').doc(pcalSelectedDate).delete();
+    closePcalModal();
+  }catch(e){
+    console.error('Chyba pri mazaní záznamu z kalendára:', e);
+    alert(t('Záznam sa nepodarilo vymazať.'));
+  }
 }
 
 async function sendVoiceMessage(blob, durationSeconds){
