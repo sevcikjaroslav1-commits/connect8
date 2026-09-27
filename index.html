@@ -41,7 +41,13 @@
   }
 
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;height:100%;overflow-x:hidden;max-width:100%;}
+  html,body{margin:0;padding:0;max-width:100%;}
+  /* POZOR: overflow-x:hidden + height:100% na html AJ body robí z <body> samostatný
+     scroll kontajner -> window sa nescrolluje (window.scrollY = 0) a Auto scroll
+     vo Feede a Správach prestane fungovať. Preto: hidden len na html (prenesie sa
+     na viewport) a na body 'clip', ktorý NEvytvára scroll kontajner. */
+  html{height:100%;overflow-x:hidden;}
+  body{min-height:100%;overflow-x:clip;}
   body{
     font-family:'Inter',sans-serif;
     background:var(--bg);
