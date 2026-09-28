@@ -3319,11 +3319,17 @@ let storageMode = "offline"; // "offline" | "online"
 ================================================================== */
 const CLOUDINARY = {
   cloudName: "vskujn4o",     // <-- sem vlož svoj Cloud name z cloudinary.com
-  uploadPreset: "jaro88"   // <-- sem vlož meno svojho "unsigned" upload presetu
+  uploadPreset: "jaro88",   // <-- sem vlož meno svojho "unsigned" upload presetu
+  // Samostatný preset LEN pre videá - má nastavenú "Incoming transformation",
+  // takže Cloudinary uloží rovno zmenšené 1080p H.264 video namiesto 4K originálu
+  // (šetrí úložisko aj kredity). Ak preset ešte neexistuje, upload automaticky
+  // použije bežný preset vyššie (video sa uloží v pôvodnej kvalite).
+  videoUploadPreset: "jaro88_video"
 };
 let pendingVideoUpload = null; // sem sa uloží URL po úspešnom uploade
 
-// Video sa nahráva a ukladá vždy v pôvodnej kvalite (nič sa nekomprimuje pri uploade).
+// Nové videá sa pri uploade zmenšujú na 1080p (preset CLOUDINARY.videoUploadPreset).
+// Staršie videá sú uložené v pôvodnej kvalite - pre ne je dôležitá úprava nižšie.
 // Pri PREHRÁVANÍ ale vieme Cloudinary požiadať, aby video "za behu" poslalo v
 // inteligentne skomprimovanej podobe (q_auto = automatická kvalita, f_auto =
 // automaticky najlepší/najľahší formát pre daný prehliadač). Vizuálne to takmer
@@ -9555,13 +9561,15 @@ function uploadImageToCloudinary(fileOrBlob){
 // priamo v UI, obmedzenie robíme tu v appke - jednoducho a spoľahlivo,
 // nezávisle od Cloudinary plánu.
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;   // 10 MB pre fotky
-const MAX_VIDEO_SIZE = 50 * 1024 * 1024;   // 50 MB pre videá
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024;  // 100 MB pre videá (= limit Cloudinary Free plánu; video sa aj tak pri uploade zmenší na 1080p)
+const MAX_FILE_SIZE  = 50 * 1024 * 1024;   // 50 MB pre ostatné súbory (PDF, dokumenty...)
 const MAX_VOICE_SIZE = 5  * 1024 * 1024;   // 5 MB pre hlasové správy (poistka, bežne sú oveľa menšie)
 
 function checkFileSizeOk(file, maxBytes, label){
   if(file.size > maxBytes){
     const maxMb = Math.round(maxBytes / (1024*1024));
-    alert(`${label} je príliš veľký súbor (max ${maxMb} MB). Vyber prosím menší súbor.`);
+    const tip = (label === 'Video') ? '\n\nTip: nahrávaj v 1080p namiesto 4K (Nastavenia fotoaparátu → Veľkosť videa), súbor bude niekoľkonásobne menší.' : '';
+    alert(`${label} je príliš veľký súbor (max ${maxMb} MB). Vyber prosím menší súbor.${tip}`);
     return false;
   }
   return true;
@@ -9672,6 +9680,47 @@ function buildVizitkaTextBlock(p, postId){
     <div class="post-vizitka-stats">${escapeHtml(stats || '')}</div>`;
 }
 
+// Spoločný upload videa na Cloudinary (príspevky aj video sekcia).
+// - používa video preset (1080p incoming transformation), pri chýbajúcom
+//   presete automaticky skúsi bežný preset
+// - po dosiahnutí 100 % hlási "Spracúvam video..." (Cloudinary vtedy prekódováva)
+// - vracia zrozumiteľnú chybovú hlášku z Cloudinary
+function uploadVideoFileToCloudinary(file, onProgress){
+  const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/video/upload`;
+  const sendWithPreset = (preset)=> new Promise((resolve, reject)=>{
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', preset);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', uploadUrl);
+    xhr.upload.onprogress = (e)=>{
+      if(e.lengthComputable && onProgress) onProgress(Math.round((e.loaded/e.total)*100));
+    };
+    xhr.onload = ()=>{
+      let data = null;
+      try{ data = JSON.parse(xhr.responseText); }catch(_){}
+      if(xhr.status>=200 && xhr.status<300 && data && data.secure_url) resolve(data.secure_url);
+      else {
+        const err = new Error((data && data.error && data.error.message) || ('Cloudinary chyba: '+xhr.status));
+        err.status = xhr.status;
+        reject(err);
+      }
+    };
+    xhr.onerror = ()=>reject(new Error('Sieťová chyba pri nahrávaní'));
+    xhr.send(formData);
+  });
+  const videoPreset = CLOUDINARY.videoUploadPreset;
+  if(!videoPreset || videoPreset === CLOUDINARY.uploadPreset) return sendWithPreset(CLOUDINARY.uploadPreset);
+  return sendWithPreset(videoPreset).catch(err=>{
+    if(err.status === 400 && /preset/i.test(err.message)){
+      console.warn('Video preset "'+videoPreset+'" neexistuje, používam bežný preset.');
+      if(onProgress) onProgress(0);
+      return sendWithPreset(CLOUDINARY.uploadPreset);
+    }
+    throw err;
+  });
+}
+
 async function handlePostVideo(event){
   const file = event.target.files[0];
   if(!file) return;
@@ -9691,26 +9740,9 @@ async function handlePostVideo(event){
   label.textContent = 'Nahrávam video... 0 %';
 
   try{
-    const url = await new Promise((resolve, reject)=>{
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/video/upload`;
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', CLOUDINARY.uploadPreset);
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', uploadUrl);
-      xhr.upload.onprogress = (e)=>{
-        if(e.lengthComputable){
-          const pct = Math.round((e.loaded/e.total)*100);
-          fill.style.width = pct+'%';
-          label.textContent = `Nahrávam video... ${pct} %`;
-        }
-      };
-      xhr.onload = ()=>{
-        if(xhr.status>=200 && xhr.status<300) resolve(JSON.parse(xhr.responseText).secure_url);
-        else reject(new Error('Cloudinary chyba: '+xhr.status));
-      };
-      xhr.onerror = ()=>reject(new Error('Sieťová chyba pri nahrávaní'));
-      xhr.send(formData);
+    const url = await uploadVideoFileToCloudinary(file, (pct)=>{
+      fill.style.width = pct+'%';
+      label.textContent = pct >= 100 ? 'Spracúvam video (zmenšujem na 1080p)...' : `Nahrávam video... ${pct} %`;
     });
     pendingPostVideo = url;
     progressBox.classList.remove('show');
@@ -9720,7 +9752,7 @@ async function handlePostVideo(event){
     preview.style.display = 'block';
   }catch(e){
     console.error('Nahrávanie videa zlyhalo:', e);
-    alert('Nahrávanie videa zlyhalo. Skús to znova.');
+    alert('Nahrávanie videa zlyhalo. Skús to znova.\n\n(' + (e && e.message ? e.message : '') + ')');
     progressBox.classList.remove('show');
   }
   event.target.value = '';
@@ -9747,7 +9779,7 @@ function formatFileSize(bytes){
 async function handlePostFile(event){
   const file = event.target.files[0];
   if(!file) return;
-  if(!checkFileSizeOk(file, MAX_VIDEO_SIZE, 'Súbor')){ event.target.value = ''; return; }
+  if(!checkFileSizeOk(file, MAX_FILE_SIZE, 'Súbor')){ event.target.value = ''; return; }
 
   if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){
     alert('Nahrávanie súborov zatiaľ nie je nastavené.');
@@ -11322,31 +11354,10 @@ function resetUploadProgress(){
 }
 
 function uploadVideoToCloudinary(file){
-  return new Promise((resolve, reject)=>{
-    const url = `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/video/upload`;
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY.uploadPreset);
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', url);
-    xhr.upload.onprogress = (e)=>{
-      if(e.lengthComputable){
-        const pct = Math.round((e.loaded/e.total)*100);
-        document.getElementById('upload-progress-fill').style.width = pct+'%';
-        document.getElementById('upload-progress-label').textContent = `Nahrávam... ${pct} %`;
-      }
-    };
-    xhr.onload = ()=>{
-      if(xhr.status>=200 && xhr.status<300){
-        const data = JSON.parse(xhr.responseText);
-        resolve(data.secure_url);
-      } else {
-        reject(new Error('Cloudinary chyba: '+xhr.status));
-      }
-    };
-    xhr.onerror = ()=>reject(new Error('Sieťová chyba pri nahrávaní'));
-    xhr.send(formData);
+  return uploadVideoFileToCloudinary(file, (pct)=>{
+    document.getElementById('upload-progress-fill').style.width = pct+'%';
+    document.getElementById('upload-progress-label').textContent =
+      pct >= 100 ? 'Spracúvam video (zmenšujem na 1080p)...' : `Nahrávam... ${pct} %`;
   });
 }
 
@@ -11372,7 +11383,7 @@ async function handleVideoFile(event){
     document.getElementById('video-submit-btn').disabled = false;
   }catch(e){
     console.error(e);
-    alert('Nahrávanie videa zlyhalo. Skús to znova, alebo vlož odkaz na video nižšie.');
+    alert('Nahrávanie videa zlyhalo. Skús to znova, alebo vlož odkaz na video nižšie.\n\n(' + (e && e.message ? e.message : '') + ')');
     resetUploadProgress();
   }
 }
