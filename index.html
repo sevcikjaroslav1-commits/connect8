@@ -3257,6 +3257,7 @@ async function triggerCallPushNotification(calleeUid, callerName, type, callId){
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       secret: CALL_PUSH_SHARED_SECRET,
+      uid: calleeUid, // Worker vďaka tomu vie, z ktorého profilu zmazať neplatné tokeny
       tokens,
       title: (type === 'video' ? '📹 Videohovor' : '📞 Hovor') + ' od ' + callerName,
       body: 'Klepnutím prijmeš hovor v Connect8',
@@ -3281,10 +3282,28 @@ async function setupPushNotifications(){
     const messaging = firebase.messaging();
     const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: swReg });
     if(!token) return;
-    // Ulož token do profilu (viac zariadení = viac tokenov, preto pole)
-    await db.collection('profiles').doc(currentUser.uid).set({
-      fcmTokens: firebase.firestore.FieldValue.arrayUnion(token)
-    }, { merge: true });
+    // Ulož token do profilu (viac zariadení = viac tokenov, preto pole).
+    // UPRATOVANIE MŔTVYCH TOKENOV:
+    //  1) starý token z TOHTO istého prehliadača (zapamätaný v localStorage)
+    //     sa nahradí novým, namiesto toho, aby sa hromadili,
+    //  2) v zozname sa drží najviac PUSH_MAX_TOKENS najnovších tokenov
+    //     (napr. mobil + počítač + tablet), staršie sa zahodia.
+    // Vďaka tomu Worker neposiela notifikácie na desiatky mŕtvych adries.
+    const PUSH_MAX_TOKENS = 5;
+    const tokenKey = 'connect_fcm_token_' + currentUser.uid;
+    let prevToken = null;
+    try{ prevToken = localStorage.getItem(tokenKey); }catch(e){}
+    const profRef = db.collection('profiles').doc(currentUser.uid);
+    const profSnap = await profRef.get();
+    const oldTokens = (profSnap.exists && Array.isArray(profSnap.data().fcmTokens)) ? profSnap.data().fcmTokens : [];
+    const cleaned = oldTokens.filter(t => t && t !== token && t !== prevToken);
+    cleaned.push(token); // najnovší vždy na konci
+    const finalTokens = cleaned.slice(-PUSH_MAX_TOKENS);
+    const changed = finalTokens.length !== oldTokens.length || finalTokens.some((t,i)=>t !== oldTokens[i]);
+    if(changed){
+      await profRef.set({ fcmTokens: finalTokens }, { merge: true });
+    }
+    try{ localStorage.setItem(tokenKey, token); }catch(e){}
     // Upozornenia, ktoré prídu, kým je appka priamo otvorená na obrazovke,
     // sa nezobrazia ako systémová notifikácia automaticky - o to sa
     // postará táto funkcia (napr. jednoduché zobrazenie v appke).
