@@ -3160,6 +3160,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
 <script>
 /* =================================================================
    ÚLOŽISKO DÁT + PRIHLASOVANIE — Firebase (Google), zadarmo
@@ -3193,6 +3194,39 @@ const FIREBASE_CONFIGURED = !!(firebaseConfig.apiKey && !firebaseConfig.apiKey.s
 let auth = null, db = null, rtdb = null;
 if(FIREBASE_CONFIGURED){
   firebase.initializeApp(firebaseConfig);
+
+  /* ===============================================================
+     FIREBASE APP CHECK - ochrana databázy pred cudzími skriptami.
+     Do Firestore a Realtime Database smie pristupovať len táto appka
+     z povolených domén (connect8.eu, www.connect8.eu, connect8.pages.dev).
+     Overenie robí neviditeľne reCAPTCHA Enterprise.
+     Kým je v APP_CHECK_SITE_KEY "VLOZ_SEM...", App Check je vypnutý
+     a appka funguje presne ako doteraz.
+     Musí sa aktivovať HNEĎ po initializeApp - pred prvým čítaním/zápisom.
+  ================================================================ */
+  const APP_CHECK_SITE_KEY = '6LdoddMtAAAAAK8sb8aKM74MwYIgDhiPIn3iqP_b';
+  if(APP_CHECK_SITE_KEY && !APP_CHECK_SITE_KEY.startsWith('VLOZ_SEM') && firebase.appCheck){
+    // Na vlastnom počítači (localhost) reCAPTCHA nefunguje - do konzoly sa
+    // vypíše "debug token", ktorý sa dá zaregistrovať vo Firebase.
+    if(location.hostname === 'localhost' || location.hostname === '127.0.0.1'){
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    }
+    try{
+      // reCAPTCHA Enterprise provider (klasický reCAPTCHA v3 provider je vo
+      // Firebase označený ako zastaraný). Kľúč je z Google Cloud projektu "connect".
+      firebase.appCheck().activate(
+        new firebase.appCheck.ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),
+        // false = overenie (token) sa vypýta až vtedy, keď appka naozaj
+        // komunikuje s Firebase (prihlásenie, registrácia, načítanie dát),
+        // nie hneď pri otvorení stránky. Návštevník, ktorý si len pozrie
+        // úvodnú stránku a odíde, tak nemíňa limit reCAPTCHA overení.
+        // Keď token vyprší, SDK si pri ďalšej požiadavke samo vypýta nový.
+        false
+      );
+    }catch(e){
+      console.error('App Check sa nepodarilo aktivovať:', e);
+    }
+  }
   auth = firebase.auth();
   db = firebase.firestore();
   rtdb = firebase.database();
