@@ -3241,28 +3241,20 @@ const FCM_VAPID_KEY = 'BG_sGfM424ZStyp5kTtyZLN1o7EGTdn8c-eBW5Ya9CBKL2tFlGE0cETuG
 // (obsahuje bezpečne schovaný Firebase Service Account kľúč, ktorý sa
 // nikdy nesmie objaviť tu v index.html).
 const CALL_PUSH_WORKER_URL = 'https://sparkling-pine-7e28.sevcikjaroslav1.workers.dev/notify-call';
-// Jednoduchá spoločná "poistka" proti tomu, aby si niekto cudzí mohol
-// poslať push cez tento endpoint - nie je to dokonalé zabezpečenie
-// (kód appky je verejne čitateľný), len základná ochrana proti
-// náhodnému/automatizovanému zneužitiu.
-const CALL_PUSH_SHARED_SECRET = 'c8-push-9f2ab74e1d';
-
 async function triggerCallPushNotification(calleeUid, callerName, type, callId){
-  if(!db) return;
-  const prof = await db.collection('profiles').doc(calleeUid).get();
-  const tokens = (prof.exists && Array.isArray(prof.data().fcmTokens)) ? prof.data().fcmTokens : [];
-  if(!tokens.length) return; // druhá strana si appku ešte nenainštalovala / nepovolila upozornenia
+  // Worker si sám overí, kto volá (Firebase ID token), že hovor callId
+  // existuje, vytvoril ho práve tento používateľ a ešte zvoní. Push tokeny
+  // adresáta aj text notifikácie si zistí sám z databázy - cudzí tak nemôže
+  // poslať falošnú notifikáciu s vlastným textom ani na cudzie zariadenie.
+  if(!auth || !auth.currentUser || !callId) return;
+  const idToken = await auth.currentUser.getIdToken();
   await fetch(CALL_PUSH_WORKER_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      secret: CALL_PUSH_SHARED_SECRET,
-      uid: calleeUid, // Worker vďaka tomu vie, z ktorého profilu zmazať neplatné tokeny
-      tokens,
-      title: (type === 'video' ? '📹 Videohovor' : '📞 Hovor') + ' od ' + callerName,
-      body: 'Klepnutím prijmeš hovor v Connect8',
-      data: { type: 'call', callId, callType: type }
-    })
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + idToken
+    },
+    body: JSON.stringify({ callId })
   });
 }
 // zariadenia do profilu prihláseného používateľa. Tento token je to, čo
