@@ -3381,6 +3381,20 @@ function optimizeCloudinaryVideoUrl(url){
   return url.replace('/video/upload/', '/video/upload/w_720,c_limit,q_auto,f_mp4,vc_h264/');
 }
 
+// Poistka: ak sa 720p verzia videa ešte nevygenerovala (veľké video sa na
+// Cloudinary spracúva asynchrónne, trvá to chvíľu), prehrávač dostane chybu.
+// Vtedy prepneme na pôvodné URL, aby sa video aj tak prehralo.
+document.addEventListener('error', (e)=>{
+  const v = e.target;
+  if(!v || v.tagName !== 'VIDEO' || v.dataset.cldFallback) return;
+  const src = v.currentSrc || v.src || '';
+  const T = '/video/upload/w_720,c_limit,q_auto,f_mp4,vc_h264/';
+  if(!src.includes(T)) return;
+  v.dataset.cldFallback = '1';
+  v.src = src.replace(T, '/video/upload/');
+  v.load();
+}, true);
+
 // Rovnaký princíp ako vyššie, len pre obrázky - použité pri príprave vizitky
 // na zdieľanie (pozri getVizitkaShareImageBlob). Galéria na vizitke ukazuje
 // len malé miniatúry, no bez tejto úpravy by sa reálne sťahovali originálne
@@ -9816,8 +9830,12 @@ function uploadVideoFileToCloudinary(file, onProgress){
   const videoPreset = CLOUDINARY.videoUploadPreset;
   if(!videoPreset || videoPreset === CLOUDINARY.uploadPreset) return sendWithPreset(CLOUDINARY.uploadPreset);
   return sendWithPreset(videoPreset).catch(err=>{
-    if(err.status === 400 && /preset/i.test(err.message)){
-      console.warn('Video preset "'+videoPreset+'" neexistuje, používam bežný preset.');
+    // Preset neexistuje ALEBO je video príliš veľké na synchrónne spracovanie
+    // (Incoming transformation na Cloudinary zvláda len menšie videá, cca do 40 MB).
+    // V oboch prípadoch nahráme cez bežný preset - zmenšenie na 720p sa potom
+    // robí pri prehrávaní (optimizeCloudinaryVideoUrl / eager async v presete).
+    if(err.status === 400 && /preset|synchronously|eager/i.test(err.message)){
+      console.warn('Video preset "'+videoPreset+'" zlyhal ('+err.message+'), používam bežný preset.');
       if(onProgress) onProgress(0);
       return sendWithPreset(CLOUDINARY.uploadPreset);
     }
@@ -9846,7 +9864,7 @@ async function handlePostVideo(event){
   try{
     const url = await uploadVideoFileToCloudinary(file, (pct)=>{
       fill.style.width = pct+'%';
-      label.textContent = pct >= 100 ? 'Spracúvam video (zmenšujem na 1080p)...' : `Nahrávam video... ${pct} %`;
+      label.textContent = pct >= 100 ? 'Spracúvam video...' : `Nahrávam video... ${pct} %`;
     });
     pendingPostVideo = url;
     progressBox.classList.remove('show');
@@ -11461,7 +11479,7 @@ function uploadVideoToCloudinary(file){
   return uploadVideoFileToCloudinary(file, (pct)=>{
     document.getElementById('upload-progress-fill').style.width = pct+'%';
     document.getElementById('upload-progress-label').textContent =
-      pct >= 100 ? 'Spracúvam video (zmenšujem na 1080p)...' : `Nahrávam... ${pct} %`;
+      pct >= 100 ? 'Spracúvam video...' : `Nahrávam... ${pct} %`;
   });
 }
 
