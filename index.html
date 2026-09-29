@@ -7145,6 +7145,42 @@ function getChatId(uidA, uidB){
   return [uidA, uidB].sort().join('_');
 }
 
+// Zapíše/aktualizuje chat dokument pred pridaním správy.
+// OPRAVA "z jednej strany ide, z druhej nie": chat dokument vytvorí ten,
+// kto napíše prvý, s participants [on, druhý]. Keď potom odpisoval druhý
+// používateľ, appka prepisovala participants v OPAČNOM poradí [druhý, on].
+// Firestore porovnáva zoznamy aj s poradím, takže bezpečnostné pravidlá to
+// brali ako zmenu účastníkov a zápis zamietli. Teraz sa pri existujúcom
+// chate participants ani mená vôbec neprepisujú - mení sa len posledná
+// správa. Nový chat sa vytvorí ako doteraz.
+async function upsertChatDoc(chatRef, otherUid, otherName, lastMessage){
+  const lastFields = {
+    lastMessage: lastMessage,
+    lastSenderId: currentUser.uid,
+    lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  let exists = false;
+  try{
+    const snap = await chatRef.get();
+    exists = snap.exists;
+  }catch(e){
+    // ak čítanie neprejde (napr. dokument ešte neexistuje a pravidlá
+    // nedovolia get), skúsime ho vytvoriť nižšie
+    exists = false;
+  }
+  if(exists){
+    await chatRef.update(lastFields);
+    return;
+  }
+  await chatRef.set(Object.assign({
+    participants: [currentUser.uid, otherUid],
+    participantNames: {
+      [currentUser.uid]: currentUser.name || 'Používateľ',
+      [otherUid]: otherName || 'Používateľ'
+    }
+  }, lastFields), {merge:true});
+}
+
 function openChatWithProfileUser(){
   const profileUser = viewedProfileUser;
   if(!profileUser) return; // vlastný profil nemá tlačidlo správ
@@ -7276,16 +7312,7 @@ async function sendImageMessage(file){
 
     // Rovnaká oprava ako pri textových/hlasových správach: najprv MUSÍ
     // existovať samotný chat dokument s poľom participants.
-    await chatRef.set({
-      participants: [currentUser.uid, otherUid],
-      participantNames: {
-        [currentUser.uid]: currentUser.name,
-        [otherUid]: currentChatUser.name
-      },
-      lastMessage: '📷 Obrázok',
-      lastSenderId: currentUser.uid,
-      lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }, {merge:true});
+    await upsertChatDoc(chatRef, otherUid, currentChatUser.name, '📷 Obrázok');
     await chatRef.collection('messages').add({
       senderId: currentUser.uid,
       type: 'image',
@@ -7339,16 +7366,7 @@ async function sendChatMessage(){
   // čo používa úplne inú kolekciu "calls"), Firestore by zápis správy
   // zamietol s "Missing or insufficient permissions" - presne to sa
   // dialo pri prvej správe novému kontaktu.
-  chatRef.set({
-    participants: [currentUser.uid, otherUid],
-    participantNames: {
-      [currentUser.uid]: currentUser.name,
-      [otherUid]: currentChatUser.name
-    },
-    lastMessage: text,
-    lastSenderId: currentUser.uid,
-    lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-  }, {merge:true}).then(()=>{
+  upsertChatDoc(chatRef, otherUid, currentChatUser.name, text).then(()=>{
     return chatRef.collection('messages').add({
       senderId: currentUser.uid,
       text,
@@ -7358,7 +7376,8 @@ async function sendChatMessage(){
     return chatRef.update({ ['unread.' + otherUid]: firebase.firestore.FieldValue.increment(1) });
   }).catch(e=>{
     console.error('Chyba pri odoslaní správy:', e);
-    alert('Správu sa nepodarilo odoslať.');
+    input.value = text; // text sa nestratí, dá sa poslať znova
+    alert('Správu sa nepodarilo odoslať.' + (e && e.code ? ' (' + e.code + ')' : ''));
   });
 }
 
@@ -7871,16 +7890,7 @@ async function sendVoiceMessage(blob, durationSeconds){
     // Rovnaká oprava ako pri textových správach: najprv MUSÍ existovať
     // samotný chat dokument s poľom participants, až potom môže appka
     // pridať správu do podkolekcie messages (viď komentár v sendChatMessage).
-    await chatRef.set({
-      participants: [currentUser.uid, otherUid],
-      participantNames: {
-        [currentUser.uid]: currentUser.name,
-        [otherUid]: currentChatUser.name
-      },
-      lastMessage: '🎤 Hlasová správa',
-      lastSenderId: currentUser.uid,
-      lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }, {merge:true});
+    await upsertChatDoc(chatRef, otherUid, currentChatUser.name, '🎤 Hlasová správa');
     await chatRef.collection('messages').add({
       senderId: currentUser.uid,
       type: 'voice',
