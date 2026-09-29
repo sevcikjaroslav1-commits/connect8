@@ -9972,8 +9972,10 @@ async function handlePostFile(event){
         }
       };
       xhr.onload = ()=>{
-        if(xhr.status>=200 && xhr.status<300) resolve(JSON.parse(xhr.responseText).secure_url);
-        else reject(new Error('Cloudinary chyba: '+xhr.status));
+        let data = null;
+        try{ data = JSON.parse(xhr.responseText); }catch(_){}
+        if(xhr.status>=200 && xhr.status<300 && data && data.secure_url) resolve(data.secure_url);
+        else reject(new Error((data && data.error && data.error.message) || ('Cloudinary chyba: '+xhr.status)));
       };
       xhr.onerror = ()=>reject(new Error('Sieťová chyba pri nahrávaní'));
       xhr.send(formData);
@@ -9985,7 +9987,20 @@ async function handlePostFile(event){
     document.getElementById('post-file-preview').classList.add('show');
   }catch(e){
     console.error('Nahrávanie súboru zlyhalo:', e);
-    alert('Nahrávanie súboru zlyhalo. Skús to znova.');
+    const msg = (e && e.message) || '';
+    let hint = '';
+    if(/file size too large|too large/i.test(msg)){
+      const m = msg.match(/Maximum is (\d+)/i);
+      const limitMb = m ? Math.round(parseInt(m[1],10)/1024/1024) : 10;
+      hint = `Súbor je príliš veľký. Maximálna veľkosť súboru je ${limitMb} MB (súbor má ${formatFileSize(file.size)}).`;
+    } else if(/transformation/i.test(msg)){
+      hint = 'Upload preset má nastavenú transformáciu, ktorá sa nedá použiť na súbory (PDF, dokumenty...).';
+    } else if(/preset/i.test(msg)){
+      hint = 'Upload preset nie je správne nastavený.';
+    } else if(/Sieťová chyba/i.test(msg)){
+      hint = 'Chyba pripojenia. Skontroluj internet a skús to znova.';
+    }
+    alert('Nahrávanie súboru zlyhalo. ' + (hint || 'Skús to znova.') + (msg ? '\n\n(' + msg + ')' : ''));
     progressBox.classList.remove('show');
   }
   event.target.value = '';
