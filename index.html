@@ -1755,6 +1755,12 @@
   .protect-badge{display:flex;justify-content:center;width:100%;margin:22px 0 8px;background:transparent;}
   .protect-badge svg{width:150px;height:150px;display:block;font-family:inherit;filter:drop-shadow(0 6px 14px rgba(15,27,45,.18));}
   @media (max-width:600px){ .protect-badge svg{width:130px;height:130px;} }
+  .post.notif-highlight{animation:notifPostPulse 2.6s ease;}
+  @keyframes notifPostPulse{0%,60%{box-shadow:0 0 0 3px #6c5ce7,0 8px 24px rgba(108,92,231,.25);}100%{box-shadow:0 0 0 0 transparent;}}
+  .notif-post-modal{display:none;position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.5);align-items:flex-start;justify-content:center;padding:40px 12px;overflow-y:auto;}
+  .notif-post-modal.open{display:flex;}
+  .notif-post-sheet{position:relative;width:100%;max-width:560px;}
+  .notif-post-close{position:absolute;top:-34px;right:0;width:30px;height:30px;border-radius:50%;background:#fff;color:#222;font-size:15px;border:none;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -7104,9 +7110,74 @@ function openNotificationTarget(id){
     openUserProfile({uid: n.fromUid, name: n.fromName, photoURL: n.fromPhoto});
   } else if(n.type === 'like_video' || n.type === 'comment_video'){
     switchMode('video');
+  } else if((n.type === 'like_post' || n.type === 'comment_post') && n.postId !== undefined && n.postId !== null){
+    switchMode('feed');
+    showPostFromNotification(n.postId);
   } else {
     switchMode('feed');
   }
+}
+
+// Po kliknutí na upozornenie "X sa páči tvoj príspevok" / "X okomentoval(a)
+// tvoj príspevok" nájde konkrétny príspevok vo Feede, doroluje naň a na
+// chvíľu ho zvýrazní. Ak príspevok vo Feede nie je (feed načítava len
+// posledných 80 príspevkov), načíta ho priamo z databázy a ukáže v okne.
+function showPostFromNotification(postId){
+  let tries = 0;
+  const tryFind = ()=>{
+    const el = document.getElementById('post-' + postId);
+    if(el){
+      el.scrollIntoView({behavior:'smooth', block:'center'});
+      el.classList.remove('notif-highlight');
+      void el.offsetWidth; // reštart animácie
+      el.classList.add('notif-highlight');
+      setTimeout(()=>el.classList.remove('notif-highlight'), 2600);
+      return;
+    }
+    if(++tries < 12){ setTimeout(tryFind, 150); return; }
+    openPostFromDatabase(postId);
+  };
+  setTimeout(tryFind, 80);
+}
+
+async function openPostFromDatabase(postId){
+  if(!db) return;
+  try{
+    const snap = await postDoc(postId).get();
+    if(!snap.exists){ alert(t('Tento príspevok už neexistuje.')); return; }
+    const data = snap.data() || {};
+    const p = Object.assign({}, data, { id: (data.id !== undefined ? data.id : snap.id) });
+    // aby fungovali tlačidlá (lajk, komentár...) aj v tomto okne
+    if(typeof ownPostsCache !== 'undefined' && currentUser){
+      if(!ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid] = [];
+      if(!findPostById(p.id)) ownPostsCache[currentUser.uid].push(p);
+    }
+    let modal = document.getElementById('notif-post-modal');
+    if(!modal){
+      modal = document.createElement('div');
+      modal.id = 'notif-post-modal';
+      modal.className = 'notif-post-modal';
+      modal.onclick = (e)=>{ if(e.target === modal) closeNotifPostModal(); };
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `<div class="notif-post-sheet">
+        <button class="notif-post-close" onclick="closeNotifPostModal()" aria-label="Zavrieť">✕</button>
+        <div class="post">${buildPostCard(findPostById(p.id) || p)}</div>
+      </div>`;
+    modal.classList.add('open');
+    if(typeof translateStaticDom === 'function') translateStaticDom(modal);
+  }catch(e){
+    console.error('Chyba pri načítaní príspevku z upozornenia:', e);
+    alert(t('Príspevok sa nepodarilo načítať.'));
+  }
+}
+
+function closeNotifPostModal(){
+  const modal = document.getElementById('notif-post-modal');
+  if(!modal) return;
+  modal.querySelectorAll('video,audio').forEach(m=>m.pause());
+  modal.classList.remove('open');
+  modal.innerHTML = '';
 }
 
 function ensureNotifAudioCtx(){
@@ -13772,6 +13843,8 @@ const UI_DICT_EN = {
   "Záznam sa nepodarilo uložiť.":"Couldn't save the entry.",
   "Naozaj vymazať záznam pre tento deň?":"Really delete the entry for this day?",
   "Záznam sa nepodarilo vymazať.":"Couldn't delete the entry.",
+  "Tento príspevok už neexistuje.":"This post no longer exists.",
+  "Príspevok sa nepodarilo načítať.":"Couldn't load the post.",
 };
 
 // Český slovník - pokrýva texty na prednej (prihlasovacej) stránke:
@@ -13855,6 +13928,8 @@ const UI_DICT_CZ = {
   "Záznam sa nepodarilo uložiť.":"Záznam se nepodařilo uložit.",
   "Naozaj vymazať záznam pre tento deň?":"Opravdu smazat záznam pro tento den?",
   "Záznam sa nepodarilo vymazať.":"Záznam se nepodařilo smazat.",
+  "Tento príspevok už neexistuje.":"Tento příspěvek už neexistuje.",
+  "Príspevok sa nepodarilo načítať.":"Příspěvek se nepodařilo načíst.",
 };
 
 // Rovnaký princíp ako UI_DICT_CZ vyššie, len pre poľštinu (aktivuje sa
@@ -14029,6 +14104,8 @@ const UI_DICT_PL = {
   "Záznam sa nepodarilo uložiť.":"Nie udało się zapisać wpisu.",
   "Naozaj vymazať záznam pre tento deň?":"Na pewno usunąć wpis z tego dnia?",
   "Záznam sa nepodarilo vymazať.":"Nie udało się usunąć wpisu.",
+  "Tento príspevok už neexistuje.":"Ten post już nie istnieje.",
+  "Príspevok sa nepodarilo načítať.":"Nie udało się wczytać posta.",
 };
 
 // hero, prihlasovací/registračný formulár, features, pätička a nadpisy
@@ -14204,6 +14281,8 @@ const UI_DICT_HU = {
   "Záznam sa nepodarilo uložiť.":"Nem sikerült menteni a bejegyzést.",
   "Naozaj vymazať záznam pre tento deň?":"Biztosan törlöd a bejegyzést erről a napról?",
   "Záznam sa nepodarilo vymazať.":"Nem sikerült törölni a bejegyzést.",
+  "Tento príspevok už neexistuje.":"Ez a bejegyzés már nem létezik.",
+  "Príspevok sa nepodarilo načítať.":"Nem sikerült betölteni a bejegyzést.",
 };
 
 // hero, prihlasovací/registračný formulár, features, pätička a nadpisy
@@ -14379,6 +14458,8 @@ const UI_DICT_AT = {
   "Záznam sa nepodarilo uložiť.":"Eintrag konnte nicht gespeichert werden.",
   "Naozaj vymazať záznam pre tento deň?":"Eintrag für diesen Tag wirklich löschen?",
   "Záznam sa nepodarilo vymazať.":"Eintrag konnte nicht gelöscht werden.",
+  "Tento príspevok už neexistuje.":"Dieser Beitrag existiert nicht mehr.",
+  "Príspevok sa nepodarilo načítať.":"Der Beitrag konnte nicht geladen werden.",
 };
 
 // hero, prihlasovací/registračný formulár, features, pätička a nadpisy
@@ -14556,6 +14637,8 @@ const UI_DICT_DE = {
   "Záznam sa nepodarilo uložiť.":"Eintrag konnte nicht gespeichert werden.",
   "Naozaj vymazať záznam pre tento deň?":"Eintrag für diesen Tag wirklich löschen?",
   "Záznam sa nepodarilo vymazať.":"Eintrag konnte nicht gelöscht werden.",
+  "Tento príspevok už neexistuje.":"Dieser Beitrag existiert nicht mehr.",
+  "Príspevok sa nepodarilo načítať.":"Der Beitrag konnte nicht geladen werden.",
 };
 
 // hero, prihlasovací/registračný formulár, features, pätička a nadpisy
@@ -14731,6 +14814,8 @@ const UI_DICT_IT = {
   "Záznam sa nepodarilo uložiť.":"Impossibile salvare la voce.",
   "Naozaj vymazať záznam pre tento deň?":"Eliminare davvero la voce per questo giorno?",
   "Záznam sa nepodarilo vymazať.":"Impossibile eliminare la voce.",
+  "Tento príspevok už neexistuje.":"Questo post non esiste più.",
+  "Príspevok sa nepodarilo načítať.":"Impossibile caricare il post.",
 };
 
 // Vráti anglický preklad pevného textu (ak existuje v slovníku), inak
