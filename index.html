@@ -3357,7 +3357,10 @@ const CLOUDINARY = {
   // Preset pre VEĽKÉ videá (nad ~40 MB), ktoré Cloudinary nevie zmenšiť hneď.
   // Nastavenie v Cloudinary: Unsigned, BEZ Incoming transformation,
   // Eager transformation: w_720,c_limit,q_auto,f_mp4,vc_h264, Eager async: ON
-  videoAsyncPreset: "jaro88_video_async"
+  videoAsyncPreset: "jaro88_video_async",
+  // Preset pre SÚBORY (PDF, ZIP, dokumenty...) - Unsigned, bez obmedzenia formátov
+  // a bez transformácií. Ak neexistuje, použije sa bežný preset vyššie.
+  fileUploadPreset: "jaro88_file"
 };
 // Musí byť presne rovnaké ako Eager transformation v presete jaro88_video_async
 const VIDEO_DELIVERY_TRANSFORM = 'w_720,c_limit,q_auto,f_mp4,vc_h264';
@@ -9686,7 +9689,7 @@ function uploadImageToCloudinary(fileOrBlob){
 // nezávisle od Cloudinary plánu.
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;   // 10 MB pre fotky
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024;   // 50 MB pre videá (video sa pri uploade aj tak zmenší na 1080p)
-const MAX_FILE_SIZE  = 50 * 1024 * 1024;   // 50 MB pre ostatné súbory (PDF, dokumenty...)
+const MAX_FILE_SIZE  = 10 * 1024 * 1024;   // 10 MB pre ostatné súbory (PDF, ZIP, dokumenty...) - limit Cloudinary Free pre raw súbory
 const MAX_VOICE_SIZE = 5  * 1024 * 1024;   // 5 MB pre hlasové správy (poistka, bežne sú oveľa menšie)
 
 function checkFileSizeOk(file, maxBytes, label){
@@ -9957,11 +9960,11 @@ async function handlePostFile(event){
   label.textContent = 'Nahrávam súbor... 0 %';
 
   try{
-    const url = await new Promise((resolve, reject)=>{
+    const sendFile = (preset)=> new Promise((resolve, reject)=>{
       const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/raw/upload`;
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', CLOUDINARY.uploadPreset);
+      formData.append('upload_preset', preset);
       const xhr = new XMLHttpRequest();
       xhr.open('POST', uploadUrl);
       xhr.upload.onprogress = (e)=>{
@@ -9980,6 +9983,18 @@ async function handlePostFile(event){
       xhr.onerror = ()=>reject(new Error('Sieťová chyba pri nahrávaní'));
       xhr.send(formData);
     });
+    let url;
+    const filePreset = CLOUDINARY.fileUploadPreset || CLOUDINARY.uploadPreset;
+    try{
+      url = await sendFile(filePreset);
+    }catch(err){
+      // Preset pre súbory ešte neexistuje -> skús bežný preset
+      if(filePreset !== CLOUDINARY.uploadPreset && /preset/i.test(err.message)){
+        console.warn('Preset "'+filePreset+'" neexistuje, používam bežný preset.');
+        fill.style.width = '0%';
+        url = await sendFile(CLOUDINARY.uploadPreset);
+      } else throw err;
+    }
     pendingPostFile = { url, name: file.name, size: file.size };
     progressBox.classList.remove('show');
     document.getElementById('post-file-preview-name').textContent = file.name;
@@ -9993,6 +10008,8 @@ async function handlePostFile(event){
       const m = msg.match(/Maximum is (\d+)/i);
       const limitMb = m ? Math.round(parseInt(m[1],10)/1024/1024) : 10;
       hint = `Súbor je príliš veľký. Maximálna veľkosť súboru je ${limitMb} MB (súbor má ${formatFileSize(file.size)}).`;
+    } else if(/format .* not allowed/i.test(msg)){
+      hint = 'Tento typ súboru nie je v nastaveniach Cloudinary povolený.';
     } else if(/transformation/i.test(msg)){
       hint = 'Upload preset má nastavenú transformáciu, ktorá sa nedá použiť na súbory (PDF, dokumenty...).';
     } else if(/preset/i.test(msg)){
