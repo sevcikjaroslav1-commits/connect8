@@ -811,6 +811,22 @@
   }
   .block-btn:hover{background:var(--mode-video);color:#fff;}
   .block-btn.blocked{background:transparent;color:var(--text-dim);border:1px solid var(--line);}
+  .report-btn{background:transparent;color:var(--text-dim);border:1px solid var(--line);font-size:12.5px;font-weight:700;
+    padding:6px 12px;border-radius:20px;flex-shrink:0;margin-left:6px;white-space:nowrap;cursor:pointer;}
+  .report-btn:hover{color:#dc2626;border-color:#dc2626;}
+  .report-modal{display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px;}
+  .report-modal.open{display:flex;}
+  .report-sheet{background:var(--surface, #fff);color:var(--text, #111);width:100%;max-width:400px;border-radius:16px;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.25);}
+  .report-sheet h3{margin:0 0 4px;font-size:17px;}
+  .report-sub{font-size:13px;color:var(--text-dim);margin-bottom:12px;}
+  .report-reason{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;cursor:pointer;font-size:14px;}
+  .report-reason input{accent-color:#dc2626;}
+  .report-sheet textarea{width:100%;box-sizing:border-box;min-height:64px;border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit;font-size:14px;margin-top:4px;background:transparent;color:inherit;resize:vertical;}
+  .report-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;}
+  .report-actions button{padding:8px 16px;border-radius:20px;font-weight:700;font-size:14px;cursor:pointer;border:1px solid var(--line);background:transparent;color:inherit;}
+  .report-actions .report-send{background:#dc2626;border-color:#dc2626;color:#fff;}
+  .notif-item.report{border-left:3px solid #dc2626;}
+  .notif-report-note{display:block;font-size:12.5px;color:var(--text-dim);margin-top:2px;}
   .block-btn.blocked:hover{background:var(--mode-video);color:#fff;border-color:var(--mode-video);}
   .post-text{font-size:14.5px;line-height:1.5;margin-bottom:12px;}
   .post-img{
@@ -2922,6 +2938,7 @@
               </div>
               <div class="profile-block-row">
                 <button class="block-btn" id="profile-block-btn" onclick="toggleBlockFromProfile()" style="display:none;">🚫 Zablokovať</button>
+                <button class="report-btn" id="profile-report-btn" onclick="reportUserFromProfile()" style="display:none;">🚩 Nahlásiť</button>
               </div>
               <div class="profile-stats" id="profile-stats">0 príspevkov · 0 fotiek</div>
               <button class="vizitka-btn" id="vizitka-btn" onclick="openVizitkaModal()" style="display:none;">🪪 Vytvoriť vizitku</button>
@@ -3120,6 +3137,20 @@
         <button onclick="closeNotifModal()">✕</button>
       </div>
       <div class="notif-list" id="notif-list"></div>
+    </div>
+  </div>
+
+  <!-- NAHLÁSENIE príspevku / používateľa -> príde ako upozornenie adminom -->
+  <div class="report-modal" id="report-modal" onclick="if(event.target===this) closeReportModal()">
+    <div class="report-sheet">
+      <h3 id="report-title">🚩 Nahlásiť</h3>
+      <div class="report-sub" id="report-sub">Prečo to nahlasuješ? Nahlásenie uvidí len správca Connect8.</div>
+      <div id="report-reasons"></div>
+      <textarea id="report-note" maxlength="500" placeholder="Poznámka (nepovinné)"></textarea>
+      <div class="report-actions">
+        <button onclick="closeReportModal()">Zrušiť</button>
+        <button class="report-send" id="report-send-btn" onclick="submitReport()">Odoslať</button>
+      </div>
     </div>
   </div>
 
@@ -5450,6 +5481,8 @@ function renderProfile(){
       blockBtn.textContent = isBlocked ? t('✓ Odblokovať') : t('🚫 Zablokovať');
     }
   }
+  const reportBtn = document.getElementById('profile-report-btn');
+  if(reportBtn) reportBtn.style.display = (isOwnProfile || !profileUser.uid) ? 'none' : 'inline-block';
 
   const grid = document.getElementById('profile-photos-grid');
   grid.innerHTML = allPhotos.length
@@ -6097,6 +6130,102 @@ function createNotification(toUid, type, extra){
   db.collection('notifications').add(notif).catch(err=>console.error('Chyba pri zápise upozornenia:', err));
 }
 
+/* ---------------- NAHLASOVANIE ----------------
+   Nahlásenie príspevku alebo používateľa sa pošle ako upozornenie
+   (kolekcia notifications, type:'report') každému používateľovi,
+   ktorý má v profiles isAdmin:true. Admin ho uvidí v 🔔 Upozorneniach. */
+const REPORT_REASONS = {
+  spam: 'Spam alebo reklama',
+  harassment: 'Obťažovanie alebo šikana',
+  inappropriate: 'Nevhodný alebo nahý obsah',
+  hate: 'Nenávisť alebo násilie',
+  scam: 'Podvod alebo falošný účet',
+  other: 'Iné'
+};
+let pendingReport = null; // {targetType, postId?, targetUid, targetName, targetPhoto, postText?}
+let adminUidsCache = null;
+
+async function getAdminUids(){
+  if(adminUidsCache) return adminUidsCache;
+  const snap = await db.collection('profiles').where('isAdmin', '==', true).get();
+  adminUidsCache = snap.docs.map(d=>d.id);
+  return adminUidsCache;
+}
+
+function openReportModal(report, title){
+  if(!currentUser){ alert('Na nahlásenie sa musíš prihlásiť.'); return; }
+  pendingReport = report;
+  document.getElementById('report-title').textContent = title;
+  document.getElementById('report-note').value = '';
+  document.getElementById('report-reasons').innerHTML = Object.entries(REPORT_REASONS).map(([k,v],i)=>`
+    <label class="report-reason"><input type="radio" name="report-reason" value="${k}" ${i===0?'checked':''}> ${t(v)}</label>`).join('');
+  const btn = document.getElementById('report-send-btn');
+  btn.disabled = false; btn.textContent = t('Odoslať');
+  document.getElementById('report-modal').classList.add('open');
+}
+
+function closeReportModal(){
+  document.getElementById('report-modal').classList.remove('open');
+  pendingReport = null;
+}
+
+function reportPost(postId){
+  openPostMenuId = null;
+  document.querySelectorAll('.post-menu-dropdown.open').forEach(el=>el.classList.remove('open'));
+  const p = findPostById(postId);
+  if(!p) return;
+  openReportModal({
+    targetType: 'post',
+    postId: p.id,
+    targetUid: p.authorId || null,
+    targetName: p.name || '',
+    targetPhoto: getAuthorPhoto(p) || null,
+    postText: (p.text || '').slice(0, 140)
+  }, '🚩 ' + t('Nahlásiť príspevok'));
+}
+
+function reportUserFromProfile(){
+  if(!viewedProfileUser || !viewedProfileUser.uid) return;
+  openReportModal({
+    targetType: 'user',
+    targetUid: viewedProfileUser.uid,
+    targetName: viewedProfileUser.name || '',
+    targetPhoto: viewedProfileUser.photoURL || null
+  }, '🚩 ' + t('Nahlásiť používateľa'));
+}
+
+async function submitReport(){
+  if(!pendingReport || !currentUser || !db) return;
+  const sel = document.querySelector('input[name="report-reason"]:checked');
+  const reason = sel ? sel.value : 'other';
+  const note = document.getElementById('report-note').value.trim().slice(0, 500);
+  const btn = document.getElementById('report-send-btn');
+  btn.disabled = true; btn.textContent = t('Odosielam...');
+  try{
+    const admins = await getAdminUids();
+    if(!admins.length) throw new Error('Nie je nastavený žiadny admin (profiles.isAdmin = true).');
+    const extra = { reason, note, ...pendingReport };
+    Object.keys(extra).forEach(k=>{ if(extra[k] === undefined) delete extra[k]; });
+    const notif = {
+      type: 'report',
+      fromUid: currentUser.uid,
+      fromName: currentUser.name,
+      fromPhoto: currentUser.photoURL || null,
+      createdAt: Date.now(),
+      read: false,
+      ...extra
+    };
+    // Aj keď nahlasuje sám admin, upozornenie sa uloží (kvôli prehľadu).
+    await Promise.all(admins.map(uid=>db.collection('notifications').add({ ...notif, toUid: uid })));
+    closeReportModal();
+    alert(t('Ďakujeme, nahlásenie sme prijali. Správca ho preverí.'));
+  }catch(e){
+    console.error('Nahlásenie zlyhalo:', e);
+    alert(t('Nahlásenie sa nepodarilo odoslať. Skús to znova.') + '\n\n(' + (e.message || e) + ')');
+    btn.disabled = false; btn.textContent = t('Odoslať');
+  }
+}
+
 function notifText(n){
   const name = `<b>${escapeHtml(n.fromName || 'Niekto')}</b>`;
   switch(n.type){
@@ -6105,6 +6234,15 @@ function notifText(n){
     case 'comment_post': return `${name} okomentoval(a) tvoj príspevok`;
     case 'comment_video': return `${name} okomentoval(a) tvoje video`;
     case 'follow': return `${name} ťa začal(a) sledovať`;
+    case 'report': {
+      const what = n.targetType === 'post'
+        ? `príspevok používateľa <b>${escapeHtml(n.targetName || '?')}</b>`
+        : `používateľa <b>${escapeHtml(n.targetName || '?')}</b>`;
+      const reason = REPORT_REASONS[n.reason] || n.reason || '';
+      return `🚩 ${name} nahlásil(a) ${what}${reason ? ` – ${escapeHtml(reason)}` : ''}`
+        + (n.note ? `<span class="notif-report-note">„${escapeHtml(n.note)}"</span>` : '')
+        + (n.postText ? `<span class="notif-report-note">Text: ${escapeHtml(n.postText)}</span>` : '');
+    }
     default: return `${name} ťa upozornil(a)`;
   }
 }
@@ -6117,7 +6255,7 @@ function renderNotifList(){
     return;
   }
   list.innerHTML = cachedNotifications.map(n=>`
-    <div class="notif-item ${n.read?'':'unread'}" onclick="openNotificationTarget('${n.id}')">
+    <div class="notif-item ${n.read?'':'unread'} ${n.type==='report'?'report':''}" onclick="openNotificationTarget('${n.id}')">
       ${avatarHtml(n.fromName || 'Niekto', n.fromPhoto)}
       <div class="notif-item-text">${notifText(n)}</div>
       <div class="notif-item-time">${formatPostTime(n.createdAt)}</div>
@@ -7129,7 +7267,14 @@ function openNotificationTarget(id){
   const n = cachedNotifications.find(x=>x.id===id);
   closeNotifModal();
   if(!n) return;
-  if(n.type === 'follow'){
+  if(n.type === 'report'){
+    if(n.targetType === 'post' && n.postId !== undefined && n.postId !== null){
+      switchMode('feed');
+      showPostFromNotification(n.postId);
+    } else if(n.targetUid){
+      openUserProfile({uid: n.targetUid, name: n.targetName, photoURL: n.targetPhoto || null});
+    }
+  } else if(n.type === 'follow'){
     openUserProfile({uid: n.fromUid, name: n.fromName, photoURL: n.fromPhoto});
   } else if(n.type === 'like_video' || n.type === 'comment_video'){
     switchMode('video');
@@ -9296,11 +9441,13 @@ function buildPostCard(p, opts={}){
           <div><div class="name">${escapeHtml(p.name)}</div><div class="time" data-ts="${p.createdAt || p.id}" title="${formatFullDate(p.createdAt || p.id)}">${formatPostTime(p.createdAt || p.id)}${p.editedAt ? ` · <span class="post-edited-tag">${t('upravené')}</span>` : ''}</div></div>
         </div>
         ${followBtnHtml(p.authorId)}
-        ${isOwnPost && !isEditing ? `
+        ${!isEditing ? `
         <div class="post-menu">
-          <button class="post-menu-btn" onclick="togglePostMenu(${p.id}, event)" title="${t('Upraviť príspevok')}">⋮</button>
+          <button class="post-menu-btn" onclick="togglePostMenu(${p.id}, event)" title="${isOwnPost ? t('Upraviť príspevok') : t('Možnosti')}">⋮</button>
           <div class="post-menu-dropdown ${openPostMenuId===p.id ? 'open' : ''}" id="post-menu-${p.id}">
-            <button onclick="startEditPost(${p.id})">✏️ ${t('Upraviť')}</button>
+            ${isOwnPost
+              ? `<button onclick="startEditPost(${p.id})">✏️ ${t('Upraviť')}</button>`
+              : `<button onclick="reportPost(${p.id})">🚩 ${t('Nahlásiť')}</button>`}
           </div>
         </div>` : ''}
         ${(isOwnPost || currentUserIsAdmin) ? `<button class="post-del-btn" onclick="deletePost(${p.id})" title="${t('Vymazať príspevok')}">🗑️</button>` : ''}
