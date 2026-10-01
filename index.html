@@ -3859,7 +3859,9 @@ async function doRegister(){
     const cred = await auth.createUserWithEmailAndPassword(email, pass);
     await cred.user.updateProfile({displayName:name});
     await db.collection('profiles').doc(cred.user.uid).set({
-      name, email, showLastOnline: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      // e-mail sa do verejného profilu NEUKLADÁ (profily vidia všetci prihlásení);
+      // e-mail je bezpečne uložený len vo Firebase Authentication
+      name, showLastOnline: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     // Nastavíme currentUser priamo tu (so správnym menom), namiesto čakania
     // na onAuthStateChanged nižšie — ten by sa mohol spustiť skôr, než sa
@@ -6222,7 +6224,10 @@ async function submitReport(){
       ...extra
     };
     // Aj keď nahlasuje sám admin, upozornenie sa uloží (kvôli prehľadu).
-    await Promise.all(admins.map(uid=>db.collection('notifications').add({ ...notif, toUid: uid })));
+    // Pravidlá nedovolia poslať upozornenie sám sebe -> admin, ktorý nahlasuje,
+    // pošle nahlásenie len ostatným adminom (ak žiadni nie sú, stačí potvrdenie).
+    const targets = admins.filter(uid=>uid !== currentUser.uid);
+    await Promise.all(targets.map(uid=>db.collection('notifications').add({ ...notif, toUid: uid })));
     closeReportModal();
     alert(t('Ďakujeme, nahlásenie sme prijali. Správca ho preverí.'));
   }catch(e){
@@ -8369,6 +8374,12 @@ if(FIREBASE_CONFIGURED){
         if(prof.exists && prof.data().avatarPhoto) photoURL = prof.data().avatarPhoto;
         if(prof.exists) showLastOnline = !!prof.data().showLastOnline;
         if(prof.exists) currentUserIsAdmin = prof.data().isAdmin === true;
+        // Staršie profily mali uložený e-mail viditeľný pre všetkých -> odstrániť
+        if(prof.exists && 'email' in prof.data()){
+          db.collection('profiles').doc(user.uid)
+            .update({ email: firebase.firestore.FieldValue.delete() })
+            .catch(e=>console.warn('E-mail z profilu sa nepodarilo odstrániť:', e));
+        }
       }catch(e){ console.error("Nepodarilo sa načítať profil:", e); }
       currentUser = { uid:user.uid, email:user.email, name, photoURL, showLastOnline };
       profileSettingsCache[user.uid] = showLastOnline;
