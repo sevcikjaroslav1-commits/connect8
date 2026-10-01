@@ -3146,6 +3146,21 @@
     </div>
   </div>
 
+  <!-- ODSTRÁNENIE CUDZIEHO OBSAHU ADMINOM -> autor dostane zdôvodnenie -->
+  <div class="report-modal" id="removal-modal" onclick="if(event.target===this) closeRemovalModal()">
+    <div class="report-sheet">
+      <h3>🛑 Odstrániť obsah</h3>
+      <div class="report-sub" id="removal-what"></div>
+      <div class="report-sub">Vyber dôvod – autor ho dostane v upozornení spolu s kontaktom pre prípadnú námietku.</div>
+      <div id="removal-reasons"></div>
+      <textarea id="removal-note" maxlength="500" placeholder="Poznámka pre autora (nepovinné)"></textarea>
+      <div class="report-actions">
+        <button onclick="closeRemovalModal()">Zrušiť</button>
+        <button class="report-send" id="removal-send-btn" onclick="confirmRemoval()">Odstrániť a oznámiť autorovi</button>
+      </div>
+    </div>
+  </div>
+
   <!-- NAHLÁSENIE príspevku / používateľa -> príde ako upozornenie adminom -->
   <div class="report-modal" id="report-modal" onclick="if(event.target===this) closeReportModal()">
     <div class="report-sheet">
@@ -6237,6 +6252,89 @@ async function submitReport(){
   }
 }
 
+/* ---------------- ODSTRÁNENIE OBSAHU ADMINOM (DSA - zdôvodnenie) ----------------
+   Keď admin zmaže CUDZÍ príspevok/video/inzerát/film, vyberie dôvod (rovnaké
+   možnosti ako pri nahlásení) a autor automaticky dostane upozornenie
+   s dôvodom a kontaktom, kam sa môže ozvať, ak nesúhlasí. */
+const CONTACT_EMAIL = 'sevcikjaroslav1@gmail.com';
+const REMOVAL_KIND_LABEL = { post:'príspevok', video:'video', product:'inzerát', movie:'film/dokument' };
+let lastReportContext = null;
+let pendingRemoval = null; // {kind, item, doDelete}
+
+function requestDeletion(kind, item, confirmText, doDelete){
+  const authorId = item && item.authorId;
+  if(currentUserIsAdmin && currentUser && authorId && authorId !== currentUser.uid){
+    openRemovalModal(kind, item, doDelete);
+    return;
+  }
+  if(!confirm(confirmText)) return;
+  doDelete();
+}
+
+function removalItemText(kind, item){
+  const t0 = kind === 'post' ? item.text : kind === 'video' ? item.caption : item.title;
+  return (t0 || '').toString().trim().slice(0, 80);
+}
+
+function openRemovalModal(kind, item, doDelete){
+  pendingRemoval = { kind, item, doDelete };
+  let pre = 'inappropriate';
+  if(lastReportContext && kind === 'post' && lastReportContext.postId === item.id && lastReportContext.reason) pre = lastReportContext.reason;
+  else if(lastReportContext && lastReportContext.targetUid === item.authorId && lastReportContext.reason) pre = lastReportContext.reason;
+  document.getElementById('removal-what').textContent =
+    `${t(REMOVAL_KIND_LABEL[kind] || 'obsah')} – ${item.name || ''}${removalItemText(kind, item) ? ': „' + removalItemText(kind, item) + '"' : ''}`;
+  document.getElementById('removal-reasons').innerHTML = Object.entries(REPORT_REASONS).map(([k,v])=>`
+    <label class="report-reason"><input type="radio" name="removal-reason" value="${k}" ${k===pre?'checked':''}> ${t(v)}</label>`).join('');
+  document.getElementById('removal-note').value = '';
+  const btn = document.getElementById('removal-send-btn');
+  btn.disabled = false; btn.textContent = t('Odstrániť a oznámiť autorovi');
+  document.getElementById('removal-modal').classList.add('open');
+}
+
+function closeRemovalModal(){
+  document.getElementById('removal-modal').classList.remove('open');
+  pendingRemoval = null;
+}
+
+async function confirmRemoval(){
+  if(!pendingRemoval) return;
+  const { kind, item, doDelete } = pendingRemoval;
+  const sel = document.querySelector('input[name="removal-reason"]:checked');
+  const reason = sel ? sel.value : 'other';
+  const note = document.getElementById('removal-note').value.trim().slice(0, 500);
+  const btn = document.getElementById('removal-send-btn');
+  btn.disabled = true; btn.textContent = t('Odstraňujem...');
+  try{
+    doDelete();
+    await db.collection('notifications').add({
+      type: 'content_removed',
+      toUid: item.authorId,
+      fromUid: currentUser.uid,
+      fromName: currentUser.name,
+      fromPhoto: currentUser.photoURL || null,
+      createdAt: Date.now(),
+      read: false,
+      kind,
+      itemText: removalItemText(kind, item),
+      reason,
+      note
+    });
+    lastReportContext = null;
+    closeRemovalModal();
+  }catch(e){
+    console.error('Oznámenie o odstránení zlyhalo:', e);
+    alert(t('Obsah bol odstránený, ale upozornenie autorovi sa nepodarilo odoslať.') + '\n\n(' + (e.message||e) + ')');
+    closeRemovalModal();
+  }
+}
+
+// čistý text upozornenia (bez HTML) - pre zobrazenie po kliknutí
+function notifPlainText(n){
+  const d = document.createElement('div');
+  d.innerHTML = notifText(n).replace(/<span/g, '\n<span');
+  return d.textContent.trim();
+}
+
 function notifText(n){
   const name = `<b>${escapeHtml(n.fromName || 'Niekto')}</b>`;
   switch(n.type){
@@ -6245,6 +6343,13 @@ function notifText(n){
     case 'comment_post': return `${name} okomentoval(a) tvoj príspevok`;
     case 'comment_video': return `${name} okomentoval(a) tvoje video`;
     case 'follow': return `${name} ťa začal(a) sledovať`;
+    case 'content_removed': {
+      const what = REMOVAL_KIND_LABEL[n.kind] || 'obsah';
+      const reason = REPORT_REASONS[n.reason] || n.reason || '';
+      return `🛑 Správca Connect8 odstránil tvoj ${what}${n.itemText ? ` „${escapeHtml(n.itemText)}"` : ''}`
+        + `<span class="notif-report-note"><b>Dôvod:</b> ${escapeHtml(reason)}${n.note ? ` – ${escapeHtml(n.note)}` : ''}</span>`
+        + `<span class="notif-report-note">Ak nesúhlasíš, napíš na ${CONTACT_EMAIL}.</span>`;
+    }
     case 'report': {
       const what = n.targetType === 'post'
         ? `príspevok používateľa <b>${escapeHtml(n.targetName || '?')}</b>`
@@ -6266,7 +6371,7 @@ function renderNotifList(){
     return;
   }
   list.innerHTML = cachedNotifications.map(n=>`
-    <div class="notif-item ${n.read?'':'unread'} ${n.type==='report'?'report':''}" onclick="openNotificationTarget('${n.id}')">
+    <div class="notif-item ${n.read?'':'unread'} ${(n.type==='report'||n.type==='content_removed')?'report':''}" onclick="openNotificationTarget('${n.id}')">
       ${avatarHtml(n.fromName || 'Niekto', n.fromPhoto)}
       <div class="notif-item-text">${notifText(n)}</div>
       <div class="notif-item-time">${formatPostTime(n.createdAt)}</div>
@@ -7278,7 +7383,12 @@ function openNotificationTarget(id){
   const n = cachedNotifications.find(x=>x.id===id);
   closeNotifModal();
   if(!n) return;
+  if(n.type === 'content_removed'){
+    alert(notifPlainText(n));
+    return;
+  }
   if(n.type === 'report'){
+    lastReportContext = { postId: n.postId, targetUid: n.targetUid, reason: n.reason };
     if(n.targetType === 'post' && n.postId !== undefined && n.postId !== null){
       switchMode('feed');
       showPostFromNotification(n.postId);
@@ -10330,11 +10440,12 @@ function toggleComments(id){
 function deletePost(id){
   const p = findPostById(id);
   if(!p) return;
-  if(!confirm('Naozaj chceš vymazať tento príspevok?')) return;
-  posts = posts.filter(p=>p.id!==id);
-  for(const uid in ownPostsCache){ ownPostsCache[uid] = ownPostsCache[uid].filter(p=>p.id!==id); }
-  removePostDoc(id);
-  refreshPostViews();
+  requestDeletion('post', p, 'Naozaj chceš vymazať tento príspevok?', ()=>{
+    posts = posts.filter(p=>p.id!==id);
+    for(const uid in ownPostsCache){ ownPostsCache[uid] = ownPostsCache[uid].filter(p=>p.id!==id); }
+    removePostDoc(id);
+    refreshPostViews();
+  });
 }
 
 // Editácia vlastného príspevku (iba text) - viditeľné len autorovi.
@@ -10813,12 +10924,13 @@ function toggleSellForm(){
 function deleteProduct(id){
   const pr = findProductById(id);
   if(!pr) return;
-  if(!confirm('Naozaj chceš vymazať tento produkt?')) return;
-  products = products.filter(pr=>pr.id!==id);
-  if(allProductsCache) allProductsCache = allProductsCache.filter(pr=>pr.id!==id);
-  removeProductDoc(id);
-  renderProducts();
-  if(document.getElementById('view-product-detail').classList.contains('active')) closeProductDetail();
+  requestDeletion('product', pr, 'Naozaj chceš vymazať tento produkt?', ()=>{
+    products = products.filter(pr=>pr.id!==id);
+    if(allProductsCache) allProductsCache = allProductsCache.filter(pr=>pr.id!==id);
+    removeProductDoc(id);
+    renderProducts();
+    if(document.getElementById('view-product-detail').classList.contains('active')) closeProductDetail();
+  });
 }
 
 let currentProductDetailId = null;
@@ -11098,8 +11210,10 @@ function addMovie(){
 }
 
 function deleteMovie(id){
-  if(!confirm('Naozaj chceš vymazať túto položku?')) return;
-  removeMovieDoc(id);
+  const m = (typeof movies !== 'undefined' ? movies : []).find(m=>m.id===id) || {id};
+  requestDeletion('movie', m, 'Naozaj chceš vymazať túto položku?', ()=>{
+    removeMovieDoc(id);
+  });
 }
 
 function playMovie(id){
@@ -11652,10 +11766,11 @@ function toggleVideoLike(id){
 function deleteVideo(id){
   const v = videos.find(v=>v.id===id);
   if(!v) return;
-  if(!confirm('Naozaj chceš vymazať toto video?')) return;
-  videos = videos.filter(v=>v.id!==id);
-  removeVideoDoc(id);
-  renderVideos();
+  requestDeletion('video', v, 'Naozaj chceš vymazať toto video?', ()=>{
+    videos = videos.filter(v=>v.id!==id);
+    removeVideoDoc(id);
+    renderVideos();
+  });
 }
 
 /* ---------------- KOMENTÁRE K VIDEÁM ---------------- */
