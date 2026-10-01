@@ -9450,7 +9450,7 @@ function buildPostCard(p, opts={}){
         ${!isEditing ? `
         <div class="post-menu">
           <button class="post-menu-btn" onclick="togglePostMenu(${p.id}, event)" title="${isOwnPost ? t('Upraviť príspevok') : t('Možnosti')}">⋮</button>
-          <div class="post-menu-dropdown ${openPostMenuId===p.id ? 'open' : ''}" id="post-menu-${p.id}">
+          <div class="post-menu-dropdown" id="post-menu-${p.id}">
             ${isOwnPost
               ? `<button onclick="startEditPost(${p.id})">✏️ ${t('Upraviť')}</button>`
               : `<button onclick="reportPost(${p.id})">🚩 ${t('Nahlásiť')}</button>`}
@@ -9613,18 +9613,45 @@ function setupFeedVideoObserver(){
   });
 }
 
+// Vykreslenie Plochy BEZ preskakovania: namiesto zmazania a znovuvytvorenia
+// všetkých príspevkov (čo načítalo všetky fotky/videá nanovo a stránka
+// poskočila) sa prepíše LEN príspevok, ktorého obsah sa naozaj zmenil.
+// Ostatné príspevky zostanú v DOM nedotknuté (fotky, videá aj preklad).
+const postCardHtmlCache = new WeakMap();
 function renderPosts(){
   const list = document.getElementById('posts-list');
-  list.innerHTML = '';
-  posts.slice().reverse().filter(p=> !(p.authorId && blockedSet.has(p.authorId))).forEach(p=>{
-    const div = document.createElement('div');
-    div.className = 'post';
-    div.id = 'post-' + p.id;
-    div.innerHTML = buildPostCard(p);
-    list.appendChild(div);
+  if(!list) return;
+  const visible = posts.slice().reverse().filter(p=> !(p.authorId && blockedSet.has(p.authorId)));
+  const wanted = new Set(visible.map(p=>'post-' + p.id));
+  // odstráň príspevky, ktoré už nemajú byť zobrazené
+  Array.from(list.children).forEach(el=>{ if(!wanted.has(el.id)) el.remove(); });
+  let changed = false;
+  visible.forEach((p, idx)=>{
+    const id = 'post-' + p.id;
+    const html = buildPostCard(p);
+    let div = list.querySelector(':scope > #' + CSS.escape(id));
+    if(!div){
+      div = document.createElement('div');
+      div.className = 'post';
+      div.id = id;
+      div.innerHTML = html;
+      postCardHtmlCache.set(div, html);
+      changed = true;
+    } else if(postCardHtmlCache.get(div) !== html){
+      div.innerHTML = html;
+      postCardHtmlCache.set(div, html);
+      changed = true;
+    }
+    // správne poradie - presúvaj len ak je prvok na zlom mieste
+    if(list.children[idx] !== div){
+      list.insertBefore(div, list.children[idx] || null);
+      changed = true;
+    }
   });
-  setupFeedVideoObserver();
-  translateVisiblePosts();
+  if(changed){
+    setupFeedVideoObserver();
+    translateVisiblePosts();
+  }
 }
 
 let pendingPostImages = []; // pole dataURL reťazcov (viacero fotiek k jednému príspevku)
@@ -10344,16 +10371,23 @@ function removeEditPostImageAt(postId, index){
   renderEditImagePreview(postId);
 }
 
+// Menu ⋮ sa len zobrazí/skryje cez CSS triedu - bez prekresľovania príspevkov,
+// takže stránka pri kliknutí neposkočí.
+function syncPostMenus(){
+  document.querySelectorAll('.post-menu-dropdown').forEach(el=>{
+    el.classList.toggle('open', openPostMenuId !== null && el.id === 'post-menu-' + openPostMenuId);
+  });
+}
 function togglePostMenu(id, ev){
   if(ev){ ev.preventDefault(); ev.stopPropagation(); }
   openPostMenuId = (openPostMenuId === id) ? null : id;
-  refreshPostViews();
+  syncPostMenus();
 }
 
 document.addEventListener('click', (ev)=>{
   if(openPostMenuId !== null && !ev.target.closest('.post-menu')){
     openPostMenuId = null;
-    refreshPostViews();
+    syncPostMenus();
   }
 });
 
