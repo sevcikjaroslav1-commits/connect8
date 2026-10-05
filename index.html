@@ -8754,7 +8754,12 @@ function openGamesDirect(){
 }
 
 let currentAppMode = 'feed';
+/* DOČASNE VYPNUTÉ: tlačidlo Správy nereaguje (vo všetkých jazykoch).
+   Zdroje správ ostávajú nastavené. Na zapnutie prepíš true -> false. */
+const NEWS_DISABLED = true;
+
 function switchMode(mode){
+  if(NEWS_DISABLED && mode === 'news') return; // Správy dočasne vypnuté
   currentAppMode = mode;
   document.querySelectorAll('.mode-dock button').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
   clearSideNavActive();
