@@ -1391,6 +1391,47 @@
   /* ---------- SPRÁVY (CHAT) ---------- */
   .profile-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   /* ---------- ZAPISOVACÍ KALENDÁR (v profile, len pre majiteľa) ---------- */
+  /* Tlačidlá povinností nad zapisovacím kalendárom */
+  .pduty-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:360px;margin:16px 0 0;}
+  .pduty-row + .pcal-card{margin-top:8px;}
+  .pduty-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:60px;padding:8px 4px;border-radius:12px;border:1px solid;font:inherit;font-size:12.5px;font-weight:700;line-height:1.15;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;}
+  .pduty-btn .pduty-ic{font-size:20px;line-height:1;}
+  .pduty-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px -6px rgba(0,0,0,.25);}
+  .pduty-btn:focus-visible{outline:2px solid currentColor;outline-offset:2px;}
+  .pduty-stk {background:#E7F0FF;border-color:#BCD4FF;color:#1D4ED8;}
+  .pduty-sub{font-size:10.5px;font-weight:600;opacity:.85;white-space:nowrap;}
+  .pduty-btn.warn{background:#FFF4E0;border-color:#F6C26B;color:#B45309;}
+  .pduty-btn.over{background:#FDE7E7;border-color:#F5A3A3;color:#B91C1C;animation:pdutyPulse 1.6s ease-in-out infinite;}
+  @keyframes pdutyPulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.35);}50%{box-shadow:0 0 0 5px rgba(220,38,38,0);}}
+  .pcal-day.has-duty::before{content:"";position:absolute;top:4px;left:4px;width:7px;height:7px;border-radius:50%;background:#2563EB;box-shadow:0 0 0 2px rgba(255,255,255,.9);}
+  .pcal-day.has-duty.duty-deadline::before{width:9px;height:9px;background:#DC2626;}
+  .pduty-dayinfo{display:flex;flex-direction:column;gap:6px;}
+  .pduty-dayinfo div{background:#E7F0FF;color:#1D4ED8;border-radius:10px;padding:8px 10px;font-size:13.5px;font-weight:600;}
+  .pduty-list{display:flex;flex-direction:column;gap:8px;}
+  .pduty-car{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);}
+  .pduty-car-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .pduty-car-name{font-weight:700;font-size:14.5px;}
+  .pduty-badge{font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;background:#E7F0FF;color:#1D4ED8;white-space:nowrap;}
+  .pduty-badge.warn{background:#FFF4E0;color:#B45309;}
+  .pduty-badge.over{background:#FDE7E7;color:#B91C1C;}
+  .pduty-car-dates{font-size:13px;color:var(--text-dim);margin-top:4px;line-height:1.5;}
+  .pduty-car-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .pduty-car-actions button{border-radius:8px;padding:6px 10px;font-size:12.5px;font-weight:600;background:var(--surface);color:var(--text);border:1px solid var(--line);}
+  .pduty-car-actions .pduty-done{background:#1D4ED8;border-color:#1D4ED8;color:#fff;}
+  .pduty-car-actions .pduty-del{color:#DC2626;border-color:#F5A3A3;}
+  .pduty-empty{font-size:13.5px;color:var(--text-dim);text-align:center;padding:6px 0;}
+  .pduty-form{display:flex;flex-direction:column;gap:10px;}
+  .pduty-input{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;background:var(--bg);color:var(--text);margin-top:4px;}
+  .pduty-input:focus{outline:none;border-color:#1D4ED8;}
+  .pduty-check{display:flex;align-items:center;gap:8px;font-size:13.5px;margin-top:4px;cursor:pointer;}
+  .pduty-check input{width:16px;height:16px;accent-color:#1D4ED8;}
+  .pduty-checks{display:flex;flex-wrap:wrap;gap:4px 14px;}
+  #pduty-stk-modal .pcal-sheet{max-height:calc(100vh - 32px);overflow-y:auto;}
+  .pduty-car-actions .pduty-del{margin-left:auto;padding:6px 9px;}
+  .pduty-add{background:#E7F0FF;color:#1D4ED8;border:1px dashed #93B4F5;border-radius:10px;padding:9px;font-size:14px;font-weight:700;}
+  .pduty-pzp {background:#E5F7EC;border-color:#B5E4C7;color:#15803D;}
+  .pduty-dan {background:#FFF1E3;border-color:#FDD0A2;color:#C2410C;}
+  .pduty-pes {background:#FCE8F3;border-color:#F5BEDB;color:#BE185D;}
   .pcal-card{background:#E8F2FF;border:1px solid #CFE2FF;border-radius:16px;padding:12px 14px 14px;max-width:360px;margin:18px 0 4px;}
   .pcal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
   .pcal-title{font-size:15px;font-weight:700;}
@@ -2958,6 +2999,14 @@
             </div>
           </div>
 
+          <!-- TLAČIDLÁ POVINNOSTÍ nad kalendárom (zatiaľ bez funkcie) - vidí ich iba majiteľ profilu -->
+          <div class="pduty-row" id="profile-duties" style="display:none;">
+            <button type="button" class="pduty-btn pduty-stk" id="pduty-stk-btn" title="STK / EK" onclick="openPdutyStk()"><span class="pduty-ic">🚗</span><span>STK / EK</span><span class="pduty-sub" id="pduty-stk-sub">Nastaviť</span></button>
+            <button type="button" class="pduty-btn pduty-pzp" title="PZP"><span class="pduty-ic">🛡️</span><span>PZP</span></button>
+            <button type="button" class="pduty-btn pduty-dan" title="Daň z nehnuteľnosti"><span class="pduty-ic">🏠</span><span>Daň</span></button>
+            <button type="button" class="pduty-btn pduty-pes" title="Daň za psa"><span class="pduty-ic">🐕</span><span>Daň</span></button>
+          </div>
+
           <!-- ZAPISOVACÍ KALENDÁR - vidí ho iba majiteľ profilu -->
           <div class="pcal-card" id="profile-calendar" style="display:none;">
             <div class="pcal-head">
@@ -2997,6 +3046,47 @@
           </div>
         </div>
 
+        <!-- OKNO STK / EK -->
+        <div class="pcal-modal" id="pduty-stk-modal" onclick="if(event.target===this) closePdutyStk()">
+          <div class="pcal-sheet">
+            <div class="pcal-sheet-head">
+              <h3>🚗 STK / EK</h3>
+              <button onclick="closePdutyStk()">✕</button>
+            </div>
+            <div class="pcal-sheet-body">
+              <div class="pduty-list" id="pduty-stk-list"></div>
+              <button class="pduty-add" id="pduty-stk-addbtn" onclick="pdutyStkEdit(null)">+ Pridať vozidlo</button>
+              <div class="pduty-form" id="pduty-stk-form" style="display:none;">
+                <div>
+                  <div class="pcal-label">Vozidlo</div>
+                  <input class="pduty-input" id="pduty-stk-vehicle" maxlength="60" placeholder="napr. Octavia PD123AB">
+                </div>
+                <div>
+                  <div class="pcal-label">Platnosť STK do</div>
+                  <input class="pduty-input" id="pduty-stk-date" type="date">
+                </div>
+                <label class="pduty-check"><input type="checkbox" id="pduty-stk-ekdiff" onchange="pdutyStkToggleEk()"> <span>EK má iný dátum ako STK</span></label>
+                <div id="pduty-stk-ekwrap" style="display:none;">
+                  <div class="pcal-label">Platnosť EK do</div>
+                  <input class="pduty-input" id="pduty-stk-ekdate" type="date">
+                </div>
+                <div>
+                  <div class="pcal-label">Pripomenúť</div>
+                  <div class="pduty-checks">
+                    <label class="pduty-check"><input type="checkbox" id="pduty-stk-r30" checked> <span>30 dní vopred</span></label>
+                    <label class="pduty-check"><input type="checkbox" id="pduty-stk-r7" checked> <span>7 dní vopred</span></label>
+                    <label class="pduty-check"><input type="checkbox" id="pduty-stk-r0" checked> <span>V deň skončenia</span></label>
+                  </div>
+                </div>
+                <div class="pcal-actions">
+                  <button class="pcal-remind-later" onclick="pdutyStkCancel()">Zrušiť</button>
+                  <button class="pcal-save" id="pduty-stk-save" onclick="pdutyStkSave()">Uložiť</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="pcal-modal" id="pcal-modal" onclick="if(event.target===this) closePcalModal()">
           <div class="pcal-sheet">
             <div class="pcal-sheet-head">
@@ -3004,6 +3094,7 @@
               <button onclick="closePcalModal()">✕</button>
             </div>
             <div class="pcal-sheet-body">
+              <div class="pduty-dayinfo" id="pduty-dayinfo" style="display:none;"></div>
               <div>
                 <div class="pcal-label">📝 Čo mám urobiť</div>
                 <textarea class="pcal-text" id="pcal-text" maxlength="2000" placeholder="Napíš si poznámku na tento deň..."></textarea>
@@ -5456,6 +5547,9 @@ function renderProfile(){
   // Zapisovací kalendár - iba vo VLASTNOM profile (súkromný)
   const pcalCard = document.getElementById('profile-calendar');
   if(pcalCard) pcalCard.style.display = isOwnProfile ? 'block' : 'none';
+  const dutiesRow = document.getElementById('profile-duties');
+  // zatiaľ len pre SK a CZ vlajku
+  if(dutiesRow) dutiesRow.style.display = (isOwnProfile && (currentLang === 'sk' || currentLang === 'cz')) ? 'grid' : 'none';
   if(isOwnProfile){ pcalSubscribe(); renderProfileCalendar(); }
 
   const backBtn = document.getElementById('profile-back-btn');
@@ -7917,10 +8011,13 @@ function pcalSubscribe(){
       renderProfileCalendar();
       pcalCheckToday();
     }, err=>console.error('Chyba pri načítaní kalendára:', err));
+  pdutySubscribe();
 }
 
 function pcalUnsubscribe(){
   if(pcalUnsub){ pcalUnsub(); pcalUnsub = null; }
+  if(pdutyUnsub){ pdutyUnsub(); pdutyUnsub = null; }
+  pdutyItems = {};
   pcalSubscribedUid = null;
   pcalEntries = {};
   pcalRemindedKey = null;
@@ -7955,19 +8052,22 @@ function pcalCheckToday(){
   if(!currentUser) return;
   const todayKey = pcalTodayKey();
   const entry = pcalTodayEntry();
-  const active = !!entry && !pcalIsDone(todayKey);
+  const duties = pdutyPending();
+  const active = (!!entry && !pcalIsDone(todayKey)) || duties.length > 0;
   if(!active) return;
   if(pcalRemindedKey === todayKey) return; // v tejto relácii už sme pripomenuli
   pcalRemindedKey = todayKey;
   openPcalReminder(false);
-  pcalShowSystemNotification(entry);
+  pcalShowSystemNotification(entry, duties);
 }
 
 function openPcalReminder(fromButton){
   const entry = pcalTodayEntry();
-  if(!entry){ if(fromButton) openProfile(); return; }
+  const duties = pdutyPending();
+  if(!entry && !duties.length){ if(fromButton) openProfile(); return; }
   const body = document.getElementById('pcal-remind-body');
-  let html = '';
+  let html = duties.map(d=>`<div class="pcal-remind-text" style="background:#E7F0FF;color:#1D4ED8;font-weight:600;">🚗 ${escapeHtml(d.text)}</div>`).join('');
+  if(!entry){ body.innerHTML = html; document.getElementById('pcal-remind-modal').classList.add('open'); return; }
   if(entry.text && entry.text.trim()) html += `<div class="pcal-remind-text">${escapeHtml(entry.text)}</div>`;
   if(entry.audioUrl) html += `<div><div class="pcal-label">🎤 ${t('Hlasová správa')}</div><audio class="pcal-audio" controls preload="metadata" src="${escapeHtml(entry.audioUrl)}"></audio></div>`;
   body.innerHTML = html;
@@ -7982,15 +8082,17 @@ function closePcalReminder(){
 }
 
 function pcalMarkTodayDone(){
+  pdutyAckPending();
   try{ localStorage.setItem(pcalDoneStorageKey(pcalTodayKey()), '1'); }catch(e){}
   closePcalReminder();
   pcalCheckToday();
 }
 
-async function pcalShowSystemNotification(entry){
+async function pcalShowSystemNotification(entry, duties){
   if(!('Notification' in window) || Notification.permission !== 'granted') return;
   const title = '📅 ' + t('Dnes máš v kalendári zapísané');
-  const text = (entry.text && entry.text.trim()) ? entry.text.trim().slice(0,140) : ('🎤 ' + t('Hlasová správa'));
+  let text = (duties && duties.length) ? duties.map(d=>'🚗 ' + d.text).join('\n') : '';
+  if(entry) text += (text ? '\n' : '') + ((entry.text && entry.text.trim()) ? entry.text.trim().slice(0,140) : ('🎤 ' + t('Hlasová správa')));
   const opts = { body: text, tag: 'pcal-' + pcalTodayKey(), icon: currentUser.photoURL || undefined };
   try{
     // na mobile (hlavne Android) funguje len cez service worker
@@ -8010,6 +8112,254 @@ setInterval(()=>{
     pcalCheckToday();
   }
 }, 60000);
+
+/* =====================================================================
+   POVINNOSTI (STK / EK, neskôr PZP, dane) – súkromné, iba majiteľ profilu
+   Firestore: calendars/{uid}/duties/{id}
+     { type:'stk', vehicle, stkDate:'YYYY-MM-DD', ekDate:'YYYY-MM-DD',
+       remind:[30,7,0], updatedAt }
+   - v kalendári sa zobrazí modrá bodka v dňoch pripomienok, červená v deň skončenia
+   - pripomienka sa ukáže v okne „Dnes máš v kalendári“ + systémové upozornenie;
+     ak appka v deň pripomienky nebola otvorená, ukáže sa pri najbližšom otvorení
+   - po termíne pripomína každý deň, kým sa nezadá nová STK
+   ===================================================================== */
+let pdutyItems = {};
+let pdutyUnsub = null;
+let pdutyEditId = null;
+
+function pdutySubscribe(){
+  if(!currentUser || !db) return;
+  if(pdutyUnsub){ pdutyUnsub(); pdutyUnsub = null; }
+  pdutyUnsub = db.collection('calendars').doc(currentUser.uid).collection('duties')
+    .onSnapshot(snap=>{
+      pdutyItems = {};
+      snap.forEach(doc=>{ pdutyItems[doc.id] = Object.assign({id:doc.id}, doc.data()); });
+      renderProfileCalendar();
+      pdutyRenderList();
+      pcalCheckToday();
+    }, err=>console.error('Chyba pri načítaní povinností:', err));
+}
+
+function pdutyParse(key){
+  if(!key) return null;
+  const [y,m,d] = key.split('-').map(Number);
+  if(!y || !m || !d) return null;
+  return new Date(y, m-1, d);
+}
+function pdutyDaysLeft(key){
+  const d = pdutyParse(key); if(!d) return null;
+  const n = new Date(); const today = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  return Math.round((d - today) / 86400000);
+}
+function pdutyAddDays(key, days){
+  const d = pdutyParse(key); d.setDate(d.getDate() + days);
+  return pcalKey(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function pdutyFmt(key){
+  const d = pdutyParse(key);
+  return d ? d.toLocaleDateString(pcalLocale(), {day:'numeric', month:'numeric', year:'numeric'}) : '';
+}
+function pdutyLeftText(n){
+  const cz = currentLang === 'cz';
+  if(n < 0)   return t('Prepadnuté!');
+  if(n === 0) return cz ? 'dnes končí' : 'dnes končí';
+  if(n === 1) return cz ? 'zítra' : 'zajtra';
+  if(cz) return 'za ' + n + (n >= 2 && n <= 4 ? ' dny' : ' dní');
+  return 'o ' + n + (n >= 2 && n <= 4 ? ' dni' : ' dní');
+}
+function pdutyLevel(n){ return n == null ? '' : (n < 0 ? 'over' : (n <= 30 ? 'warn' : '')); }
+
+// jednotlivé termíny (STK a EK spolu, ak majú rovnaký dátum)
+function pdutyEvents(){
+  const out = [];
+  Object.values(pdutyItems).forEach(it=>{
+    if(it.type !== 'stk' || !it.stkDate) return;
+    const remind = Array.isArray(it.remind) ? it.remind : [30,7,0];
+    const veh = it.vehicle || t('Vozidlo');
+    if(!it.ekDate || it.ekDate === it.stkDate){
+      out.push({item:it, kind:'stkek', label:'STK / EK', date:it.stkDate, remind, veh});
+    } else {
+      out.push({item:it, kind:'stk', label:'STK', date:it.stkDate, remind, veh});
+      out.push({item:it, kind:'ek',  label:'EK',  date:it.ekDate,  remind, veh});
+    }
+  });
+  return out;
+}
+
+// mapa deň -> povinnosti (pre bodky v kalendári)
+function pdutyDayMap(){
+  const map = {};
+  pdutyEvents().forEach(ev=>{
+    const add = (key, deadline, text)=>{ (map[key] = map[key] || []).push({deadline, text}); };
+    add(ev.date, true, `${ev.label} – ${ev.veh}: ${t('končí platnosť')}`);
+    ev.remind.filter(m=>m > 0).forEach(m=>{
+      add(pdutyAddDays(ev.date, -m), false, `${ev.label} – ${ev.veh}: ${t('platnosť končí')} ${pdutyFmt(ev.date)} (${pdutyLeftText(m)})`);
+    });
+  });
+  return map;
+}
+
+// nevybavené pripomienky na dnes (aj dobiehanie zmeškaných)
+function pdutyAckKey(ev, milestone){
+  return 'c8_pduty_ack_' + (currentUser ? currentUser.uid : '') + '_' + ev.item.id + '_' + ev.kind + '_' + ev.date + '_' + milestone;
+}
+function pdutyPending(){
+  const res = [];
+  pdutyEvents().forEach(ev=>{
+    const n = pdutyDaysLeft(ev.date);
+    if(n == null) return;
+    let milestone = null;
+    if(n < 0) milestone = 'over-' + pcalTodayKey();
+    else {
+      const hits = ev.remind.filter(m=>n <= m);
+      if(!hits.length) return;
+      milestone = String(Math.min(...hits));
+    }
+    const key = pdutyAckKey(ev, milestone);
+    try{ if(localStorage.getItem(key) === '1') return; }catch(e){}
+    const when = n < 0 ? `${t('platnosť skončila')} ${pdutyFmt(ev.date)}` : `${t('platnosť končí')} ${pdutyFmt(ev.date)} (${pdutyLeftText(n)})`;
+    res.push({text:`${ev.label} – ${ev.veh}: ${when}`, ackKey:key});
+  });
+  return res;
+}
+function pdutyAckPending(){
+  pdutyPending().forEach(p=>{ try{ localStorage.setItem(p.ackKey, '1'); }catch(e){} });
+}
+
+// stav na tlačidle STK / EK
+function pdutyRenderButtons(){
+  const btn = document.getElementById('pduty-stk-btn');
+  const sub = document.getElementById('pduty-stk-sub');
+  if(!btn || !sub) return;
+  const evs = pdutyEvents();
+  btn.classList.remove('warn','over');
+  if(!evs.length){ sub.textContent = t('Nastaviť'); return; }
+  const n = Math.min(...evs.map(ev=>pdutyDaysLeft(ev.date)));
+  sub.textContent = pdutyLeftText(n);
+  const lvl = pdutyLevel(n); if(lvl) btn.classList.add(lvl);
+}
+
+// informácia v okne dňa
+function pdutyFillDayInfo(key){
+  const box = document.getElementById('pduty-dayinfo');
+  if(!box) return;
+  const list = pdutyDayMap()[key];
+  if(!list){ box.style.display = 'none'; box.innerHTML = ''; return; }
+  box.innerHTML = list.map(x=>`<div>🚗 ${escapeHtml(x.text)}</div>`).join('');
+  box.style.display = 'flex';
+}
+
+/* ---- okno STK / EK ---- */
+function openPdutyStk(){
+  if(!currentUser) return;
+  pdutyStkCancel();
+  pdutyRenderList();
+  if(!pdutyEvents().length) pdutyStkEdit(null);   // prvé otvorenie rovno s formulárom
+  document.getElementById('pduty-stk-modal').classList.add('open');
+}
+function closePdutyStk(){
+  document.getElementById('pduty-stk-modal').classList.remove('open');
+  pdutyEditId = null;
+}
+function pdutyRenderList(){
+  const list = document.getElementById('pduty-stk-list');
+  if(!list) return;
+  const items = Object.values(pdutyItems).filter(it=>it.type === 'stk')
+    .sort((a,b)=>(a.stkDate || '').localeCompare(b.stkDate || ''));
+  if(!items.length){ list.innerHTML = `<div class="pduty-empty">${t('Zatiaľ nemáš pridané žiadne vozidlo.')}</div>`; return; }
+  list.innerHTML = items.map(it=>{
+    const same = !it.ekDate || it.ekDate === it.stkDate;
+    const n = Math.min(pdutyDaysLeft(it.stkDate), same ? Infinity : pdutyDaysLeft(it.ekDate));
+    const dates = same
+      ? `STK / EK: <b>${pdutyFmt(it.stkDate)}</b>`
+      : `STK: <b>${pdutyFmt(it.stkDate)}</b><br>EK: <b>${pdutyFmt(it.ekDate)}</b>`;
+    return `<div class="pduty-car">
+      <div class="pduty-car-top"><span class="pduty-car-name">🚗 ${escapeHtml(it.vehicle || t('Vozidlo'))}</span>
+        <span class="pduty-badge ${pdutyLevel(n)}">${pdutyLeftText(n)}</span></div>
+      <div class="pduty-car-dates">${dates}</div>
+      <div class="pduty-car-actions">
+        <button class="pduty-done" onclick="pdutyStkRenewed('${it.id}')">${t('✓ Hotovo – mám novú STK')}</button>
+        <button onclick="pdutyStkEdit('${it.id}')">${t('Upraviť')}</button>
+        <button class="pduty-del" onclick="pdutyStkDelete('${it.id}')" title="${t('Vymazať')}" aria-label="${t('Vymazať')}">🗑️</button>
+      </div></div>`;
+  }).join('');
+}
+function pdutyStkFillForm(it){
+  const sameEk = !it || !it.ekDate || it.ekDate === it.stkDate;
+  const remind = it && Array.isArray(it.remind) ? it.remind : [30,7,0];
+  document.getElementById('pduty-stk-vehicle').value = it ? (it.vehicle || '') : '';
+  document.getElementById('pduty-stk-date').value = it ? (it.stkDate || '') : '';
+  document.getElementById('pduty-stk-ekdiff').checked = !sameEk;
+  document.getElementById('pduty-stk-ekdate').value = (!sameEk && it) ? it.ekDate : '';
+  document.getElementById('pduty-stk-r30').checked = remind.includes(30);
+  document.getElementById('pduty-stk-r7').checked = remind.includes(7);
+  document.getElementById('pduty-stk-r0').checked = remind.includes(0);
+  pdutyStkToggleEk();
+  document.getElementById('pduty-stk-form').style.display = 'flex';
+  document.getElementById('pduty-stk-addbtn').style.display = 'none';
+  document.getElementById('pduty-stk-list').style.display = 'none';
+  document.getElementById('pduty-stk-save').disabled = false;
+}
+function pdutyStkEdit(id){
+  pdutyEditId = id;
+  pdutyStkFillForm(id ? pdutyItems[id] : null);
+  document.getElementById('pduty-stk-vehicle').focus();
+}
+// po absolvovaní STK: navrhne platnosť o 2 roky od dnes
+function pdutyStkRenewed(id){
+  const it = pdutyItems[id]; if(!it) return;
+  const d = new Date(); d.setFullYear(d.getFullYear() + 2);
+  const next = pcalKey(d.getFullYear(), d.getMonth(), d.getDate());
+  pdutyEditId = id;
+  pdutyStkFillForm(Object.assign({}, it, {stkDate: next, ekDate: next}));
+  document.getElementById('pduty-stk-date').focus();
+}
+function pdutyStkCancel(){
+  pdutyEditId = null;
+  const form = document.getElementById('pduty-stk-form');
+  if(form) form.style.display = 'none';
+  const add = document.getElementById('pduty-stk-addbtn');
+  if(add) add.style.display = '';
+  const list = document.getElementById('pduty-stk-list');
+  if(list) list.style.display = '';
+}
+function pdutyStkToggleEk(){
+  const on = document.getElementById('pduty-stk-ekdiff').checked;
+  document.getElementById('pduty-stk-ekwrap').style.display = on ? 'block' : 'none';
+}
+async function pdutyStkSave(){
+  if(!currentUser || !db) return;
+  const vehicle = document.getElementById('pduty-stk-vehicle').value.trim();
+  const stkDate = document.getElementById('pduty-stk-date').value;
+  const ekDiff = document.getElementById('pduty-stk-ekdiff').checked;
+  const ekDate = ekDiff ? document.getElementById('pduty-stk-ekdate').value : stkDate;
+  if(!vehicle || !stkDate || (ekDiff && !ekDate)){ alert(t('Vyplň vozidlo a dátum platnosti STK.')); return; }
+  const remind = [];
+  if(document.getElementById('pduty-stk-r30').checked) remind.push(30);
+  if(document.getElementById('pduty-stk-r7').checked) remind.push(7);
+  if(document.getElementById('pduty-stk-r0').checked) remind.push(0);
+  if('Notification' in window && Notification.permission === 'default'){
+    try{ Notification.requestPermission(); }catch(e){}
+  }
+  const col = db.collection('calendars').doc(currentUser.uid).collection('duties');
+  const ref = pdutyEditId ? col.doc(pdutyEditId) : col.doc();
+  const btn = document.getElementById('pduty-stk-save');
+  try{
+    btn.disabled = true;
+    await ref.set({ type:'stk', vehicle, stkDate, ekDate, remind, updatedAt: Date.now() });
+    pdutyStkCancel();
+  }catch(e){
+    console.error('Uloženie STK zlyhalo:', e);
+    alert(t('Uloženie sa nepodarilo. Skús to znova.'));
+    btn.disabled = false;
+  }
+}
+async function pdutyStkDelete(id){
+  if(!currentUser || !db) return;
+  if(!confirm(t('Naozaj vymazať toto vozidlo?'))) return;
+  try{ await db.collection('calendars').doc(currentUser.uid).collection('duties').doc(id).delete(); }
+  catch(e){ console.error('Mazanie zlyhalo:', e); alert(t('Mazanie sa nepodarilo. Skús to znova.')); }
+}
 
 function pcalChangeMonth(delta){
   pcalViewMonth += delta;
@@ -8034,6 +8384,7 @@ function renderProfileCalendar(){
   const firstDow = (new Date(pcalViewYear, pcalViewMonth, 1).getDay() + 6) % 7; // 0 = pondelok
   const daysInMonth = new Date(pcalViewYear, pcalViewMonth+1, 0).getDate();
   const todayKey = pcalTodayKey();
+  const dutyMap = pdutyDayMap();
   for(let i=0;i<firstDow;i++) html += `<div class="pcal-day empty"></div>`;
   for(let d=1; d<=daysInMonth; d++){
     const key = pcalKey(pcalViewYear, pcalViewMonth, d);
@@ -8043,11 +8394,15 @@ function renderProfileCalendar(){
     const cls = ['pcal-day'];
     if(key === todayKey) cls.push('today');
     if(hasText || hasAudio) cls.push('has-entry');
+    const dut = dutyMap[key];
+    if(dut){ cls.push('has-duty'); if(dut.some(x=>x.deadline)) cls.push('duty-deadline'); }
     const ico = (hasAudio ? '🎤' : '') + (hasText ? '📝' : '');
-    const tip = hasText ? escapeHtml(e.text.slice(0,120)) : (hasAudio ? t('Hlasová správa') : '');
+    let tip = hasText ? escapeHtml(e.text.slice(0,120)) : (hasAudio ? t('Hlasová správa') : '');
+    if(dut) tip = escapeHtml(dut.map(x=>'🚗 ' + x.text).join(' | ')) + (tip ? ' | ' + tip : '');
     html += `<button class="${cls.join(' ')}" onclick="openPcalModal('${key}')" title="${tip}">${d}${ico ? `<span class="pcal-ico">${ico}</span>` : ''}</button>`;
   }
   grid.innerHTML = html;
+  pdutyRenderButtons();
 }
 
 function openPcalModal(key){
@@ -8060,6 +8415,7 @@ function openPcalModal(key){
   document.getElementById('pcal-modal-title').textContent =
     new Date(y, m-1, d).toLocaleDateString(pcalLocale(), {weekday:'long', day:'numeric', month:'long', year:'numeric'});
   document.getElementById('pcal-text').value = e.text || '';
+  pdutyFillDayInfo(key);
   pcalShowAudio(e.audioUrl || null);
   document.getElementById('pcal-delete-btn').style.visibility = (e.text || e.audioUrl) ? 'visible' : 'hidden';
   document.getElementById('pcal-save-btn').disabled = false;
@@ -14274,6 +14630,34 @@ const UI_DICT_EN = {
 // neprekladaný do CZ/PL, keďže si to používateľ vyžiadal len pre úvodnú
 // stránku.
 const UI_DICT_CZ = {
+  // tlačidlá povinností nad kalendárom (popisy)
+  "Daň z nehnuteľnosti":"Daň z nemovitosti",
+  "Daň za psa":"Poplatek ze psa",
+  // STK / EK okno
+  "Nastaviť":"Nastavit",
+  "Prepadnuté!":"Propadlé!",
+  "Vozidlo":"Vozidlo",
+  "napr. Octavia PD123AB":"např. Octavia 1AB2345",
+  "Platnosť STK do":"Platnost STK do",
+  "Platnosť EK do":"Platnost EK do",
+  "EK má iný dátum ako STK":"EK má jiné datum než STK",
+  "Pripomenúť":"Připomenout",
+  "30 dní vopred":"30 dní předem",
+  "7 dní vopred":"7 dní předem",
+  "V deň skončenia":"V den skončení",
+  "Zrušiť":"Zrušit",
+  "+ Pridať vozidlo":"+ Přidat vozidlo",
+  "Upraviť":"Upravit",
+  "Vymazať":"Smazat",
+  "✓ Hotovo – mám novú STK":"✓ Hotovo – mám novou STK",
+  "Zatiaľ nemáš pridané žiadne vozidlo.":"Zatím nemáš přidané žádné vozidlo.",
+  "Vyplň vozidlo a dátum platnosti STK.":"Vyplň vozidlo a datum platnosti STK.",
+  "Naozaj vymazať toto vozidlo?":"Opravdu smazat toto vozidlo?",
+  "Uloženie sa nepodarilo. Skús to znova.":"Uložení se nepodařilo. Zkus to znovu.",
+  "Mazanie sa nepodarilo. Skús to znova.":"Mazání se nepodařilo. Zkus to znovu.",
+  "končí platnosť":"končí platnost",
+  "platnosť končí":"platnost končí",
+  "platnosť skončila":"platnost skončila",
   // hero / úvodná stránka
   "Plocha, videá, kúp/predaj aj správy — všetko na jednej platforme, postavenej pre komunitu okolo teba.":"Feed, videa, tržiště i zprávy — všechno na jedné platformě, postavené pro komunitu kolem tebe.",
   "Platforma na vzájomnú komunikáciu, zdieľanie obsahu a nadväzovanie kontaktov.":"Platforma pro vzájemnou komunikaci, sdílení obsahu a navazování kontaktů.",
