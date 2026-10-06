@@ -1392,16 +1392,31 @@
   .profile-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   /* ---------- ZAPISOVACÍ KALENDÁR (v profile, len pre majiteľa) ---------- */
   /* Tlačidlá povinností nad zapisovacím kalendárom */
-  .pduty-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:360px;margin:16px 0 0;}
+  .pduty-row{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;max-width:360px;margin:16px 0 0;}
   .pduty-row + .pcal-card{margin-top:8px;}
-  .pduty-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:60px;padding:8px 4px;border-radius:12px;border:1px solid;font:inherit;font-size:12.5px;font-weight:700;line-height:1.15;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;}
-  .pduty-btn .pduty-ic{font-size:20px;line-height:1;}
+  .pduty-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:62px;padding:6px 2px;border-radius:11px;border:1px solid;font:inherit;font-size:11px;font-weight:700;line-height:1.1;text-align:center;cursor:pointer;min-width:0;transition:transform .12s ease,box-shadow .12s ease;}
+  .pduty-btn .pduty-ic{font-size:17px;line-height:1;}
   .pduty-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px -6px rgba(0,0,0,.25);}
   .pduty-btn:focus-visible{outline:2px solid currentColor;outline-offset:2px;}
   .pduty-stk {background:#E7F0FF;border-color:#BCD4FF;color:#1D4ED8;}
-  .pduty-sub{font-size:10.5px;font-weight:600;opacity:.85;white-space:nowrap;}
-  .pduty-btn.warn{background:#FFF4E0;border-color:#F6C26B;color:#B45309;}
-  .pduty-btn.over{background:#FDE7E7;border-color:#F5A3A3;color:#B91C1C;animation:pdutyPulse 1.6s ease-in-out infinite;}
+  .pduty-sub{font-size:9.5px;font-weight:600;opacity:.85;white-space:nowrap;}
+  .pduty-plat {background:#F1EBFF;border-color:#D4C2FD;color:#6D28D9;}
+  .pduty-t-plat{background:#F1EBFF;color:#6D28D9;}
+  .pcal-remind-text.pduty-t-plat{background:#F1EBFF;color:#6D28D9;}
+  #pduty-plat-modal .pcal-sheet{max-height:calc(100vh - 32px);overflow-y:auto;}
+  .pplat-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);}
+  .pplat-ic{font-size:22px;width:30px;text-align:center;flex:none;}
+  .pplat-main{flex:1;min-width:0;}
+  .pplat-name{font-weight:700;font-size:14.5px;}
+  .pplat-info{font-size:12.5px;color:var(--text-dim);margin-top:2px;line-height:1.45;}
+  .pplat-set{background:#6D28D9;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;flex:none;}
+  .pplat-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;}
+  .pplat-acts button{border-radius:8px;padding:5px 9px;font-size:12px;font-weight:600;background:var(--surface);color:var(--text);border:1px solid var(--line);}
+  .pplat-acts .pplat-paid{background:#6D28D9;border-color:#6D28D9;color:#fff;}
+  .pplat-acts .pduty-del{margin-left:auto;color:#DC2626;border-color:#F5A3A3;}
+  .pduty-btn.warn .pduty-sub{color:#C2410C;opacity:1;}
+  .pduty-btn.over .pduty-sub{color:#DC2626;opacity:1;}
+  .pduty-btn.over{animation:pdutyPulse 1.6s ease-in-out infinite;}
   @keyframes pdutyPulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.35);}50%{box-shadow:0 0 0 5px rgba(220,38,38,0);}}
   .pduty-dots{position:absolute;top:3px;left:3px;display:flex;gap:2px;}
   .pduty-dots i{display:block;width:7px;height:7px;border-radius:50%;box-shadow:0 0 0 1.5px rgba(255,255,255,.95);}
@@ -3036,6 +3051,7 @@
             <button type="button" class="pduty-btn pduty-pzp" id="pduty-pzp-btn" title="PZP" onclick="openPdutyGen('pzp')"><span class="pduty-ic">🛡️</span><span>PZP</span><span class="pduty-sub" id="pduty-pzp-sub">Nastaviť</span></button>
             <button type="button" class="pduty-btn pduty-dan" id="pduty-dan-btn" title="Daň z nehnuteľnosti" onclick="openPdutyGen('dan')"><span class="pduty-ic">🏠</span><span>Daň</span><span class="pduty-sub" id="pduty-dan-sub">Nastaviť</span></button>
             <button type="button" class="pduty-btn pduty-pes" id="pduty-pes-btn" title="Daň za psa" onclick="openPdutyGen('pes')"><span class="pduty-ic">🐕</span><span>Daň</span><span class="pduty-sub" id="pduty-pes-sub">Nastaviť</span></button>
+            <button type="button" class="pduty-btn pduty-plat" id="pduty-plat-btn" title="Energie / Platby" onclick="openPdutyPlat()"><span class="pduty-ic">⚡</span><span>Energie/<br>Platby</span><span class="pduty-sub" id="pduty-plat-sub">Nastaviť</span></button>
           </div>
 
           <!-- ZAPISOVACÍ KALENDÁR - vidí ho iba majiteľ profilu -->
@@ -3072,6 +3088,53 @@
               <div class="pcal-actions">
                 <button class="pcal-remind-later" onclick="closePcalReminder()">Neskôr</button>
                 <button class="pcal-save" onclick="pcalMarkTodayDone()">✓ Hotovo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OKNO ENERGIE / PLATBY (elektrina, voda, plyn, nájomné) -->
+        <div class="pcal-modal" id="pduty-plat-modal" onclick="if(event.target===this) closePdutyPlat()">
+          <div class="pcal-sheet">
+            <div class="pcal-sheet-head">
+              <h3>⚡ Energie / Platby</h3>
+              <button onclick="closePdutyPlat()">✕</button>
+            </div>
+            <div class="pcal-sheet-body">
+              <div class="pduty-list" id="pduty-plat-list"></div>
+              <div class="pduty-form" id="pduty-plat-form" style="display:none;">
+                <div class="pplat-name" id="pduty-plat-form-title"></div>
+                <div class="pduty-row2">
+                  <div>
+                    <div class="pcal-label">Najbližšia platba</div>
+                    <input class="pduty-input" id="pduty-plat-date" type="date">
+                  </div>
+                  <div>
+                    <div class="pcal-label">Suma € (nepovinné)</div>
+                    <input class="pduty-input" id="pduty-plat-amount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0,00">
+                  </div>
+                </div>
+                <div>
+                  <div class="pcal-label">Ako často platíš</div>
+                  <select class="pduty-input" id="pduty-plat-freq">
+                    <option value="1">Mesačne</option>
+                    <option value="3">Štvrťročne</option>
+                    <option value="6">Polročne</option>
+                    <option value="12">Ročne</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="pcal-label">Pripomenúť</div>
+                  <div class="pduty-checks">
+                    <label class="pduty-check"><input type="checkbox" id="pduty-plat-r7" checked> <span>7 dní vopred</span></label>
+                    <label class="pduty-check"><input type="checkbox" id="pduty-plat-r3"> <span>3 dni vopred</span></label>
+                    <label class="pduty-check"><input type="checkbox" id="pduty-plat-r0" checked> <span>V deň splatnosti</span></label>
+                  </div>
+                </div>
+                <div class="pcal-actions">
+                  <button class="pcal-remind-later" onclick="pdutyPlatCancel()">Zrušiť</button>
+                  <button class="pcal-save" id="pduty-plat-save" onclick="pdutyPlatSave()">Uložiť</button>
+                </div>
               </div>
             </div>
           </div>
@@ -8222,6 +8285,7 @@ function pdutySubscribe(){
       renderProfileCalendar();
       pdutyRenderList();
       pdutyGenRenderList();
+      pdutyPlatRender();
       pcalCheckToday();
     }, err=>console.error('Chyba pri načítaní povinností:', err));
 }
@@ -8245,15 +8309,16 @@ function pdutyFmt(key){
   const d = pdutyParse(key);
   return d ? d.toLocaleDateString(pcalLocale(), {day:'numeric', month:'numeric', year:'numeric'}) : '';
 }
-function pdutyLeftText(n){
+function pdutyLeftText(n, type){
   const cz = currentLang === 'cz';
-  if(n < 0)   return t('Prepadnuté!');
-  if(n === 0) return cz ? 'dnes končí' : 'dnes končí';
+  const pay = type && type !== 'stk';
+  if(n < 0)   return pay ? t('Po splatnosti!') : t('Prepadnuté!');
+  if(n === 0) return pay ? (cz ? 'dnes splatné' : 'dnes splatné') : (cz ? 'dnes končí' : 'dnes končí');
   if(n === 1) return cz ? 'zítra' : 'zajtra';
   if(cz) return 'za ' + n + (n >= 2 && n <= 4 ? ' dny' : ' dní');
   return 'o ' + n + (n >= 2 && n <= 4 ? ' dni' : ' dní');
 }
-function pdutyLevel(n){ return n == null ? '' : (n < 0 ? 'over' : (n <= 30 ? 'warn' : '')); }
+function pdutyLevel(n, type){ return n == null ? '' : (n < 0 ? 'over' : (n <= (type === 'plat' ? 7 : 30) ? 'warn' : '')); }
 
 // typy povinností (farba = bodka v kalendári)
 const PDUTY_TYPES = {
@@ -8262,6 +8327,7 @@ const PDUTY_TYPES = {
          nameLabel:'Vozidlo', namePh:'napr. Octavia PD123AB', insurer:true, addText:'+ Pridať poistku' },
   dan: { icon:'🏠', color:'#EA580C', title:'Daň z nehnuteľnosti',
          nameLabel:'Nehnuteľnosť', namePh:'napr. Dom Prievidza', addText:'+ Pridať nehnuteľnosť' },
+  plat:{ icon:'⚡', color:'#7C3AED', title:'Energie / Platby' },
   pes: { icon:'🐕', color:'#DB2777', title:'Daň za psa',
          nameLabel:'Meno psa', namePh:'napr. Rex', addText:'+ Pridať psa' }
 };
@@ -8284,6 +8350,10 @@ function pdutyEvents(onlyType){
         out.push(Object.assign({}, base, due, {kind:'stk', label:'STK', date:it.stkDate, veh}));
         out.push(Object.assign({}, base, due, {kind:'ek',  label:'EK',  date:it.ekDate,  veh}));
       }
+    } else if(it.type === 'plat'){
+      const C = PPLAT_CATS[it.cat]; if(!C || !it.dueDate) return;
+      out.push(Object.assign({}, base, {icon:C.icon, kind:'plat_' + it.cat, label:t(C.name), date:it.dueDate, veh:'',
+        endSoon:t('splatnosť'), endToday:t('dnes je splatnosť'), ended:t('po splatnosti od')}));
     } else {
       if(!it.dueDate) return;
       out.push(Object.assign({}, base, {kind:it.type, label:t(T.title), date:it.dueDate, veh:it.name || '',
@@ -8298,9 +8368,10 @@ function pdutyDayMap(){
   const map = {};
   pdutyEvents().forEach(ev=>{
     const add = (key, deadline, text)=>{ (map[key] = map[key] || []).push({deadline, text, type:ev.type, icon:ev.icon}); };
-    add(ev.date, true, `${ev.label} – ${ev.veh}: ${ev.endToday}`);
+    const who = ev.veh ? `${ev.label} – ${ev.veh}` : ev.label;
+    add(ev.date, true, `${who}: ${ev.endToday}`);
     ev.remind.filter(m=>m > 0).forEach(m=>{
-      add(pdutyAddDays(ev.date, -m), false, `${ev.label} – ${ev.veh}: ${ev.endSoon} ${pdutyFmt(ev.date)} (${pdutyLeftText(m)})`);
+      add(pdutyAddDays(ev.date, -m), false, `${who}: ${ev.endSoon} ${pdutyFmt(ev.date)} (${pdutyLeftText(m, ev.type)})`);
     });
   });
   return map;
@@ -8325,8 +8396,9 @@ function pdutyPending(){
     const key = pdutyAckKey(ev, milestone);
     try{ if(localStorage.getItem(key) === '1') return; }catch(e){}
     const when = n < 0 ? `${ev.ended} ${pdutyFmt(ev.date)}`
-               : (n === 0 ? ev.endToday : `${ev.endSoon} ${pdutyFmt(ev.date)} (${pdutyLeftText(n)})`);
-    res.push({text:`${ev.label} – ${ev.veh}: ${when}`, ackKey:key, type:ev.type, icon:ev.icon});
+               : (n === 0 ? ev.endToday : `${ev.endSoon} ${pdutyFmt(ev.date)} (${pdutyLeftText(n, ev.type)})`);
+    const who = ev.veh ? `${ev.label} – ${ev.veh}` : ev.label;
+    res.push({text:`${who}: ${when}`, ackKey:key, type:ev.type, icon:ev.icon});
   });
   return res;
 }
@@ -8344,8 +8416,8 @@ function pdutyRenderButtons(){
     btn.classList.remove('warn','over');
     if(!evs.length){ sub.textContent = t('Nastaviť'); return; }
     const n = Math.min(...evs.map(ev=>pdutyDaysLeft(ev.date)));
-    sub.textContent = pdutyLeftText(n);
-    const lvl = pdutyLevel(n); if(lvl) btn.classList.add(lvl);
+    sub.textContent = pdutyLeftText(n, type);
+    const lvl = pdutyLevel(n, type); if(lvl) btn.classList.add(lvl);
   });
 }
 
@@ -8524,7 +8596,7 @@ function pdutyGenRenderList(){
     if(it.insurer) info += (T.months ? ' · ' : '<br>') + escapeHtml(it.insurer);
     return `<div class="pduty-car">
       <div class="pduty-car-top"><span class="pduty-car-name">${T.icon} ${escapeHtml(it.name || '')}</span>
-        <span class="pduty-badge ${pdutyLevel(n)}">${pdutyLeftText(n)}</span></div>
+        <span class="pduty-badge ${pdutyLevel(n, it.type)}">${pdutyLeftText(n, it.type)}</span></div>
       <div class="pduty-car-dates">${info}</div>
       <div class="pduty-car-actions">
         <button class="pduty-paid" style="background:${T.color}" onclick="pdutyGenPaid('${it.id}')">${t('✓ Zaplatené')}</button>
@@ -8607,6 +8679,120 @@ async function pdutyDeleteItem(id){
   if(!confirm(t('Naozaj vymazať túto položku?'))) return;
   try{ await db.collection('calendars').doc(currentUser.uid).collection('duties').doc(id).delete(); }
   catch(e){ console.error('Mazanie zlyhalo:', e); alert(t('Mazanie sa nepodarilo. Skús to znova.')); }
+}
+
+/* ---- okno ENERGIE / PLATBY ----
+   Jeden dokument na kategóriu: calendars/{uid}/duties/plat_{cat}
+   { type:'plat', cat, dueDate, freq:1|3|6|12, amount?, remind:[7,3,0], updatedAt } */
+const PPLAT_CATS = {
+  elektrina: { icon:'⚡', name:'Elektrina' },
+  voda:      { icon:'💧', name:'Voda' },
+  plyn:      { icon:'🔥', name:'Plyn' },
+  najomne:   { icon:'🔑', name:'Nájomné' }
+};
+let pdutyPlatCat = null;
+
+function pdutyFreqText2(m){
+  return m === 1 ? t('Mesačne') : (m === 3 ? t('Štvrťročne') : (m === 6 ? t('Polročne') : t('Ročne')));
+}
+function openPdutyPlat(){
+  if(!currentUser) return;
+  pdutyPlatCancel();
+  pdutyPlatRender();
+  document.getElementById('pduty-plat-modal').classList.add('open');
+}
+function closePdutyPlat(){
+  document.getElementById('pduty-plat-modal').classList.remove('open');
+  pdutyPlatCat = null;
+}
+function pdutyPlatRender(){
+  const list = document.getElementById('pduty-plat-list');
+  if(!list) return;
+  list.innerHTML = Object.keys(PPLAT_CATS).map(cat=>{
+    const C = PPLAT_CATS[cat];
+    const it = pdutyItems['plat_' + cat];
+    if(!it || !it.dueDate){
+      return `<div class="pplat-row"><span class="pplat-ic">${C.icon}</span>
+        <div class="pplat-main"><div class="pplat-name">${t(C.name)}</div><div class="pplat-info">${t('Nenastavené')}</div></div>
+        <button class="pplat-set" onclick="pdutyPlatEdit('${cat}')">${t('Nastaviť')}</button></div>`;
+    }
+    const n = pdutyDaysLeft(it.dueDate);
+    let info = `${t('Splatnosť')}: <b>${pdutyFmt(it.dueDate)}</b> · ${pdutyFreqText2(it.freq || 1)}`;
+    if(typeof it.amount === 'number') info += ` · <b>${pdutyMoney(it.amount)}</b>`;
+    return `<div class="pplat-row" style="align-items:flex-start"><span class="pplat-ic">${C.icon}</span>
+      <div class="pplat-main">
+        <div class="pduty-car-top"><span class="pplat-name">${t(C.name)}</span>
+          <span class="pduty-badge ${pdutyLevel(n, 'plat')}">${pdutyLeftText(n, 'plat')}</span></div>
+        <div class="pplat-info">${info}</div>
+        <div class="pplat-acts">
+          <button class="pplat-paid" onclick="pdutyPlatPaid('${cat}')">${t('✓ Zaplatené')}</button>
+          <button onclick="pdutyPlatEdit('${cat}')">${t('Upraviť')}</button>
+          <button class="pduty-del" onclick="pdutyDeleteItem('plat_${cat}')" title="${t('Vymazať')}" aria-label="${t('Vymazať')}">🗑️</button>
+        </div>
+      </div></div>`;
+  }).join('');
+}
+function pdutyPlatEdit(cat){
+  pdutyPlatCat = cat;
+  const C = PPLAT_CATS[cat];
+  const it = pdutyItems['plat_' + cat];
+  const remind = it && Array.isArray(it.remind) ? it.remind : [7,0];
+  document.getElementById('pduty-plat-form-title').textContent = C.icon + ' ' + t(C.name);
+  document.getElementById('pduty-plat-date').value = it ? (it.dueDate || '') : '';
+  document.getElementById('pduty-plat-amount').value = (it && typeof it.amount === 'number') ? it.amount : '';
+  document.getElementById('pduty-plat-freq').value = String(it && it.freq ? it.freq : 1);
+  document.getElementById('pduty-plat-r7').checked = remind.includes(7);
+  document.getElementById('pduty-plat-r3').checked = remind.includes(3);
+  document.getElementById('pduty-plat-r0').checked = remind.includes(0);
+  document.getElementById('pduty-plat-list').style.display = 'none';
+  document.getElementById('pduty-plat-form').style.display = 'flex';
+  document.getElementById('pduty-plat-save').disabled = false;
+  document.getElementById('pduty-plat-date').focus();
+}
+function pdutyPlatCancel(){
+  pdutyPlatCat = null;
+  const f = document.getElementById('pduty-plat-form'); if(f) f.style.display = 'none';
+  const l = document.getElementById('pduty-plat-list'); if(l) l.style.display = '';
+}
+async function pdutyPlatSave(){
+  if(!currentUser || !db || !pdutyPlatCat) return;
+  const dueDate = document.getElementById('pduty-plat-date').value;
+  if(!dueDate){ alert(t('Vyber dátum najbližšej platby.')); return; }
+  const data = { type:'plat', cat:pdutyPlatCat, dueDate,
+                 freq: parseInt(document.getElementById('pduty-plat-freq').value, 10) || 1,
+                 remind: [], updatedAt: Date.now() };
+  if(document.getElementById('pduty-plat-r7').checked) data.remind.push(7);
+  if(document.getElementById('pduty-plat-r3').checked) data.remind.push(3);
+  if(document.getElementById('pduty-plat-r0').checked) data.remind.push(0);
+  const amountRaw = document.getElementById('pduty-plat-amount').value.replace(',', '.').trim();
+  if(amountRaw !== ''){
+    const a = Math.round(parseFloat(amountRaw) * 100) / 100;
+    if(isNaN(a) || a < 0 || a >= 10000000){ alert(t('Suma nie je platná.')); return; }
+    data.amount = a;
+  }
+  if('Notification' in window && Notification.permission === 'default'){
+    try{ Notification.requestPermission(); }catch(e){}
+  }
+  const btn = document.getElementById('pduty-plat-save');
+  try{
+    btn.disabled = true;
+    await db.collection('calendars').doc(currentUser.uid).collection('duties').doc('plat_' + pdutyPlatCat).set(data);
+    pdutyPlatCancel();
+  }catch(e){
+    console.error('Uloženie zlyhalo:', e);
+    alert(t('Uloženie sa nepodarilo. Skús to znova.'));
+    btn.disabled = false;
+  }
+}
+// zaplatené -> posunie splatnosť o zvolené obdobie
+async function pdutyPlatPaid(cat){
+  const it = pdutyItems['plat_' + cat]; if(!it || !currentUser || !db) return;
+  const next = pdutyAddMonths(it.dueDate, it.freq || 1);
+  if(!confirm(t('Označiť ako zaplatené a posunúť splatnosť na') + ' ' + pdutyFmt(next) + '?')) return;
+  try{
+    await db.collection('calendars').doc(currentUser.uid).collection('duties').doc('plat_' + cat)
+      .update({ dueDate: next, updatedAt: Date.now() });
+  }catch(e){ console.error('Uloženie zlyhalo:', e); alert(t('Uloženie sa nepodarilo. Skús to znova.')); }
 }
 
 function pcalChangeMonth(delta){
@@ -14941,6 +15127,17 @@ const UI_DICT_CZ = {
   "Suma nie je platná.":"Částka není platná.",
   "Označiť ako zaplatené a posunúť splatnosť na":"Označit jako zaplacené a posunout splatnost na",
   "Naozaj vymazať túto položku?":"Opravdu smazat tuto položku?",
+  "Energie / Platby":"Energie / Platby",
+  "Elektrina":"Elektřina",
+  "Voda":"Voda",
+  "Plyn":"Plyn",
+  "Nájomné":"Nájemné",
+  "Najbližšia platba":"Nejbližší platba",
+  "Mesačne":"Měsíčně",
+  "3 dni vopred":"3 dny předem",
+  "Nenastavené":"Nenastaveno",
+  "Po splatnosti!":"Po splatnosti!",
+  "Vyber dátum najbližšej platby.":"Vyber datum nejbližší platby.",
   // hero / úvodná stránka
   "Plocha, videá, kúp/predaj aj správy — všetko na jednej platforme, postavenej pre komunitu okolo teba.":"Feed, videa, tržiště i zprávy — všechno na jedné platformě, postavené pro komunitu kolem tebe.",
   "Platforma na vzájomnú komunikáciu, zdieľanie obsahu a nadväzovanie kontaktov.":"Platforma pro vzájemnou komunikaci, sdílení obsahu a navazování kontaktů.",
