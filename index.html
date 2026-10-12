@@ -4469,6 +4469,7 @@ async function deleteMyAccount(){
       await db.collection('profiles').doc(uid).delete().catch(e=>console.error('Profil sa nepodarilo natrvalo zmazať (dokument ostáva označený ako zmazaný):', e));
     }
     if(FIREBASE_CONFIGURED && rtdb){
+      c8PresenceStop();
       await rtdb.ref('status/' + uid).remove().catch(()=>{});
     }
 
@@ -9676,7 +9677,32 @@ function updateStatusDots(){
   });
 }
 
+const c8Presence = {active:false, connected:false, ref:null, connCb:null, selfCb:null, goOnline:null, t:null};
+function c8PresenceStop(){
+  c8Presence.active = false;
+  clearTimeout(c8Presence.t);
+  try{ if(rtdb && c8Presence.connCb) rtdb.ref('.info/connected').off('value', c8Presence.connCb); }catch(e){}
+  try{ if(c8Presence.ref && c8Presence.selfCb) c8Presence.ref.off('value', c8Presence.selfCb); }catch(e){}
+  c8Presence.connCb = c8Presence.selfCb = null;
+}
+// Pri návrate do karty / prebudení PC / obnovení siete: istota, že sme online
+function c8PresenceWake(){
+  if(!c8Presence.active || !rtdb) return;
+  try{ rtdb.goOnline(); }catch(e){}
+  if(c8Presence.goOnline) c8Presence.goOnline();
+}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) c8PresenceWake(); });
+window.addEventListener('focus', c8PresenceWake);
+window.addEventListener('online', c8PresenceWake);
+setInterval(()=>{
+  // každú minútu: ak sme podľa databázy offline, vrátime sa na online
+  if(!c8Presence.active || !currentUser) return;
+  const p = presenceStatus && presenceStatus[currentUser.uid];
+  if(!p || p.state !== 'online') c8PresenceWake();
+}, 60000);
+
 function setPresenceOffline(){
+  c8PresenceStop();
   if(!FIREBASE_CONFIGURED || !rtdb || !currentUser) return;
   rtdb.ref('status/' + currentUser.uid).set({
     state:'offline', name: currentUser.name, last_changed: firebase.database.ServerValue.TIMESTAMP
@@ -9687,13 +9713,35 @@ function startPresenceHeartbeat(){
   if(!FIREBASE_CONFIGURED || !currentUser){ updateUserStats(); return; }
 
   const myStatusRef = rtdb.ref('status/' + currentUser.uid);
-  rtdb.ref('.info/connected').on('value', (snap)=>{
-    if(snap.val() === false) return;
+  c8PresenceStop();
+  c8Presence.active = true;
+  c8Presence.ref = myStatusRef;
+  // Zapíše "online" + zaregistruje onDisconnect (volá sa pri každom (znovu)pripojení)
+  const goOnline = ()=>{
+    if(!c8Presence.active || !currentUser || !c8Presence.connected) return;
     myStatusRef.onDisconnect()
       .set({state:'offline', name: currentUser.name, last_changed: firebase.database.ServerValue.TIMESTAMP})
       .then(()=>{
-        myStatusRef.set({state:'online', name: currentUser.name, last_changed: firebase.database.ServerValue.TIMESTAMP});
-      });
+        if(!c8Presence.active || !currentUser) return;
+        return myStatusRef.set({state:'online', name: currentUser.name, last_changed: firebase.database.ServerValue.TIMESTAMP});
+      }).catch(()=>{});
+  };
+  c8Presence.goOnline = goOnline;
+  c8Presence.connCb = rtdb.ref('.info/connected').on('value', (snap)=>{
+    c8Presence.connected = snap.val() === true;
+    if(c8Presence.connected) goOnline();
+  });
+  // OPRAVA "po ~10 min offline na PC": keď prehliadač na PC uspí/spomalí kartu,
+  // staré spojenie spadne potichu a server jeho onDisconnect ("offline") vykoná
+  // až NESKÔR - keď už je karta znova pripojená a online. Výsledok: karta je
+  // otvorená a pripojená, ale v databáze ostane "offline" až do F5.
+  // Riešenie: karta sleduje svoj vlastný stav a keď ho niečo prepíše na offline,
+  // hneď sa vráti na online.
+  c8Presence.selfCb = myStatusRef.on('value', (snap)=>{
+    const v = snap.val();
+    if(c8Presence.active && c8Presence.connected && (!v || v.state !== 'online')){
+      clearTimeout(c8Presence.t); c8Presence.t = setTimeout(goOnline, 800);
+    }
   });
 
   rtdb.ref('status').on('value', (snap)=>{
