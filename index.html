@@ -1857,6 +1857,147 @@
   .notif-post-sheet{position:relative;width:100%;max-width:560px;}
   .notif-post-close{position:absolute;top:-34px;right:0;width:30px;height:30px;border-radius:50%;background:#fff;color:#222;font-size:15px;border:none;cursor:pointer;}
 </style>
+
+<style id="c8h-style">
+/* ================= NOVÁ HLAVIČKA (A1) – mobil aj PC ================= */
+#app .topbar.c8h{display:block;padding:0;position:sticky;top:0;z-index:60;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:nowrap;}
+#app .c8h .c8h-top{display:flex;align-items:center;gap:14px;height:64px;padding:0 28px;max-width:1320px;margin:0 auto;}
+#app .c8h .brand{font-size:22px;letter-spacing:-.4px;flex-shrink:0;}
+#app .c8h .brand .dot{width:32px;height:32px;}
+#app .c8h .search-box{flex:0 1 480px;min-width:0;margin-left:22px;height:40px;padding:0 16px;border-radius:20px;background:var(--bg);display:flex;align-items:center;gap:8px;color:var(--text-dim);}
+#app .c8h .search-box input{font-size:14px;min-width:0;}
+#app .c8h .c8h-sicon{flex-shrink:0;}
+#app .c8h .search-results{width:min(340px,92vw);}
+#app .c8h .user-stats{flex-shrink:0;}
+#app .c8h .c8h-br{display:none;}
+#app .c8h .c8h-date{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:0;}
+#app .c8h .header-lang-flag{width:auto;height:auto;border-radius:3px;box-shadow:none;overflow:visible;}
+#app .c8h .header-lang-flag svg{width:24px;height:16px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08);}
+#app .c8h .header-clock{flex-direction:row;align-items:baseline;gap:6px;padding:0;min-width:0;max-width:none;line-height:1.2;white-space:nowrap;overflow:hidden;}
+#app .c8h .header-clock-time{font-size:13.5px;}
+#app .c8h .header-clock-date,#app .c8h .header-clock-name{font-size:13px;margin:0;}
+#app .c8h .header-clock-name{font-weight:700;overflow:hidden;text-overflow:ellipsis;max-width:none;}
+#app .c8h .header-clock-date::before,#app .c8h .header-clock-name::before{content:'·';margin-right:6px;color:var(--text-dim);font-weight:400;}
+#app .c8h .c8h-tr{width:40px;height:40px;border-radius:50%;background:var(--bg);color:#0EA5E9;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--line);transition:.15s;}
+#app .c8h .c8h-tr:hover{transform:translateY(-1px);}
+#app .c8h .c8h-icons{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+#app .c8h .messenger-btn,#app .c8h .notif-btn{width:40px;height:40px;}
+#app .c8h .c8h-user{position:relative;flex-shrink:0;}
+#app .c8h #user-avatar{width:40px;height:40px;cursor:pointer;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--line);}
+#app .c8h .logout-btn{display:none;}
+/* menu pod avatarom */
+.c8h-menu{display:none;position:absolute;right:0;top:calc(100% + 10px);width:240px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 40px rgba(20,20,26,.22);padding:8px;z-index:90;}
+.c8h-menu.open{display:block;}
+.c8h-menu-head{display:flex;align-items:center;gap:10px;padding:6px 8px 10px;border-bottom:1px solid var(--line);margin-bottom:4px;cursor:pointer;border-radius:10px;}
+.c8h-menu-head:hover{background:var(--bg);}
+.c8h-menu-av .avatar{width:42px;height:42px;}
+.c8h-menu-who{display:flex;flex-direction:column;min-width:0;}
+.c8h-menu-who b{font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c8h-menu-who span{font-size:12px;color:var(--mode-feed);font-weight:600;}
+.c8h-mi{width:100%;display:flex;align-items:center;gap:10px;padding:10px 8px;border-radius:10px;background:transparent;font-size:14.5px;font-weight:600;color:var(--text);text-align:left;}
+.c8h-mi:hover{background:var(--bg);}
+.c8h-mic{width:22px;text-align:center;font-size:16px;}
+.c8h-mflag{margin-left:auto;display:flex;}
+.c8h-mflag svg{width:22px;height:15px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.1);}
+.c8h-msep{height:1px;background:var(--line);margin:4px 0;}
+.c8h-red{color:#DC2626 !important;}
+
+/* ---- záložky (8 tlačidiel, všetky viditeľné) ---- */
+#app .c8h .mode-dock{display:flex;justify-content:center;align-items:center;gap:6px;background:transparent;border:none;border-radius:0;padding:0 28px 8px;height:auto;max-width:1320px;margin:0 auto;width:auto;overflow:visible;}
+#app .c8h .mode-dock .c8h-hidden{display:none !important;}
+#app .c8h .mode-dock button{display:flex;flex-direction:row;align-items:center;gap:8px;height:44px;padding:0 15px;border-radius:12px;background:transparent;color:var(--text-dim);font-size:14px;font-weight:600;white-space:nowrap;flex:0 0 auto;min-width:0;transition:background .2s,color .2s;}
+#app .c8h .mode-dock button:hover{background:var(--bg);}
+#app .c8h .mode-dock .mi{font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;}
+#app .c8h .mode-dock .ml{line-height:1.1;}
+#app .c8h .mode-dock button[data-mode].active{font-weight:800;}
+#app .c8h .mode-dock button[data-mode="feed"].active{background:var(--mode-feed-soft);color:var(--mode-feed);box-shadow:inset 0 -3px 0 var(--mode-feed);}
+#app .c8h .mode-dock button[data-mode="video"].active{background:#FFE4EE;color:#E11D63;box-shadow:inset 0 -3px 0 #FF3C78;}
+#app .c8h .mode-dock button[data-mode="market"].active{background:var(--mode-market-soft);color:#B4700F;box-shadow:inset 0 -3px 0 var(--mode-market);}
+#app .c8h .mode-dock button[data-mode="movies"].active{background:var(--mode-movies-soft);color:var(--mode-movies);box-shadow:inset 0 -3px 0 var(--mode-movies);}
+#app .c8h .mode-dock button[data-mode="games"].active{background:var(--mode-games-soft);color:#0284C7;box-shadow:inset 0 -3px 0 var(--mode-games);}
+/* Môj profil / Priatelia / Používatelia – farebné bubliny */
+#app .c8h .mode-dock .c8p .mi{width:30px;height:30px;border-radius:50%;font-size:16px;flex-shrink:0;}
+#app .c8h .c8p-v .mi{background:#EDE9FE;box-shadow:0 0 0 2px #8B5CF6;}
+#app .c8h .c8p-g .mi{background:#DCFCE7;box-shadow:0 0 0 2px #22C55E;}
+#app .c8h .c8p-o .mi{background:#FFEDD5;box-shadow:0 0 0 2px #F97316;}
+#app .c8h .c8p-v .mi .avatar{width:100%;height:100%;font-size:11px;}
+#app .c8h .c8p-v.active{background:#F3F0FF;color:#7C3AED;font-weight:800;}
+#app .c8h .c8p-g.active{background:#ECFDF5;color:#15803D;font-weight:800;}
+#app .c8h .c8p-o.active{background:#FFF4E8;color:#C2410C;font-weight:800;}
+
+/* na PC sú tieto 3 tlačidlá už hore v lište - ľavý panel by ich duplikoval */
+@media(min-width:901px){
+  #app .left-sidebar{display:none !important;}
+}
+/* plávajúce tlačidlo Tlmočník nahrádza nové tlačidlo v hlavičke */
+#app .translator-btn{display:none !important;}
+@media(min-width:901px){ #app .finance-btn{top:140px;} }
+
+/* ================= MOBIL ================= */
+@media(max-width:900px){
+  #app .c8h .c8h-top{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:0;height:auto;padding:6px 10px 0;}
+  #app .c8h .brand{font-size:16.5px;gap:6px;order:1;}
+  #app .c8h .brand .dot{width:26px;height:26px;}
+  #app .c8h .search-box{order:2;flex:1 1 0;margin:0;height:34px;padding:0 11px;min-width:0;}
+  #app .c8h .search-box input{font-size:13px;}
+  #app .c8h .user-stats{display:none;}
+  #app .c8h .c8h-tr{order:3;width:34px;height:34px;}
+  #app .c8h .c8h-user{order:4;}
+  #app .c8h #user-avatar{width:34px;height:34px;}
+  #app .c8h .c8h-br{display:block;order:5;flex-basis:100%;height:4px;}
+  #app .c8h .c8h-date{order:6;flex:1 1 0;margin-left:0;gap:7px;height:36px;}
+  #app .c8h .header-lang-flag svg{width:22px;height:15px;}
+  #app .c8h .header-clock{gap:4px;flex:0 1 auto;min-width:0;}
+  #app .c8h .header-clock-name{min-width:0;flex:0 1 auto;}
+  #app .c8h .header-clock-time,#app .c8h .header-clock-date{flex-shrink:0;}
+  #app .c8h .header-clock-time{font-size:12px;}
+  #app .c8h .header-clock-date,#app .c8h .header-clock-name{font-size:11px;}
+  #app .c8h .header-clock-date::before,#app .c8h .header-clock-name::before{margin-right:4px;}
+  #app .c8h .c8h-icons{order:7;gap:21px;margin-right:21px;}
+  #app .c8h .c8h-icons .notif-btn{order:1;} #app .c8h .c8h-icons .messenger-btn{order:2;}
+  #app .c8h .messenger-btn,#app .c8h .notif-btn{width:34px;height:34px;}
+  #app .c8h .messenger-btn svg,#app .c8h .notif-btn svg{width:17px;height:17px;}
+
+  #app .c8h .mode-dock{display:flex;justify-content:space-between;gap:0;padding:2px 3px 4px;width:100%;overflow:visible;order:initial;}
+  #app .c8h .mode-dock button{flex:1 1 auto;flex-direction:column;gap:1px;height:auto;padding:4px 2px 3px;border-radius:10px;font-size:var(--c8-navfs,9.5px);letter-spacing:-.25px;color:#555;}
+  #app .c8h .mode-dock .mi{font-size:17px;height:20px;}
+  #app .c8h .mode-dock button[data-mode].active{box-shadow:none;}
+  #app .c8h .mode-dock .c8p .mi{width:24px;height:24px;font-size:14px;margin-bottom:1px;}
+  #app .c8h .c8p-v .mi,#app .c8h .c8p-g .mi,#app .c8h .c8p-o .mi{box-shadow:0 0 0 1.5px currentColor;}
+  #app .c8h .c8p-v .mi{color:#8B5CF6;} #app .c8h .c8p-g .mi{color:#22C55E;} #app .c8h .c8p-o .mi{color:#F97316;}
+  #app .c8h .c8p-v .mi .avatar{color:var(--accent);}
+  #app .c8h .c8p-v.active,#app .c8h .c8p-g.active,#app .c8h .c8p-o.active{background:transparent;}
+  #app .c8h .c8p-v.active .ml{color:#7C3AED;} #app .c8h .c8p-g.active .ml{color:#15803D;} #app .c8h .c8p-o.active .ml{color:#C2410C;}
+  #app .c8h .c8p.active .mi{transform:scale(1.08);}
+  .c8h-menu{position:fixed;top:52px;right:10px;}
+}
+@media(max-width:350px){ #app .c8h .header-clock-date{display:none;} }
+
+/* ================= NASTAVENIA ================= */
+.c8s-modal{display:none;position:fixed;inset:0;z-index:85;background:rgba(0,0,0,.4);align-items:center;justify-content:center;padding:16px;}
+.c8s-modal.open{display:flex;}
+.c8s-sheet{width:100%;max-width:420px;max-height:88vh;overflow-y:auto;background:var(--surface);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.c8s-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px;position:sticky;top:0;background:var(--surface);z-index:1;}
+.c8s-head h3{margin:0;font-size:19px;}
+.c8s-head button{width:34px;height:34px;border-radius:50%;background:var(--bg);font-size:15px;color:var(--text);}
+.c8s-body{padding:4px 10px 14px;}
+.c8s-item{width:100%;display:flex;align-items:center;gap:12px;padding:13px 10px;border-radius:12px;background:transparent;font-size:15px;font-weight:600;color:var(--text);text-align:left;}
+.c8s-item:hover{background:var(--bg);}
+.c8s-ic{width:26px;text-align:center;font-size:18px;}
+.c8s-tx{flex:1;}
+.c8s-ch{color:var(--text-dim);font-size:20px;line-height:1;transition:transform .2s;}
+.c8s-ch.open{transform:rotate(90deg);}
+.c8s-cur{display:flex;}
+.c8s-cur svg,.c8s-lang svg{width:24px;height:16px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.1);flex-shrink:0;}
+.c8s-langs{display:none;grid-template-columns:1fr 1fr;gap:6px;padding:4px 10px 10px 48px;}
+.c8s-langs.open{display:grid;}
+.c8s-lang{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;background:var(--bg);font-size:13.5px;font-weight:600;color:var(--text);text-align:left;border:2px solid transparent;}
+.c8s-lang.active{border-color:var(--mode-feed);background:var(--mode-feed-soft);color:var(--mode-feed);}
+.c8s-lang:disabled{opacity:.45;cursor:not-allowed;}
+.c8s-lang small{display:block;font-size:10px;font-weight:600;color:var(--text-dim);}
+.c8s-sep{height:1px;background:var(--line);margin:6px 10px;}
+.c8s-red{color:#DC2626;}
+</style>
 </head>
 <body>
 
@@ -2554,51 +2695,83 @@
 
 <!-- ============ APP ============ -->
 <div id="app">
-  <div class="topbar">
-    <div class="topbar-left">
+  <div class="topbar c8h">
+    <div class="c8h-top">
       <div class="brand"><span class="dot" id="brand-dot"><span class="dot-eyes"></span><img class="dot-outline" src="data:image/png;base64,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" alt=""></span>Connect8</div>
-      <div class="search-box">🔍<input id="user-search-input" placeholder="Hľadať na Connect..." oninput="onUserSearchInput()" onfocus="onUserSearchInput()" autocomplete="off">
+      <div class="search-box"><svg class="c8h-sicon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="user-search-input" placeholder="Hľadať na Connect..." oninput="onUserSearchInput()" onfocus="onUserSearchInput()" autocomplete="off">
         <div class="search-results" id="user-search-results"></div>
       </div>
       <div class="user-stats" title="Registrovaní / online používatelia">
         <div class="stat-row"><span class="stat-dot total"></span><span id="total-users-count">0</span></div>
         <div class="stat-row"><span class="stat-dot online"></span><span id="online-users-count">0</span></div>
       </div>
-    </div>
-
-    <div class="mode-dock">
-      <button class="active" data-mode="feed" onclick="switchMode('feed')"><span class="ind"></span>Plocha</button>
-      <button data-mode="video" onclick="switchMode('video')"><span class="ind"></span>Videá</button>
-      <button data-mode="market" onclick="switchMode('market')"><span class="ind"></span>Kúp/Predaj</button>
-      <button data-mode="news" onclick="switchMode('news')"><span class="ind"></span>Správy</button>
-      <button data-mode="movies" onclick="switchMode('movies')"><span class="ind"></span>Filmy</button>
-      <button data-mode="games" onclick="openGamesDirect()"><span class="ind"></span>Hry</button>
-    </div>
-
-    <div class="topbar-right">
-      <div class="header-lang-flag" id="header-lang-flag" title="Aktuálny jazyk appky"></div>
-      <div class="header-clock" id="header-clock" title="Aktuálny čas a dátum" onclick="openCalendarModal()" style="cursor:pointer;">
+      <div class="c8h-br"></div>
+      <div class="c8h-date">
+        <div class="header-lang-flag" id="header-lang-flag" title="Aktuálny jazyk appky"></div>
+        <div class="header-clock" id="header-clock" title="Aktuálny čas a dátum" onclick="openCalendarModal()" style="cursor:pointer;">
         <div class="header-clock-time" id="header-clock-time">--:--</div>
         <div class="header-clock-date" id="header-clock-date">--.--.----</div>
         <div class="header-clock-name" id="header-clock-name">—</div>
       </div>
-      <button class="messenger-btn" onclick="openConvModal()" title="Správy">
+      </div>
+      <button class="c8h-tr" onclick="openTranslatorModal()" title="Tlmočník"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h9M9.5 5v3M13 8c-1 3-3 5.5-6 7"/><path d="M6 15c2.5 0 4.5-1 6-3"/><path d="m15 21 4-9 4 9M16.5 18h5"/></svg></button>
+      <div class="c8h-icons">
+        <button class="messenger-btn" onclick="openConvModal()" title="Správy">
         <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>
         <span class="badge-count" id="messenger-badge-dot">0</span>
       </button>
-      <button class="notif-btn" onclick="openNotifModal()" title="Upozornenia">
+        <button class="notif-btn" onclick="openNotifModal()" title="Upozornenia">
         <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
         <span class="badge-count" id="notif-badge-count">0</span>
       </button>
-      <div class="avatar" id="user-avatar">?</div>
-      <button class="logout-btn" onclick="doLogout()">Odhlásiť</button>
+      </div>
+      <div class="c8h-user">
+        <div class="avatar" id="user-avatar" onclick="c8ToggleUserMenu(event)" title="Menu">?</div>
+        <button class="logout-btn" onclick="doLogout()">Odhlásiť</button>
+        <div class="c8h-menu" id="c8h-menu" onclick="event.stopPropagation()">
+          <div class="c8h-menu-head" onclick="c8CloseUserMenu();openProfile()">
+            <div class="c8h-menu-av" id="c8h-menu-av"></div>
+            <div class="c8h-menu-who"><b id="c8h-menu-name">&nbsp;</b><span>Zobraziť môj profil</span></div>
+          </div>
+          <button class="c8h-mi" onclick="c8CloseUserMenu();c8OpenSettings()"><span class="c8h-mic">⚙️</span><span>Nastavenia</span></button>
+          <button class="c8h-mi" onclick="c8CloseUserMenu();c8OpenSettings(true)"><span class="c8h-mic">🌐</span><span>Jazyk</span><span class="c8h-mflag" id="c8h-menu-flag"></span></button>
+          <div class="c8h-msep"></div>
+          <button class="c8h-mi c8h-red" onclick="c8CloseUserMenu();doLogout()"><span class="c8h-mic">🚪</span><span>Odhlásiť sa</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mode-dock">
+      <button class="active" data-mode="feed" onclick="switchMode('feed')"><span class="mi">🏠</span><span class="ml">Plocha</span></button>
+      <button data-mode="video" onclick="switchMode('video')"><span class="mi">🎬</span><span class="ml">Videá</span></button>
+      <button data-mode="market" onclick="switchMode('market')"><span class="mi">🛒</span><span class="ml">Bazár</span></button>
+      <button data-mode="news" class="c8h-hidden" onclick="switchMode('news')"><span class="mi">📰</span><span class="ml">Správy</span></button>
+      <button data-mode="movies" onclick="switchMode('movies')"><span class="mi">🍿</span><span class="ml">Filmy</span></button>
+      <button data-mode="games" onclick="openGamesDirect()"><span class="mi">🎮</span><span class="ml">Hry</span></button>
+      <button id="mobile-nav-profile" class="c8p c8p-v" onclick="openProfile()"><span class="mi"><span class="avatar" id="mobile-quick-avatar">?</span></span><span class="ml">Môj profil</span></button>
+      <button id="mobile-nav-friends" class="c8p c8p-g" onclick="openFriendsList()"><span class="mi">👥</span><span class="ml">Priatelia</span></button>
+      <button id="mobile-nav-users" class="c8p c8p-o" onclick="openUsersList()"><span class="mi">🧑‍🤝‍🧑</span><span class="ml">Používatelia</span></button>
     </div>
   </div>
 
-  <div class="mobile-quick-links">
-    <button id="mobile-nav-profile" onclick="openProfile()"><span class="avatar" id="mobile-quick-avatar">?</span>Môj profil</button>
-    <button id="mobile-nav-friends" onclick="openFriendsList()">👥 Priatelia</button>
-    <button id="mobile-nav-users" onclick="openUsersList()">🧑‍🤝‍🧑 Používatelia</button>
+  <div class="mobile-quick-links" style="display:none"></div>
+
+  <!-- ============ NASTAVENIA (nové) ============ -->
+  <div class="c8s-modal" id="c8s-modal" onclick="if(event.target===this) c8CloseSettings()">
+    <div class="c8s-sheet">
+      <div class="c8s-head"><h3>⚙️ <span>Nastavenia</span></h3><button onclick="c8CloseSettings()">✕</button></div>
+      <div class="c8s-body">
+        <button class="c8s-item" onclick="c8CloseSettings();openProfile()"><span class="c8s-ic">👤</span><span class="c8s-tx">Upraviť profil</span><span class="c8s-ch">›</span></button>
+        <button class="c8s-item" id="c8s-lang-toggle" onclick="c8ToggleLangList()"><span class="c8s-ic">🌐</span><span class="c8s-tx">Jazyk</span><span class="c8s-cur" id="c8s-lang-cur"></span><span class="c8s-ch" id="c8s-lang-ch">›</span></button>
+        <div class="c8s-langs" id="c8s-langs"></div>
+        <button class="c8s-item" onclick="c8CloseSettings();openLegalModal('center')"><span class="c8s-ic">🔒</span><span class="c8s-tx">Súkromie</span><span class="c8s-ch">›</span></button>
+        <button class="c8s-item" onclick="c8CloseSettings();openLegalModal('cookies')"><span class="c8s-ic">🍪</span><span class="c8s-tx">Nastavenia cookies</span><span class="c8s-ch">›</span></button>
+        <button class="c8s-item" onclick="c8CloseSettings();openLegalModal('terms')"><span class="c8s-ic">📄</span><span class="c8s-tx">Podmienky používania</span><span class="c8s-ch">›</span></button>
+        <button class="c8s-item" onclick="c8CloseSettings();openLegalModal('privacy')"><span class="c8s-ic">🛡️</span><span class="c8s-tx">Zásady ochrany súkromia</span><span class="c8s-ch">›</span></button>
+        <div class="c8s-sep"></div>
+        <button class="c8s-item c8s-red" onclick="c8CloseSettings();deleteMyAccount()"><span class="c8s-ic">🗑️</span><span class="c8s-tx">Zrušiť účet</span></button>
+      </div>
+    </div>
   </div>
 
   <button class="translator-btn" onclick="openTranslatorModal()" title="Tlmočník">
@@ -16107,6 +16280,19 @@ const UI_DICT_IT = {
 // vráti pôvodný slovenský text nezmenený. Volá sa priamo z JS šablón
 // (napr. buildPostCard) pre časti, ktoré obsahujú aj dynamický obsah
 // (počty, mená a pod.), ktoré sa nedajú prekladať ako celý text uzla.
+
+/* ---- preklady pre novú hlavičku a Nastavenia ---- */
+(function(){
+  const add = (dict, map) => { Object.keys(map).forEach(k => { if(!Object.prototype.hasOwnProperty.call(dict, k)) dict[k] = map[k]; }); };
+  add(UI_DICT_EN, {"Nastavenia":"Settings","Jazyk":"Language","Odhlásiť sa":"Log out","Zobraziť môj profil":"View my profile","Upraviť profil":"Edit profile","Súkromie":"Privacy","Bazár":"Market","Pripravujeme":"Coming soon","Zrušiť účet":"Delete account","Aktuálny jazyk appky":"Current app language","Menu":"Menu"});
+  add(UI_DICT_CZ, {"Nastavenia":"Nastavení","Jazyk":"Jazyk","Odhlásiť sa":"Odhlásit se","Zobraziť môj profil":"Zobrazit můj profil","Upraviť profil":"Upravit profil","Súkromie":"Soukromí","Bazár":"Bazar","Pripravujeme":"Připravujeme","Zrušiť účet":"Zrušit účet","Aktuálny jazyk appky":"Aktuální jazyk aplikace","Menu":"Menu"});
+  add(UI_DICT_PL, {"Nastavenia":"Ustawienia","Jazyk":"Język","Odhlásiť sa":"Wyloguj się","Zobraziť môj profil":"Zobacz mój profil","Upraviť profil":"Edytuj profil","Súkromie":"Prywatność","Bazár":"Bazar","Pripravujeme":"Wkrótce","Zrušiť účet":"Usuń konto","Aktuálny jazyk appky":"Aktualny język aplikacji","Menu":"Menu"});
+  add(UI_DICT_HU, {"Nastavenia":"Beállítások","Jazyk":"Nyelv","Odhlásiť sa":"Kijelentkezés","Zobraziť môj profil":"Profilom megtekintése","Upraviť profil":"Profil szerkesztése","Súkromie":"Adatvédelem","Bazár":"Piac","Pripravujeme":"Hamarosan","Zrušiť účet":"Fiók törlése","Aktuálny jazyk appky":"Az alkalmazás nyelve","Menu":"Menü"});
+  add(UI_DICT_AT, {"Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
+  add(UI_DICT_DE, {"Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
+  add(UI_DICT_IT, {"Nastavenia":"Impostazioni","Jazyk":"Lingua","Odhlásiť sa":"Esci","Zobraziť môj profil":"Vedi il mio profilo","Upraviť profil":"Modifica profilo","Súkromie":"Privacy","Bazár":"Mercato","Pripravujeme":"Prossimamente","Zrušiť účet":"Elimina account","Aktuálny jazyk appky":"Lingua attuale dell'app","Menu":"Menu"});
+})();
+
 function t(text){
   if(currentLang === 'en') return UI_DICT_EN.hasOwnProperty(text) ? UI_DICT_EN[text] : text;
   if(currentLang === 'cz') return UI_DICT_CZ.hasOwnProperty(text) ? UI_DICT_CZ[text] : text;
@@ -16421,6 +16607,96 @@ async function translateVisiblePosts(){
     document.addEventListener('fullscreenchange', onFullscreenChange);
     document.addEventListener('webkitfullscreenchange', onFullscreenChange);
   })();
+</script>
+
+<script id="c8h-script">
+/* ================= NOVÁ HLAVIČKA – menu, nastavenia, prispôsobenie lišty ================= */
+function c8FlagSvg(code){
+  try{ const inner = HEADER_FLAG_SVG[code] || HEADER_FLAG_SVG.sk; return '<svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">' + inner + '</svg>'; }catch(e){ return ''; }
+}
+function c8ToggleUserMenu(ev){
+  if(ev) ev.stopPropagation();
+  const m = document.getElementById('c8h-menu');
+  if(!m) return;
+  if(m.classList.contains('open')){ c8CloseUserMenu(); return; }
+  // avatar a meno do hlavičky menu
+  const av = document.getElementById('user-avatar');
+  const slot = document.getElementById('c8h-menu-av');
+  if(av && slot){ const c = av.cloneNode(true); c.removeAttribute('id'); c.removeAttribute('onclick'); c.removeAttribute('title'); slot.innerHTML=''; slot.appendChild(c); }
+  const nm = document.getElementById('c8h-menu-name');
+  const src = document.getElementById('sidebar-username');
+  let uname = '';
+  try{ if(currentUser && currentUser.name) uname = currentUser.name; }catch(e){}
+  if(nm) nm.textContent = uname || (src ? src.textContent : '');
+  const fl = document.getElementById('c8h-menu-flag');
+  let cl='sk'; try{ cl = currentLang || 'sk'; }catch(e){}
+  if(fl) fl.innerHTML = c8FlagSvg(cl);
+  m.classList.add('open');
+}
+function c8CloseUserMenu(){ const m = document.getElementById('c8h-menu'); if(m) m.classList.remove('open'); }
+document.addEventListener('click', c8CloseUserMenu);
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ c8CloseUserMenu(); c8CloseSettings(); } });
+
+const C8_LANGS = [
+  ['sk','Slovenčina'],['en','English'],['cz','Čeština'],['pl','Polski'],
+  ['hu','Magyar'],['at','Deutsch (AT)'],['de','Deutsch'],['it','Italiano'],
+  ['fr','Français',true],['pt','Português',true],['es','Español',true]
+];
+function c8RenderLangs(){
+  const box = document.getElementById('c8s-langs');
+  if(!box) return;
+  let cur = 'sk'; try{ cur = currentLang || 'sk'; }catch(e){}
+  box.innerHTML = C8_LANGS.map(([code,name,off]) =>
+    '<button class="c8s-lang' + (code===cur?' active':'') + '"' + (off?' disabled':'') + (off?'':' onclick="c8PickLang(\''+code+'\')"') + '>' +
+      c8FlagSvg(code) + '<span>' + name + (off ? '<small>' + (typeof t==='function'?t('Pripravujeme'):'Pripravujeme') + '</small>' : '') + '</span></button>'
+  ).join('');
+  const curEl = document.getElementById('c8s-lang-cur');
+  if(curEl) curEl.innerHTML = c8FlagSvg(cur);
+}
+function c8PickLang(code){
+  if(typeof setAppLanguage === 'function') setAppLanguage(code);
+  c8RenderLangs();
+}
+function c8ToggleLangList(force){
+  const box = document.getElementById('c8s-langs'), ch = document.getElementById('c8s-lang-ch');
+  if(!box) return;
+  const open = (force === undefined) ? !box.classList.contains('open') : force;
+  box.classList.toggle('open', open);
+  if(ch) ch.classList.toggle('open', open);
+}
+function c8OpenSettings(langOpen){
+  c8RenderLangs();
+  c8ToggleLangList(!!langOpen);
+  const m = document.getElementById('c8s-modal');
+  if(m) m.classList.add('open');
+}
+function c8CloseSettings(){ const m = document.getElementById('c8s-modal'); if(m) m.classList.remove('open'); }
+
+/* na úzkych mobiloch (a v dlhších jazykoch) zmenší písmo lišty, aby sa
+   všetkých 8 tlačidiel vždy zmestilo bez posúvania */
+function c8FitNav(){
+  const dock = document.querySelector('#app .c8h .mode-dock');
+  if(!dock) return;
+  const root = document.documentElement;
+  if(window.innerWidth > 900){ root.style.removeProperty('--c8-navfs'); return; }
+  let fs = 9.5;
+  root.style.setProperty('--c8-navfs', fs + 'px');
+  let guard = 0;
+  while(dock.scrollWidth > dock.clientWidth + 1 && fs > 7 && guard++ < 12){
+    fs -= 0.25; root.style.setProperty('--c8-navfs', fs + 'px');
+  }
+}
+window.addEventListener('resize', () => { c8FitNav(); if(typeof updateTopbarHeightVar==='function') updateTopbarHeightVar(); });
+window.addEventListener('load', c8FitNav);
+setTimeout(c8FitNav, 300); setTimeout(c8FitNav, 1200);
+if(typeof applyLanguage === 'function'){
+  const _c8OrigApplyLanguage = applyLanguage;
+  applyLanguage = function(){
+    const r = _c8OrigApplyLanguage.apply(this, arguments);
+    try{ c8FitNav(); c8RenderLangs(); if(typeof updateTopbarHeightVar==='function') updateTopbarHeightVar(); }catch(e){}
+    return r;
+  };
+}
 </script>
 </body>
 </html>
