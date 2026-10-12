@@ -2018,6 +2018,8 @@
 .c8r-f.on .dot{background:#22C55E;}
 .c8r-f.off{color:var(--text-dim);}
 .c8r-empty{font-size:13px;color:var(--text-dim);}
+.c8r-more{display:block;width:100%;margin-top:8px;padding:8px 10px;border:0;border-radius:10px;background:var(--bg,#f1f2f4);color:var(--mode-feed,#4F46E5);font-weight:700;font-size:13.5px;cursor:pointer;}
+.c8r-more:hover{filter:brightness(.96);}
 </style>
 
 <style id="c8-fin-style">
@@ -16501,24 +16503,31 @@ const UI_DICT_IT = {
   const add = (dict, map) => { Object.keys(map).forEach(k => { if(!Object.prototype.hasOwnProperty.call(dict, k)) dict[k] = map[k]; }); };
   add(UI_DICT_EN, {"Moje štatistiky": "My statistics", "Videí": "Videos", "Zhliadnutí": "Views", "Lajkov": "Likes", "Komentárov": "Comments", "Najsledovanejšie": "Most viewed", "Zhliadnutia podľa videí": "Views per video", "najnovšie": "newest", "Moje príspevky": "My posts", "Príspevkov": "Posts", "Najúspešnejší": "Most successful", "Lajkov na príspevok": "Likes per post", "Môj bazár": "My market", "Inzerátov": "Listings", "Sledujem": "Following", "Práve online": "Online now", "Online z priateľov": "Online of friends", "Moja aktivita – posledných 30 dní": "My activity – last 30 days", "dnes": "today"});
   add(UI_DICT_EN, {"Aktívnych dní":"Active days","Spolu":"Total"});
+  add(UI_DICT_EN, {"Zobraziť všetkých":"Show all","Zobraziť menej":"Show less"});
   add(UI_DICT_EN, {"Štatistiky":"Statistics","Moje Reels":"My Reels","Zatiaľ nemáš žiadne Reels":"You have no Reels yet","Meniny tento týždeň":"Name days this week","Priatelia online":"Friends online","Zatiaľ nemáš priateľov":"No friends yet","Nastavenia":"Settings","Jazyk":"Language","Odhlásiť sa":"Log out","Zobraziť môj profil":"View my profile","Upraviť profil":"Edit profile","Súkromie":"Privacy","Bazár":"Market","Pripravujeme":"Coming soon","Zrušiť účet":"Delete account","Aktuálny jazyk appky":"Current app language","Menu":"Menu"});
   add(UI_DICT_CZ, {"Moje štatistiky": "Moje statistiky", "Videí": "Videí", "Zhliadnutí": "Zhlédnutí", "Lajkov": "Lajků", "Komentárov": "Komentářů", "Najsledovanejšie": "Nejsledovanější", "Zhliadnutia podľa videí": "Zhlédnutí podle videí", "najnovšie": "nejnovější", "Moje príspevky": "Moje příspěvky", "Príspevkov": "Příspěvků", "Najúspešnejší": "Nejúspěšnější", "Lajkov na príspevok": "Lajků na příspěvek", "Môj bazár": "Můj bazar", "Inzerátov": "Inzerátů", "Sledujem": "Sleduji", "Práve online": "Právě online", "Online z priateľov": "Online z přátel", "Moja aktivita – posledných 30 dní": "Moje aktivita – posledních 30 dní", "dnes": "dnes"});
   add(UI_DICT_CZ, {"Aktívnych dní":"Aktivních dní","Spolu":"Celkem"});
+  add(UI_DICT_CZ, {"Zobraziť všetkých":"Zobrazit všechny","Zobraziť menej":"Zobrazit méně"});
   add(UI_DICT_CZ, {"Štatistiky":"Statistiky","Moje Reels":"Moje Reels","Zatiaľ nemáš žiadne Reels":"Zatím nemáš žádné Reels","Meniny tento týždeň":"Jmeniny tento týden","Priatelia online":"Přátelé online","Zatiaľ nemáš priateľov":"Zatím nemáš přátele","Nastavenia":"Nastavení","Jazyk":"Jazyk","Odhlásiť sa":"Odhlásit se","Zobraziť môj profil":"Zobrazit můj profil","Upraviť profil":"Upravit profil","Súkromie":"Soukromí","Bazár":"Bazar","Pripravujeme":"Připravujeme","Zrušiť účet":"Zrušit účet","Aktuálny jazyk appky":"Aktuální jazyk aplikace","Menu":"Menu"});
   add(UI_DICT_PL, {"Moje štatistiky": "Moje statystyki", "Videí": "Filmów", "Zhliadnutí": "Wyświetleń", "Lajkov": "Polubień", "Komentárov": "Komentarzy", "Najsledovanejšie": "Najczęściej oglądane", "Zhliadnutia podľa videí": "Wyświetlenia wg filmów", "najnovšie": "najnowsze", "Moje príspevky": "Moje posty", "Príspevkov": "Postów", "Najúspešnejší": "Najlepszy", "Lajkov na príspevok": "Polubień na post", "Môj bazár": "Mój bazar", "Inzerátov": "Ogłoszeń", "Sledujem": "Obserwuję", "Práve online": "Teraz online", "Online z priateľov": "Online ze znajomych", "Moja aktivita – posledných 30 dní": "Moja aktywność – ostatnie 30 dni", "dnes": "dziś"});
   add(UI_DICT_PL, {"Aktívnych dní":"Aktywnych dni","Spolu":"Razem"});
+  add(UI_DICT_PL, {"Zobraziť všetkých":"Pokaż wszystkich","Zobraziť menej":"Pokaż mniej"});
   add(UI_DICT_PL, {"Štatistiky":"Statystyki","Moje Reels":"Moje Reels","Zatiaľ nemáš žiadne Reels":"Nie masz jeszcze Reels","Meniny tento týždeň":"Imieniny w tym tygodniu","Priatelia online":"Znajomi online","Zatiaľ nemáš priateľov":"Nie masz jeszcze znajomych","Nastavenia":"Ustawienia","Jazyk":"Język","Odhlásiť sa":"Wyloguj się","Zobraziť môj profil":"Zobacz mój profil","Upraviť profil":"Edytuj profil","Súkromie":"Prywatność","Bazár":"Bazar","Pripravujeme":"Wkrótce","Zrušiť účet":"Usuń konto","Aktuálny jazyk appky":"Aktualny język aplikacji","Menu":"Menu"});
   add(UI_DICT_HU, {"Moje štatistiky": "Statisztikáim", "Videí": "Videó", "Zhliadnutí": "Megtekintés", "Lajkov": "Kedvelés", "Komentárov": "Hozzászólás", "Najsledovanejšie": "Legnézettebb", "Zhliadnutia podľa videí": "Megtekintések videónként", "najnovšie": "legújabb", "Moje príspevky": "Bejegyzéseim", "Príspevkov": "Bejegyzés", "Najúspešnejší": "Legsikeresebb", "Lajkov na príspevok": "Kedvelés / bejegyzés", "Môj bazár": "Piacom", "Inzerátov": "Hirdetés", "Sledujem": "Követem", "Práve online": "Most online", "Online z priateľov": "Online barátok", "Moja aktivita – posledných 30 dní": "Aktivitásom – utolsó 30 nap", "dnes": "ma"});
   add(UI_DICT_HU, {"Aktívnych dní":"Aktív nap","Spolu":"Összesen"});
+  add(UI_DICT_HU, {"Zobraziť všetkých":"Összes mutatása","Zobraziť menej":"Kevesebb"});
   add(UI_DICT_HU, {"Štatistiky":"Statisztika","Moje Reels":"Saját Reels","Zatiaľ nemáš žiadne Reels":"Még nincs Reelsed","Meniny tento týždeň":"Névnapok ezen a héten","Priatelia online":"Online barátok","Zatiaľ nemáš priateľov":"Még nincsenek barátaid","Nastavenia":"Beállítások","Jazyk":"Nyelv","Odhlásiť sa":"Kijelentkezés","Zobraziť môj profil":"Profilom megtekintése","Upraviť profil":"Profil szerkesztése","Súkromie":"Adatvédelem","Bazár":"Piac","Pripravujeme":"Hamarosan","Zrušiť účet":"Fiók törlése","Aktuálny jazyk appky":"Az alkalmazás nyelve","Menu":"Menü"});
   add(UI_DICT_AT, {"Moje štatistiky": "Meine Statistiken", "Videí": "Videos", "Zhliadnutí": "Aufrufe", "Lajkov": "Likes", "Komentárov": "Kommentare", "Najsledovanejšie": "Meistgesehen", "Zhliadnutia podľa videí": "Aufrufe pro Video", "najnovšie": "neueste", "Moje príspevky": "Meine Beiträge", "Príspevkov": "Beiträge", "Najúspešnejší": "Erfolgreichster", "Lajkov na príspevok": "Likes pro Beitrag", "Môj bazár": "Mein Markt", "Inzerátov": "Inserate", "Sledujem": "Ich folge", "Práve online": "Gerade online", "Online z priateľov": "Online von Freunden", "Moja aktivita – posledných 30 dní": "Meine Aktivität – letzte 30 Tage", "dnes": "heute"});
   add(UI_DICT_AT, {"Aktívnych dní":"Aktive Tage","Spolu":"Gesamt"});
+  add(UI_DICT_AT, {"Zobraziť všetkých":"Alle anzeigen","Zobraziť menej":"Weniger anzeigen"});
   add(UI_DICT_AT, {"Štatistiky":"Statistiken","Moje Reels":"Meine Reels","Zatiaľ nemáš žiadne Reels":"Du hast noch keine Reels","Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
   add(UI_DICT_DE, {"Moje štatistiky": "Meine Statistiken", "Videí": "Videos", "Zhliadnutí": "Aufrufe", "Lajkov": "Likes", "Komentárov": "Kommentare", "Najsledovanejšie": "Meistgesehen", "Zhliadnutia podľa videí": "Aufrufe pro Video", "najnovšie": "neueste", "Moje príspevky": "Meine Beiträge", "Príspevkov": "Beiträge", "Najúspešnejší": "Erfolgreichster", "Lajkov na príspevok": "Likes pro Beitrag", "Môj bazár": "Mein Markt", "Inzerátov": "Inserate", "Sledujem": "Ich folge", "Práve online": "Gerade online", "Online z priateľov": "Online von Freunden", "Moja aktivita – posledných 30 dní": "Meine Aktivität – letzte 30 Tage", "dnes": "heute"});
   add(UI_DICT_DE, {"Aktívnych dní":"Aktive Tage","Spolu":"Gesamt"});
+  add(UI_DICT_DE, {"Zobraziť všetkých":"Alle anzeigen","Zobraziť menej":"Weniger anzeigen"});
   add(UI_DICT_DE, {"Štatistiky":"Statistiken","Moje Reels":"Meine Reels","Zatiaľ nemáš žiadne Reels":"Du hast noch keine Reels","Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
   add(UI_DICT_IT, {"Moje štatistiky": "Le mie statistiche", "Videí": "Video", "Zhliadnutí": "Visualizzazioni", "Lajkov": "Mi piace", "Komentárov": "Commenti", "Najsledovanejšie": "Più visto", "Zhliadnutia podľa videí": "Visualizzazioni per video", "najnovšie": "più recenti", "Moje príspevky": "I miei post", "Príspevkov": "Post", "Najúspešnejší": "Il migliore", "Lajkov na príspevok": "Mi piace per post", "Môj bazár": "Il mio mercato", "Inzerátov": "Annunci", "Sledujem": "Seguo", "Práve online": "Online ora", "Online z priateľov": "Online tra gli amici", "Moja aktivita – posledných 30 dní": "La mia attività – ultimi 30 giorni", "dnes": "oggi"});
   add(UI_DICT_IT, {"Aktívnych dní":"Giorni attivi","Spolu":"Totale"});
+  add(UI_DICT_IT, {"Zobraziť všetkých":"Mostra tutti","Zobraziť menej":"Mostra meno"});
   add(UI_DICT_IT, {"Štatistiky":"Statistiche","Moje Reels":"I miei Reels","Zatiaľ nemáš žiadne Reels":"Non hai ancora Reels","Meniny tento týždeň":"Onomastici questa settimana","Priatelia online":"Amici online","Zatiaľ nemáš priateľov":"Nessun amico ancora","Nastavenia":"Impostazioni","Jazyk":"Lingua","Odhlásiť sa":"Esci","Zobraziť môj profil":"Vedi il mio profilo","Upraviť profil":"Modifica profilo","Súkromie":"Privacy","Bazár":"Mercato","Pripravujeme":"Prossimamente","Zrušiť účet":"Elimina account","Aktuálny jazyk appky":"Lingua attuale dell'app","Menu":"Menu"});
 })();
 
@@ -16974,9 +16983,11 @@ function c8RenderRight(){
       const name = (pc[uid] && pc[uid].name) || (ps[uid] && ps[uid].name) || tt('Používateľ');
       const photo = pc[uid] && pc[uid].photo;
       return {uid, on, name, photo};
-    }).sort((a,b)=> (b.on - a.on) || a.name.localeCompare(b.name,'sk')).slice(0,10);
+    }).sort((a,b)=> (b.on - a.on) || a.name.localeCompare(b.name,'sk'));
+    const total = list.length;
+    const shown = window.c8rShowAll ? list : list.slice(0,10);
     fb.innerHTML = '';
-    list.forEach(u => {
+    shown.forEach(u => {
       const row = document.createElement('div');
       row.className = 'c8r-f ' + (u.on ? 'on' : 'off');
       const av = document.createElement('div'); av.className = 'avatar';
@@ -16988,6 +16999,13 @@ function c8RenderRight(){
       row.onclick = () => { try{ openUserProfile({uid:u.uid, name:u.name, photoURL:u.photo}); }catch(e){} };
       fb.appendChild(row);
     });
+    if(total > 10){
+      const more = document.createElement('button');
+      more.className = 'c8r-more';
+      more.textContent = window.c8rShowAll ? tt('Zobraziť menej') : (tt('Zobraziť všetkých') + ' (' + total + ')');
+      more.onclick = (e)=>{ e.stopPropagation(); window.c8rShowAll = !window.c8rShowAll; c8RenderRight(); };
+      fb.appendChild(more);
+    }
   }
 }
 setInterval(c8RenderRight, 15000);
