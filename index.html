@@ -1998,6 +1998,27 @@
 .c8s-sep{height:1px;background:var(--line);margin:6px 10px;}
 .c8s-red{color:#DC2626;}
 </style>
+
+<style id="c8r-style">
+/* ================= PRAVÝ PANEL (len PC) – plocha ostáva presne v strede ================= */
+.c8-right{display:none;}
+@media(min-width:1340px){
+  .c8-right{display:block;position:fixed;top:calc(var(--topbar-h,120px) + 20px);left:calc(50% + 340px);width:260px;max-height:calc(100vh - var(--topbar-h,120px) - 40px);overflow-y:auto;z-index:30;}
+}
+.c8r-card{background:var(--surface);border-radius:16px;padding:16px 18px;margin-bottom:14px;border:1px solid var(--line);}
+.c8r-title{margin:0 0 10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--text);}
+.c8r-row{display:flex;align-items:baseline;gap:6px;font-size:13.5px;line-height:1.9;color:var(--text-dim);}
+.c8r-row b{font-weight:600;color:var(--text);min-width:58px;}
+.c8r-row.today span{color:var(--mode-feed);font-weight:700;}
+.c8r-row .hol{color:#D98C1F;font-weight:600;}
+.c8r-f{display:flex;align-items:center;gap:10px;padding:5px 4px;border-radius:10px;cursor:pointer;font-size:13.5px;color:var(--text);}
+.c8r-f:hover{background:var(--bg);}
+.c8r-f .avatar{width:30px;height:30px;font-size:11px;}
+.c8r-f .dot{width:11px;height:11px;border-radius:50%;background:#C9CBD1;border:2px solid var(--surface);margin-left:-19px;margin-top:20px;flex-shrink:0;}
+.c8r-f.on .dot{background:#22C55E;}
+.c8r-f.off{color:var(--text-dim);}
+.c8r-empty{font-size:13px;color:var(--text-dim);}
+</style>
 </head>
 <body>
 
@@ -2970,6 +2991,16 @@
       </div>
     </aside>
 
+    <aside class="c8-right" id="c8-right">
+      <div class="c8r-card" onclick="openCalendarModal()" style="cursor:pointer;">
+        <p class="c8r-title">📅 <span>Meniny tento týždeň</span></p>
+        <div id="c8r-names"></div>
+      </div>
+      <div class="c8r-card">
+        <p class="c8r-title">👥 <span>Priatelia online</span></p>
+        <div id="c8r-friends"></div>
+      </div>
+    </aside>
     <div class="content-area">
       <main>
         <!-- FEED -->
@@ -16284,13 +16315,13 @@ const UI_DICT_IT = {
 /* ---- preklady pre novú hlavičku a Nastavenia ---- */
 (function(){
   const add = (dict, map) => { Object.keys(map).forEach(k => { if(!Object.prototype.hasOwnProperty.call(dict, k)) dict[k] = map[k]; }); };
-  add(UI_DICT_EN, {"Nastavenia":"Settings","Jazyk":"Language","Odhlásiť sa":"Log out","Zobraziť môj profil":"View my profile","Upraviť profil":"Edit profile","Súkromie":"Privacy","Bazár":"Market","Pripravujeme":"Coming soon","Zrušiť účet":"Delete account","Aktuálny jazyk appky":"Current app language","Menu":"Menu"});
-  add(UI_DICT_CZ, {"Nastavenia":"Nastavení","Jazyk":"Jazyk","Odhlásiť sa":"Odhlásit se","Zobraziť môj profil":"Zobrazit můj profil","Upraviť profil":"Upravit profil","Súkromie":"Soukromí","Bazár":"Bazar","Pripravujeme":"Připravujeme","Zrušiť účet":"Zrušit účet","Aktuálny jazyk appky":"Aktuální jazyk aplikace","Menu":"Menu"});
-  add(UI_DICT_PL, {"Nastavenia":"Ustawienia","Jazyk":"Język","Odhlásiť sa":"Wyloguj się","Zobraziť môj profil":"Zobacz mój profil","Upraviť profil":"Edytuj profil","Súkromie":"Prywatność","Bazár":"Bazar","Pripravujeme":"Wkrótce","Zrušiť účet":"Usuń konto","Aktuálny jazyk appky":"Aktualny język aplikacji","Menu":"Menu"});
-  add(UI_DICT_HU, {"Nastavenia":"Beállítások","Jazyk":"Nyelv","Odhlásiť sa":"Kijelentkezés","Zobraziť môj profil":"Profilom megtekintése","Upraviť profil":"Profil szerkesztése","Súkromie":"Adatvédelem","Bazár":"Piac","Pripravujeme":"Hamarosan","Zrušiť účet":"Fiók törlése","Aktuálny jazyk appky":"Az alkalmazás nyelve","Menu":"Menü"});
-  add(UI_DICT_AT, {"Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
-  add(UI_DICT_DE, {"Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
-  add(UI_DICT_IT, {"Nastavenia":"Impostazioni","Jazyk":"Lingua","Odhlásiť sa":"Esci","Zobraziť môj profil":"Vedi il mio profilo","Upraviť profil":"Modifica profilo","Súkromie":"Privacy","Bazár":"Mercato","Pripravujeme":"Prossimamente","Zrušiť účet":"Elimina account","Aktuálny jazyk appky":"Lingua attuale dell'app","Menu":"Menu"});
+  add(UI_DICT_EN, {"Meniny tento týždeň":"Name days this week","Priatelia online":"Friends online","Zatiaľ nemáš priateľov":"No friends yet","Nastavenia":"Settings","Jazyk":"Language","Odhlásiť sa":"Log out","Zobraziť môj profil":"View my profile","Upraviť profil":"Edit profile","Súkromie":"Privacy","Bazár":"Market","Pripravujeme":"Coming soon","Zrušiť účet":"Delete account","Aktuálny jazyk appky":"Current app language","Menu":"Menu"});
+  add(UI_DICT_CZ, {"Meniny tento týždeň":"Jmeniny tento týden","Priatelia online":"Přátelé online","Zatiaľ nemáš priateľov":"Zatím nemáš přátele","Nastavenia":"Nastavení","Jazyk":"Jazyk","Odhlásiť sa":"Odhlásit se","Zobraziť môj profil":"Zobrazit můj profil","Upraviť profil":"Upravit profil","Súkromie":"Soukromí","Bazár":"Bazar","Pripravujeme":"Připravujeme","Zrušiť účet":"Zrušit účet","Aktuálny jazyk appky":"Aktuální jazyk aplikace","Menu":"Menu"});
+  add(UI_DICT_PL, {"Meniny tento týždeň":"Imieniny w tym tygodniu","Priatelia online":"Znajomi online","Zatiaľ nemáš priateľov":"Nie masz jeszcze znajomych","Nastavenia":"Ustawienia","Jazyk":"Język","Odhlásiť sa":"Wyloguj się","Zobraziť môj profil":"Zobacz mój profil","Upraviť profil":"Edytuj profil","Súkromie":"Prywatność","Bazár":"Bazar","Pripravujeme":"Wkrótce","Zrušiť účet":"Usuń konto","Aktuálny jazyk appky":"Aktualny język aplikacji","Menu":"Menu"});
+  add(UI_DICT_HU, {"Meniny tento týždeň":"Névnapok ezen a héten","Priatelia online":"Online barátok","Zatiaľ nemáš priateľov":"Még nincsenek barátaid","Nastavenia":"Beállítások","Jazyk":"Nyelv","Odhlásiť sa":"Kijelentkezés","Zobraziť môj profil":"Profilom megtekintése","Upraviť profil":"Profil szerkesztése","Súkromie":"Adatvédelem","Bazár":"Piac","Pripravujeme":"Hamarosan","Zrušiť účet":"Fiók törlése","Aktuálny jazyk appky":"Az alkalmazás nyelve","Menu":"Menü"});
+  add(UI_DICT_AT, {"Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
+  add(UI_DICT_DE, {"Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
+  add(UI_DICT_IT, {"Meniny tento týždeň":"Onomastici questa settimana","Priatelia online":"Amici online","Zatiaľ nemáš priateľov":"Nessun amico ancora","Nastavenia":"Impostazioni","Jazyk":"Lingua","Odhlásiť sa":"Esci","Zobraziť môj profil":"Vedi il mio profilo","Upraviť profil":"Modifica profilo","Súkromie":"Privacy","Bazár":"Mercato","Pripravujeme":"Prossimamente","Zrušiť účet":"Elimina account","Aktuálny jazyk appky":"Lingua attuale dell'app","Menu":"Menu"});
 })();
 
 function t(text){
@@ -16696,6 +16727,78 @@ if(typeof applyLanguage === 'function'){
     try{ c8FitNav(); c8RenderLangs(); if(typeof updateTopbarHeightVar==='function') updateTopbarHeightVar(); }catch(e){}
     return r;
   };
+}
+</script>
+
+<script id="c8-legal-fix">
+/* Právne okná (Súkromie, Cookies, Podmienky, Zásady) sú v HTML vnútri
+   prihlasovacej obrazovky - po prihlásení je skrytá, a tak by sa okná
+   neukázali. Presunieme ich priamo do <body>, aby fungovali vždy. */
+(function(){
+  document.querySelectorAll('#auth-screen .legal-modal').forEach(function(m){ document.body.appendChild(m); });
+})();
+</script>
+
+<script id="c8r-script">
+/* ---------- pravý panel na PC: meniny na 4 dni + priatelia online ---------- */
+const C8_LOCALES = {sk:'sk-SK',en:'en-GB',cz:'cs-CZ',pl:'pl-PL',hu:'hu-HU',at:'de-AT',de:'de-DE',it:'it-IT'};
+function c8RenderRight(){
+  const aside = document.getElementById('c8-right');
+  if(!aside || getComputedStyle(aside).display === 'none') return;
+  let lang = 'sk'; try{ lang = currentLang || 'sk'; }catch(e){}
+  const tt = (x)=> (typeof t === 'function' ? t(x) : x);
+  const box = document.getElementById('c8r-names');
+  if(box){
+    let nd = {}, hol = {};
+    try{ const r = currentNamedaysAndHolidays(); nd = r.namedays || {}; hol = r.getHolidays(new Date().getFullYear()) || {}; }catch(e){}
+    const fmt = new Intl.DateTimeFormat(C8_LOCALES[lang] || 'sk-SK', {weekday:'short'});
+    let html = '';
+    for(let i=0;i<4;i++){
+      const d = new Date(); d.setDate(d.getDate()+i);
+      const key = String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      let wd = fmt.format(d).replace('.','');
+      wd = wd.charAt(0).toUpperCase() + wd.slice(1);
+      const name = nd[key] || '';
+      const h = hol[key] ? '<span class="hol">'+hol[key]+'</span>' : '';
+      html += '<div class="c8r-row'+(i===0?' today':'')+'"><b>'+wd+' '+d.getDate()+'.'+(d.getMonth()+1)+'.</b><span>'+(name || (h?'':'—'))+'</span>'+(name&&h?' · ':'')+h+'</div>';
+    }
+    box.innerHTML = html;
+  }
+  const fb = document.getElementById('c8r-friends');
+  if(fb){
+    let uids = [], ps = {}, pc = {};
+    try{ uids = [...followingSet]; }catch(e){}
+    try{ ps = presenceStatus || {}; }catch(e){}
+    try{ pc = profilesCache || {}; }catch(e){}
+    if(!uids.length){ fb.innerHTML = '<div class="c8r-empty">'+tt('Zatiaľ nemáš priateľov')+'</div>'; return; }
+    const list = uids.map(uid => {
+      const on = !!(ps[uid] && ps[uid].state === 'online');
+      const name = (pc[uid] && pc[uid].name) || (ps[uid] && ps[uid].name) || tt('Používateľ');
+      const photo = pc[uid] && pc[uid].photo;
+      return {uid, on, name, photo};
+    }).sort((a,b)=> (b.on - a.on) || a.name.localeCompare(b.name,'sk')).slice(0,10);
+    fb.innerHTML = '';
+    list.forEach(u => {
+      const row = document.createElement('div');
+      row.className = 'c8r-f ' + (u.on ? 'on' : 'off');
+      const av = document.createElement('div'); av.className = 'avatar';
+      if(u.photo){ av.style.backgroundImage = 'url("'+u.photo+'")'; av.style.backgroundSize='cover'; av.style.backgroundPosition='center'; }
+      else av.textContent = (u.name||'?').trim().charAt(0).toUpperCase();
+      const dot = document.createElement('span'); dot.className = 'dot';
+      const nm = document.createElement('span'); nm.textContent = u.name;
+      row.append(av, dot, nm);
+      row.onclick = () => { try{ openUserProfile({uid:u.uid, name:u.name, photoURL:u.photo}); }catch(e){} };
+      fb.appendChild(row);
+    });
+  }
+}
+setInterval(c8RenderRight, 15000);
+window.addEventListener('load', ()=>setTimeout(c8RenderRight, 1500));
+setTimeout(c8RenderRight, 4000);
+window.addEventListener('resize', c8RenderRight);
+if(typeof applyLanguage === 'function'){
+  const _c8PrevApply = applyLanguage;
+  applyLanguage = function(){ const r = _c8PrevApply.apply(this, arguments); try{ c8RenderRight(); }catch(e){} return r; };
 }
 </script>
 </body>
