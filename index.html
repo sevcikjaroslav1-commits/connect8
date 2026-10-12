@@ -2059,6 +2059,17 @@
   #app .c8h .mode-dock .c8p .mi{width:30px;height:30px;font-size:17px;margin-bottom:0;}
 }
 </style>
+
+<style id="c8-mobline">
+/* mobil: farebná čiarka pod aktívnym tlačidlom (ako na PC) */
+@media(max-width:900px){
+  #app .c8h .mode-dock button{position:relative;}
+  #app .c8h .mode-dock button.active::after{content:'';position:absolute;left:18%;right:18%;bottom:0;height:3px;border-radius:3px 3px 0 0;background:currentColor;}
+  #app .c8h .mode-dock .c8p-v.active::after{background:#7C3AED;}
+  #app .c8h .mode-dock .c8p-g.active::after{background:#15803D;}
+  #app .c8h .mode-dock .c8p-o.active::after{background:#C2410C;}
+}
+</style>
 </head>
 <body>
 
