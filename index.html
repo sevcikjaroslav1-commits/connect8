@@ -2078,6 +2078,26 @@
 @media(min-width:901px){ #app .c8h.c8-one .mode-dock .c8p .mi{width:32px;height:32px;min-width:32px;min-height:32px;} }
 #app .c8h .mode-dock .c8p.active .mi{transform:none;}
 </style>
+<style id="c8l-style">
+/* ================= ĽAVÝ PANEL (len PC) – úplne vľavo ako na FB ================= */
+.c8-left{display:none;}
+@media(min-width:1340px){
+  .c8-left{display:block;position:fixed;top:calc(var(--topbar-h,120px) + 16px);left:8px;width:280px;z-index:30;}
+}
+.c8l-item{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;color:var(--text);transition:background .15s;user-select:none;}
+.c8l-item:hover{background:rgba(0,0,0,.05);}
+.c8l-item.active{background:rgba(236,72,153,.10);}
+.c8l-av{width:36px;height:36px;font-size:14px;flex-shrink:0;}
+.c8l-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c8l-ic{width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.c8l-ic svg{width:30px;height:30px;}
+/* štítok "Moje Reels" v sekcii Videá */
+.c8-myreels-chip{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#F97316,#EC4899);color:#fff;font-weight:700;font-size:14px;padding:6px 6px 6px 14px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.25);}
+.c8-myreels-chip button{border:0;background:rgba(255,255,255,.25);color:#fff;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;font-weight:700;}
+.c8-myreels-chip button:hover{background:rgba(255,255,255,.4);}
+.c8-myreels-empty{height:100%;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--text-dim);font-size:16px;text-align:center;padding:20px;}
+.c8-myreels-empty button{border:0;background:linear-gradient(135deg,#F97316,#EC4899);color:#fff;font-weight:700;font-size:15px;padding:10px 20px;border-radius:999px;cursor:pointer;}
+</style>
 </head>
 <body>
 
@@ -3050,6 +3070,17 @@
       </div>
     </aside>
 
+    <aside class="c8-left" id="c8-left">
+      <div class="c8l-item" id="c8l-profile" onclick="c8LeftProfile()">
+        <div class="avatar c8l-av" id="c8l-avatar">?</div><span class="c8l-name" id="c8l-name">Používateľ</span>
+      </div>
+      <div class="c8l-item" id="c8l-stats" onclick="c8OpenStats()">
+        <span class="c8l-ic"><svg viewBox="0 0 24 24"><rect x="3" y="12" width="4" height="9" rx="1.2" fill="#38BDF8"/><rect x="10" y="7" width="4" height="14" rx="1.2" fill="#3B82F6"/><rect x="17" y="3" width="4" height="18" rx="1.2" fill="#6366F1"/></svg></span><span class="label">Štatistiky</span>
+      </div>
+      <div class="c8l-item" id="c8l-reels" onclick="c8OpenMyReels()">
+        <span class="c8l-ic"><svg viewBox="0 0 24 24"><defs><linearGradient id="c8rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F97316"/><stop offset="1" stop-color="#EC4899"/></linearGradient></defs><rect x="2" y="2" width="20" height="20" rx="6" fill="url(#c8rg)"/><path d="M2.5 8h19M8 2.5l3 5.5M14 2.5l3 5.5" stroke="#fff" stroke-width="1.6"/><path d="M10 11.5v6l5-3z" fill="#fff"/></svg></span><span class="label">Reels</span>
+      </div>
+    </aside>
     <aside class="c8-right" id="c8-right">
       <div class="c8r-card" onclick="openCalendarModal()" style="cursor:pointer;">
         <p class="c8r-title">📅 <span>Meniny tento týždeň</span></p>
@@ -3199,6 +3230,7 @@
             </div>
           </div>
 
+          <div class="c8-myreels-chip" id="c8-myreels-chip" style="display:none"><span>🎬 <span>Moje Reels</span></span><button onclick="c8ShowAllReels()" title="Zobraziť všetky">✕</button></div>
           <div class="video-scroller" id="video-scroller"></div>
 
           <div class="video-nav-arrows">
@@ -16422,13 +16454,13 @@ const UI_DICT_IT = {
 /* ---- preklady pre novú hlavičku a Nastavenia ---- */
 (function(){
   const add = (dict, map) => { Object.keys(map).forEach(k => { if(!Object.prototype.hasOwnProperty.call(dict, k)) dict[k] = map[k]; }); };
-  add(UI_DICT_EN, {"Meniny tento týždeň":"Name days this week","Priatelia online":"Friends online","Zatiaľ nemáš priateľov":"No friends yet","Nastavenia":"Settings","Jazyk":"Language","Odhlásiť sa":"Log out","Zobraziť môj profil":"View my profile","Upraviť profil":"Edit profile","Súkromie":"Privacy","Bazár":"Market","Pripravujeme":"Coming soon","Zrušiť účet":"Delete account","Aktuálny jazyk appky":"Current app language","Menu":"Menu"});
-  add(UI_DICT_CZ, {"Meniny tento týždeň":"Jmeniny tento týden","Priatelia online":"Přátelé online","Zatiaľ nemáš priateľov":"Zatím nemáš přátele","Nastavenia":"Nastavení","Jazyk":"Jazyk","Odhlásiť sa":"Odhlásit se","Zobraziť môj profil":"Zobrazit můj profil","Upraviť profil":"Upravit profil","Súkromie":"Soukromí","Bazár":"Bazar","Pripravujeme":"Připravujeme","Zrušiť účet":"Zrušit účet","Aktuálny jazyk appky":"Aktuální jazyk aplikace","Menu":"Menu"});
-  add(UI_DICT_PL, {"Meniny tento týždeň":"Imieniny w tym tygodniu","Priatelia online":"Znajomi online","Zatiaľ nemáš priateľov":"Nie masz jeszcze znajomych","Nastavenia":"Ustawienia","Jazyk":"Język","Odhlásiť sa":"Wyloguj się","Zobraziť môj profil":"Zobacz mój profil","Upraviť profil":"Edytuj profil","Súkromie":"Prywatność","Bazár":"Bazar","Pripravujeme":"Wkrótce","Zrušiť účet":"Usuń konto","Aktuálny jazyk appky":"Aktualny język aplikacji","Menu":"Menu"});
-  add(UI_DICT_HU, {"Meniny tento týždeň":"Névnapok ezen a héten","Priatelia online":"Online barátok","Zatiaľ nemáš priateľov":"Még nincsenek barátaid","Nastavenia":"Beállítások","Jazyk":"Nyelv","Odhlásiť sa":"Kijelentkezés","Zobraziť môj profil":"Profilom megtekintése","Upraviť profil":"Profil szerkesztése","Súkromie":"Adatvédelem","Bazár":"Piac","Pripravujeme":"Hamarosan","Zrušiť účet":"Fiók törlése","Aktuálny jazyk appky":"Az alkalmazás nyelve","Menu":"Menü"});
-  add(UI_DICT_AT, {"Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
-  add(UI_DICT_DE, {"Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
-  add(UI_DICT_IT, {"Meniny tento týždeň":"Onomastici questa settimana","Priatelia online":"Amici online","Zatiaľ nemáš priateľov":"Nessun amico ancora","Nastavenia":"Impostazioni","Jazyk":"Lingua","Odhlásiť sa":"Esci","Zobraziť môj profil":"Vedi il mio profilo","Upraviť profil":"Modifica profilo","Súkromie":"Privacy","Bazár":"Mercato","Pripravujeme":"Prossimamente","Zrušiť účet":"Elimina account","Aktuálny jazyk appky":"Lingua attuale dell'app","Menu":"Menu"});
+  add(UI_DICT_EN, {"Štatistiky":"Statistics","Moje Reels":"My Reels","Zatiaľ nemáš žiadne Reels":"You have no Reels yet","Meniny tento týždeň":"Name days this week","Priatelia online":"Friends online","Zatiaľ nemáš priateľov":"No friends yet","Nastavenia":"Settings","Jazyk":"Language","Odhlásiť sa":"Log out","Zobraziť môj profil":"View my profile","Upraviť profil":"Edit profile","Súkromie":"Privacy","Bazár":"Market","Pripravujeme":"Coming soon","Zrušiť účet":"Delete account","Aktuálny jazyk appky":"Current app language","Menu":"Menu"});
+  add(UI_DICT_CZ, {"Štatistiky":"Statistiky","Moje Reels":"Moje Reels","Zatiaľ nemáš žiadne Reels":"Zatím nemáš žádné Reels","Meniny tento týždeň":"Jmeniny tento týden","Priatelia online":"Přátelé online","Zatiaľ nemáš priateľov":"Zatím nemáš přátele","Nastavenia":"Nastavení","Jazyk":"Jazyk","Odhlásiť sa":"Odhlásit se","Zobraziť môj profil":"Zobrazit můj profil","Upraviť profil":"Upravit profil","Súkromie":"Soukromí","Bazár":"Bazar","Pripravujeme":"Připravujeme","Zrušiť účet":"Zrušit účet","Aktuálny jazyk appky":"Aktuální jazyk aplikace","Menu":"Menu"});
+  add(UI_DICT_PL, {"Štatistiky":"Statystyki","Moje Reels":"Moje Reels","Zatiaľ nemáš žiadne Reels":"Nie masz jeszcze Reels","Meniny tento týždeň":"Imieniny w tym tygodniu","Priatelia online":"Znajomi online","Zatiaľ nemáš priateľov":"Nie masz jeszcze znajomych","Nastavenia":"Ustawienia","Jazyk":"Język","Odhlásiť sa":"Wyloguj się","Zobraziť môj profil":"Zobacz mój profil","Upraviť profil":"Edytuj profil","Súkromie":"Prywatność","Bazár":"Bazar","Pripravujeme":"Wkrótce","Zrušiť účet":"Usuń konto","Aktuálny jazyk appky":"Aktualny język aplikacji","Menu":"Menu"});
+  add(UI_DICT_HU, {"Štatistiky":"Statisztika","Moje Reels":"Saját Reels","Zatiaľ nemáš žiadne Reels":"Még nincs Reelsed","Meniny tento týždeň":"Névnapok ezen a héten","Priatelia online":"Online barátok","Zatiaľ nemáš priateľov":"Még nincsenek barátaid","Nastavenia":"Beállítások","Jazyk":"Nyelv","Odhlásiť sa":"Kijelentkezés","Zobraziť môj profil":"Profilom megtekintése","Upraviť profil":"Profil szerkesztése","Súkromie":"Adatvédelem","Bazár":"Piac","Pripravujeme":"Hamarosan","Zrušiť účet":"Fiók törlése","Aktuálny jazyk appky":"Az alkalmazás nyelve","Menu":"Menü"});
+  add(UI_DICT_AT, {"Štatistiky":"Statistiken","Moje Reels":"Meine Reels","Zatiaľ nemáš žiadne Reels":"Du hast noch keine Reels","Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
+  add(UI_DICT_DE, {"Štatistiky":"Statistiken","Moje Reels":"Meine Reels","Zatiaľ nemáš žiadne Reels":"Du hast noch keine Reels","Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
+  add(UI_DICT_IT, {"Štatistiky":"Statistiche","Moje Reels":"I miei Reels","Zatiaľ nemáš žiadne Reels":"Non hai ancora Reels","Meniny tento týždeň":"Onomastici questa settimana","Priatelia online":"Amici online","Zatiaľ nemáš priateľov":"Nessun amico ancora","Nastavenia":"Impostazioni","Jazyk":"Lingua","Odhlásiť sa":"Esci","Zobraziť môj profil":"Vedi il mio profilo","Upraviť profil":"Modifica profilo","Súkromie":"Privacy","Bazár":"Mercato","Pripravujeme":"Prossimamente","Zrušiť účet":"Elimina account","Aktuálny jazyk appky":"Lingua attuale dell'app","Menu":"Menu"});
 })();
 
 function t(text){
@@ -16929,6 +16961,98 @@ if(typeof applyLanguage === 'function'){
   const _c8PrevApply3 = applyLanguage;
   applyLanguage = function(){ const r = _c8PrevApply3.apply(this, arguments); try{ c8LayoutHeader(); }catch(e){} return r; };
 }
+</script>
+
+<script id="c8l-script">
+/* ---------- ľavý panel na PC: profil, štatistiky, moje Reels ---------- */
+let c8MyReelsOnly = false;
+function c8IsMyVideo(v){
+  try{ return v.authorId ? v.authorId === currentUser.uid : v.name === currentUser.name; }catch(e){ return false; }
+}
+function c8SyncLeft(){
+  try{
+    if(!currentUser) return;
+    const n = document.getElementById('c8l-name');
+    if(n && n.textContent !== currentUser.name) n.textContent = currentUser.name || '';
+    const av = document.getElementById('c8l-avatar');
+    if(av && av.dataset.photo !== String(currentUser.photoURL || '')){
+      av.dataset.photo = String(currentUser.photoURL || '');
+      applyAvatar(av, currentUser.photoURL || null);
+    }
+  }catch(e){}
+}
+function c8SetLeftActive(id){
+  document.querySelectorAll('.c8l-item').forEach(el=>el.classList.toggle('active', el.id === id));
+}
+function c8LeftProfile(){
+  c8MyReelsOnly = false; c8UpdateReelsChip();
+  openProfile();
+}
+function c8OpenStats(){ /* zatiaľ bez funkcie */ }
+function c8OpenMyReels(){
+  c8MyReelsOnly = true;
+  c8SwitchingToMyReels = true;
+  try{ switchMode('video'); } finally { c8SwitchingToMyReels = false; }
+  renderVideos();
+  const sc = document.getElementById('video-scroller'); if(sc) sc.scrollTop = 0;
+  c8UpdateReelsChip();
+}
+function c8ShowAllReels(){
+  c8MyReelsOnly = false;
+  renderVideos();
+  const sc = document.getElementById('video-scroller'); if(sc) sc.scrollTop = 0;
+  c8UpdateReelsChip();
+}
+function c8UpdateReelsChip(){
+  const chip = document.getElementById('c8-myreels-chip');
+  if(chip) chip.style.display = c8MyReelsOnly ? 'flex' : 'none';
+  c8SetLeftActive(c8MyReelsOnly ? 'c8l-reels' : '');
+}
+let c8SwitchingToMyReels = false;
+if(typeof switchMode === 'function'){
+  const _c8PrevSwitch = switchMode;
+  switchMode = function(mode){
+    // klik na bežné "Videá" (alebo inú sekciu) => zase všetky videá
+    if(!c8SwitchingToMyReels && c8MyReelsOnly){
+      c8MyReelsOnly = false;
+      const r = _c8PrevSwitch.apply(this, arguments);
+      try{ renderVideos(); }catch(e){}
+      c8UpdateReelsChip();
+      return r;
+    }
+    return _c8PrevSwitch.apply(this, arguments);
+  };
+}
+if(typeof openProfile === 'function'){
+  const _c8PrevOpenProfile = openProfile;
+  openProfile = function(){
+    if(c8MyReelsOnly){ c8MyReelsOnly = false; try{ renderVideos(); }catch(e){} c8UpdateReelsChip(); }
+    return _c8PrevOpenProfile.apply(this, arguments);
+  };
+}
+if(typeof renderVideos === 'function'){
+  const _c8PrevRenderVideos = renderVideos;
+  renderVideos = function(){
+    if(!c8MyReelsOnly) return _c8PrevRenderVideos.apply(this, arguments);
+    const all = videos;
+    videos = all.filter(c8IsMyVideo);
+    try{
+      _c8PrevRenderVideos.apply(this, arguments);
+    } finally {
+      videos = all;
+    }
+    const sc = document.getElementById('video-scroller');
+    if(sc && !sc.querySelector('.video-card')){
+      const tt = (x)=> (typeof t === 'function' ? t(x) : x);
+      sc.innerHTML = '<div class="c8-myreels-empty"><div style="font-size:42px">🎬</div><div>'+tt('Zatiaľ nemáš žiadne Reels')+'</div><button onclick="openVideoModal()">'+tt('Pridať video')+'</button></div>';
+    }
+  };
+}
+if(typeof renderAllAvatars === 'function'){
+  const _c8PrevRAA = renderAllAvatars;
+  renderAllAvatars = function(){ const r = _c8PrevRAA.apply(this, arguments); c8SyncLeft(); return r; };
+}
+setInterval(c8SyncLeft, 3000);
 </script>
 </body>
 </html>
