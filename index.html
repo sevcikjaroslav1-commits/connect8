@@ -1954,7 +1954,7 @@
   #app .c8h .header-clock-date,#app .c8h .header-clock-name{font-size:11px;}
   #app .c8h .header-clock-date::before,#app .c8h .header-clock-name::before{margin-right:4px;}
   #app .c8h .c8h-icons{order:7;gap:21px;margin-right:21px;}
-  #app .c8h .c8h-icons .notif-btn{order:1;} #app .c8h .c8h-icons .messenger-btn{order:2;}
+  #app .c8h .c8h-icons .messenger-btn{order:1;} #app .c8h .c8h-icons .notif-btn{order:2;}
   #app .c8h .messenger-btn,#app .c8h .notif-btn{width:34px;height:34px;}
   #app .c8h .messenger-btn svg,#app .c8h .notif-btn svg{width:17px;height:17px;}
 
@@ -2018,6 +2018,46 @@
 .c8r-f.on .dot{background:#22C55E;}
 .c8r-f.off{color:var(--text-dim);}
 .c8r-empty{font-size:13px;color:var(--text-dim);}
+</style>
+
+<style id="c8-fin-style">
+/* Financie: aj na PC len cez Tlmočník (rovnako ako na mobile) */
+#app .finance-btn{display:none !important;}
+.translator-financie-inline{display:flex !important;flex-direction:column;align-items:center;gap:2px;cursor:pointer;background:none;border:none;padding:0;flex-shrink:0;}
+.translator-financie-inline .invite-label{font-size:10px;color:var(--text-dim);font-weight:600;white-space:nowrap;}
+</style>
+
+<style id="c8-onerow">
+/* PC: celá hlavička v JEDNOM riadku (logo + hľadanie vľavo, veľké záložky v strede, ikony vpravo).
+   Trieda c8-one sa zapne len vtedy, keď sa všetko zmestí - inak ostanú automaticky 2 riadky a nič sa neschová. */
+@media(min-width:901px){
+  #app .topbar.c8h.c8-one{display:flex;align-items:center;height:76px;padding:0 16px;gap:0;}
+  #app .c8h.c8-one .c8h-top{display:contents;}
+  #app .c8h.c8-one .brand{order:1;margin-right:14px;}
+  #app .c8h.c8-one .search-box{order:2;flex:0 0 175px;margin-left:0;}
+  #app .c8h.c8-one .user-stats{order:3;margin-left:10px;}
+  #app .c8h.c8-one .mode-dock{order:4;flex:1 1 auto;justify-content:center;gap:2px;padding:0 10px;height:76px;max-width:none;margin:0;}
+  #app .c8h.c8-one .c8h-date{order:5;margin-left:0;flex-shrink:0;}
+  #app .c8h.c8-one .c8h-tr{order:6;margin-left:12px;}
+  #app .c8h.c8-one .c8h-icons{order:7;margin-left:12px;}
+  #app .c8h.c8-one .c8h-user{order:8;margin-left:12px;}
+  #app .c8h.c8-one .mode-dock button{flex-direction:column;justify-content:center;gap:4px;height:76px;padding:0 9px;border-radius:0;font-size:12.5px;font-weight:700;position:relative;min-width:0;}
+  #app .c8h.c8-one .mode-dock button:hover{background:var(--bg);border-radius:12px;height:62px;}
+  #app .c8h.c8-one .mode-dock .mi{font-size:24px;height:30px;}
+  #app .c8h.c8-one .mode-dock .c8p .mi{width:32px;height:32px;font-size:17px;}
+  #app .c8h.c8-one .mode-dock button[data-mode].active,#app .c8h.c8-one .mode-dock button.c8p.active{background:transparent;box-shadow:none;}
+  #app .c8h.c8-one .mode-dock button.active::after{content:'';position:absolute;left:8px;right:8px;bottom:0;height:4px;border-radius:4px 4px 0 0;background:currentColor;}
+}
+</style>
+
+<style id="c8-mobicons">
+/* mobil: väčšie ikony v spodnej lište (Plocha, Videá, ...) */
+@media(max-width:900px){
+  #app .c8h .mode-dock{padding:3px 3px 5px;}
+  #app .c8h .mode-dock button{gap:2px;padding:5px 2px 4px;}
+  #app .c8h .mode-dock .mi{font-size:23px;height:28px;}
+  #app .c8h .mode-dock .c8p .mi{width:30px;height:30px;font-size:17px;margin-bottom:0;}
+}
 </style>
 </head>
 <body>
@@ -16799,6 +16839,28 @@ window.addEventListener('resize', c8RenderRight);
 if(typeof applyLanguage === 'function'){
   const _c8PrevApply = applyLanguage;
   applyLanguage = function(){ const r = _c8PrevApply.apply(this, arguments); try{ c8RenderRight(); }catch(e){} return r; };
+}
+</script>
+
+<script id="c8-onerow-js">
+/* zapne 1-riadkovú hlavičku na PC len ak sa celá zmestí, inak 2 riadky (nič sa neschováva) */
+function c8LayoutHeader(){
+  const tb = document.querySelector('#app > .topbar.c8h');
+  if(!tb) return;
+  if(window.innerWidth <= 900){ tb.classList.remove('c8-one'); return; }
+  tb.classList.add('c8-one');
+  const dock = tb.querySelector('.mode-dock');
+  const fits = tb.scrollWidth <= tb.clientWidth + 1 && (!dock || dock.scrollWidth <= dock.clientWidth + 1);
+  if(!fits) tb.classList.remove('c8-one');
+  if(typeof updateTopbarHeightVar === 'function') updateTopbarHeightVar();
+}
+window.addEventListener('resize', c8LayoutHeader);
+window.addEventListener('load', c8LayoutHeader);
+setTimeout(c8LayoutHeader, 300); setTimeout(c8LayoutHeader, 1500);
+setInterval(c8LayoutHeader, 60000);
+if(typeof applyLanguage === 'function'){
+  const _c8PrevApply3 = applyLanguage;
+  applyLanguage = function(){ const r = _c8PrevApply3.apply(this, arguments); try{ c8LayoutHeader(); }catch(e){} return r; };
 }
 </script>
 </body>
