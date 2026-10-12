@@ -2070,6 +2070,14 @@
   #app .c8h .mode-dock .c8p-o.active::after{background:#C2410C;}
 }
 </style>
+
+<style id="c8-bubblefix">
+/* rovnako veľké krúžky pri Môj profil / Priatelia / Používatelia (nesmú sa zmenšiť) */
+#app .c8h .mode-dock .c8p .mi{flex:0 0 auto;box-sizing:border-box;overflow:hidden;line-height:1;}
+#app .c8h .mode-dock .c8p .mi{width:30px;height:30px;min-width:30px;min-height:30px;}
+@media(min-width:901px){ #app .c8h.c8-one .mode-dock .c8p .mi{width:32px;height:32px;min-width:32px;min-height:32px;} }
+#app .c8h .mode-dock .c8p.active .mi{transform:none;}
+</style>
 </head>
 <body>
 
