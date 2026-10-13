@@ -2185,6 +2185,28 @@
 .c8rv-box video,.c8rv-box iframe{width:100%;height:100%;border:0;display:block;background:#000;}
 .c8rv-x{position:absolute;top:14px;right:14px;z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.9);font-size:18px;cursor:pointer;}
 </style>
+<style id="c8fv-style">
+/* ===== Priatelia: prepínač Ikonky / Zoznam ===== */
+.c8fv-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 0 12px;flex-wrap:wrap;}
+.c8fv-seg{display:flex;background:#E9EBF0;border-radius:12px;padding:3px;gap:2px;}
+.c8fv-seg button{border:0;background:transparent;display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:9px;font:700 12.5px Inter,sans-serif;color:#6B7280;cursor:pointer;}
+.c8fv-seg button.on{background:#fff;color:#4F46E5;box-shadow:0 1px 3px rgba(0,0,0,.12);}
+.c8fv-seg svg{width:15px;height:15px;}
+#friends-grid.c8-list{display:block;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 8px;max-width:640px;}
+#friends-grid.c8-list .c8fl-h{font-size:12px;font-weight:700;color:var(--text-dim);padding:8px 6px 4px;text-transform:uppercase;letter-spacing:.4px;}
+#friends-grid.c8-list .user-card{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;column-gap:12px;row-gap:1px;align-items:center;text-align:left;padding:8px 6px;}
+#friends-grid.c8-list .user-card-avatar-wrap{grid-row:1 / span 3;}
+#friends-grid.c8-list .user-card .avatar{width:42px;height:42px;font-size:15px;}
+#friends-grid.c8-list .status-dot{width:12px;height:12px;right:-1px;bottom:-1px;background:#C9CBD1;}
+#friends-grid.c8-list .status-dot.online{background:#22C55E;}
+#friends-grid.c8-list .user-card-name{grid-column:2;font-size:15px;align-self:end;}
+#friends-grid.c8-list .c8fl-st{grid-column:2;font-size:12px;font-weight:600;color:#16A34A;align-self:start;}
+#friends-grid.c8-list .user-card.c8-off .user-card-name{color:var(--text-dim);font-weight:500;}
+#friends-grid.c8-list .user-card.c8-off .c8fl-st{color:#9CA3AF;font-weight:500;}
+#friends-grid.c8-list .user-card-lastonline{grid-column:2;margin:0;}
+#friends-grid.c8-list .user-card-call-row{grid-column:3;grid-row:1 / span 3;margin:0;}
+#friends-grid:not(.c8-list) .c8fl-h, #friends-grid:not(.c8-list) .c8fl-st{display:none;}
+</style>
 </head>
 <body>
 
@@ -3704,7 +3726,7 @@
         <!-- PRIATELIA (SLEDOVANÍ POUŽÍVATELIA) -->
         <section class="view" id="view-friends">
           <button class="profile-back-btn" onclick="switchMode('feed')">← Späť do Feedu</button>
-          <div class="profile-section-title">👥 Priatelia</div>
+          <div class="c8fv-bar"><div class="profile-section-title" style="margin:0">👥 Priatelia</div><div class="c8fv-seg"><button type="button" id="c8fv-grid" onclick="c8SetFriendsView('grid')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor"/></svg><span>Ikonky</span></button><button type="button" id="c8fv-list" onclick="c8SetFriendsView('list')"><svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2" fill="currentColor"/><rect x="9" y="5" width="12" height="2.4" rx="1.2" fill="currentColor"/><circle cx="5" cy="12" r="2" fill="currentColor"/><rect x="9" y="11" width="12" height="2.4" rx="1.2" fill="currentColor"/><circle cx="5" cy="18" r="2" fill="currentColor"/><rect x="9" y="17" width="12" height="2.4" rx="1.2" fill="currentColor"/></svg><span>Zoznam</span></button></div></div>
           <div class="users-grid" id="friends-grid"></div>
         </section>
 
@@ -16580,42 +16602,49 @@ const UI_DICT_IT = {
   add(UI_DICT_EN, {"Zobraziť všetkých":"Show all","Zobraziť menej":"Show less"});
   add(UI_DICT_EN, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Address: Horné Vestenice 144, 972 22 Horné Vestenice, Slovakia", "Adresa": "Address", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovakia"});
   add(UI_DICT_EN, {"Všetko": "All", "Videá": "Videos", "Fotky": "Photos", "Zatiaľ žiadne Reels.": "No Reels yet.", "Zatiaľ žiadne videá.": "No videos yet."});
+  add(UI_DICT_EN, {"Ikonky": "Icons", "Zoznam": "List"});
   add(UI_DICT_EN, {"Štatistiky":"Statistics","Moje Reels":"My Reels","Zatiaľ nemáš žiadne Reels":"You have no Reels yet","Meniny tento týždeň":"Name days this week","Priatelia online":"Friends online","Zatiaľ nemáš priateľov":"No friends yet","Nastavenia":"Settings","Jazyk":"Language","Odhlásiť sa":"Log out","Zobraziť môj profil":"View my profile","Upraviť profil":"Edit profile","Súkromie":"Privacy","Bazár":"Market","Pripravujeme":"Coming soon","Zrušiť účet":"Delete account","Aktuálny jazyk appky":"Current app language","Menu":"Menu"});
   add(UI_DICT_CZ, {"Moje štatistiky": "Moje statistiky", "Videí": "Videí", "Zhliadnutí": "Zhlédnutí", "Lajkov": "Lajků", "Komentárov": "Komentářů", "Najsledovanejšie": "Nejsledovanější", "Zhliadnutia podľa videí": "Zhlédnutí podle videí", "najnovšie": "nejnovější", "Moje príspevky": "Moje příspěvky", "Príspevkov": "Příspěvků", "Najúspešnejší": "Nejúspěšnější", "Lajkov na príspevok": "Lajků na příspěvek", "Môj bazár": "Můj bazar", "Inzerátov": "Inzerátů", "Sledujem": "Sleduji", "Práve online": "Právě online", "Online z priateľov": "Online z přátel", "Moja aktivita – posledných 30 dní": "Moje aktivita – posledních 30 dní", "dnes": "dnes"});
   add(UI_DICT_CZ, {"Aktívnych dní":"Aktivních dní","Spolu":"Celkem"});
   add(UI_DICT_CZ, {"Zobraziť všetkých":"Zobrazit všechny","Zobraziť menej":"Zobrazit méně"});
   add(UI_DICT_CZ, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko", "Adresa": "Adresa", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko"});
   add(UI_DICT_CZ, {"Všetko": "Vše", "Videá": "Videa", "Fotky": "Fotky", "Zatiaľ žiadne Reels.": "Zatím žádné Reels.", "Zatiaľ žiadne videá.": "Zatím žádná videa."});
+  add(UI_DICT_CZ, {"Ikonky": "Ikony", "Zoznam": "Seznam"});
   add(UI_DICT_CZ, {"Štatistiky":"Statistiky","Moje Reels":"Moje Reels","Zatiaľ nemáš žiadne Reels":"Zatím nemáš žádné Reels","Meniny tento týždeň":"Jmeniny tento týden","Priatelia online":"Přátelé online","Zatiaľ nemáš priateľov":"Zatím nemáš přátele","Nastavenia":"Nastavení","Jazyk":"Jazyk","Odhlásiť sa":"Odhlásit se","Zobraziť môj profil":"Zobrazit můj profil","Upraviť profil":"Upravit profil","Súkromie":"Soukromí","Bazár":"Bazar","Pripravujeme":"Připravujeme","Zrušiť účet":"Zrušit účet","Aktuálny jazyk appky":"Aktuální jazyk aplikace","Menu":"Menu"});
   add(UI_DICT_PL, {"Moje štatistiky": "Moje statystyki", "Videí": "Filmów", "Zhliadnutí": "Wyświetleń", "Lajkov": "Polubień", "Komentárov": "Komentarzy", "Najsledovanejšie": "Najczęściej oglądane", "Zhliadnutia podľa videí": "Wyświetlenia wg filmów", "najnovšie": "najnowsze", "Moje príspevky": "Moje posty", "Príspevkov": "Postów", "Najúspešnejší": "Najlepszy", "Lajkov na príspevok": "Polubień na post", "Môj bazár": "Mój bazar", "Inzerátov": "Ogłoszeń", "Sledujem": "Obserwuję", "Práve online": "Teraz online", "Online z priateľov": "Online ze znajomych", "Moja aktivita – posledných 30 dní": "Moja aktywność – ostatnie 30 dni", "dnes": "dziś"});
   add(UI_DICT_PL, {"Aktívnych dní":"Aktywnych dni","Spolu":"Razem"});
   add(UI_DICT_PL, {"Zobraziť všetkých":"Pokaż wszystkich","Zobraziť menej":"Pokaż mniej"});
   add(UI_DICT_PL, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Adres: Horné Vestenice 144, 972 22 Horné Vestenice, Słowacja", "Adresa": "Adres", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Słowacja"});
   add(UI_DICT_PL, {"Všetko": "Wszystko", "Videá": "Wideo", "Fotky": "Zdjęcia", "Zatiaľ žiadne Reels.": "Brak Reels.", "Zatiaľ žiadne videá.": "Brak filmów."});
+  add(UI_DICT_PL, {"Ikonky": "Ikony", "Zoznam": "Lista"});
   add(UI_DICT_PL, {"Štatistiky":"Statystyki","Moje Reels":"Moje Reels","Zatiaľ nemáš žiadne Reels":"Nie masz jeszcze Reels","Meniny tento týždeň":"Imieniny w tym tygodniu","Priatelia online":"Znajomi online","Zatiaľ nemáš priateľov":"Nie masz jeszcze znajomych","Nastavenia":"Ustawienia","Jazyk":"Język","Odhlásiť sa":"Wyloguj się","Zobraziť môj profil":"Zobacz mój profil","Upraviť profil":"Edytuj profil","Súkromie":"Prywatność","Bazár":"Bazar","Pripravujeme":"Wkrótce","Zrušiť účet":"Usuń konto","Aktuálny jazyk appky":"Aktualny język aplikacji","Menu":"Menu"});
   add(UI_DICT_HU, {"Moje štatistiky": "Statisztikáim", "Videí": "Videó", "Zhliadnutí": "Megtekintés", "Lajkov": "Kedvelés", "Komentárov": "Hozzászólás", "Najsledovanejšie": "Legnézettebb", "Zhliadnutia podľa videí": "Megtekintések videónként", "najnovšie": "legújabb", "Moje príspevky": "Bejegyzéseim", "Príspevkov": "Bejegyzés", "Najúspešnejší": "Legsikeresebb", "Lajkov na príspevok": "Kedvelés / bejegyzés", "Môj bazár": "Piacom", "Inzerátov": "Hirdetés", "Sledujem": "Követem", "Práve online": "Most online", "Online z priateľov": "Online barátok", "Moja aktivita – posledných 30 dní": "Aktivitásom – utolsó 30 nap", "dnes": "ma"});
   add(UI_DICT_HU, {"Aktívnych dní":"Aktív nap","Spolu":"Összesen"});
   add(UI_DICT_HU, {"Zobraziť všetkých":"Összes mutatása","Zobraziť menej":"Kevesebb"});
   add(UI_DICT_HU, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Cím: Horné Vestenice 144, 972 22 Horné Vestenice, Szlovákia", "Adresa": "Cím", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Szlovákia"});
   add(UI_DICT_HU, {"Všetko": "Összes", "Videá": "Videók", "Fotky": "Fotók", "Zatiaľ žiadne Reels.": "Még nincs Reels.", "Zatiaľ žiadne videá.": "Még nincs videó."});
+  add(UI_DICT_HU, {"Ikonky": "Ikonok", "Zoznam": "Lista"});
   add(UI_DICT_HU, {"Štatistiky":"Statisztika","Moje Reels":"Saját Reels","Zatiaľ nemáš žiadne Reels":"Még nincs Reelsed","Meniny tento týždeň":"Névnapok ezen a héten","Priatelia online":"Online barátok","Zatiaľ nemáš priateľov":"Még nincsenek barátaid","Nastavenia":"Beállítások","Jazyk":"Nyelv","Odhlásiť sa":"Kijelentkezés","Zobraziť môj profil":"Profilom megtekintése","Upraviť profil":"Profil szerkesztése","Súkromie":"Adatvédelem","Bazár":"Piac","Pripravujeme":"Hamarosan","Zrušiť účet":"Fiók törlése","Aktuálny jazyk appky":"Az alkalmazás nyelve","Menu":"Menü"});
   add(UI_DICT_AT, {"Moje štatistiky": "Meine Statistiken", "Videí": "Videos", "Zhliadnutí": "Aufrufe", "Lajkov": "Likes", "Komentárov": "Kommentare", "Najsledovanejšie": "Meistgesehen", "Zhliadnutia podľa videí": "Aufrufe pro Video", "najnovšie": "neueste", "Moje príspevky": "Meine Beiträge", "Príspevkov": "Beiträge", "Najúspešnejší": "Erfolgreichster", "Lajkov na príspevok": "Likes pro Beitrag", "Môj bazár": "Mein Markt", "Inzerátov": "Inserate", "Sledujem": "Ich folge", "Práve online": "Gerade online", "Online z priateľov": "Online von Freunden", "Moja aktivita – posledných 30 dní": "Meine Aktivität – letzte 30 Tage", "dnes": "heute"});
   add(UI_DICT_AT, {"Aktívnych dní":"Aktive Tage","Spolu":"Gesamt"});
   add(UI_DICT_AT, {"Zobraziť všetkých":"Alle anzeigen","Zobraziť menej":"Weniger anzeigen"});
   add(UI_DICT_AT, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Adresse: Horné Vestenice 144, 972 22 Horné Vestenice, Slowakei", "Adresa": "Adresse", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slowakei"});
   add(UI_DICT_AT, {"Všetko": "Alles", "Videá": "Videos", "Fotky": "Fotos", "Zatiaľ žiadne Reels.": "Noch keine Reels.", "Zatiaľ žiadne videá.": "Noch keine Videos."});
+  add(UI_DICT_AT, {"Ikonky": "Symbole", "Zoznam": "Liste"});
   add(UI_DICT_AT, {"Štatistiky":"Statistiken","Moje Reels":"Meine Reels","Zatiaľ nemáš žiadne Reels":"Du hast noch keine Reels","Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
   add(UI_DICT_DE, {"Moje štatistiky": "Meine Statistiken", "Videí": "Videos", "Zhliadnutí": "Aufrufe", "Lajkov": "Likes", "Komentárov": "Kommentare", "Najsledovanejšie": "Meistgesehen", "Zhliadnutia podľa videí": "Aufrufe pro Video", "najnovšie": "neueste", "Moje príspevky": "Meine Beiträge", "Príspevkov": "Beiträge", "Najúspešnejší": "Erfolgreichster", "Lajkov na príspevok": "Likes pro Beitrag", "Môj bazár": "Mein Markt", "Inzerátov": "Inserate", "Sledujem": "Ich folge", "Práve online": "Gerade online", "Online z priateľov": "Online von Freunden", "Moja aktivita – posledných 30 dní": "Meine Aktivität – letzte 30 Tage", "dnes": "heute"});
   add(UI_DICT_DE, {"Aktívnych dní":"Aktive Tage","Spolu":"Gesamt"});
   add(UI_DICT_DE, {"Zobraziť všetkých":"Alle anzeigen","Zobraziť menej":"Weniger anzeigen"});
   add(UI_DICT_DE, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Adresse: Horné Vestenice 144, 972 22 Horné Vestenice, Slowakei", "Adresa": "Adresse", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slowakei"});
   add(UI_DICT_DE, {"Všetko": "Alles", "Videá": "Videos", "Fotky": "Fotos", "Zatiaľ žiadne Reels.": "Noch keine Reels.", "Zatiaľ žiadne videá.": "Noch keine Videos."});
+  add(UI_DICT_DE, {"Ikonky": "Symbole", "Zoznam": "Liste"});
   add(UI_DICT_DE, {"Štatistiky":"Statistiken","Moje Reels":"Meine Reels","Zatiaľ nemáš žiadne Reels":"Du hast noch keine Reels","Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
   add(UI_DICT_IT, {"Moje štatistiky": "Le mie statistiche", "Videí": "Video", "Zhliadnutí": "Visualizzazioni", "Lajkov": "Mi piace", "Komentárov": "Commenti", "Najsledovanejšie": "Più visto", "Zhliadnutia podľa videí": "Visualizzazioni per video", "najnovšie": "più recenti", "Moje príspevky": "I miei post", "Príspevkov": "Post", "Najúspešnejší": "Il migliore", "Lajkov na príspevok": "Mi piace per post", "Môj bazár": "Il mio mercato", "Inzerátov": "Annunci", "Sledujem": "Seguo", "Práve online": "Online ora", "Online z priateľov": "Online tra gli amici", "Moja aktivita – posledných 30 dní": "La mia attività – ultimi 30 giorni", "dnes": "oggi"});
   add(UI_DICT_IT, {"Aktívnych dní":"Giorni attivi","Spolu":"Totale"});
   add(UI_DICT_IT, {"Zobraziť všetkých":"Mostra tutti","Zobraziť menej":"Mostra meno"});
   add(UI_DICT_IT, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Indirizzo: Horné Vestenice 144, 972 22 Horné Vestenice, Slovacchia", "Adresa": "Indirizzo", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovacchia"});
   add(UI_DICT_IT, {"Všetko": "Tutto", "Videá": "Video", "Fotky": "Foto", "Zatiaľ žiadne Reels.": "Ancora nessun Reels.", "Zatiaľ žiadne videá.": "Ancora nessun video."});
+  add(UI_DICT_IT, {"Ikonky": "Icone", "Zoznam": "Elenco"});
   add(UI_DICT_IT, {"Štatistiky":"Statistiche","Moje Reels":"I miei Reels","Zatiaľ nemáš žiadne Reels":"Non hai ancora Reels","Meniny tento týždeň":"Onomastici questa settimana","Priatelia online":"Amici online","Zatiaľ nemáš priateľov":"Nessun amico ancora","Nastavenia":"Impostazioni","Jazyk":"Lingua","Odhlásiť sa":"Esci","Zobraziť môj profil":"Vedi il mio profilo","Upraviť profil":"Modifica profilo","Súkromie":"Privacy","Bazár":"Mercato","Pripravujeme":"Prossimamente","Zrušiť účet":"Elimina account","Aktuálny jazyk appky":"Lingua attuale dell'app","Menu":"Menu"});
 })();
 
@@ -17395,6 +17424,51 @@ if(typeof renderProfile === 'function'){
   }
 });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') c8CloseReel(); });
+</script>
+
+<script id="c8fv-script">
+/* ---------- Priatelia: prepínač Ikonky / Zoznam (zoznam: online hore, potom offline, podľa abecedy) ---------- */
+let c8FriendsView = 'grid';
+try{ c8FriendsView = localStorage.getItem('c8_friends_view') || 'grid'; }catch(e){}
+function c8SetFriendsView(m){
+  c8FriendsView = m;
+  try{ localStorage.setItem('c8_friends_view', m); }catch(e){}
+  c8ApplyFriendsView();
+}
+function c8ApplyFriendsView(){
+  const g = document.getElementById('friends-grid'); if(!g) return;
+  const list = c8FriendsView === 'list';
+  const bg = document.getElementById('c8fv-grid'), bl = document.getElementById('c8fv-list');
+  if(bg) bg.classList.toggle('on', !list); if(bl) bl.classList.toggle('on', list);
+  g.classList.toggle('c8-list', list);
+  const cards = [...g.querySelectorAll(':scope > .user-card')];
+  g.querySelectorAll(':scope > .c8fl-h').forEach(h=>h.remove());
+  if(!cards.length) return;
+  const tt = (x)=> (typeof t === 'function' ? t(x) : x);
+  const nm = c=> ((c.querySelector('.user-card-name')||{}).textContent||'');
+  const isOn = c=> !!c.querySelector('.status-dot.online');
+  cards.forEach(c=>{
+    let st = c.querySelector('.c8fl-st');
+    if(!st){ st = document.createElement('span'); st.className = 'c8fl-st'; const n = c.querySelector('.user-card-name'); if(n) n.after(st); }
+    const on = isOn(c); st.textContent = on ? '● ' + tt('Online') : tt('Offline');
+    c.classList.toggle('c8-off', !on);
+  });
+  cards.sort((a,b)=> nm(a).localeCompare(nm(b),'sk'));
+  if(!list){ cards.forEach(c=>g.appendChild(c)); return; }
+  const on = cards.filter(isOn), off = cards.filter(c=>!isOn(c));
+  const head = (txt)=>{ const h=document.createElement('div'); h.className='c8fl-h'; h.textContent=txt; return h; };
+  if(on.length){ g.appendChild(head(tt('Online') + ' (' + on.length + ')')); on.forEach(c=>g.appendChild(c)); }
+  if(off.length){ g.appendChild(head(tt('Offline') + ' (' + off.length + ')')); off.forEach(c=>g.appendChild(c)); }
+}
+if(typeof renderFriendsList === 'function'){
+  const _c8PrevRFL = renderFriendsList;
+  renderFriendsList = async function(){ c8ApplyFriendsView(); const r = await _c8PrevRFL.apply(this, arguments); try{ c8ApplyFriendsView(); }catch(e){} return r; };
+}
+if(typeof updateStatusDots === 'function'){
+  const _c8PrevUSD = updateStatusDots;
+  updateStatusDots = function(){ const r = _c8PrevUSD.apply(this, arguments); try{ const v=document.getElementById('view-friends'); if(v && v.classList.contains('active')) c8ApplyFriendsView(); }catch(e){} return r; };
+}
+c8ApplyFriendsView();
 </script>
 </body>
 </html>
