@@ -2252,6 +2252,14 @@
   #app .c8h.c8-one .c8h-tr{margin-left:auto;}
 }
 </style>
+<style id="c8-mobeven">
+/* mobil: všetky tlačidlá lišty rovnako široké => ikonky rovnako od seba */
+@media(max-width:900px){
+  #app .c8h .mode-dock button{flex:1 1 0!important;min-width:0!important;overflow:visible;}
+  #app .c8h .mode-dock button .ml{white-space:nowrap;}
+  #app .c8h .mode-dock button:last-child .ml{letter-spacing:-.45px;}
+}
+</style>
 </head>
 <body>
 
