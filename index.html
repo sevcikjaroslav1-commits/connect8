@@ -2143,6 +2143,37 @@
   #auth-screen #p-fan7{ top:137px; }
 }
 </style>
+<style id="c8pt-style">
+/* ===== Profil: tlačidlá Všetko / Reels / Videá / Fotky ===== */
+.c8pt-row{display:flex;gap:6px;max-width:360px;margin:2px 0 10px;}
+.c8pt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 2px 6px;border-radius:14px;font-weight:700;font-size:12.5px;color:#4B5563;background:#fff;border:1px solid #E5E7EB;box-shadow:0 1px 2px rgba(0,0,0,.04);cursor:pointer;font-family:inherit;transition:transform .12s, box-shadow .15s;}
+.c8pt:hover{transform:translateY(-1px);}
+.c8pt svg{width:22px;height:22px;flex-shrink:0}
+.c8pt .b{fill:#fff}
+.c8pt-all .f{fill:#6366F1}.c8pt-reels .f{fill:#EF4444}.c8pt-vid .f{fill:#2563EB}.c8pt-foto .f{fill:#10B981}
+.c8pt.on{color:#fff;border-color:transparent;}
+.c8pt.on .f{fill:#fff}
+.c8pt-all.on{background:linear-gradient(135deg,#6366F1,#8B5CF6);box-shadow:0 4px 12px rgba(99,102,241,.35)}
+.c8pt-reels.on{background:linear-gradient(135deg,#F59E0B,#EF4444);box-shadow:0 4px 12px rgba(239,68,68,.35)}
+.c8pt-reels.on .b{fill:#EF4444}
+.c8pt-vid.on{background:linear-gradient(135deg,#0EA5E9,#2563EB);box-shadow:0 4px 12px rgba(37,99,235,.35)}
+.c8pt-vid.on .b{fill:#2563EB}
+.c8pt-foto.on{background:linear-gradient(135deg,#10B981,#0EA5E9);box-shadow:0 4px 12px rgba(16,185,129,.35)}
+.c8pt-foto.on .b{fill:#10B981}
+.c8pt-all.on .b{fill:#6366F1}
+.c8pt-lbl{display:flex;align-items:center;gap:4px}
+.c8pt-cnt{font-size:10px;font-weight:700;padding:0 5px;border-radius:999px;background:#F3F4F6;color:#6B7280}
+.c8pt.on .c8pt-cnt{background:rgba(255,255,255,.25);color:#fff}
+.c8pt-reels-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:560px;}
+.c8pt-reel{position:relative;aspect-ratio:9/16;border-radius:12px;overflow:hidden;background:#111827;cursor:pointer;}
+.c8pt-reel img,.c8pt-reel video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;}
+.c8pt-reel .v{position:absolute;left:6px;bottom:6px;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.7);}
+.c8pt-reel .p{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;opacity:.85;text-shadow:0 2px 8px rgba(0,0,0,.6);}
+.c8rv-modal{display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:16px;}
+.c8rv-box{position:relative;height:min(86vh,820px);aspect-ratio:9/16;max-width:100%;background:#000;border-radius:16px;overflow:hidden;}
+.c8rv-box video,.c8rv-box iframe{width:100%;height:100%;border:0;display:block;background:#000;}
+.c8rv-x{position:absolute;top:14px;right:14px;z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.9);font-size:18px;cursor:pointer;}
+</style>
 </head>
 <body>
 
@@ -3345,6 +3376,7 @@
 
         <!-- PROFIL -->
         <section class="view" id="view-profile">
+          <div class="c8pt-row" id="c8pt-row"><button type="button" class="c8pt c8pt-all" data-tab="all" onclick="c8SetProfTab('all')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" class="f"/><rect x="13" y="3" width="8" height="8" rx="2" class="f" opacity=".7"/><rect x="3" y="13" width="8" height="8" rx="2" class="f" opacity=".7"/><rect x="13" y="13" width="8" height="8" rx="2" class="f"/></svg><span class="c8pt-lbl"><span>Všetko</span><span class="c8pt-cnt" id="c8pt-cnt-all">0</span></span></button><button type="button" class="c8pt c8pt-reels" data-tab="reels" onclick="c8SetProfTab('reels')"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="3" class="f"/><g class="b"><rect x="3.6" y="5" width="2" height="2" rx=".5"/><rect x="3.6" y="9" width="2" height="2" rx=".5"/><rect x="3.6" y="13" width="2" height="2" rx=".5"/><rect x="3.6" y="17" width="2" height="2" rx=".5"/><rect x="18.4" y="5" width="2" height="2" rx=".5"/><rect x="18.4" y="9" width="2" height="2" rx=".5"/><rect x="18.4" y="13" width="2" height="2" rx=".5"/><rect x="18.4" y="17" width="2" height="2" rx=".5"/></g><path d="M10 8.5v7l5.5-3.5z" class="b"/></svg><span class="c8pt-lbl"><span>Reels</span><span class="c8pt-cnt" id="c8pt-cnt-reels">0</span></span></button><button type="button" class="c8pt c8pt-vid" data-tab="vid" onclick="c8SetProfTab('vid')"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="14" height="14" rx="3" class="f"/><path d="M17 10l5-3v10l-5-3z" class="f"/><path d="M7.5 9v6l4.5-3z" class="b"/></svg><span class="c8pt-lbl"><span>Videá</span><span class="c8pt-cnt" id="c8pt-cnt-vid">0</span></span></button><button type="button" class="c8pt c8pt-foto" data-tab="foto" onclick="c8SetProfTab('foto')"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3" class="f"/><circle cx="8" cy="9.5" r="2" class="b"/><path d="M3 18l5.5-5.5 4 4 3-3L21 18z" class="b"/></svg><span class="c8pt-lbl"><span>Fotky</span><span class="c8pt-cnt" id="c8pt-cnt-foto">0</span></span></button></div>
           <button class="profile-back-btn" id="profile-back-btn" onclick="profileBack()">← Späť do Feedu</button>
           <div class="profile-header">
             <div class="profile-avatar-wrap">
@@ -3415,10 +3447,15 @@
             <div class="pcal-hint">Klikni na deň a zapíš si, čo máš urobiť (text alebo hlasová správa do 1 min).</div>
           </div>
 
-          <div class="profile-section-title">📷 Fotky</div>
+          <div class="profile-section-title c8pt-sec-reels" style="display:none">🎞️ Reels</div>
+          <div class="c8pt-reels-grid c8pt-sec-reels" id="c8pt-reels-grid" style="display:none"></div>
+          <div class="profile-section-title c8pt-sec-vid" style="display:none">🎥 Videá</div>
+          <div class="c8pt-sec-vid" id="c8pt-vid-list" style="display:none"></div>
+
+          <div class="profile-section-title" id="c8pt-photos-title">📷 Fotky</div>
           <div class="profile-photos-grid" id="profile-photos-grid"></div>
 
-          <div class="profile-section-title">📝 Príspevky</div>
+          <div class="profile-section-title" id="c8pt-posts-title">📝 Príspevky</div>
           <div id="profile-posts-list"></div>
 
           <button class="delete-account-btn" id="delete-account-btn" onclick="deleteMyAccount()" style="display:none;">🗑️ Zrušiť účet v Connect8</button>
@@ -16531,36 +16568,43 @@ const UI_DICT_IT = {
   add(UI_DICT_EN, {"Aktívnych dní":"Active days","Spolu":"Total"});
   add(UI_DICT_EN, {"Zobraziť všetkých":"Show all","Zobraziť menej":"Show less"});
   add(UI_DICT_EN, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Address: Horné Vestenice 144, 972 22 Horné Vestenice, Slovakia", "Adresa": "Address", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovakia"});
+  add(UI_DICT_EN, {"Všetko": "All", "Videá": "Videos", "Fotky": "Photos", "Zatiaľ žiadne Reels.": "No Reels yet.", "Zatiaľ žiadne videá.": "No videos yet."});
   add(UI_DICT_EN, {"Štatistiky":"Statistics","Moje Reels":"My Reels","Zatiaľ nemáš žiadne Reels":"You have no Reels yet","Meniny tento týždeň":"Name days this week","Priatelia online":"Friends online","Zatiaľ nemáš priateľov":"No friends yet","Nastavenia":"Settings","Jazyk":"Language","Odhlásiť sa":"Log out","Zobraziť môj profil":"View my profile","Upraviť profil":"Edit profile","Súkromie":"Privacy","Bazár":"Market","Pripravujeme":"Coming soon","Zrušiť účet":"Delete account","Aktuálny jazyk appky":"Current app language","Menu":"Menu"});
   add(UI_DICT_CZ, {"Moje štatistiky": "Moje statistiky", "Videí": "Videí", "Zhliadnutí": "Zhlédnutí", "Lajkov": "Lajků", "Komentárov": "Komentářů", "Najsledovanejšie": "Nejsledovanější", "Zhliadnutia podľa videí": "Zhlédnutí podle videí", "najnovšie": "nejnovější", "Moje príspevky": "Moje příspěvky", "Príspevkov": "Příspěvků", "Najúspešnejší": "Nejúspěšnější", "Lajkov na príspevok": "Lajků na příspěvek", "Môj bazár": "Můj bazar", "Inzerátov": "Inzerátů", "Sledujem": "Sleduji", "Práve online": "Právě online", "Online z priateľov": "Online z přátel", "Moja aktivita – posledných 30 dní": "Moje aktivita – posledních 30 dní", "dnes": "dnes"});
   add(UI_DICT_CZ, {"Aktívnych dní":"Aktivních dní","Spolu":"Celkem"});
   add(UI_DICT_CZ, {"Zobraziť všetkých":"Zobrazit všechny","Zobraziť menej":"Zobrazit méně"});
   add(UI_DICT_CZ, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko", "Adresa": "Adresa", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko"});
+  add(UI_DICT_CZ, {"Všetko": "Vše", "Videá": "Videa", "Fotky": "Fotky", "Zatiaľ žiadne Reels.": "Zatím žádné Reels.", "Zatiaľ žiadne videá.": "Zatím žádná videa."});
   add(UI_DICT_CZ, {"Štatistiky":"Statistiky","Moje Reels":"Moje Reels","Zatiaľ nemáš žiadne Reels":"Zatím nemáš žádné Reels","Meniny tento týždeň":"Jmeniny tento týden","Priatelia online":"Přátelé online","Zatiaľ nemáš priateľov":"Zatím nemáš přátele","Nastavenia":"Nastavení","Jazyk":"Jazyk","Odhlásiť sa":"Odhlásit se","Zobraziť môj profil":"Zobrazit můj profil","Upraviť profil":"Upravit profil","Súkromie":"Soukromí","Bazár":"Bazar","Pripravujeme":"Připravujeme","Zrušiť účet":"Zrušit účet","Aktuálny jazyk appky":"Aktuální jazyk aplikace","Menu":"Menu"});
   add(UI_DICT_PL, {"Moje štatistiky": "Moje statystyki", "Videí": "Filmów", "Zhliadnutí": "Wyświetleń", "Lajkov": "Polubień", "Komentárov": "Komentarzy", "Najsledovanejšie": "Najczęściej oglądane", "Zhliadnutia podľa videí": "Wyświetlenia wg filmów", "najnovšie": "najnowsze", "Moje príspevky": "Moje posty", "Príspevkov": "Postów", "Najúspešnejší": "Najlepszy", "Lajkov na príspevok": "Polubień na post", "Môj bazár": "Mój bazar", "Inzerátov": "Ogłoszeń", "Sledujem": "Obserwuję", "Práve online": "Teraz online", "Online z priateľov": "Online ze znajomych", "Moja aktivita – posledných 30 dní": "Moja aktywność – ostatnie 30 dni", "dnes": "dziś"});
   add(UI_DICT_PL, {"Aktívnych dní":"Aktywnych dni","Spolu":"Razem"});
   add(UI_DICT_PL, {"Zobraziť všetkých":"Pokaż wszystkich","Zobraziť menej":"Pokaż mniej"});
   add(UI_DICT_PL, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Adres: Horné Vestenice 144, 972 22 Horné Vestenice, Słowacja", "Adresa": "Adres", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Słowacja"});
+  add(UI_DICT_PL, {"Všetko": "Wszystko", "Videá": "Wideo", "Fotky": "Zdjęcia", "Zatiaľ žiadne Reels.": "Brak Reels.", "Zatiaľ žiadne videá.": "Brak filmów."});
   add(UI_DICT_PL, {"Štatistiky":"Statystyki","Moje Reels":"Moje Reels","Zatiaľ nemáš žiadne Reels":"Nie masz jeszcze Reels","Meniny tento týždeň":"Imieniny w tym tygodniu","Priatelia online":"Znajomi online","Zatiaľ nemáš priateľov":"Nie masz jeszcze znajomych","Nastavenia":"Ustawienia","Jazyk":"Język","Odhlásiť sa":"Wyloguj się","Zobraziť môj profil":"Zobacz mój profil","Upraviť profil":"Edytuj profil","Súkromie":"Prywatność","Bazár":"Bazar","Pripravujeme":"Wkrótce","Zrušiť účet":"Usuń konto","Aktuálny jazyk appky":"Aktualny język aplikacji","Menu":"Menu"});
   add(UI_DICT_HU, {"Moje štatistiky": "Statisztikáim", "Videí": "Videó", "Zhliadnutí": "Megtekintés", "Lajkov": "Kedvelés", "Komentárov": "Hozzászólás", "Najsledovanejšie": "Legnézettebb", "Zhliadnutia podľa videí": "Megtekintések videónként", "najnovšie": "legújabb", "Moje príspevky": "Bejegyzéseim", "Príspevkov": "Bejegyzés", "Najúspešnejší": "Legsikeresebb", "Lajkov na príspevok": "Kedvelés / bejegyzés", "Môj bazár": "Piacom", "Inzerátov": "Hirdetés", "Sledujem": "Követem", "Práve online": "Most online", "Online z priateľov": "Online barátok", "Moja aktivita – posledných 30 dní": "Aktivitásom – utolsó 30 nap", "dnes": "ma"});
   add(UI_DICT_HU, {"Aktívnych dní":"Aktív nap","Spolu":"Összesen"});
   add(UI_DICT_HU, {"Zobraziť všetkých":"Összes mutatása","Zobraziť menej":"Kevesebb"});
   add(UI_DICT_HU, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Cím: Horné Vestenice 144, 972 22 Horné Vestenice, Szlovákia", "Adresa": "Cím", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Szlovákia"});
+  add(UI_DICT_HU, {"Všetko": "Összes", "Videá": "Videók", "Fotky": "Fotók", "Zatiaľ žiadne Reels.": "Még nincs Reels.", "Zatiaľ žiadne videá.": "Még nincs videó."});
   add(UI_DICT_HU, {"Štatistiky":"Statisztika","Moje Reels":"Saját Reels","Zatiaľ nemáš žiadne Reels":"Még nincs Reelsed","Meniny tento týždeň":"Névnapok ezen a héten","Priatelia online":"Online barátok","Zatiaľ nemáš priateľov":"Még nincsenek barátaid","Nastavenia":"Beállítások","Jazyk":"Nyelv","Odhlásiť sa":"Kijelentkezés","Zobraziť môj profil":"Profilom megtekintése","Upraviť profil":"Profil szerkesztése","Súkromie":"Adatvédelem","Bazár":"Piac","Pripravujeme":"Hamarosan","Zrušiť účet":"Fiók törlése","Aktuálny jazyk appky":"Az alkalmazás nyelve","Menu":"Menü"});
   add(UI_DICT_AT, {"Moje štatistiky": "Meine Statistiken", "Videí": "Videos", "Zhliadnutí": "Aufrufe", "Lajkov": "Likes", "Komentárov": "Kommentare", "Najsledovanejšie": "Meistgesehen", "Zhliadnutia podľa videí": "Aufrufe pro Video", "najnovšie": "neueste", "Moje príspevky": "Meine Beiträge", "Príspevkov": "Beiträge", "Najúspešnejší": "Erfolgreichster", "Lajkov na príspevok": "Likes pro Beitrag", "Môj bazár": "Mein Markt", "Inzerátov": "Inserate", "Sledujem": "Ich folge", "Práve online": "Gerade online", "Online z priateľov": "Online von Freunden", "Moja aktivita – posledných 30 dní": "Meine Aktivität – letzte 30 Tage", "dnes": "heute"});
   add(UI_DICT_AT, {"Aktívnych dní":"Aktive Tage","Spolu":"Gesamt"});
   add(UI_DICT_AT, {"Zobraziť všetkých":"Alle anzeigen","Zobraziť menej":"Weniger anzeigen"});
   add(UI_DICT_AT, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Adresse: Horné Vestenice 144, 972 22 Horné Vestenice, Slowakei", "Adresa": "Adresse", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slowakei"});
+  add(UI_DICT_AT, {"Všetko": "Alles", "Videá": "Videos", "Fotky": "Fotos", "Zatiaľ žiadne Reels.": "Noch keine Reels.", "Zatiaľ žiadne videá.": "Noch keine Videos."});
   add(UI_DICT_AT, {"Štatistiky":"Statistiken","Moje Reels":"Meine Reels","Zatiaľ nemáš žiadne Reels":"Du hast noch keine Reels","Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
   add(UI_DICT_DE, {"Moje štatistiky": "Meine Statistiken", "Videí": "Videos", "Zhliadnutí": "Aufrufe", "Lajkov": "Likes", "Komentárov": "Kommentare", "Najsledovanejšie": "Meistgesehen", "Zhliadnutia podľa videí": "Aufrufe pro Video", "najnovšie": "neueste", "Moje príspevky": "Meine Beiträge", "Príspevkov": "Beiträge", "Najúspešnejší": "Erfolgreichster", "Lajkov na príspevok": "Likes pro Beitrag", "Môj bazár": "Mein Markt", "Inzerátov": "Inserate", "Sledujem": "Ich folge", "Práve online": "Gerade online", "Online z priateľov": "Online von Freunden", "Moja aktivita – posledných 30 dní": "Meine Aktivität – letzte 30 Tage", "dnes": "heute"});
   add(UI_DICT_DE, {"Aktívnych dní":"Aktive Tage","Spolu":"Gesamt"});
   add(UI_DICT_DE, {"Zobraziť všetkých":"Alle anzeigen","Zobraziť menej":"Weniger anzeigen"});
   add(UI_DICT_DE, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Adresse: Horné Vestenice 144, 972 22 Horné Vestenice, Slowakei", "Adresa": "Adresse", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slowakei"});
+  add(UI_DICT_DE, {"Všetko": "Alles", "Videá": "Videos", "Fotky": "Fotos", "Zatiaľ žiadne Reels.": "Noch keine Reels.", "Zatiaľ žiadne videá.": "Noch keine Videos."});
   add(UI_DICT_DE, {"Štatistiky":"Statistiken","Moje Reels":"Meine Reels","Zatiaľ nemáš žiadne Reels":"Du hast noch keine Reels","Meniny tento týždeň":"Namenstage diese Woche","Priatelia online":"Freunde online","Zatiaľ nemáš priateľov":"Noch keine Freunde","Nastavenia":"Einstellungen","Jazyk":"Sprache","Odhlásiť sa":"Abmelden","Zobraziť môj profil":"Mein Profil ansehen","Upraviť profil":"Profil bearbeiten","Súkromie":"Datenschutz","Bazár":"Markt","Pripravujeme":"Demnächst","Zrušiť účet":"Konto löschen","Aktuálny jazyk appky":"Aktuelle App-Sprache","Menu":"Menü"});
   add(UI_DICT_IT, {"Moje štatistiky": "Le mie statistiche", "Videí": "Video", "Zhliadnutí": "Visualizzazioni", "Lajkov": "Mi piace", "Komentárov": "Commenti", "Najsledovanejšie": "Più visto", "Zhliadnutia podľa videí": "Visualizzazioni per video", "najnovšie": "più recenti", "Moje príspevky": "I miei post", "Príspevkov": "Post", "Najúspešnejší": "Il migliore", "Lajkov na príspevok": "Mi piace per post", "Môj bazár": "Il mio mercato", "Inzerátov": "Annunci", "Sledujem": "Seguo", "Práve online": "Online ora", "Online z priateľov": "Online tra gli amici", "Moja aktivita – posledných 30 dní": "La mia attività – ultimi 30 giorni", "dnes": "oggi"});
   add(UI_DICT_IT, {"Aktívnych dní":"Giorni attivi","Spolu":"Totale"});
   add(UI_DICT_IT, {"Zobraziť všetkých":"Mostra tutti","Zobraziť menej":"Mostra meno"});
   add(UI_DICT_IT, {"Adresa: Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Indirizzo: Horné Vestenice 144, 972 22 Horné Vestenice, Slovacchia", "Adresa": "Indirizzo", "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovensko": "Jaroslav Ševčík, Horné Vestenice 144, 972 22 Horné Vestenice, Slovacchia"});
+  add(UI_DICT_IT, {"Všetko": "Tutto", "Videá": "Video", "Fotky": "Foto", "Zatiaľ žiadne Reels.": "Ancora nessun Reels.", "Zatiaľ žiadne videá.": "Ancora nessun video."});
   add(UI_DICT_IT, {"Štatistiky":"Statistiche","Moje Reels":"I miei Reels","Zatiaľ nemáš žiadne Reels":"Non hai ancora Reels","Meniny tento týždeň":"Onomastici questa settimana","Priatelia online":"Amici online","Zatiaľ nemáš priateľov":"Nessun amico ancora","Nastavenia":"Impostazioni","Jazyk":"Lingua","Odhlásiť sa":"Esci","Zobraziť môj profil":"Vedi il mio profilo","Upraviť profil":"Modifica profilo","Súkromie":"Privacy","Bazár":"Mercato","Pripravujeme":"Prossimamente","Zrušiť účet":"Elimina account","Aktuálny jazyk appky":"Lingua attuale dell'app","Menu":"Menu"});
 })();
 
@@ -17263,6 +17307,83 @@ function c8FitFan(){
 window.addEventListener('resize', c8FitFan);
 window.addEventListener('load', ()=>{ c8FitFan(); setTimeout(c8FitFan, 500); });
 setInterval(c8FitFan, 1500);
+</script>
+
+<div class="c8rv-modal" id="c8rv-modal" onclick="if(event.target===this) c8CloseReel()"><button class="c8rv-x" onclick="c8CloseReel()">✕</button><div class="c8rv-box" id="c8rv-box"></div></div>
+<script id="c8pt-script">
+/* ---------- Profil: Všetko / Reels / Videá / Fotky ---------- */
+let c8ProfTab = 'all';
+function c8SetProfTab(k){ c8ProfTab = k; c8ApplyProfTab(); }
+function c8ProfUser(){ try{ return viewedProfileUser || currentUser; }catch(e){ return null; } }
+function c8ReelPoster(url){
+  if(!url) return '';
+  try{ const yt = getYouTubeId(url); if(yt) return 'https://img.youtube.com/vi/'+yt+'/hqdefault.jpg'; }catch(e){}
+  if(url.includes('res.cloudinary.com') && url.includes('/video/upload/')){
+    return url.replace('/video/upload/','/video/upload/so_1,w_320,h_568,c_fill,q_auto/').replace(/\.[a-z0-9]+(\?.*)?$/i,'.jpg');
+  }
+  return '';
+}
+function c8OpenReel(id){
+  const v = (videos||[]).find(x=>String(x.id)===String(id)); if(!v) return;
+  const box = document.getElementById('c8rv-box'); let yt=null;
+  try{ yt = getYouTubeId(v.url); }catch(e){}
+  if(yt) box.innerHTML = '<iframe src="https://www.youtube.com/embed/'+yt+'?autoplay=1&playsinline=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>';
+  else { const src = (typeof optimizeCloudinaryVideoUrl==='function') ? optimizeCloudinaryVideoUrl(v.url) : v.url; box.innerHTML = '<video src="'+src+'" controls autoplay playsinline webkit-playsinline></video>'; }
+  document.getElementById('c8rv-modal').style.display = 'flex';
+  try{ pauseAllVideoSectionMedia(); }catch(e){}
+}
+function c8CloseReel(){ document.getElementById('c8rv-box').innerHTML=''; document.getElementById('c8rv-modal').style.display='none'; }
+function c8ApplyProfTab(){
+  const u = c8ProfUser(); if(!u) return;
+  const tt = (x)=> (typeof t === 'function' ? t(x) : x);
+  const esc = (x)=> (typeof escapeHtml === 'function' ? escapeHtml(String(x||'')) : String(x||''));
+  const mine = (o, nk)=> o && (o.authorId ? o.authorId === u.uid : o[nk||'name'] === u.name);
+  let src = posts; try{ if(u.uid && ownPostsCache[u.uid]) src = ownPostsCache[u.uid]; }catch(e){}
+  const myPosts = (src||[]).filter(p=>mine(p));
+  const photos = myPosts.filter(p=>!p.isVizitka).reduce((a,p)=>a.concat(getPostPhotos(p)),[]);
+  const vidPosts = myPosts.filter(p=>p.video);
+  const reels = (videos||[]).filter(v=>mine(v) && v.url);
+  const set=(id,n)=>{const e=document.getElementById(id); if(e) e.textContent=n;};
+  set('c8pt-cnt-all', myPosts.length + reels.length); set('c8pt-cnt-reels', reels.length); set('c8pt-cnt-vid', vidPosts.length); set('c8pt-cnt-foto', photos.length);
+  document.querySelectorAll('.c8pt').forEach(b=>b.classList.toggle('on', b.dataset.tab===c8ProfTab));
+  const show=(el,on,disp)=>{ if(el) el.style.display = on ? (disp||'') : 'none'; };
+  const isOwn = !viewedProfileUser, all = c8ProfTab==='all';
+  // pôvodné časti profilu - viditeľné iba pri "Všetko" (s pôvodnými pravidlami)
+  show(document.getElementById('profile-duties'), all && isOwn && (currentLang==='sk'||currentLang==='cz'), 'grid');
+  show(document.getElementById('profile-calendar'), all && isOwn, 'block');
+  show(document.getElementById('c8pt-photos-title'), all || c8ProfTab==='foto');
+  show(document.getElementById('profile-photos-grid'), all || c8ProfTab==='foto');
+  show(document.getElementById('c8pt-posts-title'), all);
+  show(document.getElementById('profile-posts-list'), all);
+  show(document.getElementById('delete-account-btn'), all && isOwn, 'inline-flex');
+  document.querySelectorAll('.c8pt-sec-reels').forEach(e=>show(e, c8ProfTab==='reels', e.id?'grid':''));
+  document.querySelectorAll('.c8pt-sec-vid').forEach(e=>show(e, c8ProfTab==='vid'));
+  if(c8ProfTab==='reels'){
+    const g = document.getElementById('c8pt-reels-grid');
+    g.innerHTML = reels.length ? reels.slice().sort((a,b)=>(b.createdAt||b.id)-(a.createdAt||a.id)).map(v=>{
+      const po = c8ReelPoster(v.url);
+      const media = po ? '<img src="'+po+'" loading="lazy" alt="" onerror="this.outerHTML=\'<video src=&quot;'+esc(v.url)+'#t=0.5&quot; preload=&quot;metadata&quot; muted playsinline></video>\'">'
+                       : '<video src="'+esc(v.url)+'#t=0.5" preload="metadata" muted playsinline></video>';
+      return '<div class="c8pt-reel" onclick="c8OpenReel(\''+v.id+'\')">'+media+'<div class="p">▶</div><div class="v">👁 '+((typeof formatViewCount==='function')?formatViewCount(v.views||0):(v.views||0))+'</div></div>';
+    }).join('') : '<div class="profile-empty">'+tt('Zatiaľ žiadne Reels.')+'</div>';
+  }
+  if(c8ProfTab==='vid'){
+    const l = document.getElementById('c8pt-vid-list');
+    l.innerHTML = vidPosts.length ? vidPosts.slice().reverse().map(p=>'<div class="post">'+buildPostCard(p,{showComments:false})+'</div>').join('')
+                                  : '<div class="profile-empty">'+tt('Zatiaľ žiadne videá.')+'</div>';
+  }
+}
+if(typeof renderProfile === 'function'){
+  const _c8PrevRP = renderProfile;
+  renderProfile = function(){ const r = _c8PrevRP.apply(this, arguments); try{ c8ApplyProfTab(); }catch(e){ console.error(e); } return r; };
+}
+['openProfile','openUserProfile'].forEach(fn=>{
+  if(typeof window[fn] === 'function'){
+    const prev = window[fn];
+    window[fn] = function(){ c8ProfTab = 'all'; return prev.apply(this, arguments); };
+  }
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') c8CloseReel(); });
 </script>
 </body>
 </html>
