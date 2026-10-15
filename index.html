@@ -4406,7 +4406,7 @@ function loadState(){
       db.collection('videos').orderBy('createdAt','desc').limit(80).onSnapshot((snap)=>{
         videos = docsToArray(snap);
         videos.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); // najnovšie prvé (render ich nechá tak)
-        if(!firstVideos && document.getElementById('app').style.display === 'block') renderVideos();
+        if(!firstVideos && document.getElementById('app').style.display === 'block') c8VideosRefresh();
         if(firstVideos){ firstVideos = false; markLoaded(); }
       }, (err)=>{
         console.error("Firestore chyba (videos):", err);
@@ -12847,39 +12847,29 @@ function playMedia(id, opts={}){
   if(mediaEl.tagName === 'VIDEO'){
     if(opts.autoplay && !mediaEl.paused && mediaEl.muted === desiredMuted) return; // už beží presne v požadovanom stave, netreba nič robiť znova
     if(opts.autoplay && isIOSDevice()){
-      // iPhone: automatické spustenie bez dotyku smie ísť LEN stlmene - preto vždy
-      // najprv nastavíme muted=true a spustíme (to teraz spoľahlivo prejde), a keďže
-      // video už reálne beží, hneď potom v tichosti zapneme zvuk podľa preferencie
-      // (zmena .muted na už bežiacom videu nový dotyk/gesto nevyžaduje).
-      // POZOR: iPhone video, ktoré sa spustilo samo (bez dotyku), okamžite
-      // ZASTAVÍ, ak mu skript hneď zapne zvuk - preto sa doteraz každé video
-      // muselo púšťať ručne. Teraz: spustíme stlmene, skúsime zapnúť zvuk
-      // a ak to iPhone video zastaví, vrátime ho späť do stlmeného prehrávania
-      // (a na tlačidle ukážeme 🔇 - ťuknutím si zvuk zapne).
+      // iPhone: video so zvukom sa smie spustiť bez ťuknutia LEN vtedy, ak
+      // tento <video> prvok už raz dostal "povolenie" ťuknutím (c8u=1, viď
+      // c8IosGesture). Vtedy hrá rovno so zvukom. Inak (alebo keď by to iPhone
+      // aj tak odmietol) hrá STLMENE - automatické prehrávanie sa nikdy nezastaví.
       const btn = document.getElementById('mute-btn-'+id);
       const setBtn = muted => { if(btn) btn.textContent = muted ? '🔇' : '🔊'; };
-      mediaEl.muted = true;
-      mediaEl.defaultMuted = true;
-      mediaEl.setAttribute('muted', '');
       mediaEl.playsInline = true;
       mediaEl.setAttribute('playsinline', '');
       mediaEl.setAttribute('webkit-playsinline', '');
-      const tryPlay = ()=> mediaEl.play().then(()=>{
-        if(desiredMuted || !iosSoundUnlocked){ setBtn(true); return; }
-        mediaEl.muted = false;
-        setTimeout(()=>{
-          if(mediaEl.paused || mediaEl.muted){
-            mediaEl.muted = true;
-            mediaEl.play().catch(()=>{});
-            setBtn(true);
-          } else {
+      const playMuted = ()=>{ mediaEl.muted = true; setBtn(true); return mediaEl.play(); };
+      const start = ()=>{
+        if(!desiredMuted && mediaEl.dataset.c8u === '1'){
+          mediaEl.muted = false;
+          return mediaEl.play().then(()=>{
             setBtn(false);
-          }
-        }, 250);
-      });
-      tryPlay().catch(()=>{
+            setTimeout(()=>{ if(mediaEl.paused && c8IsActiveVideo(id)) playMuted().catch(()=>{}); }, 350);
+          }).catch(()=> playMuted());
+        }
+        return playMuted();
+      };
+      start().catch(()=>{
         // video ešte nebolo pripravené - skús znova, keď sa načíta
-        const retry = ()=>{ mediaEl.removeEventListener('canplay', retry); tryPlay().catch(()=>{}); };
+        const retry = ()=>{ mediaEl.removeEventListener('canplay', retry); start().catch(()=>{}); };
         mediaEl.addEventListener('canplay', retry);
       });
       return;
@@ -13070,78 +13060,13 @@ function mountAndPlay(card){
     // začal naraz predbežne načítavať/dekódovať všetky videá v zozname, čo
     // rýchlo vyčerpá limit súbežne aktívnych <video> prehrávačov.
     const videoEl = document.getElementById('media-'+id);
-    if(isIOSDevice() && videoEl && videoEl !== c8IosShared){
-      // iPhone: všetky videá prehráva JEDEN zdieľaný prehrávač (viď c8GetIosShared) -
-      // ten po prvom ťuknutí smie hrať so zvukom aj pri ďalších videách.
-      c8IosReleaseShared();
-      const v = c8GetIosShared();
-      videoEl.id = 'media-ph-' + id;
-      v.id = 'media-' + id;
-      v.className = videoEl.className;
-      v.style.cssText = videoEl.style.cssText;
-      videoEl.replaceWith(v);
-      c8IosParked = { ph: videoEl, id: id };
-      v.src = videoEl.dataset.src || '';
-      v.load();
-      playMedia(id, {autoplay:true});
-      return;
-    }
-    if(videoEl && !videoEl.getAttribute('src') && videoEl.dataset.src){
+    if(videoEl && (!videoEl.getAttribute('src') || videoEl.getAttribute('src') === C8_SILENT_WAV) && videoEl.dataset.src){
       videoEl.src = videoEl.dataset.src;
       videoEl.load();
     }
     playMedia(id, {autoplay:true});
   }
 }
-
-/* ---- iPhone: jeden zdieľaný <video> prehrávač pre sekciu Videá ----
-   iPhone (WebKit) dovolí prehrávať so zvukom bez ťuknutia LEN tomu <video>
-   prvku, ktorý už raz dostal povolenie ťuknutím. Každé video malo doteraz
-   vlastný prvok, preto každé išlo len stlmene. Teraz sa jeden prvok presúva
-   z karty do karty (mení sa len zdroj videa) a povolenie mu ostáva. */
-var c8IosShared = null, c8IosParked = null;
-const C8_SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
-function c8GetIosShared(){
-  if(!c8IosShared){
-    const v = document.createElement('video');
-    v.setAttribute('playsinline', '');
-    v.setAttribute('webkit-playsinline', '');
-    v.playsInline = true;
-    v.controls = true;
-    v.preload = 'auto';
-    c8IosShared = v;
-  }
-  return c8IosShared;
-}
-function c8IosReleaseShared(){
-  const v = c8IosShared, p = c8IosParked;
-  c8IosParked = null;
-  if(!v || !p) return;
-  try{ v.pause(); }catch(e){}
-  if(v.isConnected && p.ph) v.replaceWith(p.ph);
-  if(p.ph) p.ph.id = 'media-' + p.id;
-  v.id = '';
-  v.removeAttribute('src');
-  try{ v.load(); }catch(e){}
-}
-// Prvé ťuknutie kdekoľvek v appke (napr. na "Videá") odomkne zvuk pre zdieľaný prehrávač.
-function c8IosUnlock(){
-  if(iosSoundUnlocked || !isIOSDevice()) return;
-  iosSoundUnlocked = true;
-  const v = c8GetIosShared();
-  try{
-    const hadSrc = !!v.getAttribute('src');
-    if(!hadSrc) v.src = C8_SILENT_WAV;
-    v.muted = false;
-    const pr = v.play();
-    if(pr && pr.then){
-      pr.then(()=>{ if(!hadSrc){ v.pause(); v.removeAttribute('src'); try{ v.load(); }catch(e){} } })
-        .catch(()=>{});
-    }
-  }catch(e){}
-}
-document.addEventListener('touchend', c8IosUnlock, {capture:true, passive:true});
-document.addEventListener('click', c8IosUnlock, true);
 
 // Keď video (natívne aj YouTube) opustí zorné pole, uvoľníme jeho zdroj -
 // nielen ho pauznuť. Dôvod: mobilné prehliadače majú limit na počet súčasne
@@ -13151,7 +13076,6 @@ document.addEventListener('click', c8IosUnlock, true);
 function unmountIfYouTube(card){
   const id = card.dataset.vid;
   if(card.dataset.kind !== 'youtube'){
-    if(c8IosParked && String(c8IosParked.id) === String(id)){ c8IosReleaseShared(); return; }
     const videoEl = document.getElementById('media-'+id);
     if(videoEl){
       videoEl.pause();
@@ -13174,6 +13098,89 @@ function unmountIfYouTube(card){
 }
 
 let videoMuteState = {}; // len lokálny stav (nie je súčasťou zdieľaných dát)
+
+/* ---- iPhone: zvuk pri automatickom prehrávaní v sekcii Videá ----
+   iPhone pustí video SO ZVUKOM bez ťuknutia len tomu <video> prvku, ktorý
+   už raz dostal ťuknutie. Pri každom dotyku obrazovky (ťuknutie, potiahnutie
+   na ďalšie video) preto v tej istej chvíli "odomkneme" aktuálne video a
+   susedné videá (krátkym prehratím tichého zvuku), a bežiacemu videu
+   zapneme zvuk. Ďalšie video potom už môže začať hrať rovno so zvukom. */
+const C8_SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+function c8IsActiveVideo(id){ return String(activeVideoCardId) === String(id); }
+function c8IosGesture(e){
+  if(!isIOSDevice()) return;
+  // ťuknutie na 🔊/🔇 rieši samotné tlačidlo (toggleMute)
+  if(e && e.target && e.target.closest && e.target.closest('[id^="mute-btn-"]')) return;
+  const sc = document.getElementById('video-scroller');
+  if(!sc) return;
+  const cards = Array.prototype.slice.call(sc.querySelectorAll('.video-card'));
+  if(!cards.length) return;
+  let idx = cards.findIndex(c => c.dataset.vid === String(activeVideoCardId));
+  if(idx < 0) idx = 0;
+  for(let k = idx - 1; k <= idx + 2; k++){
+    const card = cards[k];
+    if(!card || card.dataset.kind === 'youtube') continue;
+    const vid = card.dataset.vid;
+    const v = document.getElementById('media-' + vid);
+    if(!v || v.tagName !== 'VIDEO') continue;
+    const src = v.getAttribute('src');
+    if(src && src !== C8_SILENT_WAV && !v.paused){
+      // práve hrá: dotyk = smie dostať zvuk
+      v.dataset.c8u = '1';
+      if(videoMuteState[vid] !== true && v.muted){
+        v.muted = false;
+        const b = document.getElementById('mute-btn-' + vid);
+        if(b) b.textContent = '🔊';
+      }
+      continue;
+    }
+    if(v.dataset.c8u === '1' || (src && src !== C8_SILENT_WAV)) continue;
+    // odomknutie tichým zvukom (nič nepočuť, nič sa nesťahuje)
+    try{
+      v.src = C8_SILENT_WAV;
+      v.muted = false;
+      const pr = v.play();
+      v.dataset.c8u = '1';
+      const done = ()=>{ if(v.getAttribute('src') === C8_SILENT_WAV){ try{ v.pause(); }catch(e){} v.removeAttribute('src'); try{ v.load(); }catch(e){} } };
+      if(pr && pr.then) pr.then(done).catch(done); else done();
+    }catch(e){}
+  }
+}
+document.addEventListener('touchend', c8IosGesture, {capture:true, passive:true});
+document.addEventListener('click', c8IosGesture, true);
+
+// Zmena počtu videní/lajkov nesmie zakaždým prekresliť celý zoznam videí -
+// zničili by sa tým prehrávače (aj ich povolenie na zvuk na iPhone) a
+// práve hrajúce video by sa reštartovalo. Ak sa zoznam videí nezmenil,
+// len prepíšeme čísla.
+function c8VideosRefresh(){
+  try{
+    let myReels = false;
+    try{ myReels = !!c8MyReelsOnly; }catch(e){}
+    const sc = document.getElementById('video-scroller');
+    if(!myReels && sc){
+      const domIds = Array.prototype.map.call(sc.querySelectorAll('.video-card'), c => c.dataset.vid).join(',');
+      const ids = videos.map(v => String(v.id)).join(',');
+      if(domIds && domIds === ids){
+        videos.forEach(v=>{
+          const ve = document.getElementById('views-' + v.id);
+          if(ve) ve.textContent = '👁 ' + formatViewCount(v.views || 0);
+          const lb = sc.querySelector('.video-card[data-vid="' + v.id + '"] button[onclick="toggleVideoLike(' + v.id + ')"]');
+          if(lb){
+            lb.classList.toggle('liked', getLikedBy(v).includes(currentUser.uid));
+            const cnt = lb.nextElementSibling;
+            if(cnt) cnt.textContent = v.likes || 0;
+          }
+          const cc = document.getElementById('chat-count-' + v.id);
+          if(cc) cc.textContent = (v.comments && v.comments.length) || 0;
+        });
+        return;
+      }
+    }
+  }catch(e){}
+  renderVideos();
+}
+
 // iPhone: kým si používateľ v sekcii Videá raz neťukne na 🔊, videá idú automaticky
 // stlmene (inak by ich iPhone vôbec nespustil). Po ťuknutí skúšame aj so zvukom.
 var iosSoundUnlocked = false;
@@ -13186,6 +13193,7 @@ function toggleMute(id){
   const newMuted = !currentlyMuted;
   videoMuteState[id] = newMuted;
   if(!newMuted && isIOSDevice()) iosSoundUnlocked = true; // ťuknutie = povolenie zvuku aj pre ďalšie videá
+  if(mediaEl && mediaEl.tagName === 'VIDEO') mediaEl.dataset.c8u = '1';
   const btn = document.getElementById('mute-btn-'+id);
   if(mediaEl){
     if(mediaEl.tagName === 'VIDEO'){
