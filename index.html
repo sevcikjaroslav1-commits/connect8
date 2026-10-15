@@ -13070,6 +13070,22 @@ function mountAndPlay(card){
     // začal naraz predbežne načítavať/dekódovať všetky videá v zozname, čo
     // rýchlo vyčerpá limit súbežne aktívnych <video> prehrávačov.
     const videoEl = document.getElementById('media-'+id);
+    if(isIOSDevice() && videoEl && videoEl !== c8IosShared){
+      // iPhone: všetky videá prehráva JEDEN zdieľaný prehrávač (viď c8GetIosShared) -
+      // ten po prvom ťuknutí smie hrať so zvukom aj pri ďalších videách.
+      c8IosReleaseShared();
+      const v = c8GetIosShared();
+      videoEl.id = 'media-ph-' + id;
+      v.id = 'media-' + id;
+      v.className = videoEl.className;
+      v.style.cssText = videoEl.style.cssText;
+      videoEl.replaceWith(v);
+      c8IosParked = { ph: videoEl, id: id };
+      v.src = videoEl.dataset.src || '';
+      v.load();
+      playMedia(id, {autoplay:true});
+      return;
+    }
     if(videoEl && !videoEl.getAttribute('src') && videoEl.dataset.src){
       videoEl.src = videoEl.dataset.src;
       videoEl.load();
@@ -13077,6 +13093,55 @@ function mountAndPlay(card){
     playMedia(id, {autoplay:true});
   }
 }
+
+/* ---- iPhone: jeden zdieľaný <video> prehrávač pre sekciu Videá ----
+   iPhone (WebKit) dovolí prehrávať so zvukom bez ťuknutia LEN tomu <video>
+   prvku, ktorý už raz dostal povolenie ťuknutím. Každé video malo doteraz
+   vlastný prvok, preto každé išlo len stlmene. Teraz sa jeden prvok presúva
+   z karty do karty (mení sa len zdroj videa) a povolenie mu ostáva. */
+var c8IosShared = null, c8IosParked = null;
+const C8_SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+function c8GetIosShared(){
+  if(!c8IosShared){
+    const v = document.createElement('video');
+    v.setAttribute('playsinline', '');
+    v.setAttribute('webkit-playsinline', '');
+    v.playsInline = true;
+    v.controls = true;
+    v.preload = 'auto';
+    c8IosShared = v;
+  }
+  return c8IosShared;
+}
+function c8IosReleaseShared(){
+  const v = c8IosShared, p = c8IosParked;
+  c8IosParked = null;
+  if(!v || !p) return;
+  try{ v.pause(); }catch(e){}
+  if(v.isConnected && p.ph) v.replaceWith(p.ph);
+  if(p.ph) p.ph.id = 'media-' + p.id;
+  v.id = '';
+  v.removeAttribute('src');
+  try{ v.load(); }catch(e){}
+}
+// Prvé ťuknutie kdekoľvek v appke (napr. na "Videá") odomkne zvuk pre zdieľaný prehrávač.
+function c8IosUnlock(){
+  if(iosSoundUnlocked || !isIOSDevice()) return;
+  iosSoundUnlocked = true;
+  const v = c8GetIosShared();
+  try{
+    const hadSrc = !!v.getAttribute('src');
+    if(!hadSrc) v.src = C8_SILENT_WAV;
+    v.muted = false;
+    const pr = v.play();
+    if(pr && pr.then){
+      pr.then(()=>{ if(!hadSrc){ v.pause(); v.removeAttribute('src'); try{ v.load(); }catch(e){} } })
+        .catch(()=>{});
+    }
+  }catch(e){}
+}
+document.addEventListener('touchend', c8IosUnlock, {capture:true, passive:true});
+document.addEventListener('click', c8IosUnlock, true);
 
 // Keď video (natívne aj YouTube) opustí zorné pole, uvoľníme jeho zdroj -
 // nielen ho pauznuť. Dôvod: mobilné prehliadače majú limit na počet súčasne
@@ -13086,6 +13151,7 @@ function mountAndPlay(card){
 function unmountIfYouTube(card){
   const id = card.dataset.vid;
   if(card.dataset.kind !== 'youtube'){
+    if(c8IosParked && String(c8IosParked.id) === String(id)){ c8IosReleaseShared(); return; }
     const videoEl = document.getElementById('media-'+id);
     if(videoEl){
       videoEl.pause();
