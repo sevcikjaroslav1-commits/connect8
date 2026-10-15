@@ -2387,15 +2387,15 @@
         <div id="form-register" style="display:none;">
           <div class="field">
             <label>Meno</label>
-            <input type="text" id="reg-name" placeholder="Jaro Novák">
+            <input type="text" id="reg-name" placeholder="Jaro Novák" autocomplete="off">
           </div>
           <div class="field">
             <label>E-mail</label>
-            <input type="email" id="reg-email" placeholder="tvoj@email.sk">
+            <input type="email" id="reg-email" placeholder="tvoj@email.sk" autocomplete="off">
           </div>
           <div class="field">
             <label>Heslo</label>
-            <input type="password" id="reg-pass" placeholder="min. 6 znakov">
+            <input type="password" id="reg-pass" placeholder="min. 6 znakov" autocomplete="new-password">
           </div>
           <button class="cta" onclick="doRegister()">Vytvoriť účet</button>
           <p class="form-error" id="reg-error"></p>
@@ -4628,6 +4628,7 @@ async function doRegister(){
     // meno stihne zapísať do databázy, a použil by dočasne e-mail.
     currentUser = { uid: cred.user.uid, email, name, showLastOnline: false };
     allUsersCache = null; // nový používateľ - nech sa nabudúce znova načíta zoznam pre vyhľadávanie
+    clearAuthForms(); // po registrácii vymažeme vyplnené údaje z formulára
     await loadState(); // istota, že posty/produkty/videá sú načítané pred zobrazením appky
     enterApp();
   }catch(e){
@@ -4655,8 +4656,18 @@ function doLogout(){
   currentUserIsAdmin = false;
   document.getElementById('app').style.display = 'none';
   document.getElementById('auth-screen').style.display = 'flex';
-  document.getElementById('login-email').value = '';
-  document.getElementById('login-pass').value = '';
+  clearAuthForms();
+  switchTab('login');
+}
+
+// vymaže všetky údaje z prihlasovacieho aj registračného formulára
+function clearAuthForms(){
+  ['login-email','login-pass','reg-name','reg-email','reg-pass'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  ['login-error','reg-error'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.textContent = '';
+  });
 }
 
 async function deleteMyAccount(){
@@ -4743,8 +4754,8 @@ async function deleteMyAccount(){
     currentUserIsAdmin = false;
     document.getElementById('app').style.display = 'none';
     document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('login-email').value = '';
-    document.getElementById('login-pass').value = '';
+    clearAuthForms();
+    switchTab('login');
   }catch(e){
     console.error('Vymazanie účtu zlyhalo:', e);
     alert('Vymazanie účtu sa nepodarilo. Skús to znova, prípadne sa najprv znova prihlás a skús to hneď potom.');
