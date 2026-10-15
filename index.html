@@ -1722,6 +1722,9 @@
     word-break:break-word;white-space:pre-wrap;
   }
   .chat-bubble.theirs{background:var(--bg);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px;}
+  .chat-time{font-size:10.5px;line-height:1.2;color:var(--text-muted,#8A8F98);margin-top:-5px;padding:0 6px;}
+  .chat-time.mine{align-self:flex-end;}
+  .chat-time.theirs{align-self:flex-start;}
   .chat-bubble.mine{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
   .chat-input-row{
     display:flex;gap:5px;padding:10px 10px;border-top:1px solid var(--line);flex-shrink:0;align-items:center;
@@ -8302,6 +8305,31 @@ function closeChatModal(){
   currentChatId = null;
 }
 
+// Čas správy v chate: dnes "14:32", včera "včera 14:32", inak "12.10. 14:32"
+// (iný rok aj s rokom). Ešte neuložená správa (serverTimestamp čaká) = teraz.
+function formatChatMsgTime(ts){
+  let d;
+  try{
+    if(ts && typeof ts.toDate === 'function') d = ts.toDate();
+    else if(ts && typeof ts.seconds === 'number') d = new Date(ts.seconds * 1000);
+    else if(typeof ts === 'number') d = new Date(ts);
+  }catch(e){}
+  if(!d || isNaN(d.getTime())) d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const now = new Date();
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const dayMs = 86400000;
+  const tr = (typeof t === 'function') ? t : (s => s);
+  let short;
+  if(d.getTime() >= startToday) short = hm;
+  else if(d.getTime() >= startToday - dayMs) short = tr('včera') + ' ' + hm;
+  else if(d.getFullYear() === now.getFullYear()) short = d.getDate() + '.' + (d.getMonth() + 1) + '. ' + hm;
+  else short = d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + hm;
+  const full = d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + hm;
+  return { short, full };
+}
+
 function subscribeToChatMessages(){
   if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; }
   const container = document.getElementById('chat-messages');
@@ -8331,6 +8359,13 @@ function subscribeToChatMessages(){
           bubble.textContent = m.text || '';
         }
         container.appendChild(bubble);
+        // Čas odoslania pod každou správou (dnes = len čas, inak aj dátum)
+        const tEl = document.createElement('div');
+        tEl.className = 'chat-time ' + (mine ? 'mine' : 'theirs');
+        const tInfo = formatChatMsgTime(m.createdAt);
+        tEl.textContent = tInfo.short;
+        tEl.title = tInfo.full;
+        container.appendChild(tEl);
       });
       container.scrollTop = container.scrollHeight;
       // Ak je chat otvorený a prídu nové správy pre mňa, hneď ich označím ako prečítané
@@ -12816,10 +12851,37 @@ function playMedia(id, opts={}){
       // najprv nastavíme muted=true a spustíme (to teraz spoľahlivo prejde), a keďže
       // video už reálne beží, hneď potom v tichosti zapneme zvuk podľa preferencie
       // (zmena .muted na už bežiacom videu nový dotyk/gesto nevyžaduje).
+      // POZOR: iPhone video, ktoré sa spustilo samo (bez dotyku), okamžite
+      // ZASTAVÍ, ak mu skript hneď zapne zvuk - preto sa doteraz každé video
+      // muselo púšťať ručne. Teraz: spustíme stlmene, skúsime zapnúť zvuk
+      // a ak to iPhone video zastaví, vrátime ho späť do stlmeného prehrávania
+      // (a na tlačidle ukážeme 🔇 - ťuknutím si zvuk zapne).
+      const btn = document.getElementById('mute-btn-'+id);
+      const setBtn = muted => { if(btn) btn.textContent = muted ? '🔇' : '🔊'; };
       mediaEl.muted = true;
-      mediaEl.play().then(()=>{
-        if(!desiredMuted) mediaEl.muted = false;
-      }).catch(()=>{ /* zlyhalo aj stlmené - skús znova pri ďalšom scrolle */ });
+      mediaEl.defaultMuted = true;
+      mediaEl.setAttribute('muted', '');
+      mediaEl.playsInline = true;
+      mediaEl.setAttribute('playsinline', '');
+      mediaEl.setAttribute('webkit-playsinline', '');
+      const tryPlay = ()=> mediaEl.play().then(()=>{
+        if(desiredMuted || !iosSoundUnlocked){ setBtn(true); return; }
+        mediaEl.muted = false;
+        setTimeout(()=>{
+          if(mediaEl.paused || mediaEl.muted){
+            mediaEl.muted = true;
+            mediaEl.play().catch(()=>{});
+            setBtn(true);
+          } else {
+            setBtn(false);
+          }
+        }, 250);
+      });
+      tryPlay().catch(()=>{
+        // video ešte nebolo pripravené - skús znova, keď sa načíta
+        const retry = ()=>{ mediaEl.removeEventListener('canplay', retry); tryPlay().catch(()=>{}); };
+        mediaEl.addEventListener('canplay', retry);
+      });
       return;
     }
     mediaEl.play().catch(()=>{
@@ -12836,7 +12898,7 @@ function playMedia(id, opts={}){
       // Rovnaké obmedzenie platí aj pre vložený YouTube prehrávač na iPhone.
       mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'mute', args:[]}), '*');
       mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*');
-      if(!desiredMuted){
+      if(!desiredMuted && iosSoundUnlocked){
         setTimeout(()=>{
           mediaEl.contentWindow.postMessage(JSON.stringify({event:'command', func:'unMute', args:[]}), '*');
         }, 400);
@@ -13046,13 +13108,18 @@ function unmountIfYouTube(card){
 }
 
 let videoMuteState = {}; // len lokálny stav (nie je súčasťou zdieľaných dát)
+// iPhone: kým si používateľ v sekcii Videá raz neťukne na 🔊, videá idú automaticky
+// stlmene (inak by ich iPhone vôbec nespustil). Po ťuknutí skúšame aj so zvukom.
+var iosSoundUnlocked = false;
 
 function toggleMute(id){
-  const currentlyMuted = videoMuteState[id] === true; // default: NEstlmené
+  const mediaEl = document.getElementById('media-'+id);
+  // Na iPhone môže byť video stlmené automaticky (pozri playMedia), hoci
+  // používateľ zvuk chce - preto rozhoduje SKUTOČNÝ stav videa.
+  const currentlyMuted = (mediaEl && mediaEl.tagName === 'VIDEO') ? mediaEl.muted : (videoMuteState[id] === true);
   const newMuted = !currentlyMuted;
   videoMuteState[id] = newMuted;
-
-  const mediaEl = document.getElementById('media-'+id);
+  if(!newMuted && isIOSDevice()) iosSoundUnlocked = true; // ťuknutie = povolenie zvuku aj pre ďalšie videá
   const btn = document.getElementById('mute-btn-'+id);
   if(mediaEl){
     if(mediaEl.tagName === 'VIDEO'){
