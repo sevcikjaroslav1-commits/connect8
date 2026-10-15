@@ -2265,7 +2265,7 @@
 </style>
 <style id="c8g-style">
 /* Zemeguľa s krajinami používateľov */
-.c8g-card{margin-top:40px;transition:transform .2s;background:var(--surface,#fff);border:1px solid var(--border,#E5E7EB);border-radius:16px;padding:12px 12px 10px;}
+.c8g-card{margin-top:40px;transition:transform .2s;background:transparent;border:0;padding:0;}
 .c8g-head{display:flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--text,#111827);padding:2px 4px 4px;}
 .c8g-head svg{width:20px;height:20px;flex-shrink:0;}
 .c8g-canvas{display:block;width:100%;aspect-ratio:1/1;cursor:grab;touch-action:none;}
@@ -17946,6 +17946,18 @@ c8ApplyFriendsView();
     g.addColorStop(0, '#FFFFFF'); g.addColorStop(1, '#E4E7FB');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
     ctx.strokeStyle = '#D5D9F6'; ctx.lineWidth = 1; ctx.stroke();
+    // jemné čiary: poludníky od pólu k pólu a rovnobežky
+    ctx.strokeStyle = 'rgba(79,70,229,0.22)'; ctx.lineWidth = 0.8;
+    for(let lat = -75; lat <= 75; lat += 15){
+      ctx.beginPath(); let pen = false;
+      for(let lon = -180; lon <= 180; lon += 3){ const p = this.proj(lon, lat); if(p.z > 0){ const X = cx + R * p.x, Y = cy - R * p.y; if(pen) ctx.lineTo(X, Y); else { ctx.moveTo(X, Y); pen = true; } } else pen = false; }
+      ctx.stroke();
+    }
+    for(let lon = -180; lon < 180; lon += 15){
+      ctx.beginPath(); let pen = false;
+      for(let lat = -88; lat <= 88; lat += 3){ const p = this.proj(lon, lat); if(p.z > 0){ const X = cx + R * p.x, Y = cy - R * p.y; if(pen) ctx.lineTo(X, Y); else { ctx.moveTo(X, Y); pen = true; } } else pen = false; }
+      ctx.stroke();
+    }
     const D = getDots(), ds = S / 260;
     for(let i = 0; i < D.length; i += 2){
       const p = this.proj(D[i], D[i + 1]); if(p.z <= 0) continue;
