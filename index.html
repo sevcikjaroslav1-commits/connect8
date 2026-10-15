@@ -13060,6 +13060,23 @@ function mountAndPlay(card){
     // začal naraz predbežne načítavať/dekódovať všetky videá v zozname, čo
     // rýchlo vyčerpá limit súbežne aktívnych <video> prehrávačov.
     const videoEl = document.getElementById('media-'+id);
+    if(isIOSDevice() && videoEl && videoEl !== c8IosShared){
+      // iPhone: všetky videá hrá JEDEN spoločný prehrávač - povolenie na zvuk
+      // (získané jedným ťuknutím) mu ostáva aj pri ďalších videách.
+      c8IosReleaseShared();
+      const v = c8GetIosShared();
+      videoEl.id = 'media-ph-' + id;
+      v.id = 'media-' + id;
+      v.className = videoEl.className;
+      v.style.cssText = videoEl.style.cssText;
+      videoEl.replaceWith(v);
+      c8IosParked = { ph: videoEl, id: String(id) };
+      v.src = videoEl.dataset.src || '';
+      v.load();
+      playMedia(id, {autoplay:true});
+      c8IosWatchdog(id);
+      return;
+    }
     if(videoEl && (!videoEl.getAttribute('src') || videoEl.getAttribute('src') === C8_SILENT_WAV) && videoEl.dataset.src){
       videoEl.src = videoEl.dataset.src;
       videoEl.load();
@@ -13076,6 +13093,7 @@ function mountAndPlay(card){
 function unmountIfYouTube(card){
   const id = card.dataset.vid;
   if(card.dataset.kind !== 'youtube'){
+    if(c8IosParked && c8IosParked.id === String(id)){ c8IosReleaseShared(); return; }
     const videoEl = document.getElementById('media-'+id);
     if(videoEl){
       videoEl.pause();
@@ -13101,50 +13119,75 @@ let videoMuteState = {}; // len lokálny stav (nie je súčasťou zdieľaných d
 
 /* ---- iPhone: zvuk pri automatickom prehrávaní v sekcii Videá ----
    iPhone pustí video SO ZVUKOM bez ťuknutia len tomu <video> prvku, ktorý
-   už raz dostal ťuknutie. Pri každom dotyku obrazovky (ťuknutie, potiahnutie
-   na ďalšie video) preto v tej istej chvíli "odomkneme" aktuálne video a
-   susedné videá (krátkym prehratím tichého zvuku), a bežiacemu videu
-   zapneme zvuk. Ďalšie video potom už môže začať hrať rovno so zvukom. */
+   už raz dostal ťuknutie. Preto všetky videá v sekcii Videá hrá JEDEN
+   spoločný prehrávač (presúva sa z karty do karty, mení sa len video).
+   Prvé ťuknutie kdekoľvek mu dá povolenie na zvuk a to mu už ostane. */
 const C8_SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+var c8IosShared = null, c8IosParked = null;
 function c8IsActiveVideo(id){ return String(activeVideoCardId) === String(id); }
+function c8GetIosShared(){
+  if(!c8IosShared){
+    const v = document.createElement('video');
+    v.setAttribute('playsinline', '');
+    v.setAttribute('webkit-playsinline', '');
+    v.playsInline = true;
+    v.controls = true;
+    v.preload = 'auto';
+    c8IosShared = v;
+  }
+  return c8IosShared;
+}
+function c8IosReleaseShared(){
+  const v = c8IosShared, p = c8IosParked;
+  c8IosParked = null;
+  if(!v || !p) return;
+  try{ v.pause(); }catch(e){}
+  if(v.isConnected && p.ph) v.replaceWith(p.ph);
+  if(p.ph) p.ph.id = 'media-' + p.id;
+  v.id = '';
+  v.removeAttribute('src');
+  try{ v.load(); }catch(e){}
+}
+// Poistka: ak by sa video po presune predsa nespustilo, spusti ho (aspoň stlmene).
+function c8IosWatchdog(id){
+  [700, 1800, 3500].forEach(ms => setTimeout(()=>{
+    const v = c8IosShared;
+    if(!v || !c8IsActiveVideo(id) || !c8IosParked || c8IosParked.id !== String(id)) return;
+    if(v.dataset.userPaused === '1' || v.ended) return;
+    if(v.paused){
+      const wantSound = videoMuteState[id] !== true && v.dataset.c8u === '1';
+      v.muted = !wantSound;
+      v.play().catch(()=>{ v.muted = true; v.play().catch(()=>{}); });
+    }
+  }, ms));
+}
 function c8IosGesture(e){
   if(!isIOSDevice()) return;
-  // ťuknutie na 🔊/🔇 rieši samotné tlačidlo (toggleMute)
-  if(e && e.target && e.target.closest && e.target.closest('[id^="mute-btn-"]')) return;
-  const sc = document.getElementById('video-scroller');
-  if(!sc) return;
-  const cards = Array.prototype.slice.call(sc.querySelectorAll('.video-card'));
-  if(!cards.length) return;
-  let idx = cards.findIndex(c => c.dataset.vid === String(activeVideoCardId));
-  if(idx < 0) idx = 0;
-  for(let k = idx - 1; k <= idx + 2; k++){
-    const card = cards[k];
-    if(!card || card.dataset.kind === 'youtube') continue;
-    const vid = card.dataset.vid;
-    const v = document.getElementById('media-' + vid);
-    if(!v || v.tagName !== 'VIDEO') continue;
-    const src = v.getAttribute('src');
-    if(src && src !== C8_SILENT_WAV && !v.paused){
-      // práve hrá: dotyk = smie dostať zvuk
-      v.dataset.c8u = '1';
-      if(videoMuteState[vid] !== true && v.muted){
-        v.muted = false;
-        const b = document.getElementById('mute-btn-' + vid);
-        if(b) b.textContent = '🔊';
-      }
-      continue;
-    }
-    if(v.dataset.c8u === '1' || (src && src !== C8_SILENT_WAV)) continue;
-    // odomknutie tichým zvukom (nič nepočuť, nič sa nesťahuje)
-    try{
-      v.src = C8_SILENT_WAV;
+  if(e && e.target && e.target.closest && e.target.closest('[id^="mute-btn-"]')) return; // rieši toggleMute
+  const v = c8GetIosShared();
+  const src = v.getAttribute('src');
+  if(src && src !== C8_SILENT_WAV){
+    // práve sa prehráva video - ťuknutie = povolenie, zapni zvuk
+    v.dataset.c8u = '1';
+    const id = c8IosParked ? c8IosParked.id : null;
+    if(id && videoMuteState[id] !== true && v.muted){
       v.muted = false;
-      const pr = v.play();
-      v.dataset.c8u = '1';
-      const done = ()=>{ if(v.getAttribute('src') === C8_SILENT_WAV){ try{ v.pause(); }catch(e){} v.removeAttribute('src'); try{ v.load(); }catch(e){} } };
-      if(pr && pr.then) pr.then(done).catch(done); else done();
-    }catch(e){}
+      if(v.paused && v.dataset.userPaused !== '1') v.play().catch(()=>{});
+      const b = document.getElementById('mute-btn-' + id);
+      if(b) b.textContent = '🔊';
+    }
+    return;
   }
+  if(v.dataset.c8u === '1') return;
+  // prehrávač je voľný: odomkni ho tichým zvukom (nič nepočuť)
+  try{
+    v.src = C8_SILENT_WAV;
+    v.muted = false;
+    const pr = v.play();
+    v.dataset.c8u = '1';
+    const done = ()=>{ if(v.getAttribute('src') === C8_SILENT_WAV){ try{ v.pause(); }catch(err){} v.removeAttribute('src'); try{ v.load(); }catch(err){} } };
+    if(pr && pr.then) pr.then(done).catch(done); else done();
+  }catch(err){}
 }
 document.addEventListener('touchend', c8IosGesture, {capture:true, passive:true});
 document.addEventListener('click', c8IosGesture, true);
