@@ -2506,6 +2506,7 @@
           <li>E-mailová adresa</li>
           <li>Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme</li>
           <li>Profilová fotka (ak ju nahráš)</li>
+          <li>Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.</li>
         </ul>
         <p><strong>2.2 Obsah, ktorý vytváraš</strong></p>
         <ul>
@@ -13886,6 +13887,7 @@ const LEGAL_DICT_EN = {
   "E-mailová adresa": "Email address",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Password — stored securely via Firebase Authentication; we never see or store it in readable form",
   "Profilová fotka (ak ju nahráš)": "Profile photo (if you upload one)",
+  "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Country — determined automatically on your first login from your device's language setting (not from your location). On the home page it is shown only in aggregate as a country flag on the globe, without your name and without the number of users.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Content you create",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Feed posts (text, images, videos, files)",
   "Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov": "Short videos (similar to TikTok) — including view counts, likes and comments",
@@ -14118,6 +14120,7 @@ const LEGAL_DICT_CZ = {
   "E-mailová adresa": "E-mailová adresa",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Heslo — ukládá se zabezpečeně přes Firebase Authentication, my ho v podobě čitelného textu nikdy nevidíme ani neukládáme",
   "Profilová fotka (ak ju nahráš)": "Profilová fotka (pokud ji nahraješ)",
+  "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Země — určí se automaticky při prvním přihlášení podle jazykového nastavení tvého zařízení (ne podle polohy). Na úvodní stránce se zobrazuje jen souhrnně jako vlajka země na zeměkouli, bez jména a bez počtu uživatelů.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Obsah, který vytváříš",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Příspěvky ve feedu (text, obrázky, videa, soubory)",
   "Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov": "Krátká videa (podobně jako TikTok) — včetně počtu zhlédnutí, lajků a komentářů",
@@ -14348,6 +14351,7 @@ const LEGAL_DICT_PL = {
   "E-mailová adresa": "Adres e-mail",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Hasło — jest przechowywane bezpiecznie za pośrednictwem Firebase Authentication, my sami nigdy nie widzimy go ani nie przechowujemy w postaci czytelnego tekstu",
   "Profilová fotka (ak ju nahráš)": "Zdjęcie profilowe (jeśli je dodasz)",
+  "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Kraj — ustalany automatycznie przy pierwszym logowaniu na podstawie ustawień językowych twojego urządzenia (nie na podstawie lokalizacji). Na stronie głównej jest pokazywany tylko zbiorczo jako flaga kraju na globusie, bez imienia i bez liczby użytkowników.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Treści, które tworzysz",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Posty na kanale (tekst, obrazy, filmy, pliki)",
   "Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov": "Krótkie filmy (podobnie jak TikTok) — łącznie z liczbą wyświetleń, polubień i komentarzy",
@@ -14577,6 +14581,7 @@ const LEGAL_DICT_HU = {
   "E-mailová adresa": "E-mail cím",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Jelszó — biztonságosan a Firebase Authentication szolgáltatáson keresztül tárolódik, azt olvasható formában soha nem látjuk és nem tároljuk",
   "Profilová fotka (ak ju nahráš)": "Profilkép (ha feltöltöd)",
+  "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Ország — az első bejelentkezéskor automatikusan, az eszközöd nyelvi beállítása alapján kerül meghatározásra (nem a tartózkodási helyed alapján). A kezdőlapon csak összesítve, egy ország zászlajaként jelenik meg a földgömbön, név és felhasználószám nélkül.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Az általad létrehozott tartalom",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Bejegyzések a hírfolyamban (szöveg, képek, videók, fájlok)",
   "Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov": "Rövid videók (a TikTokhoz hasonlóan) — beleértve a megtekintések, kedvelések és hozzászólások számát",
@@ -14806,6 +14811,7 @@ const LEGAL_DICT_AT = {
   "E-mailová adresa": "E-Mail-Adresse",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Passwort — wird sicher über Firebase Authentication gespeichert, wir sehen oder speichern es niemals in lesbarer Form",
   "Profilová fotka (ak ju nahráš)": "Profilbild (falls du eines hochlädst)",
+  "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Land — wird bei deiner ersten Anmeldung automatisch anhand der Spracheinstellung deines Geräts bestimmt (nicht anhand deines Standorts). Auf der Startseite wird es nur zusammengefasst als Landesflagge auf dem Globus angezeigt, ohne Namen und ohne Anzahl der Nutzer.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Inhalte, die du erstellst",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Beiträge im Feed (Text, Bilder, Videos, Dateien)",
   "Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov": "Kurze Videos (ähnlich wie TikTok) — einschließlich der Anzahl der Aufrufe, Likes und Kommentare",
@@ -15036,6 +15042,7 @@ const LEGAL_DICT_DE = {
   "E-mailová adresa": "E-Mail-Adresse",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Passwort — wird sicher über Firebase Authentication gespeichert, wir sehen oder speichern es niemals in lesbarer Form",
   "Profilová fotka (ak ju nahráš)": "Profilbild (falls du eines hochlädst)",
+  "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Land — wird bei deiner ersten Anmeldung automatisch anhand der Spracheinstellung deines Geräts bestimmt (nicht anhand deines Standorts). Auf der Startseite wird es nur zusammengefasst als Landesflagge auf dem Globus angezeigt, ohne Namen und ohne Anzahl der Nutzer.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Inhalte, die du erstellst",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Beiträge im Feed (Text, Bilder, Videos, Dateien)",
   "Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov": "Kurze Videos (ähnlich wie TikTok) — einschließlich der Anzahl der Aufrufe, Likes und Kommentare",
@@ -15265,6 +15272,7 @@ const LEGAL_DICT_IT = {
   "E-mailová adresa": "Indirizzo e-mail",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Password — viene memorizzata in modo sicuro tramite Firebase Authentication, noi non la vediamo né la memorizziamo mai in chiaro",
   "Profilová fotka (ak ju nahráš)": "Foto del profilo (se ne carichi una)",
+  "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Paese — determinato automaticamente al primo accesso in base all'impostazione della lingua del tuo dispositivo (non in base alla posizione). Nella pagina iniziale viene mostrato solo in forma aggregata come bandiera del paese sul globo, senza nome e senza numero di utenti.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Contenuti che crei",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Post nel feed (testo, immagini, video, file)",
   "Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov": "Video brevi (simili a TikTok) — comprese visualizzazioni, mi piace e commenti",
