@@ -18496,10 +18496,16 @@ c8ApplyFriendsView();
       video.src = (typeof optimizeCloudinaryVideoUrl === 'function') ? optimizeCloudinaryVideoUrl(holo.video) : holo.video;
       video.addEventListener('playing', ()=>{ talking = !video.muted; });
       video.addEventListener('ended', ()=>{ talking = false; if(opts.onEnd) opts.onEnd(); });
-      const p = video.play();
-      if(p && p.catch) p.catch(()=>{
-        if(!video.muted){ video.muted = true; video.play().catch(()=>{}); if(opts.onNeedSound) opts.onNeedSound(); }
-      });
+      if(opts.autoplay === false){
+        // bez automatického prehratia: ukáž prvý snímok a čakaj na ťuknutie
+        video.addEventListener('loadeddata', ()=>{ try{ video.currentTime = 0.05; }catch(_){} }, { once: true });
+      } else {
+        const p = video.play();
+        if(p && p.then) p.then(()=>{ if(opts.onStart) opts.onStart(!video.muted); });
+        if(p && p.catch) p.catch(()=>{
+          if(!video.muted){ video.muted = true; video.play().then(()=>{ if(opts.onStart) opts.onStart(false); }).catch(()=>{}); if(opts.onNeedSound) opts.onNeedSound(); }
+        });
+      }
     }
     const ss = x=>{ x = Math.min(1, Math.max(0, x)); return x*x*(3 - 2*x); };
     let ctl = null;
@@ -18560,6 +18566,10 @@ c8ApplyFriendsView();
     return ctl = {
       video,
       unmute(){ if(video){ video.muted = false; video.currentTime = 0; video.play().catch(()=>{}); talking = true; } },
+      replay(){ if(!video) return Promise.resolve(false); video.muted = false; try{ video.currentTime = 0; }catch(_){}
+        return video.play().then(()=>{ talking = true; return true; }).catch(()=>{ video.muted = true; return video.play().then(()=>false).catch(()=>false); }); },
+      stop(){ if(video){ try{ video.pause(); }catch(_){} talking = false; } },
+      isPlaying(){ return !!(video && !video.paused && !video.ended); },
       destroy(){ dead = true; cancelAnimationFrame(raf); window.removeEventListener('resize', onRs); if(video){ try{ video.pause(); video.removeAttribute('src'); video.load(); }catch(_){} } stage.innerHTML = ''; }
     };
   }
@@ -18784,26 +18794,41 @@ c8ApplyFriendsView();
   function findPost(id){
     return (posts || []).find(x=>x.id === id) || Object.values(ownPostsCache || {}).flat().find(x=>x.id === id);
   }
+  const playedPosts = new Set(); // hologramy, ktoré sa už raz samé prehrali
+  function stopOtherPosts(except){
+    postPlayers.forEach((o, b)=>{ if(o !== except && o.isPlaying && o.isPlaying()){ o.stop(); setPostBtn(b, 'replay'); } });
+  }
+  function setPostBtn(box, state){
+    const btn = box.querySelector('.c8holo-snd'); if(!btn) return;
+    if(state === 'hide'){ btn.style.display = 'none'; return; }
+    btn.style.display = '';
+    btn.textContent = state === 'sound' ? '🔊 Prehrať so zvukom' : (state === 'play' ? '▶ Prehrať' : '▶ Prehrať znova');
+  }
   function mountPost(box){
     if(postPlayers.has(box)) return;
-    const p = findPost(Number(box.dataset.hpid)); if(!p || !p.hologram) return;
+    const id = Number(box.dataset.hpid);
+    const p = findPost(id); if(!p || !p.hologram) return;
     const stage = box.querySelector('.c8holo-stage');
-    const pl = mountPlayer(stage, p.hologram, { sound: false, loop: true });
+    const isVideo = p.hologram.type === 'video';
+    let anotherPlaying = false;
+    postPlayers.forEach(o=>{ if(o.isPlaying && o.isPlaying()) anotherPlaying = true; });
+    const auto = isVideo && !playedPosts.has(id) && !anotherPlaying;
+    const pl = mountPlayer(stage, p.hologram, {
+      sound: true, loop: false, autoplay: auto,
+      onStart: (withSound)=>{ playedPosts.add(id); setPostBtn(box, withSound ? 'hide' : 'sound'); },
+      onNeedSound: ()=>setPostBtn(box, 'sound'),
+      onEnd: ()=>setPostBtn(box, 'replay')
+    });
     postPlayers.set(box, pl);
-    const snd = box.querySelector('.c8holo-snd');
-    if(snd){
-      snd.style.display = p.hologram.type === 'video' ? '' : 'none';
-      snd.textContent = '🔇 Zapnúť zvuk';
-      snd.onclick = (e)=>{
-        e.stopPropagation();
-        const v = pl.video; if(!v) return;
-        if(v.muted){
-          // zvuk môže hrať len jeden hologram naraz
-          postPlayers.forEach((o, b)=>{ if(o !== pl && o.video && !o.video.muted){ o.video.muted = true; const s2 = b.querySelector('.c8holo-snd'); if(s2) s2.textContent = '🔇 Zapnúť zvuk'; } });
-          pl.unmute(); snd.textContent = '🔊 Vypnúť zvuk';
-        } else { v.muted = true; snd.textContent = '🔇 Zapnúť zvuk'; }
-      };
-    }
+    if(!isVideo){ setPostBtn(box, 'hide'); return; }
+    setPostBtn(box, auto ? 'hide' : (playedPosts.has(id) ? 'replay' : 'play'));
+    const btn = box.querySelector('.c8holo-snd');
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      stopOtherPosts(pl);
+      playedPosts.add(id);
+      pl.replay().then(withSound=>setPostBtn(box, withSound ? 'hide' : 'sound'));
+    };
   }
   function unmountPost(box){
     const pl = postPlayers.get(box); if(!pl) return;
@@ -18830,7 +18855,7 @@ c8ApplyFriendsView();
     window.buildPostCard = buildPostCard = function(p, o){
       let html = _buildPostCard.apply(this, arguments);
       if(p && p.hologram && (p.hologram.front || p.hologram.video)){
-        const block = '<div class="c8holo-post" data-hpid="' + p.id + '"><div class="c8holo-stage"></div><button type="button" class="c8holo-snd" style="display:none">🔇 Zapnúť zvuk</button></div>';
+        const block = '<div class="c8holo-post" data-hpid="' + p.id + '"><div class="c8holo-stage"></div><button type="button" class="c8holo-snd" style="display:none">▶ Prehrať</button></div>';
         const anchor = '<div class="post-text-translation" id="post-tr-' + p.id + '"></div>';
         html = html.indexOf(anchor) >= 0 ? html.replace(anchor, anchor + block) : html + block;
       }
