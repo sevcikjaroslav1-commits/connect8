@@ -2293,6 +2293,9 @@
   #auth-screen #p-fan5 img.c8hc-m{ display:block; object-fit:cover; object-position:top center; }
 }
 </style>
+<style id="c8-onefs">
+@media(min-width:1520px){ #app .c8h.c8-one .mode-dock button{font-size:var(--c8-onefs,12.5px)!important;} #app .c8h.c8-one .mode-dock .ml{white-space:nowrap;} }
+</style>
 </head>
 <body>
 
@@ -17472,8 +17475,29 @@ function c8LayoutHeader(){
   if(window.innerWidth <= 900){ tb.classList.remove('c8-one'); return; }
   tb.classList.add('c8-one');
   const dock = tb.querySelector('.mode-dock');
+  // dlhšie popisky (napr. PL "Użytkownicy", HU "Felhasználók"): na širokom PC
+  // má lišta pevnú šírku 608px - rozšír ju len o toľko, koľko treba, prípadne
+  // trochu zmenši písmo, aby ostala 1-riadková hlavička ako pri ostatných jazykoch
+  let overlap = false;
+  if(dock){
+    dock.style.width = ''; tb.style.removeProperty('--c8-onefs');
+    if(window.innerWidth >= 1520 && dock.scrollWidth > dock.clientWidth + 1){
+      const btns = Array.from(dock.querySelectorAll(':scope > button'));
+      const need = () => { let m = 0; btns.forEach(b => { const l = b.querySelector('.ml') || b; const rg = document.createRange(); rg.selectNodeContents(l); m = Math.max(m, rg.getBoundingClientRect().width); }); return Math.ceil(btns.length * (m + 10)); };
+      const others = ['.search-box', '.user-stats', '.c8h-date'].map(q => tb.querySelector(q)).filter(Boolean);
+      const hits = () => { const r = dock.getBoundingClientRect(); return others.some(o => { const q = o.getBoundingClientRect(); return q.width && q.right > r.left - 4 && q.left < r.right + 4; }); };
+      let fs = 12.5;
+      for(let i = 0; i < 6; i++){
+        const w = need();
+        dock.style.width = Math.max(608, w) + 'px';
+        if(!hits() || fs <= 10.5) break;
+        fs -= 0.5; tb.style.setProperty('--c8-onefs', fs + 'px');
+      }
+      overlap = hits();
+    }
+  }
   const fits = tb.scrollWidth <= tb.clientWidth + 1 && (!dock || dock.scrollWidth <= dock.clientWidth + 1);
-  if(!fits) tb.classList.remove('c8-one');
+  if(!fits || overlap){ tb.classList.remove('c8-one'); if(dock) dock.style.width = ''; tb.style.removeProperty('--c8-onefs'); }
   if(typeof updateTopbarHeightVar === 'function') updateTopbarHeightVar();
 }
 window.addEventListener('resize', c8LayoutHeader);
