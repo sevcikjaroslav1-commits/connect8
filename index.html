@@ -18310,7 +18310,7 @@ c8ApplyFriendsView();
     const ox = out.getContext('2d');
     ox.drawImage(col, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
     ox.drawImage(mask, bb.x, bb.y, bb.w, bb.h, bb.w, 0, bb.w, bb.h);
-    return await canvasToBlob(out, 'image/jpeg', 0.9);
+    return await canvasToBlob(out, 'image/jpeg', 0.82);
   }
 
   // video -> zbalené video (vľavo postava, vpravo maska) + zvuk, max 20 s
@@ -18321,6 +18321,7 @@ c8ApplyFriendsView();
     return '';
   }
   async function packVideo(seg, file, onProg, unlock){
+    unlock.started = true;
     const v = unlock.video;
     await new Promise((res, rej)=>{ if(v.readyState >= 1) return res(); v.onloadedmetadata = ()=>res(); v.onerror = ()=>rej(new Error('Video sa nepodarilo načítať.')); });
     const dur = Math.min(20, v.duration || 20);
@@ -18354,6 +18355,14 @@ c8ApplyFriendsView();
     const ac = unlock.ac;
     let audioBuf = null;
     try{ audioBuf = await ac.decodeAudioData(await file.arrayBuffer()); }catch(e){ console.warn('Hologram: zvuk sa nepodarilo dekódovať', e); }
+    // jemné zosilnenie: zmeria sa priemerná hlasitosť a vypočíta sa, o koľko zosilniť (najviac +12 dB)
+    let boostDb = 4;
+    if(audioBuf){
+      let sum = 0, cnt = 0; const endS = Math.min(audioBuf.length, Math.floor(dur * audioBuf.sampleRate));
+      for(let ch = 0; ch < Math.min(2, audioBuf.numberOfChannels); ch++){ const d = audioBuf.getChannelData(ch); for(let i = 0; i < endS; i += 8){ sum += d[i]*d[i]; cnt++; } }
+      const rmsDb = 20 * Math.log10(Math.sqrt(sum / Math.max(1, cnt)) || 1e-5);
+      boostDb = Math.max(0, Math.min(12, -20 - rmsDb));
+    }
 
     // 2. krok: video sa prehrá (stlmené) a nahrá sa zbalený obraz + zvuk
     const out = document.createElement('canvas'); out.width = w * 2; out.height = h;
@@ -18374,41 +18383,36 @@ c8ApplyFriendsView();
     };
     await seekTo(0); drawPacked();
     const stream = out.captureStream(30);
-    let srcNode = null;
-    if(audioBuf){
-      const dest = ac.createMediaStreamDestination();
-      srcNode = ac.createBufferSource(); srcNode.buffer = audioBuf;
-      // zosilnenie hlasu: zmeria sa priemerná hlasitosť (len časť, ktorá ide do hologramu)
-      // a zvuk sa zosilní na bežnú úroveň; kompresor vyrovná tiché a hlasné miesta
-      // a obmedzovač zabráni praskaniu
-      let sum = 0, cnt = 0, peak = 0;
-      const endS = Math.min(audioBuf.length, Math.floor(dur * audioBuf.sampleRate));
-      for(let ch = 0; ch < audioBuf.numberOfChannels; ch++){
-        const d = audioBuf.getChannelData(ch);
-        for(let i = 0; i < endS; i += 4){ const x = d[i]; sum += x*x; cnt++; const ax = x < 0 ? -x : x; if(ax > peak) peak = ax; }
-      }
-      const rms = Math.sqrt(sum / Math.max(1, cnt)) || 1e-4;
-      const rmsDb = 20 * Math.log10(rms);
-      const gainDb = Math.max(0, Math.min(24, -16 - rmsDb)); // cieľ asi -16 dB, max +24 dB
-      const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 80;   // preč dunenie
-      const pres = ac.createBiquadFilter(); pres.type = 'peaking'; pres.frequency.value = 3000; pres.Q.value = 0.9; pres.gain.value = 3; // zrozumiteľnosť reči
-      const gain = ac.createGain(); gain.gain.value = Math.pow(10, gainDb / 20);
-      const comp = ac.createDynamicsCompressor();
-      comp.threshold.value = -24; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = 0.005; comp.release.value = 0.25;
-      const makeup = ac.createGain(); makeup.gain.value = 1.15;
-      const lim = ac.createDynamicsCompressor();
-      lim.threshold.value = -4; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.1;
-      srcNode.connect(hp); hp.connect(pres); pres.connect(gain); gain.connect(comp); comp.connect(makeup); makeup.connect(lim); lim.connect(dest);
-      dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
-    }
+    // ZVUK priamo z prehrávaného videa: keď sa video na chvíľu zasekne, počká aj zvuk,
+    // takže obraz a zvuk nikdy neutečú od seba
+    let srcNode = null, useElementAudio = false;
+    const dest = ac.createMediaStreamDestination();
+    const gainNode = ac.createGain(); gainNode.gain.value = Math.pow(10, boostDb / 20);
+    const comp = ac.createDynamicsCompressor();
+    comp.threshold.value = -6; comp.knee.value = 6; comp.ratio.value = 8; comp.attack.value = 0.003; comp.release.value = 0.2; // len poistka proti praskaniu
+    gainNode.connect(comp); comp.connect(dest);
+    if(unlock.elSrc){ unlock.elSrc.connect(gainNode); useElementAudio = true; }
+    else if(audioBuf){ srcNode = ac.createBufferSource(); srcNode.buffer = audioBuf; srcNode.connect(gainNode); }
+    dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
     const mime = pickMime();
     if(mime === null) throw new Error('Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.');
-    const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 2500000 } : undefined);
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 1500000, audioBitsPerSecond: 96000 } : { videoBitsPerSecond: 1500000, audioBitsPerSecond: 96000 });
     const chunks = [];
     rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
     const stopped = new Promise(res => rec.onstop = res);
+    if(ac.state === 'suspended'){ try{ await ac.resume(); }catch(_){} }
     rec.start(250);
-    await v.play();
+    if(useElementAudio){
+      v.muted = false;
+      try{ await v.play(); }
+      catch(e){
+        // prehliadač nedovolil prehrať video so zvukom -> náhradný spôsob (zvuk zvlášť)
+        v.muted = true; useElementAudio = false;
+        try{ unlock.elSrc.disconnect(); }catch(_){}
+        if(audioBuf){ srcNode = ac.createBufferSource(); srcNode.buffer = audioBuf; srcNode.connect(gainNode); }
+        await v.play();
+      }
+    } else { await v.play(); }
     if(srcNode){ try{ srcNode.start(0, v.currentTime); }catch(_){} }
     let done = false;
     await new Promise(resolve => {
@@ -18697,7 +18701,10 @@ c8ApplyFriendsView();
     const v = unlock.video;
     v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto';
     v.src = URL.createObjectURL(f);
-    v.muted = true;
+    // zvuk videa pôjde cez Web Audio (do reproduktora nejde nič) - pripojí sa ešte počas kliknutia
+    try{ if(unlock.ac) unlock.elSrc = unlock.ac.createMediaElementSource(v); }catch(e){ unlock.elSrc = null; }
+    v.muted = false;
+    const up = v.play(); if(up && up.then) up.then(()=>{ if(unlock.started) return; try{ v.pause(); v.currentTime = 0; }catch(_){} }).catch(()=>{});
     busyUI(true);
     try{
       if(!unlock.ac) throw new Error('Tento prehliadač nepodporuje spracovanie zvuku.');
