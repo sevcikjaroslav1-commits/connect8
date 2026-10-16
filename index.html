@@ -18377,7 +18377,28 @@ c8ApplyFriendsView();
     let srcNode = null;
     if(audioBuf){
       const dest = ac.createMediaStreamDestination();
-      srcNode = ac.createBufferSource(); srcNode.buffer = audioBuf; srcNode.connect(dest);
+      srcNode = ac.createBufferSource(); srcNode.buffer = audioBuf;
+      // zosilnenie hlasu: zmeria sa priemerná hlasitosť (len časť, ktorá ide do hologramu)
+      // a zvuk sa zosilní na bežnú úroveň; kompresor vyrovná tiché a hlasné miesta
+      // a obmedzovač zabráni praskaniu
+      let sum = 0, cnt = 0, peak = 0;
+      const endS = Math.min(audioBuf.length, Math.floor(dur * audioBuf.sampleRate));
+      for(let ch = 0; ch < audioBuf.numberOfChannels; ch++){
+        const d = audioBuf.getChannelData(ch);
+        for(let i = 0; i < endS; i += 4){ const x = d[i]; sum += x*x; cnt++; const ax = x < 0 ? -x : x; if(ax > peak) peak = ax; }
+      }
+      const rms = Math.sqrt(sum / Math.max(1, cnt)) || 1e-4;
+      const rmsDb = 20 * Math.log10(rms);
+      const gainDb = Math.max(0, Math.min(24, -16 - rmsDb)); // cieľ asi -16 dB, max +24 dB
+      const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 80;   // preč dunenie
+      const pres = ac.createBiquadFilter(); pres.type = 'peaking'; pres.frequency.value = 3000; pres.Q.value = 0.9; pres.gain.value = 3; // zrozumiteľnosť reči
+      const gain = ac.createGain(); gain.gain.value = Math.pow(10, gainDb / 20);
+      const comp = ac.createDynamicsCompressor();
+      comp.threshold.value = -24; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = 0.005; comp.release.value = 0.25;
+      const makeup = ac.createGain(); makeup.gain.value = 1.15;
+      const lim = ac.createDynamicsCompressor();
+      lim.threshold.value = -4; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.001; lim.release.value = 0.1;
+      srcNode.connect(hp); hp.connect(pres); pres.connect(gain); gain.connect(comp); comp.connect(makeup); makeup.connect(lim); lim.connect(dest);
       dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
     }
     const mime = pickMime();
