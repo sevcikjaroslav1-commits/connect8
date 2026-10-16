@@ -2514,6 +2514,7 @@
           <li>Krátke videá (podobne ako TikTok) — vrátane počtu zhliadnutí, lajkov a komentárov</li>
           <li>Komentáre a lajky pod príspevkami a videami</li>
           <li>Inzeráty v marketplace (názov, popis, cena, fotky tovaru)</li>
+          <li>Hologram (ak si ho vytvoríš) — 2 fotky alebo krátke video (max 10 s) aj so zvukom. Postava sa vystrihne priamo v tvojom zariadení a výsledok sa uloží na Cloudinary. Ak zapneš „Ukáž môj hologram“, uvidí ho každý, kto príde na tvoj profil. Hologram môžeš kedykoľvek vymazať.</li>
           <li>Odkazy na YouTube videá vložené k príspevku alebo do sekcie Filmy (prehrávanie beží priamo cez servery YouTube/Google)</li>
         </ul>
         <p><strong>2.3 Komunikácia medzi používateľmi</strong></p>
@@ -3501,7 +3502,7 @@
         <!-- PROFIL -->
         <section class="view" id="view-profile">
           <div class="c8pt-row" id="c8pt-row"><button type="button" class="c8pt c8pt-all" data-tab="all" onclick="c8SetProfTab('all')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" class="f"/><rect x="13" y="3" width="8" height="8" rx="2" class="f" opacity=".7"/><rect x="3" y="13" width="8" height="8" rx="2" class="f" opacity=".7"/><rect x="13" y="13" width="8" height="8" rx="2" class="f"/></svg><span class="c8pt-lbl"><span>Všetko</span><span class="c8pt-cnt" id="c8pt-cnt-all">0</span></span></button><button type="button" class="c8pt c8pt-reels" data-tab="reels" onclick="c8SetProfTab('reels')"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="3" class="f"/><g class="b"><rect x="3.6" y="5" width="2" height="2" rx=".5"/><rect x="3.6" y="9" width="2" height="2" rx=".5"/><rect x="3.6" y="13" width="2" height="2" rx=".5"/><rect x="3.6" y="17" width="2" height="2" rx=".5"/><rect x="18.4" y="5" width="2" height="2" rx=".5"/><rect x="18.4" y="9" width="2" height="2" rx=".5"/><rect x="18.4" y="13" width="2" height="2" rx=".5"/><rect x="18.4" y="17" width="2" height="2" rx=".5"/></g><path d="M10 8.5v7l5.5-3.5z" class="b"/></svg><span class="c8pt-lbl"><span>Reels</span><span class="c8pt-cnt" id="c8pt-cnt-reels">0</span></span></button><button type="button" class="c8pt c8pt-vid" data-tab="vid" onclick="c8SetProfTab('vid')"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="14" height="14" rx="3" class="f"/><path d="M17 10l5-3v10l-5-3z" class="f"/><path d="M7.5 9v6l4.5-3z" class="b"/></svg><span class="c8pt-lbl"><span>Videá</span><span class="c8pt-cnt" id="c8pt-cnt-vid">0</span></span></button><button type="button" class="c8pt c8pt-foto" data-tab="foto" onclick="c8SetProfTab('foto')"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3" class="f"/><circle cx="8" cy="9.5" r="2" class="b"/><path d="M3 18l5.5-5.5 4 4 3-3L21 18z" class="b"/></svg><span class="c8pt-lbl"><span>Fotky</span><span class="c8pt-cnt" id="c8pt-cnt-foto">0</span></span></button></div>
-          <button class="profile-back-btn" id="profile-back-btn" onclick="profileBack()">← Späť do Feedu</button>
+          <div class="c8holo-toprow"><button class="profile-back-btn" id="profile-back-btn" onclick="profileBack()">← Späť do Feedu</button><button type="button" class="c8holo-btn" id="c8holo-btn" onclick="c8HoloOpen()"><span class="c8holo-dot"></span><span class="c8holo-lbl">Hologram</span></button></div>
           <div class="profile-header">
             <div class="profile-avatar-wrap">
               <div class="avatar profile-avatar" id="profile-avatar" onclick="openProfileAvatarLightbox()">?</div>
@@ -13887,6 +13888,7 @@ const LEGAL_DICT_EN = {
   "E-mailová adresa": "Email address",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Password — stored securely via Firebase Authentication; we never see or store it in readable form",
   "Profilová fotka (ak ju nahráš)": "Profile photo (if you upload one)",
+  "Hologram (ak si ho vytvoríš) — 2 fotky alebo krátke video (max 10 s) aj so zvukom. Postava sa vystrihne priamo v tvojom zariadení a výsledok sa uloží na Cloudinary. Ak zapneš „Ukáž môj hologram“, uvidí ho každý, kto príde na tvoj profil. Hologram môžeš kedykoľvek vymazať.": "Hologram (if you create one) — 2 photos or a short video (max 10 s) including sound. The person is cut out directly on your device and the result is stored on Cloudinary. If you turn on “Show my hologram”, everyone who visits your profile will see it. You can delete your hologram at any time.",
   "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Country — determined automatically on your first login from your device's language setting (not from your location). On the home page it is shown only in aggregate as a country flag on the globe, without your name and without the number of users.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Content you create",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Feed posts (text, images, videos, files)",
@@ -14120,6 +14122,7 @@ const LEGAL_DICT_CZ = {
   "E-mailová adresa": "E-mailová adresa",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Heslo — ukládá se zabezpečeně přes Firebase Authentication, my ho v podobě čitelného textu nikdy nevidíme ani neukládáme",
   "Profilová fotka (ak ju nahráš)": "Profilová fotka (pokud ji nahraješ)",
+  "Hologram (ak si ho vytvoríš) — 2 fotky alebo krátke video (max 10 s) aj so zvukom. Postava sa vystrihne priamo v tvojom zariadení a výsledok sa uloží na Cloudinary. Ak zapneš „Ukáž môj hologram“, uvidí ho každý, kto príde na tvoj profil. Hologram môžeš kedykoľvek vymazať.": "Hologram (pokud si ho vytvoříš) — 2 fotky nebo krátké video (max 10 s) i se zvukem. Postava se vystřihne přímo ve tvém zařízení a výsledek se uloží na Cloudinary. Pokud zapneš „Ukaž můj hologram“, uvidí ho každý, kdo přijde na tvůj profil. Hologram můžeš kdykoli smazat.",
   "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Země — určí se automaticky při prvním přihlášení podle jazykového nastavení tvého zařízení (ne podle polohy). Na úvodní stránce se zobrazuje jen souhrnně jako vlajka země na zeměkouli, bez jména a bez počtu uživatelů.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Obsah, který vytváříš",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Příspěvky ve feedu (text, obrázky, videa, soubory)",
@@ -14351,6 +14354,7 @@ const LEGAL_DICT_PL = {
   "E-mailová adresa": "Adres e-mail",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Hasło — jest przechowywane bezpiecznie za pośrednictwem Firebase Authentication, my sami nigdy nie widzimy go ani nie przechowujemy w postaci czytelnego tekstu",
   "Profilová fotka (ak ju nahráš)": "Zdjęcie profilowe (jeśli je dodasz)",
+  "Hologram (ak si ho vytvoríš) — 2 fotky alebo krátke video (max 10 s) aj so zvukom. Postava sa vystrihne priamo v tvojom zariadení a výsledok sa uloží na Cloudinary. Ak zapneš „Ukáž môj hologram“, uvidí ho každý, kto príde na tvoj profil. Hologram môžeš kedykoľvek vymazať.": "Hologram (jeśli go utworzysz) — 2 zdjęcia lub krótkie wideo (maks. 10 s) z dźwiękiem. Postać jest wycinana bezpośrednio na twoim urządzeniu, a wynik zapisywany w Cloudinary. Jeśli włączysz „Pokaż mój hologram”, zobaczy go każdy, kto odwiedzi twój profil. Hologram możesz w każdej chwili usunąć.",
   "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Kraj — ustalany automatycznie przy pierwszym logowaniu na podstawie ustawień językowych twojego urządzenia (nie na podstawie lokalizacji). Na stronie głównej jest pokazywany tylko zbiorczo jako flaga kraju na globusie, bez imienia i bez liczby użytkowników.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Treści, które tworzysz",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Posty na kanale (tekst, obrazy, filmy, pliki)",
@@ -14581,6 +14585,7 @@ const LEGAL_DICT_HU = {
   "E-mailová adresa": "E-mail cím",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Jelszó — biztonságosan a Firebase Authentication szolgáltatáson keresztül tárolódik, azt olvasható formában soha nem látjuk és nem tároljuk",
   "Profilová fotka (ak ju nahráš)": "Profilkép (ha feltöltöd)",
+  "Hologram (ak si ho vytvoríš) — 2 fotky alebo krátke video (max 10 s) aj so zvukom. Postava sa vystrihne priamo v tvojom zariadení a výsledok sa uloží na Cloudinary. Ak zapneš „Ukáž môj hologram“, uvidí ho každý, kto príde na tvoj profil. Hologram môžeš kedykoľvek vymazať.": "Hologram (ha létrehozod) — 2 fotó vagy egy rövid videó (max. 10 mp) hanggal. Az alakot közvetlenül az eszközödön vágjuk ki, az eredményt a Cloudinary tárolja. Ha bekapcsolod a „Mutasd a hologramom” opciót, mindenki látja, aki megnyitja a profilodat. A hologramot bármikor törölheted.",
   "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Ország — az első bejelentkezéskor automatikusan, az eszközöd nyelvi beállítása alapján kerül meghatározásra (nem a tartózkodási helyed alapján). A kezdőlapon csak összesítve, egy ország zászlajaként jelenik meg a földgömbön, név és felhasználószám nélkül.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Az általad létrehozott tartalom",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Bejegyzések a hírfolyamban (szöveg, képek, videók, fájlok)",
@@ -14811,6 +14816,7 @@ const LEGAL_DICT_AT = {
   "E-mailová adresa": "E-Mail-Adresse",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Passwort — wird sicher über Firebase Authentication gespeichert, wir sehen oder speichern es niemals in lesbarer Form",
   "Profilová fotka (ak ju nahráš)": "Profilbild (falls du eines hochlädst)",
+  "Hologram (ak si ho vytvoríš) — 2 fotky alebo krátke video (max 10 s) aj so zvukom. Postava sa vystrihne priamo v tvojom zariadení a výsledok sa uloží na Cloudinary. Ak zapneš „Ukáž môj hologram“, uvidí ho každý, kto príde na tvoj profil. Hologram môžeš kedykoľvek vymazať.": "Hologramm (falls du eines erstellst) — 2 Fotos oder ein kurzes Video (max. 10 s) mit Ton. Die Person wird direkt auf deinem Gerät ausgeschnitten und das Ergebnis bei Cloudinary gespeichert. Wenn du „Mein Hologramm zeigen“ einschaltest, sieht es jeder, der dein Profil besucht. Du kannst dein Hologramm jederzeit löschen.",
   "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Land — wird bei deiner ersten Anmeldung automatisch anhand der Spracheinstellung deines Geräts bestimmt (nicht anhand deines Standorts). Auf der Startseite wird es nur zusammengefasst als Landesflagge auf dem Globus angezeigt, ohne Namen und ohne Anzahl der Nutzer.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Inhalte, die du erstellst",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Beiträge im Feed (Text, Bilder, Videos, Dateien)",
@@ -15042,6 +15048,7 @@ const LEGAL_DICT_DE = {
   "E-mailová adresa": "E-Mail-Adresse",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Passwort — wird sicher über Firebase Authentication gespeichert, wir sehen oder speichern es niemals in lesbarer Form",
   "Profilová fotka (ak ju nahráš)": "Profilbild (falls du eines hochlädst)",
+  "Hologram (ak si ho vytvoríš) — 2 fotky alebo krátke video (max 10 s) aj so zvukom. Postava sa vystrihne priamo v tvojom zariadení a výsledok sa uloží na Cloudinary. Ak zapneš „Ukáž môj hologram“, uvidí ho každý, kto príde na tvoj profil. Hologram môžeš kedykoľvek vymazať.": "Hologramm (falls du eines erstellst) — 2 Fotos oder ein kurzes Video (max. 10 s) mit Ton. Die Person wird direkt auf deinem Gerät ausgeschnitten und das Ergebnis bei Cloudinary gespeichert. Wenn du „Mein Hologramm zeigen“ einschaltest, sieht es jeder, der dein Profil besucht. Du kannst dein Hologramm jederzeit löschen.",
   "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Land — wird bei deiner ersten Anmeldung automatisch anhand der Spracheinstellung deines Geräts bestimmt (nicht anhand deines Standorts). Auf der Startseite wird es nur zusammengefasst als Landesflagge auf dem Globus angezeigt, ohne Namen und ohne Anzahl der Nutzer.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Inhalte, die du erstellst",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Beiträge im Feed (Text, Bilder, Videos, Dateien)",
@@ -15272,6 +15279,7 @@ const LEGAL_DICT_IT = {
   "E-mailová adresa": "Indirizzo e-mail",
   "Heslo — ukladá sa zabezpečene cez Firebase Authentication, my ho vo forme čitateľného textu nikdy nevidíme ani neukladáme": "Password — viene memorizzata in modo sicuro tramite Firebase Authentication, noi non la vediamo né la memorizziamo mai in chiaro",
   "Profilová fotka (ak ju nahráš)": "Foto del profilo (se ne carichi una)",
+  "Hologram (ak si ho vytvoríš) — 2 fotky alebo krátke video (max 10 s) aj so zvukom. Postava sa vystrihne priamo v tvojom zariadení a výsledok sa uloží na Cloudinary. Ak zapneš „Ukáž môj hologram“, uvidí ho každý, kto príde na tvoj profil. Hologram môžeš kedykoľvek vymazať.": "Ologramma (se lo crei) — 2 foto o un breve video (max 10 s) con audio. La persona viene ritagliata direttamente sul tuo dispositivo e il risultato viene salvato su Cloudinary. Se attivi “Mostra il mio ologramma”, lo vedrà chiunque visiti il tuo profilo. Puoi eliminare il tuo ologramma in qualsiasi momento.",
   "Krajina — určí sa automaticky pri prvom prihlásení podľa jazykového nastavenia tvojho zariadenia (nie podľa polohy). Na úvodnej stránke sa zobrazuje len súhrnne ako vlajka krajiny na zemeguli, bez mena a bez počtu používateľov.": "Paese — determinato automaticamente al primo accesso in base all'impostazione della lingua del tuo dispositivo (non in base alla posizione). Nella pagina iniziale viene mostrato solo in forma aggregata come bandiera del paese sul globo, senza nome e senza numero di utenti.",
   "2.2 Obsah, ktorý vytváraš": "2.2 Contenuti che crei",
   "Príspevky vo feede (text, obrázky, videá, súbory)": "Post nel feed (testo, immagini, video, file)",
@@ -18111,5 +18119,689 @@ c8ApplyFriendsView();
 })();
 
 </script>
+<style id="c8holo-style">
+/* ================= HOLOGRAM PROFILU ================= */
+.c8holo-toprow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;}
+.c8holo-toprow .profile-back-btn{margin-bottom:0;}
+.c8holo-btn{display:none;align-items:center;gap:6px;border:1.5px solid #22d3ee;background:rgba(34,211,238,.08);color:#0891b2;font-weight:700;font-size:13px;letter-spacing:.02em;padding:7px 16px;border-radius:10px;cursor:pointer;}
+.c8holo-btn:hover{background:rgba(34,211,238,.18);}
+.c8holo-btn .c8holo-dot{width:8px;height:8px;border-radius:50%;background:#22d3ee;box-shadow:0 0 8px #22d3ee;}
+.c8holo-modal{position:fixed;inset:0;z-index:10050;background:rgba(2,6,16,.72);display:none;align-items:center;justify-content:center;padding:16px;}
+.c8holo-modal.open{display:flex;}
+.c8holo-card{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#07111F;color:#D6F6FF;border:1px solid #12304A;border-radius:18px;padding:18px 18px 20px;box-shadow:0 20px 60px rgba(0,0,0,.5);font-family:inherit;}
+.c8holo-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.c8holo-head h3{margin:0;font-size:19px;color:#E6FBFF;letter-spacing:.02em;}
+.c8holo-x{background:transparent;border:1px solid #12304A;color:#9FD3E0;border-radius:10px;width:34px;height:34px;font-size:16px;cursor:pointer;}
+.c8holo-stage{width:100%;max-width:340px;aspect-ratio:3/4;margin:0 auto;position:relative;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;}
+.c8holo-stage canvas{width:100%;height:100%;display:block;}
+.c8holo-hint{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);font-size:11px;letter-spacing:.12em;color:#7FA9B8;white-space:nowrap;pointer-events:none;}
+.c8holo-sec{border-top:1px solid #12304A;margin-top:14px;padding-top:14px;display:flex;flex-direction:column;gap:10px;}
+.c8holo-sec h4{margin:0;font-size:14px;color:#9FE9FF;letter-spacing:.04em;}
+.c8holo-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:480px){.c8holo-opts{grid-template-columns:1fr;}}
+.c8holo-opt{border:1px solid #12304A;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;background:rgba(63,224,255,.04);}
+.c8holo-opt b{font-size:14px;color:#E6FBFF;}
+.c8holo-opt small{color:#7FA9B8;font-size:12px;line-height:1.45;}
+.c8holo-file{display:flex;align-items:center;gap:8px;font-size:12px;color:#BFEFFF;border:1px dashed #1E4A66;border-radius:10px;padding:8px 10px;cursor:pointer;}
+.c8holo-file input{display:none;}
+.c8holo-file.ok{border-style:solid;border-color:#22C55E;color:#BBF7D0;}
+.c8holo-go{background:#0E7490;color:#fff;border:0;border-radius:10px;padding:10px 12px;font-weight:700;font-size:13px;cursor:pointer;}
+.c8holo-go:disabled{opacity:.45;cursor:default;}
+.c8holo-go.green{background:#16A34A;}
+.c8holo-go.ghost{background:transparent;border:1px solid #1E4A66;color:#BFEFFF;}
+.c8holo-go.red{background:transparent;border:1px solid #7F1D1D;color:#FCA5A5;}
+.c8holo-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.c8holo-status{font-size:13px;color:#9FE9FF;min-height:18px;}
+.c8holo-bar{height:6px;border-radius:6px;background:#0B2236;overflow:hidden;}
+.c8holo-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#22d3ee,#22C55E);transition:width .2s;}
+.c8holo-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;color:#D6F6FF;}
+.c8holo-switch input{width:44px;height:24px;accent-color:#22C55E;}
+.c8holo-ov{position:fixed;inset:0;z-index:10040;background:radial-gradient(120% 80% at 50% 45%,rgba(10,26,46,.96) 0%,rgba(4,10,20,.97) 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;opacity:0;transition:opacity .35s;}
+.c8holo-ov.show{opacity:1;}
+.c8holo-ov .c8holo-stage{max-width:min(440px,90vw);max-height:72vh;width:auto;height:72vh;}
+.c8holo-ov-name{color:#9FE9FF;font-size:13px;letter-spacing:.2em;text-transform:uppercase;}
+.c8holo-ov-close{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:calc(14px + env(safe-area-inset-right,0px));background:rgba(7,17,31,.8);border:1px solid #12304A;color:#D6F6FF;border-radius:12px;padding:8px 14px;font-weight:700;cursor:pointer;}
+.c8holo-post{margin:8px 0 4px;border-radius:14px;background:radial-gradient(120% 80% at 50% 45%,#0A1A2E 0%,#040A14 75%);overflow:hidden;position:relative;}
+.c8holo-post .c8holo-stage{max-width:360px;}
+.c8holo-post-play{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:28px 12px;background:transparent;border:0;color:#9FE9FF;font-weight:700;font-size:15px;cursor:pointer;}
+.c8holo-post-play span{border:1px solid #22d3ee;border-radius:999px;padding:9px 18px;background:rgba(34,211,238,.08);}
+</style>
+
+<div class="c8holo-modal" id="c8holo-modal" role="dialog" aria-modal="true" aria-label="Hologram">
+  <div class="c8holo-card">
+    <div class="c8holo-head"><h3>✨ Môj hologram</h3><button class="c8holo-x" type="button" onclick="c8HoloClose()" aria-label="Zavrieť">✕</button></div>
+    <div id="c8holo-have" style="display:none;">
+      <div class="c8holo-stage" id="c8holo-preview"></div>
+      <div class="c8holo-sec">
+        <label class="c8holo-switch"><span>Ukáž môj hologram každému, kto príde na môj profil</span><input type="checkbox" id="c8holo-show" onchange="c8HoloToggleShow(this.checked)"></label>
+        <div class="c8holo-row">
+          <button class="c8holo-go green" type="button" id="c8holo-share" onclick="c8HoloShare()">📤 Zdieľať môj hologram na Plochu</button>
+          <button class="c8holo-go red" type="button" onclick="c8HoloDelete()">🗑 Vymazať hologram</button>
+        </div>
+        <div class="c8holo-status" id="c8holo-have-status"></div>
+      </div>
+    </div>
+    <div class="c8holo-sec" id="c8holo-create">
+      <h4 id="c8holo-create-title">Vytvoriť hologram</h4>
+      <div class="c8holo-opts">
+        <div class="c8holo-opt">
+          <b>1. Z 2 fotiek</b>
+          <small>Odfoť sa spredu a zozadu. Postava bude stále spredu, otočiť sa dá myšou alebo prstom.</small>
+          <label class="c8holo-file" id="c8holo-lf"><input type="file" accept="image/*" id="c8holo-front" onchange="c8HoloPick(this,'c8holo-lf','Spredu')"><span>📷 Fotka spredu</span></label>
+          <label class="c8holo-file" id="c8holo-lb"><input type="file" accept="image/*" id="c8holo-back" onchange="c8HoloPick(this,'c8holo-lb','Zozadu')"><span>📷 Fotka zozadu</span></label>
+          <button class="c8holo-go" type="button" id="c8holo-go-photo" onclick="c8HoloCreatePhoto()">Vytvoriť z fotiek</button>
+        </div>
+        <div class="c8holo-opt">
+          <b>2. Z videa (max 10 s)</b>
+          <small>Nahraj krátke video, kde hovoríš a hýbeš sa. Hologram bude aj so zvukom.</small>
+          <label class="c8holo-file" id="c8holo-lv"><input type="file" accept="video/*" id="c8holo-video" onchange="c8HoloPick(this,'c8holo-lv','Video')"><span>🎥 Vybrať video</span></label>
+          <button class="c8holo-go" type="button" id="c8holo-go-video" onclick="c8HoloCreateVideo()">Vytvoriť z videa</button>
+        </div>
+      </div>
+      <small style="color:#7FA9B8;font-size:12px;line-height:1.45;">Tip: stoj pred jednoduchou stenou, mobil maj položený, svetlo spredu a celú postavu v zábere.</small>
+      <div class="c8holo-bar"><i id="c8holo-bar"></i></div>
+      <div class="c8holo-status" id="c8holo-status"></div>
+    </div>
+  </div>
+</div>
+
+<script id="c8holo-script">
+/* =====================================================================
+   HOLOGRAM PROFILU
+   - tvorba: z 2 fotiek (spredu/zozadu) alebo z videa (max 10 s, so zvukom)
+   - postava sa vystrihne priamo v zariadení (MediaPipe Selfie Segmentation,
+     načíta sa z CDN až pri tvorbe), na Cloudinary ide "zbalený" súbor:
+     vľavo obraz, vpravo maska postavy -> funguje na iPhone aj Androide
+   - uloženie: profiles/{uid}.hologram = {type, front, back | video, show, at}
+   - návšteva profilu: ak má majiteľ zapnuté "Ukáž môj hologram", hologram
+     vyskočí každému návštevníkovi (video sa prehrá a samo zavrie)
+   - zdieľanie na Plochu: príspevok s poľom hologram
+===================================================================== */
+(function(){
+  const MP_VER = '0.1.1675465747';
+  const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@' + MP_VER + '/';
+  const CY = [0.25, 0.88, 1.0];
+  let segPromise = null;
+  let segResolve = null;
+
+  function $(id){ return document.getElementById(id); }
+  function setStatus(msg, pct){
+    const s = $('c8holo-status'); if(s) s.textContent = msg || '';
+    const b = $('c8holo-bar'); if(b && pct != null) b.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  }
+
+  // ---------- segmentácia (načíta sa až keď treba) ----------
+  function loadScript(src){
+    return new Promise((res, rej)=>{
+      if(window.SelfieSegmentation) return res();
+      const s = document.createElement('script'); s.src = src; s.crossOrigin = 'anonymous';
+      s.onload = ()=>res(); s.onerror = ()=>rej(new Error('Nepodarilo sa načítať nástroj na vystrihnutie postavy.'));
+      document.head.appendChild(s);
+    });
+  }
+  function getSeg(){
+    if(segPromise) return segPromise;
+    segPromise = (async ()=>{
+      await loadScript(MP_BASE + 'selfie_segmentation.js');
+      const seg = new window.SelfieSegmentation({ locateFile: f => MP_BASE + f });
+      seg.setOptions({ modelSelection: 0, selfieMode: false });
+      seg.onResults(r => { if(segResolve){ const fn = segResolve; segResolve = null; fn(r.segmentationMask); } });
+      await seg.initialize();
+      return seg;
+    })();
+    segPromise.catch(()=>{ segPromise = null; });
+    return segPromise;
+  }
+  // vráti masku nakreslenú do canvasu w x h (biela = postava, čierna = pozadie)
+  async function segment(seg, source, maskCanvas){
+    const w = maskCanvas.width, h = maskCanvas.height;
+    const mask = await new Promise((res, rej)=>{
+      segResolve = res;
+      seg.send({ image: source }).catch(rej);
+    });
+    const mx = maskCanvas.getContext('2d');
+    mx.globalCompositeOperation = 'source-over';
+    mx.fillStyle = '#000'; mx.fillRect(0, 0, w, h);
+    // maska má dôveru v alfa kanáli -> prefarbíme na bielu a položíme na čiernu
+    if(!segment._tmp){ segment._tmp = document.createElement('canvas'); }
+    const tmp = segment._tmp; tmp.width = w; tmp.height = h;
+    const tx = tmp.getContext('2d');
+    tx.globalCompositeOperation = 'source-over'; tx.clearRect(0, 0, w, h);
+    tx.drawImage(mask, 0, 0, w, h);
+    tx.globalCompositeOperation = 'source-in'; tx.fillStyle = '#fff'; tx.fillRect(0, 0, w, h);
+    mx.drawImage(tmp, 0, 0);
+  }
+
+  // ---------- pomocné ----------
+  function fileToImage(file){
+    return new Promise((res, rej)=>{
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = ()=>{ res(img); setTimeout(()=>URL.revokeObjectURL(url), 2000); };
+      img.onerror = ()=>rej(new Error('Fotku sa nepodarilo načítať.'));
+      img.src = url;
+    });
+  }
+  function canvasToBlob(c, type, q){ return new Promise(res => c.toBlob(res, type, q)); }
+  function maskBBox(maskCanvas){
+    const w = maskCanvas.width, h = maskCanvas.height;
+    const d = maskCanvas.getContext('2d').getImageData(0, 0, w, h).data;
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for(let y = 0; y < h; y += 2){ for(let x = 0; x < w; x += 2){ if(d[(y*w + x)*4] > 110){ if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; } } }
+    if(x1 < 0) return null;
+    const m = Math.round(Math.max(w, h) * 0.03);
+    x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(w - 1, x1 + m); y1 = Math.min(h - 1, y1 + m);
+    return { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+  }
+
+  // fotka -> zbalený obrázok (vľavo postava, vpravo maska), orezaný na postavu
+  async function packPhoto(seg, file){
+    const img = await fileToImage(file);
+    const sc = Math.min(1, 900 / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.round(img.naturalWidth * sc), h = Math.round(img.naturalHeight * sc);
+    const col = document.createElement('canvas'); col.width = w; col.height = h;
+    col.getContext('2d').drawImage(img, 0, 0, w, h);
+    const mask = document.createElement('canvas'); mask.width = w; mask.height = h;
+    await segment(seg, col, mask);
+    const bb = maskBBox(mask);
+    if(!bb) throw new Error('Na fotke sa nepodarilo nájsť postavu. Skús fotku s celou postavou pred jednoduchým pozadím.');
+    const out = document.createElement('canvas'); out.width = bb.w * 2; out.height = bb.h;
+    const ox = out.getContext('2d');
+    ox.drawImage(col, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
+    ox.drawImage(mask, bb.x, bb.y, bb.w, bb.h, bb.w, 0, bb.w, bb.h);
+    return await canvasToBlob(out, 'image/jpeg', 0.9);
+  }
+
+  // video -> zbalené video (vľavo postava, vpravo maska) + zvuk, max 10 s
+  function pickMime(){
+    const list = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    if(!window.MediaRecorder) return null;
+    for(const m of list){ try{ if(MediaRecorder.isTypeSupported(m)) return m; }catch(_){} }
+    return '';
+  }
+  async function packVideo(seg, file, onProg, unlock){
+    const v = unlock.video;
+    await new Promise((res, rej)=>{ if(v.readyState >= 1) return res(); v.onloadedmetadata = ()=>res(); v.onerror = ()=>rej(new Error('Video sa nepodarilo načítať.')); });
+    const dur = Math.min(10, v.duration || 10);
+    let w, h;
+    if(v.videoHeight >= v.videoWidth){ h = 640; w = Math.round(v.videoWidth * 640 / v.videoHeight / 2) * 2; }
+    else { w = 360; h = Math.round(v.videoHeight * 360 / v.videoWidth / 2) * 2; }
+    w = Math.min(w, 360);
+    const col = document.createElement('canvas'); col.width = w; col.height = h;
+    const cx = col.getContext('2d');
+    const mw = Math.round(w * 0.4), mh = Math.round(h * 0.4);
+    const mask = document.createElement('canvas'); mask.width = mw; mask.height = mh;
+    const seekTo = t => new Promise(res => { let ok = false; const fin = ()=>{ if(ok) return; ok = true; v.removeEventListener('seeked', fin); res(); }; v.addEventListener('seeked', fin); v.currentTime = t; setTimeout(fin, 1500); });
+
+    // 1. krok: postava sa vystrihne z každého snímku (video stojí, posúva sa po snímkach)
+    v.muted = true; try{ v.pause(); }catch(_){}
+    const FPS = 24, n = Math.max(1, Math.floor(dur * FPS));
+    const masks = [];
+    for(let i = 0; i < n; i++){
+      await seekTo(Math.min(dur - 0.01, i / FPS));
+      cx.drawImage(v, 0, 0, w, h);
+      await segment(seg, col, mask);
+      masks.push(await createImageBitmap(mask));
+      onProg && onProg(0.75 * (i + 1) / n);
+    }
+
+    // zvuk z videa (dekóduje sa samostatne, aby nebolo treba ďalšie ťuknutie)
+    const ac = unlock.ac;
+    let audioBuf = null;
+    try{ audioBuf = await ac.decodeAudioData(await file.arrayBuffer()); }catch(e){ console.warn('Hologram: zvuk sa nepodarilo dekódovať', e); }
+
+    // 2. krok: video sa prehrá (stlmené) a nahrá sa zbalený obraz + zvuk
+    const out = document.createElement('canvas'); out.width = w * 2; out.height = h;
+    const ox = out.getContext('2d');
+    ox.fillStyle = '#000'; ox.fillRect(0, 0, w * 2, h);
+    const drawPacked = ()=>{
+      cx.drawImage(v, 0, 0, w, h);
+      ox.drawImage(col, 0, 0);
+      const idx = Math.max(0, Math.min(n - 1, Math.round(v.currentTime * FPS)));
+      ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high';
+      ox.fillStyle = '#000'; ox.fillRect(w, 0, w, h);
+      ox.drawImage(masks[idx], w, 0, w, h);
+    };
+    await seekTo(0); drawPacked();
+    const stream = out.captureStream(30);
+    let srcNode = null;
+    if(audioBuf){
+      const dest = ac.createMediaStreamDestination();
+      srcNode = ac.createBufferSource(); srcNode.buffer = audioBuf; srcNode.connect(dest);
+      dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+    }
+    const mime = pickMime();
+    if(mime === null) throw new Error('Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.');
+    const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 2500000 } : undefined);
+    const chunks = [];
+    rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+    const stopped = new Promise(res => rec.onstop = res);
+    rec.start(250);
+    await v.play();
+    if(srcNode){ try{ srcNode.start(0, v.currentTime); }catch(_){} }
+    let done = false;
+    await new Promise(resolve => {
+      const finish = ()=>{ if(done) return; done = true; try{ v.pause(); }catch(_){} resolve(); };
+      v.onended = finish;
+      const step = ()=>{
+        if(done) return;
+        if(v.currentTime >= dur - 0.02){ finish(); return; }
+        drawPacked();
+        onProg && onProg(0.75 + 0.25 * v.currentTime / dur);
+        if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(step); else requestAnimationFrame(step);
+      };
+      step();
+    });
+    rec.stop();
+    if(srcNode){ try{ srcNode.stop(); }catch(_){} }
+    await stopped;
+    stream.getTracks().forEach(t => t.stop());
+    masks.forEach(m => { try{ m.close(); }catch(_){} });
+    const type = (rec.mimeType || mime || 'video/webm').split(';')[0];
+    return new Blob(chunks, { type });
+  }
+
+  // ---------- prehrávač hologramu (spoločný pre profil, návštevu aj Plochu) ----------
+  function tintPacked(img){
+    const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height, w = Math.floor(W / 2);
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
+    const col = x.getImageData(0, 0, w, H).data, msk = x.getImageData(w, 0, w, H).data;
+    const out = x.createImageData(w, H), o = out.data;
+    const hist = new Uint32Array(256); let n = 0;
+    for(let i = 0; i < col.length; i += 4){ if(msk[i] > 128){ hist[Math.round(0.3*col[i] + 0.59*col[i+1] + 0.11*col[i+2])]++; n++; } }
+    let lo = 0, hi = 255, acc = 0;
+    for(let i = 0; i < 256; i++){ acc += hist[i]; if(acc >= n * 0.02){ lo = i; break; } }
+    acc = 0; for(let i = 255; i >= 0; i--){ acc += hist[i]; if(acc >= n * 0.02){ hi = i; break; } }
+    const rng = Math.max(1, hi - lo);
+    for(let i = 0; i < col.length; i += 4){
+      let m = msk[i] / 255; m = m < 0.12 ? 0 : (m > 0.88 ? 1 : (m - 0.12) / 0.76);
+      let l = (0.3*col[i] + 0.59*col[i+1] + 0.11*col[i+2] - lo) / rng; l = Math.pow(Math.max(0, Math.min(1, l)), 0.8);
+      for(let k = 0; k < 3; k++){ o[i+k] = Math.min(255, (CY[k] * (0.35 + 0.85*l) * 0.95 + (col[i+k]/255) * 0.3) * 255); }
+      o[i+3] = m * (0.6 + 0.4*l) * 255;
+    }
+    const t = document.createElement('canvas'); t.width = w; t.height = H; t.getContext('2d').putImageData(out, 0, 0);
+    return t;
+  }
+  function loadImg(url){
+    return new Promise((res, rej)=>{ const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = ()=>res(i); i.onerror = ()=>rej(new Error('img')); i.src = url; });
+  }
+
+  function makeGL(){
+    const gc = document.createElement('canvas'); gc.width = 360; gc.height = 640;
+    const gl = gc.getContext('webgl', { premultipliedAlpha: true, alpha: true });
+    if(!gl) return null;
+    const vs = 'attribute vec2 p;varying vec2 uv;void main(){uv=vec2((p.x+1.)/2.,(1.-p.y)/2.);gl_Position=vec4(p,0.,1.);}';
+    const fs = 'precision mediump float;varying vec2 uv;uniform sampler2D t;uniform float back;' +
+      'vec4 holo(vec2 u,float b){vec3 c=texture2D(t,vec2(u.x*.5,u.y)).rgb;float m=texture2D(t,vec2(.5+u.x*.5,u.y)).r;' +
+      'm=smoothstep(.12,.88,m);float l=dot(c,vec3(.3,.59,.11));l=pow(clamp((l-.12)/.8,0.,1.),.85);vec3 cy=vec3(.25,.88,1.);' +
+      'vec3 f=clamp(cy*(.3+.9*l)*.95+c*.25,0.,1.);float a=m*(.6+.4*l);' +
+      'vec3 bk=cy*(.22+.35*l);float ab=m*.78;vec3 col=mix(f,bk,b);float al=mix(a,ab,b);return vec4(col*al,al);}' +
+      'void main(){vec2 u=uv;if(back>.5)u.x=1.-u.x;gl_FragColor=holo(u,back);}';
+    const sh = (ty, src)=>{ const s = gl.createShader(ty); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    const prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog);
+    if(!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+    gl.useProgram(prog);
+    const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const uBack = gl.getUniformLocation(prog, 'back');
+    return {
+      canvas: gc,
+      render(video, backAmt){
+        if(video.readyState < 2) return false;
+        const vw = video.videoWidth / 2, vh = video.videoHeight;
+        if(vw && vh){ const nh = 640, nw = Math.round(nh * vw / vh); if(gc.width !== nw){ gc.width = nw; gc.height = nh; } }
+        gl.viewport(0, 0, gc.width, gc.height); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        try{ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, video); }catch(e){ return false; }
+        gl.uniform1f(uBack, backAmt); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); return true;
+      }
+    };
+  }
+
+  // holo = {type:'photo', front, back} alebo {type:'video', video}
+  // opts: {sound:bool, loop:bool, onEnd:fn, onNeedSound:fn}
+  function mountPlayer(stage, holo, opts){
+    opts = opts || {};
+    stage.innerHTML = '<canvas></canvas><div class="c8holo-hint">⟵ potiahni a otoč ⟶</div>';
+    const cv = stage.querySelector('canvas'), ctx = cv.getContext('2d'), hint = stage.querySelector('.c8holo-hint');
+    const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const off = document.createElement('canvas'), octx = off.getContext('2d');
+    let W = 0, H = 0, dpr = 1, dead = false, raf = 0;
+    const size = ()=>{ dpr = Math.min(2, window.devicePixelRatio || 1); const r = stage.getBoundingClientRect(); W = r.width; H = r.height; cv.width = Math.max(1, Math.round(W*dpr)); cv.height = Math.max(1, Math.round(H*dpr)); };
+    size(); const onRs = ()=>size(); window.addEventListener('resize', onRs);
+    let ang = 0, vel = 0, drag = false, lx = 0, lastInteract = -1e9, used = false;
+    const parts = Array.from({ length: 50 }, ()=>({ x: Math.random()*2-1, y: Math.random(), s: .6 + Math.random()*1.5, v: .04 + Math.random()*.08 }));
+    const down = e=>{ drag = true; lx = e.clientX; vel = 0; stage.style.cursor = 'grabbing'; try{ stage.setPointerCapture(e.pointerId); }catch(_){} if(!used){ used = true; hint.style.opacity = '0'; } };
+    const move = e=>{ if(!drag) return; const d = (e.clientX - lx) * 0.6; lx = e.clientX; ang += d; vel = d; lastInteract = performance.now(); };
+    const up = ()=>{ if(!drag) return; drag = false; stage.style.cursor = ''; lastInteract = performance.now(); };
+    stage.addEventListener('pointerdown', down); stage.addEventListener('pointermove', move);
+    stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+
+    let front = null, back = null, video = null, gl = null, talking = false;
+    if(holo.type === 'photo'){
+      Promise.all([loadImg(holo.front), holo.back ? loadImg(holo.back) : Promise.resolve(null)]).then(([f, b])=>{
+        if(dead) return; front = tintPacked(f); back = b ? tintPacked(b) : null;
+      }).catch(()=>{ hint.textContent = 'Hologram sa nepodarilo načítať'; });
+    } else {
+      gl = makeGL();
+      video = document.createElement('video');
+      video.crossOrigin = 'anonymous'; video.playsInline = true; video.setAttribute('playsinline', ''); video.setAttribute('webkit-playsinline', '');
+      video.preload = 'auto'; video.loop = !!opts.loop; video.muted = !opts.sound;
+      video.src = (typeof optimizeCloudinaryVideoUrl === 'function') ? optimizeCloudinaryVideoUrl(holo.video) : holo.video;
+      video.addEventListener('playing', ()=>{ talking = !video.muted; });
+      video.addEventListener('ended', ()=>{ talking = false; if(opts.onEnd) opts.onEnd(); });
+      const p = video.play();
+      if(p && p.catch) p.catch(()=>{
+        if(!video.muted){ video.muted = true; video.play().catch(()=>{}); if(opts.onNeedSound) opts.onNeedSound(); }
+      });
+    }
+    const ss = x=>{ x = Math.min(1, Math.max(0, x)); return x*x*(3 - 2*x); };
+    let ctl = null;
+    function frame(now){
+      if(dead) return;
+      if(!stage.isConnected){ if(ctl) ctl.destroy(); return; }
+      const t = now / 1000;
+      if(!drag){
+        if(Math.abs(vel) > 0.05){ ang += vel; vel *= 0.92; lastInteract = now; }
+        else if(now - lastInteract > 1400){ const home = Math.round(ang/360)*360; ang += (home - ang) * 0.05; }
+      }
+      const cs = Math.cos(ang*Math.PI/180), local = ((ang + 90) % 180 + 180) % 180 - 90, wf = ss((cs + 0.22) / 0.44);
+      if(!W || !H) size();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+      const cx = W/2, baseY = H*0.88, speak = talking ? 1 : 0;
+      const flick = reduce ? 1 : (0.93 + 0.05*Math.sin(t*37) + 0.03*Math.random());
+      let g = ctx.createLinearGradient(0, H*0.08, 0, baseY);
+      g.addColorStop(0, 'rgba(63,224,255,0)'); g.addColorStop(1, 'rgba(63,224,255,' + ((0.20 + 0.08*speak)*flick) + ')');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(cx - W*0.12, H*0.08); ctx.lineTo(cx + W*0.12, H*0.08); ctx.lineTo(cx + W*0.38, baseY); ctx.lineTo(cx - W*0.38, baseY); ctx.closePath(); ctx.fill();
+      const pul = reduce ? 1 : (0.75 + 0.25*Math.sin(t*(4 + 4*speak)));
+      ctx.save(); ctx.shadowColor = 'rgba(63,224,255,0.9)'; ctx.shadowBlur = 18*pul;
+      [[0.38,0.055,0.35],[0.30,0.042,0.6],[0.22,0.03,0.9]].forEach(([rx, ry, a])=>{ ctx.strokeStyle = 'rgba(63,224,255,' + (a*pul) + ')'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(cx, baseY, W*rx, W*ry, 0, 0, Math.PI*2); ctx.stroke(); });
+      ctx.restore();
+      // zdroj postavy
+      let srcF = null, srcB = null;
+      if(holo.type === 'photo'){ srcF = front; srcB = back || front; }
+      else if(gl && video && gl.render(video, 1 - wf)){ srcF = gl.canvas; srcB = gl.canvas; }
+      if(srcF){
+        const ref = srcF, h = H*0.80, wF = srcF.width*h/srcF.height, wB = srcB.width*h/srcB.height;
+        const fy = baseY - H*0.02 - h + (reduce ? 0 : Math.sin(t*1.6)*H*0.006);
+        const ow = Math.ceil(Math.max(wF, wB)) + 40, oh = Math.ceil(h) + 20;
+        if(off.width !== Math.round(ow*dpr) || off.height !== Math.round(oh*dpr)){ off.width = Math.round(ow*dpr); off.height = Math.round(oh*dpr); }
+        octx.setTransform(dpr, 0, 0, dpr, 0, 0); octx.clearRect(0, 0, ow, oh); octx.globalCompositeOperation = 'source-over';
+        const k = Math.sin(local*0.16*Math.PI/180)*0.35;
+        const face = (img, w, a, mirror)=>{ if(a <= 0.01) return; octx.globalAlpha = a; octx.save(); octx.translate(ow/2, oh/2); octx.transform(1, k*0.25, 0, 1, 0, 0); if(mirror){ octx.scale(-1, 1); } octx.drawImage(img, -w/2 + (mirror ? -1 : 1)*local*0.25, -h/2, w, h); octx.restore(); };
+        if(holo.type === 'photo'){
+          if(back){ face(srcB, wB, 1 - wf, false); face(srcF, wF, wf, false); }
+          else { face(srcF, wF, 1, wf < 0.5); }
+        } else { face(srcF, wF, 1, false); }
+        octx.globalAlpha = 1;
+        octx.globalCompositeOperation = 'destination-out'; octx.fillStyle = 'rgba(0,0,0,0.30)';
+        const shf = (t*40) % 4; for(let y = shf; y < oh; y += 4) octx.fillRect(0, y, ow, 1.6);
+        octx.globalCompositeOperation = 'source-over';
+        const flip = 1 - Math.abs(wf*2 - 1), glitch = (!reduce) && ((t % 2.6) < 0.1 || flip > 0.35);
+        const dx = cx - ow/2, dy = fy - 10;
+        ctx.save(); ctx.globalAlpha = (0.45 + 0.15*speak)*flick; ctx.shadowColor = 'rgba(63,224,255,1)'; ctx.shadowBlur = 24; ctx.drawImage(off, dx, dy, ow, oh); ctx.restore();
+        ctx.save(); ctx.globalAlpha = 0.95*flick*(1 - 0.25*flip);
+        if(glitch){ for(let i = 0; i < 5; i++){ const sy = Math.random()*oh, shh = 6 + Math.random()*24, sx = (Math.random()*2 - 1)*(8 + 16*flip); ctx.drawImage(off, 0, sy*dpr, off.width, shh*dpr, dx + sx, dy + sy, ow, shh); } ctx.globalAlpha *= 0.85; }
+        ctx.drawImage(off, dx, dy, ow, oh); ctx.restore();
+        void ref;
+      }
+      ctx.save(); ctx.fillStyle = 'rgba(120,235,255,0.8)';
+      parts.forEach(p=>{ if(!reduce){ p.y -= p.v*0.016; if(p.y < 0) p.y = 1; } const f = p.y, y = H*0.08 + (baseY - H*0.08)*f, x = cx + p.x*W*(0.1 + 0.27*f); ctx.globalAlpha = 0.15 + 0.6*f; ctx.beginPath(); ctx.arc(x, y, p.s, 0, 7); ctx.fill(); });
+      ctx.restore();
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    return ctl = {
+      video,
+      unmute(){ if(video){ video.muted = false; video.currentTime = 0; video.play().catch(()=>{}); talking = true; } },
+      destroy(){ dead = true; cancelAnimationFrame(raf); window.removeEventListener('resize', onRs); if(video){ try{ video.pause(); video.removeAttribute('src'); video.load(); }catch(_){} } stage.innerHTML = ''; }
+    };
+  }
+  window.c8HoloMountPlayer = mountPlayer;
+
+  // ---------- dáta ----------
+  let myHolo = null, previewPlayer = null;
+  const holoCache = {};
+  async function loadHolo(uid, fresh){
+    const c = holoCache[uid];
+    if(!fresh && c && Date.now() - c.at < 60000) return c.h;
+    try{
+      const s = await db.collection('profiles').doc(uid).get();
+      const d = s.exists ? s.data() : null;
+      const h = (d && d.hologram && (d.hologram.front || d.hologram.video)) ? d.hologram : null;
+      holoCache[uid] = { h, at: Date.now() };
+      return h;
+    }catch(e){ return null; }
+  }
+  async function saveHolo(h){
+    await db.collection('profiles').doc(currentUser.uid).set({ hologram: h }, { merge: true });
+    myHolo = h; currentUser.hologram = h; holoCache[currentUser.uid] = { h, at: Date.now() };
+  }
+
+  // ---------- modal (vlastný profil) ----------
+  window.c8HoloPick = function(input, labelId, name){
+    const l = $(labelId); if(!l) return;
+    const f = input.files && input.files[0];
+    l.classList.toggle('ok', !!f);
+    l.querySelector('span').textContent = f ? ('✓ ' + name + ': ' + (f.name.length > 22 ? f.name.slice(0, 20) + '…' : f.name)) : l.querySelector('span').textContent;
+  };
+  function showHave(){
+    const have = $('c8holo-have'); if(!have) return;
+    if(previewPlayer){ previewPlayer.destroy(); previewPlayer = null; }
+    if(myHolo){
+      have.style.display = '';
+      $('c8holo-create-title').textContent = 'Vytvoriť nový hologram (nahradí terajší)';
+      $('c8holo-show').checked = !!myHolo.show;
+      previewPlayer = mountPlayer($('c8holo-preview'), myHolo, { loop: true, sound: false });
+      $('c8holo-have-status').textContent = myHolo.type === 'video' ? 'Ukážka beží bez zvuku. Návštevníci ho uvidia aj so zvukom.' : '';
+    } else {
+      have.style.display = 'none';
+      $('c8holo-create-title').textContent = 'Vytvoriť hologram';
+    }
+  }
+  window.c8HoloOpen = async function(){
+    if(viewedProfileUser){ // cudzí profil -> prehraj jeho hologram znova
+      const h = await loadHolo(viewedProfileUser.uid);
+      if(h) showOverlay(h, viewedProfileUser.name);
+      return;
+    }
+    $('c8holo-modal').classList.add('open');
+    setStatus('', 0);
+    if(myHolo === null && currentUser) myHolo = await loadHolo(currentUser.uid, true);
+    showHave();
+  };
+  window.c8HoloClose = function(){
+    $('c8holo-modal').classList.remove('open');
+    if(previewPlayer){ previewPlayer.destroy(); previewPlayer = null; }
+  };
+  function busyUI(on){
+    ['c8holo-go-photo', 'c8holo-go-video'].forEach(id=>{ const b = $(id); if(b) b.disabled = on; });
+  }
+  window.c8HoloCreatePhoto = async function(){
+    const f = $('c8holo-front').files[0], b = $('c8holo-back').files[0];
+    if(!f){ setStatus('Vyber aspoň fotku spredu.'); return; }
+    if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){ setStatus('Nahrávanie nie je nastavené.'); return; }
+    busyUI(true);
+    try{
+      setStatus('Načítavam nástroj na vystrihnutie postavy…', 5);
+      const seg = await getSeg();
+      setStatus('Vystrihujem postavu spredu…', 25);
+      const pf = await packPhoto(seg, f);
+      let pb = null;
+      if(b){ setStatus('Vystrihujem postavu zozadu…', 45); pb = await packPhoto(seg, b); }
+      setStatus('Nahrávam hologram…', 65);
+      const fu = await uploadImageToCloudinary(pf);
+      const bu = pb ? await uploadImageToCloudinary(pb) : null;
+      setStatus('Ukladám do profilu…', 90);
+      await saveHolo({ type: 'photo', front: fu, back: bu, show: myHolo ? !!myHolo.show : true, at: Date.now() });
+      setStatus('✓ Hologram je hotový', 100);
+      showHave();
+    }catch(e){ console.error(e); setStatus('⚠️ ' + (e.message || 'Hologram sa nepodarilo vytvoriť.'), 0); }
+    busyUI(false);
+  };
+  window.c8HoloCreateVideo = async function(){
+    const f = $('c8holo-video').files[0];
+    if(!f){ setStatus('Najprv vyber video.'); return; }
+    if(typeof MAX_VIDEO_SIZE !== 'undefined' && f.size > MAX_VIDEO_SIZE){ setStatus('Video je príliš veľké (max 50 MB).'); return; }
+    if(!CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){ setStatus('Nahrávanie nie je nastavené.'); return; }
+    // odomknutie zvuku a prehrávania ešte počas kliknutia (iPhone)
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const unlock = { ac: AC ? new AC() : null, video: document.createElement('video') };
+    if(unlock.ac && unlock.ac.resume) unlock.ac.resume();
+    const v = unlock.video;
+    v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto';
+    v.src = URL.createObjectURL(f);
+    v.muted = true;
+    busyUI(true);
+    try{
+      if(!unlock.ac) throw new Error('Tento prehliadač nepodporuje spracovanie zvuku.');
+      setStatus('Načítavam nástroj na vystrihnutie postavy…', 3);
+      const seg = await getSeg();
+      await new Promise(r => { if(v.readyState >= 1) r(); else v.onloadedmetadata = ()=>r(); });
+      const longer = (v.duration || 0) > 10.5;
+      setStatus(longer ? 'Video je dlhšie ako 10 s, použijem prvých 10 sekúnd…' : 'Vytváram hologram…', 5);
+      const blob = await packVideo(seg, f, p => setStatus('Vytváram hologram… ' + Math.round(p*100) + ' %', 5 + p*60), unlock);
+      const ext = blob.type.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
+      const file = new File([blob], 'hologram.' + ext, { type: blob.type });
+      setStatus('Nahrávam hologram… 0 %', 66);
+      const url = await uploadVideoFileToCloudinary(file, (pct, msg)=> setStatus(msg || ('Nahrávam… ' + pct + ' %'), 66 + pct*0.28));
+      setStatus('Ukladám do profilu…', 96);
+      await saveHolo({ type: 'video', video: url, show: myHolo ? !!myHolo.show : true, at: Date.now() });
+      setStatus('✓ Hologram je hotový', 100);
+      showHave();
+    }catch(e){ console.error(e); setStatus('⚠️ ' + (e.message || 'Hologram sa nepodarilo vytvoriť.'), 0); }
+    try{ unlock.ac && unlock.ac.close(); }catch(_){}
+    URL.revokeObjectURL(v.src);
+    busyUI(false);
+  };
+  window.c8HoloToggleShow = async function(on){
+    if(!myHolo) return;
+    const h = Object.assign({}, myHolo, { show: !!on });
+    try{ await saveHolo(h); $('c8holo-have-status').textContent = on ? '✓ Návštevníci tvojho profilu uvidia hologram.' : 'Hologram sa návštevníkom nezobrazí.'; }
+    catch(e){ $('c8holo-have-status').textContent = '⚠️ Nepodarilo sa uložiť.'; }
+  };
+  window.c8HoloDelete = async function(){
+    const st = $('c8holo-have-status');
+    if(!st.dataset.confirm){ st.dataset.confirm = '1'; st.textContent = 'Klikni ešte raz na „Vymazať hologram“ pre potvrdenie.'; setTimeout(()=>{ delete st.dataset.confirm; }, 4000); return; }
+    delete st.dataset.confirm;
+    try{
+      await db.collection('profiles').doc(currentUser.uid).set({ hologram: firebase.firestore.FieldValue.delete() }, { merge: true });
+      myHolo = null; currentUser.hologram = null; showHave(); setStatus('Hologram bol vymazaný.', 0);
+    }catch(e){ st.textContent = '⚠️ Nepodarilo sa vymazať.'; }
+  };
+  window.c8HoloShare = async function(){
+    if(!myHolo || !currentUser) return;
+    const btn = $('c8holo-share'); btn.disabled = true; btn.textContent = 'Zdieľam…';
+    const h = { type: myHolo.type, front: myHolo.front || null, back: myHolo.back || null, video: myHolo.video || null };
+    const newPost = {
+      id: Date.now(), name: currentUser.name, authorId: currentUser.uid, createdAt: Date.now(),
+      text: '✨ Môj hologram na Connect8', hologram: h, isHologram: true,
+      photos: [], video: null, link: null, linkTitle: '', linkImage: null, file: null,
+      img: null, likes: 0, liked: false, views: 0, comments: [], open: false
+    };
+    posts.push(newPost);
+    if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid].push(newPost);
+    renderPosts();
+    try{
+      await savePost(newPost);
+      bumpRateLimit('lastPostAt');
+      btn.textContent = '✓ Zdieľané na Plochu';
+      $('c8holo-have-status').textContent = 'Hologram je na Ploche, uvidia ho všetci.';
+      setTimeout(()=>{ btn.disabled = false; btn.textContent = '📤 Zdieľať môj hologram na Plochu'; }, 4000);
+    }catch(err){
+      posts = posts.filter(p=>p.id !== newPost.id);
+      if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid] = ownPostsCache[currentUser.uid].filter(p=>p.id !== newPost.id);
+      renderPosts();
+      btn.disabled = false; btn.textContent = '📤 Zdieľať môj hologram na Plochu';
+      handleCreateRejection(err, null, t('príspevok'), renderPosts);
+    }
+  };
+
+  // ---------- návšteva profilu: hologram vyskočí ----------
+  let ovPlayer = null;
+  function closeOverlay(){
+    const ov = document.querySelector('.c8holo-ov'); if(!ov) return;
+    ov.classList.remove('show');
+    setTimeout(()=>{ if(ovPlayer){ ovPlayer.destroy(); ovPlayer = null; } ov.remove(); }, 350);
+  }
+  window.c8HoloCloseOverlay = closeOverlay;
+  function showOverlay(h, name){
+    closeOverlay();
+    const ov = document.createElement('div'); ov.className = 'c8holo-ov';
+    ov.innerHTML = '<button class="c8holo-ov-close" type="button">✕ Zavrieť</button><div class="c8holo-ov-name"></div><div class="c8holo-stage"></div><div class="c8holo-row" style="justify-content:center"></div>';
+    ov.querySelector('.c8holo-ov-name').textContent = '✨ ' + (name || '');
+    document.body.appendChild(ov);
+    requestAnimationFrame(()=>ov.classList.add('show'));
+    ov.querySelector('.c8holo-ov-close').onclick = closeOverlay;
+    const row = ov.querySelector('.c8holo-row');
+    ovPlayer = mountPlayer(ov.querySelector('.c8holo-stage'), h, {
+      sound: h.type === 'video', loop: false,
+      onEnd: ()=>setTimeout(closeOverlay, 600),
+      onNeedSound: ()=>{
+        row.innerHTML = '<button class="c8holo-go" type="button">🔊 Zapnúť zvuk</button>';
+        row.querySelector('button').onclick = ()=>{ if(ovPlayer) ovPlayer.unmute(); row.innerHTML = ''; };
+      }
+    });
+  }
+  window.c8HoloShowOverlay = showOverlay;
+
+  // ---------- napojenie na profil ----------
+  let pendingVisit = null;
+  const _openUserProfile = window.openUserProfile;
+  if(typeof _openUserProfile === 'function'){
+    window.openUserProfile = openUserProfile = function(user){ pendingVisit = user && user.uid; return _openUserProfile.apply(this, arguments); };
+  }
+  async function afterRender(){
+    const btn = $('c8holo-btn'); if(!btn || !currentUser) return;
+    const own = !viewedProfileUser;
+    if(own){
+      btn.style.display = 'inline-flex';
+      btn.querySelector('.c8holo-lbl').textContent = 'Hologram';
+      return;
+    }
+    const uid = viewedProfileUser.uid;
+    btn.style.display = 'none';
+    if(!uid) return;
+    const h = await loadHolo(uid);
+    if(!viewedProfileUser || viewedProfileUser.uid !== uid) return;
+    if(h){ btn.style.display = 'inline-flex'; btn.querySelector('.c8holo-lbl').textContent = 'Hologram'; }
+    if(h && h.show && pendingVisit === uid){ pendingVisit = null; showOverlay(h, viewedProfileUser.name); }
+    else if(pendingVisit === uid) pendingVisit = null;
+  }
+  const _renderProfile = window.renderProfile;
+  if(typeof _renderProfile === 'function'){
+    window.renderProfile = renderProfile = function(){ const r = _renderProfile.apply(this, arguments); try{ afterRender(); }catch(e){} return r; };
+  }
+
+  // ---------- Plocha: hologram v príspevku ----------
+  const postPlayers = {};
+  const _buildPostCard = window.buildPostCard;
+  if(typeof _buildPostCard === 'function'){
+    window.buildPostCard = buildPostCard = function(p, o){
+      let html = _buildPostCard.apply(this, arguments);
+      if(p && p.hologram && (p.hologram.front || p.hologram.video)){
+        const block = '<div class="c8holo-post" id="c8holo-post-' + p.id + '"><button type="button" class="c8holo-post-play" onclick="c8HoloPostPlay(' + p.id + ')"><span>✨ ▶ Prehrať hologram</span></button></div>';
+        const anchor = '<div class="post-text-translation" id="post-tr-' + p.id + '"></div>';
+        html = html.indexOf(anchor) >= 0 ? html.replace(anchor, anchor + block) : html + block;
+      }
+      return html;
+    };
+  }
+  window.c8HoloPostPlay = function(id){
+    const p = (posts || []).find(x=>x.id === id) || Object.values(ownPostsCache || {}).flat().find(x=>x.id === id);
+    const box = $('c8holo-post-' + id); if(!p || !box) return;
+    Object.keys(postPlayers).forEach(k=>{ if(postPlayers[k]){ postPlayers[k].destroy(); delete postPlayers[k]; } });
+    document.querySelectorAll('.c8holo-post').forEach(b=>{ if(b !== box && !b.querySelector('.c8holo-post-play')){ const pid = b.id.replace('c8holo-post-', ''); b.innerHTML = '<button type="button" class="c8holo-post-play" onclick="c8HoloPostPlay(' + pid + ')"><span>✨ ▶ Prehrať hologram</span></button>'; } });
+    box.innerHTML = '<div class="c8holo-stage"></div>';
+    postPlayers[id] = mountPlayer(box.querySelector('.c8holo-stage'), p.hologram, { sound: p.hologram.type === 'video', loop: false });
+  };
+})();
+</script>
+
 </body>
 </html>
