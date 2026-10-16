@@ -18342,7 +18342,11 @@ c8ApplyFriendsView();
       await seekTo(Math.min(dur - 0.01, i / FPS));
       cx.drawImage(v, 0, 0, w, h);
       await segment(seg, col, mask);
-      masks.push(await createImageBitmap(mask));
+      // maska sa uloží ako malé pole bajtov (nie ako obrázok v grafickej pamäti, tá sa pri dlhom videu na mobile vyprázdni)
+      const md = mask.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, mw, mh).data;
+      const arr = new Uint8Array(mw * mh);
+      for(let k = 0, j = 0; k < arr.length; k++, j += 4) arr[k] = md[j];
+      masks.push(arr);
       onProg && onProg(0.75 * (i + 1) / n);
     }
 
@@ -18355,13 +18359,18 @@ c8ApplyFriendsView();
     const out = document.createElement('canvas'); out.width = w * 2; out.height = h;
     const ox = out.getContext('2d');
     ox.fillStyle = '#000'; ox.fillRect(0, 0, w * 2, h);
+    const mctx = mask.getContext('2d', { willReadFrequently: true });
+    const maskImg = mctx.createImageData(mw, mh);
     const drawPacked = ()=>{
       cx.drawImage(v, 0, 0, w, h);
       ox.drawImage(col, 0, 0);
       const idx = Math.max(0, Math.min(n - 1, Math.round(v.currentTime * FPS)));
       ox.imageSmoothingEnabled = true; ox.imageSmoothingQuality = 'high';
       ox.fillStyle = '#000'; ox.fillRect(w, 0, w, h);
-      ox.drawImage(masks[idx], w, 0, w, h);
+      const arr = masks[idx], md = maskImg.data;
+      for(let k = 0, j = 0; k < arr.length; k++, j += 4){ const a = arr[k]; md[j] = a; md[j+1] = a; md[j+2] = a; md[j+3] = 255; }
+      mctx.putImageData(maskImg, 0, 0);
+      ox.drawImage(mask, w, 0, w, h);
     };
     await seekTo(0); drawPacked();
     const stream = out.captureStream(30);
@@ -18397,7 +18406,7 @@ c8ApplyFriendsView();
     if(srcNode){ try{ srcNode.stop(); }catch(_){} }
     await stopped;
     stream.getTracks().forEach(t => t.stop());
-    masks.forEach(m => { try{ m.close(); }catch(_){} });
+    masks.length = 0;
     const type = (rec.mimeType || mime || 'video/webm').split(';')[0];
     return new Blob(chunks, { type });
   }
