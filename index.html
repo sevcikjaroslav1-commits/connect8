@@ -12149,11 +12149,16 @@ function deleteComment(postId, ci){
   const p = findPostById(postId);
   if(!p) return;
   if(!confirm(t('Naozaj chceš vymazať tento komentár?'))) return;
-  p.comments.splice(ci, 1);
+  const removed = p.comments.splice(ci, 1)[0];
   if(editingCommentKey === `${postId}:${ci}`){ editingCommentKey = null; editingCommentImage = null; }
   renderPosts();
   updateDoc(postDoc(p.id), {comments: p.comments}, 'príspevok - vymazanie komentára')
-    .catch(()=>{ alert(t('Vymazanie komentára sa nepodarilo uložiť.')); });
+    .catch(()=>{
+      // vrátiť komentár späť, aby nezmizol len na oko
+      if(removed && !p.comments.includes(removed)) p.comments.splice(Math.min(ci, p.comments.length), 0, removed);
+      renderPosts();
+      alert(t('Vymazanie komentára sa nepodarilo uložiť.'));
+    });
 }
 
 /* ---------------- MARKETPLACE ---------------- */
