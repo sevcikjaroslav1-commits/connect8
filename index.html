@@ -3065,7 +3065,7 @@
     <div class="c8s-sheet">
       <div class="c8s-head"><h3>⚙️ <span>Nastavenia</span></h3><button onclick="c8CloseSettings()">✕</button></div>
       <div class="c8s-body">
-        <button class="c8s-item" onclick="c8CloseSettings();openProfile()"><span class="c8s-ic">👤</span><span class="c8s-tx">Upraviť profil</span><span class="c8s-ch">›</span></button>
+        <button class="c8s-item" onclick="c8CloseSettings();c8EpOpen()"><span class="c8s-ic">👤</span><span class="c8s-tx">Upraviť profil</span><span class="c8s-ch">›</span></button>
         <button class="c8s-item" id="c8s-lang-toggle" onclick="c8ToggleLangList()"><span class="c8s-ic">🌐</span><span class="c8s-tx">Jazyk</span><span class="c8s-cur" id="c8s-lang-cur"></span><span class="c8s-ch" id="c8s-lang-ch">›</span></button>
         <div class="c8s-langs" id="c8s-langs"></div>
         <button class="c8s-item" onclick="c8CloseSettings();openLegalModal('center')"><span class="c8s-ic">🔒</span><span class="c8s-tx">Súkromie</span><span class="c8s-ch">›</span></button>
@@ -19002,5 +19002,177 @@ c8ApplyFriendsView();
 })();
 </script>
 
+<style id="c8ep-style">
+.c8ep-modal{position:fixed;inset:0;z-index:10070;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:16px;}
+.c8ep-modal.open{display:flex;}
+.c8ep-card{width:min(440px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--card,#fff);color:var(--text,#111827);border-radius:18px;padding:18px 18px 20px;box-shadow:0 20px 60px rgba(15,23,42,.25);}
+.c8ep-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.c8ep-head h3{margin:0;font-size:18px;}
+.c8ep-x{background:var(--bg,#f3f4f6);border:0;border-radius:10px;width:34px;height:34px;font-size:16px;cursor:pointer;color:var(--text,#111827);}
+.c8ep-sec{border-top:1px solid var(--border,#E5E7EB);padding-top:14px;margin-top:14px;display:flex;flex-direction:column;gap:8px;}
+.c8ep-sec:first-of-type{border-top:0;margin-top:0;padding-top:4px;}
+.c8ep-sec h4{margin:0 0 2px;font-size:14px;}
+.c8ep-sec label{font-size:12px;font-weight:600;color:var(--text-dim,#6B7280);}
+.c8ep-sec input{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border,#E5E7EB);border-radius:10px;font-size:15px;background:var(--bg,#fff);color:var(--text,#111827);}
+.c8ep-sec input:focus{outline:2px solid #6366F1;outline-offset:0;border-color:transparent;}
+.c8ep-btn{align-self:flex-start;background:#4F46E5;color:#fff;border:0;border-radius:10px;padding:10px 16px;font-weight:700;font-size:14px;cursor:pointer;}
+.c8ep-btn:disabled{opacity:.5;cursor:default;}
+.c8ep-msg{font-size:13px;min-height:18px;}
+.c8ep-msg.ok{color:#16A34A;} .c8ep-msg.err{color:#DC2626;}
+.c8ep-hint{font-size:12px;color:var(--text-dim,#6B7280);margin:0;}
+</style>
+<div class="c8ep-modal" id="c8ep-modal" role="dialog" aria-modal="true" aria-label="Upraviť profil">
+  <div class="c8ep-card">
+    <div class="c8ep-head"><h3>👤 Upraviť profil</h3><button type="button" class="c8ep-x" onclick="c8EpClose()" aria-label="Zavrieť">✕</button></div>
+    <div class="c8ep-sec">
+      <h4>Meno</h4>
+      <label for="c8ep-name">Zobrazované meno</label>
+      <input id="c8ep-name" type="text" maxlength="40" autocomplete="name">
+      <button type="button" class="c8ep-btn" id="c8ep-name-btn" onclick="c8EpSaveName()">Uložiť meno</button>
+      <div class="c8ep-msg" id="c8ep-name-msg"></div>
+    </div>
+    <div class="c8ep-sec">
+      <h4>Heslo na prihlásenie</h4>
+      <label for="c8ep-old">Terajšie heslo</label>
+      <input id="c8ep-old" type="password" autocomplete="current-password">
+      <label for="c8ep-new">Nové heslo (min. 6 znakov)</label>
+      <input id="c8ep-new" type="password" autocomplete="new-password">
+      <label for="c8ep-new2">Nové heslo ešte raz</label>
+      <input id="c8ep-new2" type="password" autocomplete="new-password">
+      <button type="button" class="c8ep-btn" id="c8ep-pass-btn" onclick="c8EpSavePass()">Zmeniť heslo</button>
+      <div class="c8ep-msg" id="c8ep-pass-msg"></div>
+      <p class="c8ep-hint">Pre bezpečnosť treba zadať terajšie heslo. Po zmene sa ďalej prihlasuješ už novým heslom.</p>
+    </div>
+    <div class="c8ep-sec">
+      <button type="button" class="c8ep-btn" style="background:transparent;color:#4F46E5;border:1px solid #C7D2FE" onclick="c8EpClose();openProfile()">Otvoriť môj profil ›</button>
+    </div>
+  </div>
+</div>
+<script id="c8ep-script">
+(function(){
+  const $ = id => document.getElementById(id);
+  const msg = (id, text, ok) => { const m = $(id); m.textContent = text || ''; m.className = 'c8ep-msg' + (text ? (ok ? ' ok' : ' err') : ''); };
+  window.c8EpOpen = function(){
+    if(!currentUser) return;
+    $('c8ep-name').value = currentUser.name || '';
+    ['c8ep-old','c8ep-new','c8ep-new2'].forEach(id => $(id).value = '');
+    msg('c8ep-name-msg', ''); msg('c8ep-pass-msg', '');
+    $('c8ep-modal').classList.add('open');
+  };
+  window.c8EpClose = function(){ $('c8ep-modal').classList.remove('open'); };
+  $('c8ep-modal').addEventListener('click', e => { if(e.target.id === 'c8ep-modal') c8EpClose(); });
+
+  window.c8EpSaveName = async function(){
+    const name = $('c8ep-name').value.trim().replace(/\s+/g, ' ');
+    if(name.length < 2){ msg('c8ep-name-msg', 'Meno musí mať aspoň 2 znaky.'); return; }
+    if(typeof containsBannedContent === 'function' && containsBannedContent(name)){ msg('c8ep-name-msg', 'Meno obsahuje nevhodné slovo.'); return; }
+    if(name === currentUser.name){ msg('c8ep-name-msg', 'Meno je rovnaké ako doteraz.', true); return; }
+    const btn = $('c8ep-name-btn'); btn.disabled = true; msg('c8ep-name-msg', 'Ukladám…', true);
+    try{
+      await db.collection('profiles').doc(currentUser.uid).update({ name });
+      try{ if(auth && auth.currentUser) await auth.currentUser.updateProfile({ displayName: name }); }catch(_){}
+      const oldName = currentUser.name;
+      currentUser.name = name;
+      // meno aj v tvojich príspevkoch (aby sa ukazovalo nové meno)
+      const mine = [];
+      const seen = new Set();
+      const add = p => { if(p && p.authorId === currentUser.uid && !seen.has(p.id)){ seen.add(p.id); mine.push(p); } };
+      (posts || []).forEach(add);
+      Object.values(ownPostsCache || {}).forEach(arr => (arr || []).forEach(add));
+      try{
+        const snap = await db.collection('posts').where('authorId', '==', currentUser.uid).get();
+        snap.forEach(d => { const p = d.data(); if(p && !seen.has(p.id)){ seen.add(p.id); mine.push(p); } });
+      }catch(_){}
+      mine.forEach(p => { p.name = name; });
+      for(const p of mine){ try{ await db.collection('posts').doc(String(p.id)).update({ name }); }catch(e){ console.warn('Meno v príspevku sa nepodarilo zmeniť', p.id, e); } }
+      if(typeof allUsersCache !== 'undefined' && allUsersCache){ const u = allUsersCache.find(x => x.id === currentUser.uid); if(u) u.name = name; }
+      try{ renderAllAvatars(); }catch(_){}
+      try{ renderPosts(); }catch(_){}
+      try{ if(document.getElementById('view-profile').classList.contains('active')) renderProfile(); }catch(_){}
+      document.querySelectorAll('.c8s-name, #c8l-name, .c8h-me-name').forEach(el => { if(el.textContent === oldName) el.textContent = name; });
+      msg('c8ep-name-msg', '✓ Meno bolo zmenené.', true);
+    }catch(e){
+      console.error(e); msg('c8ep-name-msg', 'Meno sa nepodarilo uložiť. Skús to znova.');
+    }
+    btn.disabled = false;
+  };
+
+  window.c8EpSavePass = async function(){
+    const oldP = $('c8ep-old').value, n1 = $('c8ep-new').value, n2 = $('c8ep-new2').value;
+    if(!oldP){ msg('c8ep-pass-msg', 'Zadaj terajšie heslo.'); return; }
+    if(n1.length < 6){ msg('c8ep-pass-msg', 'Nové heslo musí mať aspoň 6 znakov.'); return; }
+    if(n1 !== n2){ msg('c8ep-pass-msg', 'Nové heslá sa nezhodujú.'); return; }
+    if(n1 === oldP){ msg('c8ep-pass-msg', 'Nové heslo je rovnaké ako terajšie.'); return; }
+    if(!auth || !auth.currentUser || !currentUser.email){ msg('c8ep-pass-msg', 'Nie si prihlásený.'); return; }
+    const btn = $('c8ep-pass-btn'); btn.disabled = true; msg('c8ep-pass-msg', 'Mením heslo…', true);
+    try{
+      const cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, oldP);
+      await auth.currentUser.reauthenticateWithCredential(cred);
+      await auth.currentUser.updatePassword(n1);
+      ['c8ep-old','c8ep-new','c8ep-new2'].forEach(id => $(id).value = '');
+      msg('c8ep-pass-msg', '✓ Heslo bolo zmenené.', true);
+    }catch(e){
+      const c = e && e.code;
+      const t = (c === 'auth/wrong-password' || c === 'auth/invalid-credential' || c === 'auth/invalid-login-credentials') ? 'Terajšie heslo nie je správne.'
+        : c === 'auth/weak-password' ? 'Nové heslo je príliš slabé (min. 6 znakov).'
+        : c === 'auth/too-many-requests' ? 'Príliš veľa pokusov. Skús to o chvíľu.'
+        : c === 'auth/network-request-failed' ? 'Chyba siete — skontroluj pripojenie.'
+        : 'Heslo sa nepodarilo zmeniť. Skús to znova.';
+      msg('c8ep-pass-msg', t);
+    }
+    btn.disabled = false;
+  };
+})();
+</script>
+
+<style id="c8pw-style">
+.c8pw-wrap{position:relative;display:block;width:100%}
+.c8pw-wrap>input{width:100%;box-sizing:border-box;padding-right:46px!important}
+.c8pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;background:transparent;padding:0;margin:0;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#94a3b8;border-radius:8px;-webkit-tap-highlight-color:transparent}
+.c8pw-eye:hover{color:#6366f1}
+.c8pw-eye svg{width:21px;height:21px}
+</style>
+<script id="c8pw-script">
+(function(){
+  var EYE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYE_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-6.4 0-10-7-10-7a18.5 18.5 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.1 9.1 0 0 1 12 4c6.4 0 10 7 10 7a18.6 18.6 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  var IDS=['login-pass','reg-pass','c8ep-old','c8ep-new','c8ep-new2'];
+  function setState(inp,btn,show){
+    inp.type=show?'text':'password';
+    btn.innerHTML=show?EYE_OFF:EYE;
+    btn.setAttribute('aria-label',show?'Skryť heslo':'Zobraziť heslo');
+    btn.title=show?'Skryť heslo':'Zobraziť heslo';
+  }
+  function add(id){
+    var inp=document.getElementById(id);
+    if(!inp||inp.dataset.c8pw)return;
+    inp.dataset.c8pw='1';
+    var wrap=document.createElement('span');wrap.className='c8pw-wrap';
+    inp.parentNode.insertBefore(wrap,inp);wrap.appendChild(inp);
+    var btn=document.createElement('button');btn.type='button';btn.className='c8pw-eye';btn.tabIndex=-1;
+    wrap.appendChild(btn);setState(inp,btn,false);
+    btn.addEventListener('mousedown',function(e){e.preventDefault();});
+    btn.addEventListener('click',function(e){
+      e.preventDefault();e.stopPropagation();
+      var show=inp.type==='password';setState(inp,btn,show);
+      try{inp.focus();var l=inp.value.length;inp.setSelectionRange(l,l);}catch(_){}
+    });
+  }
+  window.c8PwHideAll=function(){
+    IDS.forEach(function(id){var inp=document.getElementById(id);if(!inp||!inp.dataset.c8pw)return;
+      var btn=inp.parentNode.querySelector('.c8pw-eye');if(btn)setState(inp,btn,false);});
+  };
+  function init(){
+    IDS.forEach(add);
+    if(typeof window.clearAuthForms==='function'&&!window.clearAuthForms.__c8pw){
+      var o=window.clearAuthForms;window.clearAuthForms=function(){var r=o.apply(this,arguments);c8PwHideAll();return r;};window.clearAuthForms.__c8pw=1;
+    }
+    if(typeof window.c8EpOpen==='function'&&!window.c8EpOpen.__c8pw){
+      var e=window.c8EpOpen;window.c8EpOpen=function(){var r=e.apply(this,arguments);c8PwHideAll();return r;};window.c8EpOpen.__c8pw=1;
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
 </body>
 </html>
