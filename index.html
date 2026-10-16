@@ -18163,8 +18163,9 @@ c8ApplyFriendsView();
 .c8holo-ov-close{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:calc(14px + env(safe-area-inset-right,0px));background:rgba(7,17,31,.8);border:1px solid #12304A;color:#D6F6FF;border-radius:12px;padding:8px 14px;font-weight:700;cursor:pointer;}
 .c8holo-post{margin:8px 0 4px;border-radius:14px;background:radial-gradient(120% 80% at 50% 45%,#0A1A2E 0%,#040A14 75%);overflow:hidden;position:relative;}
 .c8holo-post .c8holo-stage{max-width:360px;}
-.c8holo-post-play{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:28px 12px;background:transparent;border:0;color:#9FE9FF;font-weight:700;font-size:15px;cursor:pointer;}
-.c8holo-post-play span{border:1px solid #22d3ee;border-radius:999px;padding:9px 18px;background:rgba(34,211,238,.08);}
+.c8holo-post .c8holo-stage{width:100%;max-width:380px;}
+.c8holo-snd{position:absolute;right:10px;bottom:10px;background:rgba(7,17,31,.85);border:1px solid #1E4A66;color:#D6F6FF;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;}
+.c8holo-snd:hover{border-color:#22d3ee;color:#9FE9FF;}
 </style>
 
 <div class="c8holo-modal" id="c8holo-modal" role="dialog" aria-modal="true" aria-label="Hologram">
@@ -18778,28 +18779,64 @@ c8ApplyFriendsView();
     window.renderProfile = renderProfile = function(){ const r = _renderProfile.apply(this, arguments); try{ afterRender(); }catch(e){} return r; };
   }
 
-  // ---------- Plocha: hologram v príspevku ----------
-  const postPlayers = {};
+  // ---------- Plocha: hologram sa ukazuje priamo v príspevku ----------
+  const postPlayers = new Map(); // element -> player
+  function findPost(id){
+    return (posts || []).find(x=>x.id === id) || Object.values(ownPostsCache || {}).flat().find(x=>x.id === id);
+  }
+  function mountPost(box){
+    if(postPlayers.has(box)) return;
+    const p = findPost(Number(box.dataset.hpid)); if(!p || !p.hologram) return;
+    const stage = box.querySelector('.c8holo-stage');
+    const pl = mountPlayer(stage, p.hologram, { sound: false, loop: true });
+    postPlayers.set(box, pl);
+    const snd = box.querySelector('.c8holo-snd');
+    if(snd){
+      snd.style.display = p.hologram.type === 'video' ? '' : 'none';
+      snd.textContent = '🔇 Zapnúť zvuk';
+      snd.onclick = (e)=>{
+        e.stopPropagation();
+        const v = pl.video; if(!v) return;
+        if(v.muted){
+          // zvuk môže hrať len jeden hologram naraz
+          postPlayers.forEach((o, b)=>{ if(o !== pl && o.video && !o.video.muted){ o.video.muted = true; const s2 = b.querySelector('.c8holo-snd'); if(s2) s2.textContent = '🔇 Zapnúť zvuk'; } });
+          pl.unmute(); snd.textContent = '🔊 Vypnúť zvuk';
+        } else { v.muted = true; snd.textContent = '🔇 Zapnúť zvuk'; }
+      };
+    }
+  }
+  function unmountPost(box){
+    const pl = postPlayers.get(box); if(!pl) return;
+    postPlayers.delete(box);
+    const stage = box.querySelector('.c8holo-stage');
+    pl.destroy();
+    if(!stage && box.isConnected){ box.insertAdjacentHTML('afterbegin', '<div class="c8holo-stage"></div>'); }
+  }
+  // hologram beží len keď je príspevok na obrazovke (šetrí batériu a výkon)
+  const io = ('IntersectionObserver' in window) ? new IntersectionObserver(entries=>{
+    entries.forEach(en=>{ if(en.isIntersecting) mountPost(en.target); else unmountPost(en.target); });
+  }, { rootMargin: '200px 0px' }) : null;
+  function scanPosts(){
+    document.querySelectorAll('.c8holo-post:not([data-hobs])').forEach(box=>{
+      box.setAttribute('data-hobs', '1');
+      if(io) io.observe(box); else mountPost(box);
+    });
+    postPlayers.forEach((pl, box)=>{ if(!box.isConnected){ postPlayers.delete(box); pl.destroy(); } });
+  }
+  new MutationObserver(()=>{ clearTimeout(scanPosts._t); scanPosts._t = setTimeout(scanPosts, 60); }).observe(document.body, { childList: true, subtree: true });
+
   const _buildPostCard = window.buildPostCard;
   if(typeof _buildPostCard === 'function'){
     window.buildPostCard = buildPostCard = function(p, o){
       let html = _buildPostCard.apply(this, arguments);
       if(p && p.hologram && (p.hologram.front || p.hologram.video)){
-        const block = '<div class="c8holo-post" id="c8holo-post-' + p.id + '"><button type="button" class="c8holo-post-play" onclick="c8HoloPostPlay(' + p.id + ')"><span>✨ ▶ Prehrať hologram</span></button></div>';
+        const block = '<div class="c8holo-post" data-hpid="' + p.id + '"><div class="c8holo-stage"></div><button type="button" class="c8holo-snd" style="display:none">🔇 Zapnúť zvuk</button></div>';
         const anchor = '<div class="post-text-translation" id="post-tr-' + p.id + '"></div>';
         html = html.indexOf(anchor) >= 0 ? html.replace(anchor, anchor + block) : html + block;
       }
       return html;
     };
   }
-  window.c8HoloPostPlay = function(id){
-    const p = (posts || []).find(x=>x.id === id) || Object.values(ownPostsCache || {}).flat().find(x=>x.id === id);
-    const box = $('c8holo-post-' + id); if(!p || !box) return;
-    Object.keys(postPlayers).forEach(k=>{ if(postPlayers[k]){ postPlayers[k].destroy(); delete postPlayers[k]; } });
-    document.querySelectorAll('.c8holo-post').forEach(b=>{ if(b !== box && !b.querySelector('.c8holo-post-play')){ const pid = b.id.replace('c8holo-post-', ''); b.innerHTML = '<button type="button" class="c8holo-post-play" onclick="c8HoloPostPlay(' + pid + ')"><span>✨ ▶ Prehrať hologram</span></button>'; } });
-    box.innerHTML = '<div class="c8holo-stage"></div>';
-    postPlayers[id] = mountPlayer(box.querySelector('.c8holo-stage'), p.hologram, { sound: p.hologram.type === 'video', loop: false });
-  };
 })();
 </script>
 
