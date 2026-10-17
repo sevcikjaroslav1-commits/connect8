@@ -19313,7 +19313,7 @@ c8ApplyFriendsView();
     let spinStart = null;
     const spin = (now)=>{ if(spinStart === null) return 0; const e = now - spinStart - SPIN_T0; if(e <= 0) return 0; if(e >= SPIN_D) return 360; const k = e / SPIN_D; return 360 * (k*k*(3 - 2*k)); };
     let ended = false;
-    const pl = window.c8HoloMountPlayer(stage, holo, { sound: true, loop: false, autoplay: false, spin: isVideo ? null : spin, dpr: 1.8, onEnd: ()=>{ ended = true; } });
+    const pl = window.c8HoloMountPlayer(stage, holo, { sound: true, loop: false, autoplay: false, spin: isVideo ? null : spin, dpr: 1.2, onEnd: ()=>{ ended = true; } });
     const v = pl.video;
     let elSrc = null;
     if(v){
@@ -19334,7 +19334,7 @@ c8ApplyFriendsView();
           await new Promise(r => setTimeout(r, 1200));
         }
         const src = stage.querySelector('canvas');
-        const OW = 1080, OH = 1920, Z = 1.5;
+        const OW = 720, OH = 1280;
         const out = document.createElement('canvas'); out.width = OW; out.height = OH;
         const x = out.getContext('2d');
         const bg = x.createRadialGradient(OW/2, OH*0.45, 40, OW/2, OH*0.45, OH*0.75);
@@ -19344,21 +19344,21 @@ c8ApplyFriendsView();
         const draw = ()=>{
           x.fillStyle = bg; x.fillRect(0, 0, OW, OH);
           // názov hore
-          x.fillStyle = '#FFFFFF'; x.font = '700 ' + Math.round(40*Z) + 'px Inter, Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-          x.fillText(title, OW/2, 96*Z, OW - 80*Z);
+          x.fillStyle = '#FFFFFF'; x.font = '700 40px Inter, Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+          x.fillText(title, OW/2, 96, OW - 80);
           // hologram
-          if(src && src.width){ const sh = 1000*Z, sw = sh * src.width / src.height; x.imageSmoothingQuality = 'high'; x.drawImage(src, (OW - sw)/2, 140*Z, sw, sh); }
+          if(src && src.width){ const sh = 1000, sw = sh * src.width / src.height; x.drawImage(src, (OW - sw)/2, 140, sw, sh); }
           // vodoznak pod kruhmi: logo + „Hologram connect8.eu“
           if(src && src.width){
             const k = 1000 / src.height * (src.height / (stage.getBoundingClientRect().height || 840));
-            const sH = stage.getBoundingClientRect().height || 840, sW = stage.getBoundingClientRect().width || 600, kk = 1000*Z / sH;
-            const wy = 140*Z + (sH*0.84 + sW*0.055) * kk + 36*Z;
+            const sH = stage.getBoundingClientRect().height || 840, sW = stage.getBoundingClientRect().width || 600, kk = 1000 / sH;
+            const wy = 140 + (sH*0.84 + sW*0.055) * kk + 36;
             void k;
             x.textBaseline = 'middle'; x.textAlign = 'left';
-            const f1 = '500 ' + Math.round(30*Z) + 'px Inter, Arial, sans-serif', f2 = '800 ' + Math.round(30*Z) + 'px Inter, Arial, sans-serif';
+            const f1 = '500 30px Inter, Arial, sans-serif', f2 = '800 30px Inter, Arial, sans-serif';
             x.font = f1; const w0 = x.measureText('Hologram ').width;
             x.font = f2; const wa = x.measureText('connect').width, wb = x.measureText('8').width, wc = x.measureText('.eu').width;
-            const L = 44*Z, gap = 12*Z, tot = L + gap + w0 + wa + wb + wc;
+            const L = 44, gap = 12, tot = L + gap + w0 + wa + wb + wc;
             let tx = (OW - tot) / 2;
             if(logoImg.complete && logoImg.naturalWidth){
               x.save(); x.fillStyle = 'rgba(255,255,255,0.92)'; x.beginPath(); x.arc(tx + L/2, wy, L/2, 0, Math.PI*2); x.fill(); x.restore();
@@ -19379,7 +19379,7 @@ c8ApplyFriendsView();
           dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
           if(ac.state === 'suspended'){ try{ await ac.resume(); }catch(_){} }
         }
-        const opt = { videoBitsPerSecond: 10000000, audioBitsPerSecond: 160000 }; if(mime) opt.mimeType = mime;
+        const opt = { videoBitsPerSecond: 3500000, audioBitsPerSecond: 128000 }; if(mime) opt.mimeType = mime;
         const rec = new MediaRecorder(stream, opt);
         const chunks = []; rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
         const stopped = new Promise(r => rec.onstop = r);
