@@ -18172,6 +18172,11 @@ c8ApplyFriendsView();
 .c8holo-x{background:transparent;border:1px solid #12304A;color:#9FD3E0;border-radius:10px;width:34px;height:34px;font-size:16px;cursor:pointer;}
 .c8holo-stage{width:100%;max-width:340px;aspect-ratio:3/4;margin:0 auto;position:relative;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;}
 .c8holo-stage canvas{width:100%;height:100%;display:block;}
+.c8holo-wm{position:absolute;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:.45em;white-space:nowrap;text-decoration:none;color:#CBD5E1;font-family:Inter,system-ui,sans-serif;font-weight:500;line-height:1;z-index:2;cursor:pointer;}
+.c8holo-wm img{width:1.45em;height:1.45em;border-radius:50%;background:rgba(255,255,255,.92);}
+.c8holo-wm b{color:#fff;font-weight:800;margin-left:-.15em;}
+.c8holo-wm b i{color:#22C55E;font-style:normal;}
+.c8holo-wm:hover b{text-decoration:underline;}
 .c8holo-hint{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);font-size:11px;letter-spacing:.12em;color:#7FA9B8;white-space:nowrap;pointer-events:none;}
 .c8holo-sec{border-top:1px solid #12304A;margin-top:14px;padding-top:14px;display:flex;flex-direction:column;gap:10px;}
 .c8holo-sec h4{margin:0;font-size:14px;color:#9FE9FF;letter-spacing:.04em;}
@@ -18374,7 +18379,7 @@ c8ApplyFriendsView();
 
   // video -> zbalené video (vľavo postava, vpravo maska) + zvuk, max 20 s
   function pickMime(){
-    const list = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    const list = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1.4D401F,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
     if(!window.MediaRecorder) return null;
     for(const m of list){ try{ if(MediaRecorder.isTypeSupported(m)) return m; }catch(_){} }
     return '';
@@ -18561,13 +18566,17 @@ c8ApplyFriendsView();
   // opts: {sound:bool, loop:bool, onEnd:fn, onNeedSound:fn}
   function mountPlayer(stage, holo, opts){
     opts = opts || {};
-    stage.innerHTML = '<canvas></canvas><div class="c8holo-hint">⟵ ' + T('potiahni a otoč') + ' ⟶</div>';
+    const wmLogo = (document.querySelector('.card-logo') || {}).src || '';
+    stage.innerHTML = '<canvas></canvas><a class="c8holo-wm" href="https://connect8.eu/" target="_blank" rel="noopener">' + (wmLogo ? '<img alt="" src="' + wmLogo + '">' : '') + '<span>Hologram</span><b>connect<i>8</i>.eu</b></a><div class="c8holo-hint">⟵ ' + T('potiahni a otoč') + ' ⟶</div>';
     const cv = stage.querySelector('canvas'), ctx = cv.getContext('2d'), hint = stage.querySelector('.c8holo-hint');
+    const wm = stage.querySelector('.c8holo-wm');
+    wm.addEventListener('pointerdown', e=>e.stopPropagation());
+    const placeWm = ()=>{ if(!W || !H) return; wm.style.top = (H*0.84 + W*0.055 + Math.max(5, H*0.012)) + 'px'; wm.style.fontSize = Math.max(10, Math.min(16, W*0.042)) + 'px'; };
     const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     const off = document.createElement('canvas'), octx = off.getContext('2d');
     let W = 0, H = 0, dpr = 1, dead = false, raf = 0;
     const size = ()=>{ dpr = Math.min(2, window.devicePixelRatio || 1); const r = stage.getBoundingClientRect(); W = r.width; H = r.height; cv.width = Math.max(1, Math.round(W*dpr)); cv.height = Math.max(1, Math.round(H*dpr)); };
-    size(); const onRs = ()=>size(); window.addEventListener('resize', onRs);
+    size(); placeWm(); const onRs = ()=>{ size(); placeWm(); }; window.addEventListener('resize', onRs);
     let ang = 0, vel = 0, drag = false, lx = 0, lastInteract = -1e9, used = false;
     const parts = Array.from({ length: 50 }, ()=>({ x: Math.random()*2-1, y: Math.random(), s: .6 + Math.random()*1.5, v: .04 + Math.random()*.08 }));
     const down = e=>{ drag = true; lx = e.clientX; vel = 0; stage.style.cursor = 'grabbing'; try{ stage.setPointerCapture(e.pointerId); }catch(_){} if(!used){ used = true; hint.style.opacity = '0'; } };
@@ -18606,14 +18615,15 @@ c8ApplyFriendsView();
       if(dead) return;
       if(!stage.isConnected){ if(ctl) ctl.destroy(); return; }
       const t = now / 1000;
-      if(!drag){
+      if(opts.spin){ ang = opts.spin(now); }
+      else if(!drag){
         if(Math.abs(vel) > 0.05){ ang += vel; vel *= 0.92; lastInteract = now; }
         else if(now - lastInteract > 1400){ const home = Math.round(ang/360)*360; ang += (home - ang) * 0.05; }
       }
       const cs = Math.cos(ang*Math.PI/180), local = ((ang + 90) % 180 + 180) % 180 - 90, wf = ss((cs + 0.22) / 0.44);
-      if(!W || !H) size();
+      if(!W || !H){ size(); placeWm(); }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-      const cx = W/2, baseY = H*0.88, speak = talking ? 1 : 0;
+      const cx = W/2, baseY = H*0.84, speak = talking ? 1 : 0;
       const flick = reduce ? 1 : (0.93 + 0.05*Math.sin(t*37) + 0.03*Math.random());
       let g = ctx.createLinearGradient(0, H*0.08, 0, baseY);
       g.addColorStop(0, 'rgba(63,224,255,0)'); g.addColorStop(1, 'rgba(63,224,255,' + ((0.20 + 0.08*speak)*flick) + ')');
@@ -18627,7 +18637,7 @@ c8ApplyFriendsView();
       if(holo.type === 'photo'){ srcF = front; srcB = back || front; }
       else if(gl && video && gl.render(video, 1 - wf)){ srcF = gl.canvas; srcB = gl.canvas; }
       if(srcF){
-        const ref = srcF, h = H*0.80, wF = srcF.width*h/srcF.height, wB = srcB.width*h/srcB.height;
+        const ref = srcF, h = H*0.76, wF = srcF.width*h/srcF.height, wB = srcB.width*h/srcB.height;
         const fy = baseY - H*0.02 - h + (reduce ? 0 : Math.sin(t*1.6)*H*0.006);
         const ow = Math.ceil(Math.max(wF, wB)) + 40, oh = Math.ceil(h) + 20;
         if(off.width !== Math.round(ow*dpr) || off.height !== Math.round(oh*dpr)){ off.width = Math.round(ow*dpr); off.height = Math.round(oh*dpr); }
@@ -19233,6 +19243,297 @@ c8ApplyFriendsView();
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+<style id="c8hx-style">
+.c8hx-ov{position:fixed;inset:0;z-index:100000;background:rgba(2,8,18,.82);display:flex;align-items:center;justify-content:center;padding:16px;}
+.c8hx-card{width:100%;max-width:380px;background:#071423;border:1px solid #13405a;border-radius:18px;padding:20px 18px 18px;color:#D9F6FF;box-shadow:0 20px 60px rgba(0,0,0,.5);font-family:inherit;}
+.c8hx-card h3{margin:0 0 6px;font-size:18px;color:#fff;}
+.c8hx-card p{margin:0 0 12px;font-size:13px;line-height:1.45;color:#9CCFE0;}
+.c8hx-bar{height:8px;border-radius:6px;background:#0B2a3d;overflow:hidden;margin:6px 0 8px;}
+.c8hx-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#22d3ee,#34d399);transition:width .2s;}
+.c8hx-st{font-size:13px;color:#BFEFFF;min-height:18px;margin-bottom:10px;}
+.c8hx-btns{display:flex;flex-direction:column;gap:8px;}
+.c8hx-btns button{border:0;border-radius:12px;padding:12px 14px;font-weight:700;font-size:14px;cursor:pointer;}
+.c8hx-share{background:#16A34A;color:#fff;}
+.c8hx-dl{background:#0E7490;color:#fff;}
+.c8hx-close{background:transparent;color:#9CCFE0;border:1px solid #1E4A66 !important;}
+.c8hx-plat{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+.c8hx-plat a{flex:1 1 30%;text-align:center;text-decoration:none;font-size:12.5px;font-weight:700;color:#D9F6FF;border:1px solid #1E4A66;border-radius:10px;padding:8px 6px;}
+.c8holo-stage.c8hx-stage{position:fixed;left:0;top:0;width:600px;height:840px;max-width:none;max-height:none;aspect-ratio:auto;opacity:0;pointer-events:none;z-index:-1;}
+.share-holo-note{display:none;margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#ECFEFF;border:1px solid #A5F3FC;color:#0E7490;font-size:13px;line-height:1.4;font-weight:600;}
+.share-modal.c8hx-mode .share-holo-note{display:block;}
+</style>
+<script id="c8hx-script">
+/* =====================================================================
+   HOLOGRAM -> VIDEO NA SOCIÁLNE SIETE
+   - hologram (so všetkými efektmi a zvukom) sa nahrá priamo v zariadení
+     ako zvislé video 9:16 s logom connect8.eu dole
+   - mobil: otvorí sa ponuka zdieľania telefónu (FB, Instagram, TikTok, WhatsApp…)
+   - PC: video sa stiahne a dá sa nahrať na FB / Instagram / TikTok
+   - nemíňa kredity (hologram sa len raz načíta, video sa nikam neukladá)
+===================================================================== */
+(function(){
+  function T(s){ try{ return (typeof t === 'function') ? t(s) : s; }catch(_){ return s; } }
+  (function(){
+    const add = (d, m) => { try{ if(!d) return; Object.keys(m).forEach(k => { if(!Object.prototype.hasOwnProperty.call(d, k)) d[k] = m[k]; }); }catch(_){} };
+    const K = ['📤 Zdieľať','Hologram ako video','Vytváram video hologramu…','Hologram sa nahrá ako video so zvukom a logom connect8.eu. Nechaj túto stránku otvorenú.','✓ Video je hotové','📤 Zdieľať video (Facebook, Instagram, TikTok…)','⬇ Stiahnuť video','Zavrieť','Video sa stiahlo. Nahraj ho na sociálnu sieť ako Reel alebo príbeh:','⚠️ Video sa nepodarilo vytvoriť.','Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.','🎬 Hologram sa zdieľa ako video – vyber sieť a video sa najprv vytvorí.','Hologram z Connect8 ✨ Vytvor si svoj zadarmo: https://connect8.eu','Načítavam hologram…'];
+    const L = {
+      EN:['📤 Share','Hologram as a video','Creating hologram video…','The hologram will be recorded as a video with sound and the connect8.eu logo. Keep this page open.','✓ Video is ready','📤 Share video (Facebook, Instagram, TikTok…)','⬇ Download video','Close','The video has been downloaded. Upload it to a social network as a Reel or story:','⚠️ Could not create the video.','This browser cannot record video. Try Chrome or an up-to-date Safari.','🎬 The hologram is shared as a video – choose a network and the video will be created first.','Hologram from Connect8 ✨ Create yours for free: https://connect8.eu','Loading hologram…'],
+      CZ:['📤 Sdílet','Hologram jako video','Vytvářím video hologramu…','Hologram se nahraje jako video se zvukem a logem connect8.eu. Nech tuto stránku otevřenou.','✓ Video je hotové','📤 Sdílet video (Facebook, Instagram, TikTok…)','⬇ Stáhnout video','Zavřít','Video se stáhlo. Nahraj ho na sociální síť jako Reel nebo příběh:','⚠️ Video se nepodařilo vytvořit.','Tento prohlížeč neumí nahrávat video. Zkus Chrome nebo aktuální Safari.','🎬 Hologram se sdílí jako video – vyber síť a video se nejdřív vytvoří.','Hologram z Connect8 ✨ Vytvoř si svůj zdarma: https://connect8.eu','Načítám hologram…'],
+      PL:['📤 Udostępnij','Hologram jako wideo','Tworzę wideo hologramu…','Hologram zostanie nagrany jako wideo z dźwiękiem i logo connect8.eu. Nie zamykaj tej strony.','✓ Wideo gotowe','📤 Udostępnij wideo (Facebook, Instagram, TikTok…)','⬇ Pobierz wideo','Zamknij','Wideo zostało pobrane. Wgraj je do sieci społecznościowej jako Reel lub relację:','⚠️ Nie udało się utworzyć wideo.','Ta przeglądarka nie potrafi nagrywać wideo. Spróbuj Chrome lub aktualnego Safari.','🎬 Hologram udostępniasz jako wideo – wybierz sieć, a wideo zostanie najpierw utworzone.','Hologram z Connect8 ✨ Stwórz swój za darmo: https://connect8.eu','Wczytuję hologram…'],
+      HU:['📤 Megosztás','Hologram videóként','Hologram videó készítése…','A hologram hanggal és connect8.eu logóval videóként rögzül. Hagyd nyitva ezt az oldalt.','✓ A videó elkészült','📤 Videó megosztása (Facebook, Instagram, TikTok…)','⬇ Videó letöltése','Bezárás','A videó letöltődött. Töltsd fel a közösségi oldalra Reelként vagy történetként:','⚠️ Nem sikerült elkészíteni a videót.','Ez a böngésző nem tud videót rögzíteni. Próbáld Chrome-mal vagy friss Safarival.','🎬 A hologram videóként osztható meg – válassz oldalt, és előbb elkészül a videó.','Hologram a Connect8-ról ✨ Készítsd el a sajátodat ingyen: https://connect8.eu','Hologram betöltése…'],
+      DE:['📤 Teilen','Hologramm als Video','Hologramm-Video wird erstellt…','Das Hologramm wird als Video mit Ton und connect8.eu-Logo aufgenommen. Lass diese Seite geöffnet.','✓ Video ist fertig','📤 Video teilen (Facebook, Instagram, TikTok…)','⬇ Video herunterladen','Schließen','Das Video wurde heruntergeladen. Lade es als Reel oder Story hoch:','⚠️ Das Video konnte nicht erstellt werden.','Dieser Browser kann kein Video aufnehmen. Versuche Chrome oder ein aktuelles Safari.','🎬 Das Hologramm wird als Video geteilt – wähle ein Netzwerk, das Video wird zuerst erstellt.','Hologramm von Connect8 ✨ Erstelle deins kostenlos: https://connect8.eu','Hologramm wird geladen…'],
+      IT:['📤 Condividi','Ologramma come video','Creazione del video dell\'ologramma…','L\'ologramma verrà registrato come video con audio e logo connect8.eu. Tieni aperta questa pagina.','✓ Video pronto','📤 Condividi video (Facebook, Instagram, TikTok…)','⬇ Scarica video','Chiudi','Il video è stato scaricato. Caricalo sul social come Reel o storia:','⚠️ Impossibile creare il video.','Questo browser non può registrare video. Prova Chrome o un Safari aggiornato.','🎬 L\'ologramma si condivide come video – scegli il social e il video verrà creato prima.','Ologramma da Connect8 ✨ Crea il tuo gratis: https://connect8.eu','Caricamento dell\'ologramma…']
+    };
+    const dict = n => { try{ return eval('UI_DICT_' + n); }catch(_){ return null; } };
+    Object.keys(L).forEach(n => { const m = {}; K.forEach((k, i) => m[k] = L[n][i]); add(dict(n), m); if(n === 'DE') add(dict('AT'), m); });
+  })();
+
+  function pickMime(){
+    const list = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    if(!window.MediaRecorder) return null;
+    for(const m of list){ try{ if(MediaRecorder.isTypeSupported(m)) return m; }catch(_){} }
+    return '';
+  }
+  function rr(x, X, Y, W, H, r){ x.beginPath(); x.moveTo(X+r, Y); x.arcTo(X+W, Y, X+W, Y+H, r); x.arcTo(X+W, Y+H, X, Y+H, r); x.arcTo(X, Y+H, X, Y, r); x.arcTo(X, Y, X+W, Y, r); x.closePath(); }
+
+  // ---------- nahratie hologramu do videa ----------
+  // MUSÍ sa zavolať priamo z kliknutia (kvôli zvuku na mobile)
+  function exportHolo(holo, name, onProg){
+    const mime = pickMime();
+    if(mime === null || !window.c8HoloMountPlayer) return Promise.reject(new Error(T('Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.')));
+    const isVideo = holo.type === 'video';
+    const AC = window.AudioContext || window.webkitAudioContext;
+    const ac = (isVideo && AC) ? new AC() : null;
+    if(ac && ac.resume) ac.resume();
+    const stage = document.createElement('div'); stage.className = 'c8holo-stage c8hx-stage';
+    document.body.appendChild(stage);
+    const SPIN_T0 = 1800, SPIN_D = 2600, PHOTO_LEN = 7200;
+    let spinStart = null;
+    const spin = (now)=>{ if(spinStart === null) return 0; const e = now - spinStart - SPIN_T0; if(e <= 0) return 0; if(e >= SPIN_D) return 360; const k = e / SPIN_D; return 360 * (k*k*(3 - 2*k)); };
+    let ended = false;
+    const pl = window.c8HoloMountPlayer(stage, holo, { sound: true, loop: false, autoplay: false, spin: isVideo ? null : spin, onEnd: ()=>{ ended = true; } });
+    const v = pl.video;
+    let elSrc = null;
+    if(v){
+      v.muted = false;
+      try{ if(ac) elSrc = ac.createMediaElementSource(v); }catch(_){ elSrc = null; }
+      // odomknutie prehrávania so zvukom ešte počas kliknutia (iPhone)
+      const up = v.play(); if(up && up.then) up.then(()=>{ if(!recStarted){ try{ v.pause(); v.currentTime = 0; }catch(_){} } }).catch(()=>{});
+    }
+    let recStarted = false;
+    const cleanup = ()=>{ try{ pl.destroy(); }catch(_){} stage.remove(); try{ ac && ac.close(); }catch(_){} };
+    return (async ()=>{
+      try{
+        // počkaj, kým je hologram načítaný
+        onProg && onProg(T('Načítavam hologram…'), 2);
+        if(v){
+          await new Promise((res, rej)=>{ if(v.readyState >= 2) return res(); const to = setTimeout(()=>rej(new Error('load')), 30000); v.addEventListener('loadeddata', ()=>{ clearTimeout(to); res(); }, { once: true }); v.addEventListener('error', ()=>{ clearTimeout(to); rej(new Error('load')); }, { once: true }); });
+        } else {
+          await new Promise(r => setTimeout(r, 1200));
+        }
+        const src = stage.querySelector('canvas');
+        const OW = 720, OH = 1280;
+        const out = document.createElement('canvas'); out.width = OW; out.height = OH;
+        const x = out.getContext('2d');
+        const bg = x.createRadialGradient(OW/2, OH*0.45, 40, OW/2, OH*0.45, OH*0.75);
+        bg.addColorStop(0, '#0A2238'); bg.addColorStop(1, '#030A14');
+        const title = (name || 'Hologram');
+        const logoImg = new Image(); logoImg.src = (document.querySelector('.card-logo') || {}).src || '';
+        const draw = ()=>{
+          x.fillStyle = bg; x.fillRect(0, 0, OW, OH);
+          // názov hore
+          x.fillStyle = '#FFFFFF'; x.font = '700 40px Inter, Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+          x.fillText(title, OW/2, 96, OW - 80);
+          // hologram
+          if(src && src.width){ const sh = 1000, sw = sh * src.width / src.height; x.drawImage(src, (OW - sw)/2, 140, sw, sh); }
+          // vodoznak pod kruhmi: logo + „Hologram connect8.eu“
+          if(src && src.width){
+            const k = 1000 / src.height * (src.height / (stage.getBoundingClientRect().height || 840));
+            const sH = stage.getBoundingClientRect().height || 840, sW = stage.getBoundingClientRect().width || 600, kk = 1000 / sH;
+            const wy = 140 + (sH*0.84 + sW*0.055) * kk + 36;
+            void k;
+            x.textBaseline = 'middle'; x.textAlign = 'left';
+            const f1 = '500 30px Inter, Arial, sans-serif', f2 = '800 30px Inter, Arial, sans-serif';
+            x.font = f1; const w0 = x.measureText('Hologram ').width;
+            x.font = f2; const wa = x.measureText('connect').width, wb = x.measureText('8').width, wc = x.measureText('.eu').width;
+            const L = 44, gap = 12, tot = L + gap + w0 + wa + wb + wc;
+            let tx = (OW - tot) / 2;
+            if(logoImg.complete && logoImg.naturalWidth){
+              x.save(); x.fillStyle = 'rgba(255,255,255,0.92)'; x.beginPath(); x.arc(tx + L/2, wy, L/2, 0, Math.PI*2); x.fill(); x.restore();
+              x.drawImage(logoImg, tx, wy - L/2, L, L);
+            }
+            tx += L + gap;
+            x.font = f1; x.fillStyle = '#CBD5E1'; x.fillText('Hologram ', tx, wy); tx += w0;
+            x.font = f2; x.fillStyle = '#FFFFFF'; x.fillText('connect', tx, wy); tx += wa;
+            x.fillStyle = '#22C55E'; x.fillText('8', tx, wy); tx += wb;
+            x.fillStyle = '#FFFFFF'; x.fillText('.eu', tx, wy);
+          }
+        };
+        draw();
+        const stream = out.captureStream(30);
+        if(ac && elSrc){
+          const dest = ac.createMediaStreamDestination();
+          elSrc.connect(dest);
+          dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
+          if(ac.state === 'suspended'){ try{ await ac.resume(); }catch(_){} }
+        }
+        const opt = { videoBitsPerSecond: 3500000, audioBitsPerSecond: 128000 }; if(mime) opt.mimeType = mime;
+        const rec = new MediaRecorder(stream, opt);
+        const chunks = []; rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+        const stopped = new Promise(r => rec.onstop = r);
+        recStarted = true;
+        rec.start(250);
+        const t0 = performance.now(); spinStart = t0;
+        let total = PHOTO_LEN;
+        if(v){
+          try{ v.currentTime = 0; }catch(_){}
+          try{ await v.play(); }catch(e){ v.muted = true; await v.play().catch(()=>{}); }
+          total = Math.min(21000, ((v.duration && isFinite(v.duration)) ? v.duration : 20) * 1000 + 600);
+        }
+        await new Promise(res => {
+          const step = ()=>{
+            draw();
+            const el = performance.now() - t0;
+            onProg && onProg(T('Vytváram video hologramu…') + ' ' + Math.min(99, Math.round(el / total * 100)) + ' %', 5 + 90 * Math.min(1, el / total));
+            if(el >= total || (ended && v && v.ended && el > 800)){ setTimeout(res, ended ? 400 : 0); return; }
+            requestAnimationFrame(step);
+          };
+          step();
+        });
+        draw(); rec.stop(); await stopped;
+        stream.getTracks().forEach(tr => tr.stop());
+        const type = (rec.mimeType || mime || 'video/webm').split(';')[0];
+        const ext = type.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
+        const blob = new Blob(chunks, { type });
+        cleanup();
+        return new File([blob], 'connect8-hologram.' + ext, { type });
+      }catch(e){ cleanup(); throw e; }
+    })();
+  }
+
+  // ---------- okno s priebehom a zdieľaním ----------
+  const PLAT = { facebook: ['Facebook', 'https://www.facebook.com/'], instagram: ['Instagram', 'https://www.instagram.com/'], tiktok: ['TikTok', 'https://www.tiktok.com/upload'] };
+  function download(file){
+    const u = URL.createObjectURL(file), a = document.createElement('a');
+    a.href = u; a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u), 60000);
+  }
+  window.c8HoloShareSocial = function(holo, name){
+    if(!holo || !(holo.front || holo.video)) return;
+    const ov = document.createElement('div'); ov.className = 'c8hx-ov';
+    ov.innerHTML = '<div class="c8hx-card"><h3></h3><p></p><div class="c8hx-bar"><i></i></div><div class="c8hx-st"></div><div class="c8hx-btns"></div></div>';
+    ov.querySelector('h3').textContent = '🎬 ' + T('Hologram ako video');
+    ov.querySelector('p').textContent = T('Hologram sa nahrá ako video so zvukom a logom connect8.eu. Nechaj túto stránku otvorenú.');
+    document.body.appendChild(ov);
+    const bar = ov.querySelector('.c8hx-bar i'), st = ov.querySelector('.c8hx-st'), btns = ov.querySelector('.c8hx-btns');
+    const close = ()=>{ ov.remove(); };
+    const addBtn = (cls, label, fn)=>{ const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = label; b.onclick = fn; btns.appendChild(b); return b; };
+    let cancelled = false;
+    addBtn('c8hx-close', T('Zavrieť'), ()=>{ cancelled = true; close(); });
+    exportHolo(holo, name, (msg, pct)=>{ st.textContent = msg; bar.style.width = pct + '%'; }).then(file=>{
+      if(cancelled) return;
+      bar.style.width = '100%'; st.textContent = T('✓ Video je hotové');
+      ov.querySelector('p').textContent = '';
+      btns.innerHTML = '';
+      const text = T('Hologram z Connect8 ✨ Vytvor si svoj zadarmo: https://connect8.eu');
+      let canFiles = false; try{ canFiles = !!(navigator.canShare && navigator.canShare({ files: [file] })); }catch(_){}
+      if(canFiles){
+        addBtn('c8hx-share', T('📤 Zdieľať video (Facebook, Instagram, TikTok…)'), async ()=>{
+          try{ await navigator.share({ files: [file], title: 'Connect8', text }); }catch(e){ if(e && e.name === 'AbortError') return; download(file); }
+        });
+      }
+      addBtn('c8hx-dl', T('⬇ Stiahnuť video'), ()=>{
+        download(file);
+        if(!ov.querySelector('.c8hx-plat')){
+          const p = document.createElement('p'); p.style.margin = '6px 0 0'; p.textContent = T('Video sa stiahlo. Nahraj ho na sociálnu sieť ako Reel alebo príbeh:');
+          const row = document.createElement('div'); row.className = 'c8hx-plat';
+          Object.keys(PLAT).forEach(k=>{ const a = document.createElement('a'); a.href = PLAT[k][1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = PLAT[k][0]; row.appendChild(a); });
+          btns.appendChild(p); btns.appendChild(row);
+        }
+      });
+      addBtn('c8hx-close', T('Zavrieť'), close);
+    }).catch(e=>{
+      console.error(e);
+      if(cancelled) return;
+      st.textContent = T('⚠️ Video sa nepodarilo vytvoriť.') + (e && e.message && e.message !== 'load' ? ' ' + e.message : '');
+      bar.style.width = '0';
+    });
+  };
+
+  // ---------- tlačidlo v okne „Môj hologram“ ----------
+  function addModalBtn(){
+    const del = document.querySelector('#c8holo-have .c8holo-go.red');
+    if(!del || document.getElementById('c8holo-social')) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'c8holo-go'; b.id = 'c8holo-social';
+    b.textContent = T('📤 Zdieľať');
+    b.onclick = ()=>{
+      let h = null;
+      try{ h = (currentUser && currentUser.hologram) || null; }catch(_){}
+      if(!h) return;
+      window.c8HoloShareSocial(h, (currentUser && currentUser.name) || '');
+    };
+    del.insertAdjacentElement('afterend', b);
+  }
+  const _open = window.c8HoloOpen;
+  if(typeof _open === 'function'){
+    window.c8HoloOpen = async function(){ const r = await _open.apply(this, arguments); try{ addModalBtn(); const b = document.getElementById('c8holo-social'); if(b) b.textContent = T('📤 Zdieľať'); }catch(_){} return r; };
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addModalBtn); else addModalBtn();
+
+  // ---------- Plocha: zdieľanie príspevku s hologramom = video ----------
+  let shareHolo = null;
+  function findAnyPost(id){
+    try{ return (posts || []).find(x=>x.id === id) || Object.values(ownPostsCache || {}).flat().find(x=>x.id === id) || null; }catch(_){ return null; }
+  }
+  const modal = document.getElementById('share-modal');
+  if(modal){
+    const opts = modal.querySelector('.share-options');
+    if(opts && !modal.querySelector('.share-holo-note')){
+      const n = document.createElement('div'); n.className = 'share-holo-note';
+      n.textContent = T('🎬 Hologram sa zdieľa ako video – vyber sieť a video sa najprv vytvorí.');
+      opts.parentNode.insertBefore(n, opts);
+    }
+  }
+  if(typeof openShareModal === 'function'){
+    const _osm = openShareModal;
+    window.openShareModal = openShareModal = function(postId){
+      const p = findAnyPost(postId);
+      const hs = (p && p.hologram && (p.hologram.front || p.hologram.video)) ? { h: p.hologram, name: p.name || '' } : null;
+      try{ return _osm.apply(this, arguments); }
+      finally{
+        shareHolo = hs;
+        const m = document.getElementById('share-modal');
+        if(m){ m.classList.toggle('c8hx-mode', !!hs); const n = m.querySelector('.share-holo-note'); if(n) n.textContent = T('🎬 Hologram sa zdieľa ako video – vyber sieť a video sa najprv vytvorí.'); }
+      }
+    };
+  }
+  if(typeof openVideoShareModal === 'function'){
+    const _ovsm = openVideoShareModal;
+    window.openVideoShareModal = openVideoShareModal = function(){ shareHolo = null; const m = document.getElementById('share-modal'); if(m) m.classList.remove('c8hx-mode'); return _ovsm.apply(this, arguments); };
+  }
+  function holoGo(){
+    const s = shareHolo; if(!s) return false;
+    try{ closeShareModal(); }catch(_){}
+    shareHolo = null;
+    window.c8HoloShareSocial(s.h, s.name);
+    return true;
+  }
+  const fb = document.getElementById('share-fb-link');
+  if(fb) fb.addEventListener('click', e=>{ if(shareHolo){ e.preventDefault(); e.stopImmediatePropagation(); holoGo(); } }, true);
+  ['shareToInstagram', 'shareToTikTok', 'shareToWhatsApp', 'shareToEmail'].forEach(fn=>{
+    try{
+      const orig = eval(fn);
+      if(typeof orig !== 'function') return;
+      const wrapped = function(){ if(holoGo()) return; return orig.apply(this, arguments); };
+      window[fn] = wrapped; eval(fn + ' = wrapped');
+    }catch(_){}
+  });
+  // „Kopírovať odkaz“ ostáva – skopíruje odkaz na príspevok
+  const _csm = (typeof closeShareModal === 'function') ? closeShareModal : null;
+  if(_csm){ window.closeShareModal = closeShareModal = function(){ const m = document.getElementById('share-modal'); if(m) m.classList.remove('c8hx-mode'); return _csm.apply(this, arguments); }; }
 })();
 </script>
 </body>
