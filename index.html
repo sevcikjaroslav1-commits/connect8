@@ -18679,7 +18679,8 @@ c8ApplyFriendsView();
   window.c8HoloMountPlayer = mountPlayer;
 
   // ---------- dáta ----------
-  let myHolo = null, previewPlayer = null;
+  let myHolo = null, myHoloUid = null, previewPlayer = null;
+  window.c8HoloMine = ()=> (currentUser && myHoloUid === currentUser.uid) ? myHolo : null;
   const holoCache = {};
   async function loadHolo(uid, fresh){
     const c = holoCache[uid];
@@ -18694,7 +18695,7 @@ c8ApplyFriendsView();
   }
   async function saveHolo(h){
     await db.collection('profiles').doc(currentUser.uid).set({ hologram: h }, { merge: true });
-    myHolo = h; currentUser.hologram = h; holoCache[currentUser.uid] = { h, at: Date.now() };
+    myHolo = h; myHoloUid = currentUser.uid; currentUser.hologram = h; holoCache[currentUser.uid] = { h, at: Date.now() };
   }
 
   // ---------- modal (vlastný profil) ----------
@@ -18727,7 +18728,9 @@ c8ApplyFriendsView();
     $('c8holo-modal').classList.add('open');
     try{ if(typeof translateStaticDom === 'function') translateStaticDom($('c8holo-modal')); }catch(_){}
     setStatus('', 0);
-    if(myHolo === null && currentUser) myHolo = await loadHolo(currentUser.uid, true);
+    // iný používateľ na tom istom zariadení (odhlásenie/prihlásenie) -> zahoď hologram predošlého účtu
+    if(currentUser && myHoloUid !== currentUser.uid){ myHolo = null; myHoloUid = null; if(previewPlayer){ previewPlayer.destroy(); previewPlayer = null; } }
+    if(myHolo === null && currentUser){ const uid = currentUser.uid; const h = await loadHolo(uid, true); if(currentUser && currentUser.uid === uid){ myHolo = h; myHoloUid = uid; } }
     showHave();
   };
   window.c8HoloClose = function(){
@@ -18809,7 +18812,7 @@ c8ApplyFriendsView();
     delete st.dataset.confirm;
     try{
       await db.collection('profiles').doc(currentUser.uid).set({ hologram: firebase.firestore.FieldValue.delete() }, { merge: true });
-      myHolo = null; currentUser.hologram = null; showHave(); setStatus('Hologram bol vymazaný.', 0);
+      myHolo = null; myHoloUid = currentUser.uid; currentUser.hologram = null; showHave(); setStatus('Hologram bol vymazaný.', 0);
     }catch(e){ st.textContent = T('⚠️ Nepodarilo sa vymazať.'); }
   };
   window.c8HoloShare = async function(){
@@ -19427,13 +19430,15 @@ c8ApplyFriendsView();
     ov.querySelector('h3').textContent = '🎬 ' + T('Hologram ako video');
     ov.querySelector('p').textContent = T('Hologram sa nahrá ako video so zvukom a logom connect8.eu. Nechaj túto stránku otvorenú.');
     document.body.appendChild(ov);
+    try{ window.c8WakeOn && c8WakeOn('holoShare'); }catch(_){}
     const bar = ov.querySelector('.c8hx-bar i'), st = ov.querySelector('.c8hx-st'), btns = ov.querySelector('.c8hx-btns');
-    const close = ()=>{ ov.remove(); };
+    const close = ()=>{ ov.remove(); try{ window.c8WakeOff && c8WakeOff('holoShare'); }catch(_){} };
     const addBtn = (cls, label, fn)=>{ const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = label; b.onclick = fn; btns.appendChild(b); return b; };
     let cancelled = false;
     addBtn('c8hx-close', T('Zavrieť'), ()=>{ cancelled = true; close(); });
     exportHolo(holo, name, (msg, pct)=>{ st.textContent = msg; bar.style.width = pct + '%'; }).then(file=>{
       if(cancelled) return;
+      try{ window.c8WakeOff && c8WakeOff('holoShare'); }catch(_){}
       bar.style.width = '100%'; st.textContent = T('✓ Video je hotové');
       ov.querySelector('p').textContent = '';
       btns.innerHTML = '';
@@ -19456,6 +19461,7 @@ c8ApplyFriendsView();
       addBtn('c8hx-close', T('Zavrieť'), close);
     }).catch(e=>{
       console.error(e);
+      try{ window.c8WakeOff && c8WakeOff('holoShare'); }catch(_){}
       if(cancelled) return;
       st.textContent = T('⚠️ Video sa nepodarilo vytvoriť.') + (e && e.message && e.message !== 'load' ? ' ' + e.message : '');
       bar.style.width = '0';
@@ -19471,7 +19477,7 @@ c8ApplyFriendsView();
     b.textContent = T('📤 Zdieľať');
     b.onclick = ()=>{
       let h = null;
-      try{ h = (currentUser && currentUser.hologram) || null; }catch(_){}
+      try{ h = (window.c8HoloMine && c8HoloMine()) || null; }catch(_){}
       if(!h) return;
       window.c8HoloShareSocial(h, (currentUser && currentUser.name) || '');
     };
@@ -19534,6 +19540,37 @@ c8ApplyFriendsView();
   // „Kopírovať odkaz“ ostáva – skopíruje odkaz na príspevok
   const _csm = (typeof closeShareModal === 'function') ? closeShareModal : null;
   if(_csm){ window.closeShareModal = closeShareModal = function(){ const m = document.getElementById('share-modal'); if(m) m.classList.remove('c8hx-mode'); return _csm.apply(this, arguments); }; }
+})();
+</script>
+<script id="c8wake-script">
+/* Obrazovka nezhasne počas: vytvárania hologramu, tvorby videa na zdieľanie,
+   hovoru a videohovoru (Screen Wake Lock API). Po skončení sa vráti normál. */
+(function(){
+  const keys = new Set(); let lock = null, busy = false;
+  async function apply(){
+    if(busy) return; busy = true;
+    try{
+      if(keys.size && !lock && 'wakeLock' in navigator && document.visibilityState === 'visible'){
+        lock = await navigator.wakeLock.request('screen');
+        lock.addEventListener('release', ()=>{ lock = null; });
+      } else if(!keys.size && lock){ const l = lock; lock = null; await l.release(); }
+    }catch(_){ lock = null; }
+    busy = false;
+    if((keys.size && !lock && document.visibilityState === 'visible' && 'wakeLock' in navigator) || (!keys.size && lock)) setTimeout(apply, 300);
+  }
+  window.c8WakeOn = k => { keys.add(k); apply(); };
+  window.c8WakeOff = k => { keys.delete(k); apply(); };
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible' && keys.size) apply(); });
+  // hovor / videohovor
+  try{
+    if(typeof openCallScreen === 'function'){ const o = openCallScreen; openCallScreen = function(){ c8WakeOn('call'); return o.apply(this, arguments); }; }
+    if(typeof endCall === 'function'){ const e = endCall; endCall = function(){ c8WakeOff('call'); return e.apply(this, arguments); }; }
+  }catch(_){}
+  // vytváranie hologramu
+  ['c8HoloCreatePhoto', 'c8HoloCreateVideo'].forEach(fn=>{
+    const f = window[fn]; if(typeof f !== 'function') return;
+    window[fn] = async function(){ c8WakeOn(fn); try{ return await f.apply(this, arguments); } finally { c8WakeOff(fn); } };
+  });
 })();
 </script>
 </body>
