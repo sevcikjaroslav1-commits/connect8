@@ -2500,7 +2500,7 @@
         <button onclick="closeLegalModal('privacy')">✕</button>
       </div>
       <div class="legal-sheet-body">
-        <p class="legal-updated">Posledná aktualizácia: 5. septembra 2026</p>
+        <p class="legal-updated">Posledná aktualizácia: 17. októbra 2026</p>
 
         <h2>1. Kto sme (prevádzkovateľ)</h2>
         <p>Prevádzkovateľom platformy Connect8 („Connect8" alebo „appka") a správcom osobných údajov je:</p>
@@ -2543,7 +2543,17 @@
           <li>Dátum registrácie, dátum poslednej aktivity</li>
         </ul>
         <p><strong>2.5 Čo nezbierame</strong></p>
-        <p>Connect8 nezbiera polohu, neanalyzuje obsah tvojich súkromných správ na reklamné účely a nepoužíva nástroje na sledovanie správania naprieč inými webmi (napr. Google Analytics, reklamné pixely).</p>
+        <p>Connect8 nezbiera tvoju polohu na pozadí ani bez tvojho vedomia — poloha sa spracúva iba vtedy, keď sám zapneš „Zdieľať moju polohu“ (bod 2.6). Connect8 neanalyzuje obsah tvojich súkromných správ na reklamné účely a nepoužíva nástroje na sledovanie správania naprieč inými webmi (napr. Google Analytics, reklamné pixely).</p>
+
+        <p><strong>2.6 Zdieľanie polohy (iba ak ho sám zapneš)</strong></p>
+        <ul>
+          <li>Polohu (GPS súradnice, presnosť, rýchlosť a prejdenú trasu) spracúvame iba počas zdieľania, ktoré sám spustíš tlačidlom „Zdieľať moju polohu“, a len kým máš connect8 otvorené.</li>
+          <li>Polohu vidia iba priatelia, ktorých pri spustení zaškrtneš. Ostatní používatelia ju nevidia a nevedia ani to, že polohu zdieľaš.</li>
+          <li>Zdieľanie kedykoľvek vypneš tlačidlom „Vypnúť“, inak sa samo ukončí po čase, ktorý si zvolil (najviac 8 hodín). Pri odhlásení sa ukončí hneď.</li>
+          <li>Po vypnutí sa živá poloha aj trasa z databázy natrvalo vymažú. Ostane len obrázok trasy, ak si ho sám uložíš alebo zdieľaš na Plochu.</li>
+          <li>Priateľ, ktorý tvoju polohu sleduje, môže na mape vidieť aj svoju vlastnú polohu — tá ostáva iba v jeho zariadení a nikam sa neodosiela.</li>
+          <li>Právny základ: tvoj súhlas (čl. 6 ods. 1 písm. a) GDPR), ktorý dávaš spustením zdieľania a povolením polohy v prehliadači. Súhlas odvoláš vypnutím zdieľania.</li>
+        </ul>
 
         <h2>3. Prečo tieto údaje spracúvame (účel a právny základ)</h2>
         <table>
@@ -2562,6 +2572,7 @@
           <li><strong>Firebase (Google)</strong> — autentifikácia používateľov, ukladanie dát appky (príspevky, správy, profily) a push notifikácie. Viac: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></li>
           <li><strong>Cloudinary</strong> — ukladanie a spracovanie nahraných obrázkov a videí. Viac: <a href="https://cloudinary.com/privacy" target="_blank" rel="noopener">cloudinary.com/privacy</a></li>
           <li><strong>YouTube / Google</strong> — prehrávanie vložených YouTube videí sa riadi zásadami YouTube/Google, nie Connect8</li>
+          <li>OpenStreetMap — mapové podklady pri zdieľaní polohy. Pri zobrazení mapy sa tvoja IP adresa odošle serverom OpenStreetMap. Viac: osmfoundation.org/wiki/Privacy_Policy</li>
         </ul>
         <p>Connect8 nepredáva tvoje osobné údaje tretím stranám na marketingové účely.</p>
 
@@ -2570,6 +2581,7 @@
 
         <h2>6. Zabezpečenie údajov</h2>
         <p>Heslá sú spravované cez Firebase Authentication a nie sú nikdy uložené v čitateľnej podobe. Prenos dát medzi tvojím zariadením a appkou je šifrovaný (HTTPS). Prístup k databáze appky je obmedzený len na nevyhnutné technické účely.</p>
+        <p>Údaje o polohe sú v databáze chránené pravidlami Firebase tak, aby ich mohol čítať iba ich majiteľ a priatelia, ktorých pri zdieľaní sám vybral. Po skončení zdieľania sa vymažú.</p>
 
         <h2>7. Tvoje práva</h2>
         <p>Ako používateľ máš podľa GDPR najmä právo:</p>
@@ -19571,6 +19583,619 @@ c8ApplyFriendsView();
     const f = window[fn]; if(typeof f !== 'function') return;
     window[fn] = async function(){ c8WakeOn(fn); try{ return await f.apply(this, arguments); } finally { c8WakeOff(fn); } };
   });
+})();
+</script>
+<script id="c8ll-legal">
+(function(){
+  const NEW = {"p25": "Connect8 nezbiera tvoju polohu na pozadí ani bez tvojho vedomia — poloha sa spracúva iba vtedy, keď sám zapneš „Zdieľať moju polohu“ (bod 2.6). Connect8 neanalyzuje obsah tvojich súkromných správ na reklamné účely a nepoužíva nástroje na sledovanie správania naprieč inými webmi (napr. Google Analytics, reklamné pixely).", "h26": "2.6 Zdieľanie polohy (iba ak ho sám zapneš)", "l1": "Polohu (GPS súradnice, presnosť, rýchlosť a prejdenú trasu) spracúvame iba počas zdieľania, ktoré sám spustíš tlačidlom „Zdieľať moju polohu“, a len kým máš connect8 otvorené.", "l2": "Polohu vidia iba priatelia, ktorých pri spustení zaškrtneš. Ostatní používatelia ju nevidia a nevedia ani to, že polohu zdieľaš.", "l3": "Zdieľanie kedykoľvek vypneš tlačidlom „Vypnúť“, inak sa samo ukončí po čase, ktorý si zvolil (najviac 8 hodín). Pri odhlásení sa ukončí hneď.", "l4": "Po vypnutí sa živá poloha aj trasa z databázy natrvalo vymažú. Ostane len obrázok trasy, ak si ho sám uložíš alebo zdieľaš na Plochu.", "l5": "Priateľ, ktorý tvoju polohu sleduje, môže na mape vidieť aj svoju vlastnú polohu — tá ostáva iba v jeho zariadení a nikam sa neodosiela.", "l6": "Právny základ: tvoj súhlas (čl. 6 ods. 1 písm. a) GDPR), ktorý dávaš spustením zdieľania a povolením polohy v prehliadači. Súhlas odvoláš vypnutím zdieľania.", "tp": "OpenStreetMap — mapové podklady pri zdieľaní polohy. Pri zobrazení mapy sa tvoja IP adresa odošle serverom OpenStreetMap. Viac: osmfoundation.org/wiki/Privacy_Policy", "sec": "Údaje o polohe sú v databáze chránené pravidlami Firebase tak, aby ich mohol čítať iba ich majiteľ a priatelia, ktorých pri zdieľaní sám vybral. Po skončení zdieľania sa vymažú.", "upd": "Posledná aktualizácia: 17. októbra 2026"};
+  const TR = {"EN": {"p25": "Connect8 does not collect your location in the background or without your knowledge — location is processed only when you yourself turn on “Share my location” (section 2.6). Connect8 does not analyse the content of your private messages for advertising purposes and does not use tools that track behaviour across other websites (e.g. Google Analytics, advertising pixels).", "h26": "2.6 Location sharing (only if you turn it on)", "l1": "We process your location (GPS coordinates, accuracy, speed and the route travelled) only during sharing that you start yourself with the “Share my location” button, and only while connect8 is open.", "l2": "Only the friends you tick when starting can see your location. Other users cannot see it and do not even know that you are sharing.", "l3": "You can stop sharing at any time with the “Stop” button; otherwise it ends automatically after the time you chose (at most 8 hours). It ends immediately when you log out.", "l4": "After you stop, your live location and route are permanently deleted from the database. Only the route image remains, if you save it or share it to the Feed yourself.", "l5": "A friend who follows your location can also see their own location on the map — it stays only on their device and is not sent anywhere.", "l6": "Legal basis: your consent (Art. 6(1)(a) GDPR), which you give by starting the sharing and allowing location in the browser. You withdraw consent by stopping the sharing.", "tp": "OpenStreetMap — map tiles for location sharing. When the map is displayed, your IP address is sent to OpenStreetMap servers. More: osmfoundation.org/wiki/Privacy_Policy", "sec": "Location data in the database is protected by Firebase rules so that only its owner and the friends they selected when sharing can read it. It is deleted when sharing ends.", "upd": "Last updated: October 17, 2026"}, "CZ": {"p25": "Connect8 nesbírá tvou polohu na pozadí ani bez tvého vědomí — poloha se zpracovává jen tehdy, když sám zapneš „Sdílet mou polohu“ (bod 2.6). Connect8 neanalyzuje obsah tvých soukromých zpráv pro reklamní účely a nepoužívá nástroje pro sledování chování napříč jinými weby (např. Google Analytics, reklamní pixely).", "h26": "2.6 Sdílení polohy (jen pokud ho sám zapneš)", "l1": "Polohu (GPS souřadnice, přesnost, rychlost a ušlou trasu) zpracováváme jen během sdílení, které sám spustíš tlačítkem „Sdílet mou polohu“, a jen dokud máš connect8 otevřené.", "l2": "Polohu vidí jen přátelé, které při spuštění zaškrtneš. Ostatní uživatelé ji nevidí a nevědí ani to, že polohu sdílíš.", "l3": "Sdílení kdykoli vypneš tlačítkem „Vypnout“, jinak se samo ukončí po čase, který sis zvolil (nejvýše 8 hodin). Při odhlášení se ukončí hned.", "l4": "Po vypnutí se živá poloha i trasa z databáze trvale smažou. Zůstane jen obrázek trasy, pokud si ho sám uložíš nebo sdílíš na Plochu.", "l5": "Přítel, který tvou polohu sleduje, může na mapě vidět i svou vlastní polohu — ta zůstává jen v jeho zařízení a nikam se neodesílá.", "l6": "Právní základ: tvůj souhlas (čl. 6 odst. 1 písm. a) GDPR), který dáváš spuštěním sdílení a povolením polohy v prohlížeči. Souhlas odvoláš vypnutím sdílení.", "tp": "OpenStreetMap — mapové podklady při sdílení polohy. Při zobrazení mapy se tvá IP adresa odešle serverům OpenStreetMap. Více: osmfoundation.org/wiki/Privacy_Policy", "sec": "Údaje o poloze jsou v databázi chráněny pravidly Firebase tak, aby je mohl číst jen jejich vlastník a přátelé, které při sdílení sám vybral. Po skončení sdílení se smažou.", "upd": "Poslední aktualizace: 17. října 2026"}, "PL": {"p25": "Connect8 nie zbiera twojej lokalizacji w tle ani bez twojej wiedzy — lokalizacja jest przetwarzana tylko wtedy, gdy sam włączysz „Udostępnij moją lokalizację” (punkt 2.6). Connect8 nie analizuje treści twoich prywatnych wiadomości w celach reklamowych i nie używa narzędzi śledzących zachowanie w innych serwisach (np. Google Analytics, piksele reklamowe).", "h26": "2.6 Udostępnianie lokalizacji (tylko jeśli sam je włączysz)", "l1": "Lokalizację (współrzędne GPS, dokładność, prędkość i przebytą trasę) przetwarzamy tylko podczas udostępniania, które sam uruchomisz przyciskiem „Udostępnij moją lokalizację”, i tylko gdy connect8 jest otwarty.", "l2": "Lokalizację widzą tylko znajomi, których zaznaczysz przy uruchomieniu. Inni użytkownicy jej nie widzą i nie wiedzą nawet, że ją udostępniasz.", "l3": "Udostępnianie wyłączysz w każdej chwili przyciskiem „Wyłącz”, w przeciwnym razie zakończy się samo po wybranym czasie (maksymalnie 8 godzin). Po wylogowaniu kończy się natychmiast.", "l4": "Po wyłączeniu bieżąca lokalizacja i trasa są trwale usuwane z bazy danych. Zostaje tylko obraz trasy, jeśli sam go zapiszesz lub udostępnisz na tablicy.", "l5": "Znajomy, który śledzi twoją lokalizację, może widzieć na mapie także swoją lokalizację — pozostaje ona tylko na jego urządzeniu i nigdzie nie jest wysyłana.", "l6": "Podstawa prawna: twoja zgoda (art. 6 ust. 1 lit. a RODO), której udzielasz, uruchamiając udostępnianie i zezwalając na lokalizację w przeglądarce. Zgodę wycofujesz, wyłączając udostępnianie.", "tp": "OpenStreetMap — podkłady mapowe przy udostępnianiu lokalizacji. Przy wyświetlaniu mapy twój adres IP jest wysyłany do serwerów OpenStreetMap. Więcej: osmfoundation.org/wiki/Privacy_Policy", "sec": "Dane o lokalizacji są w bazie chronione regułami Firebase tak, aby mógł je odczytać tylko ich właściciel i znajomi wybrani przez niego przy udostępnianiu. Po zakończeniu udostępniania są usuwane.", "upd": "Ostatnia aktualizacja: 17 października 2026"}, "HU": {"p25": "A Connect8 nem gyűjti a helyzetedet a háttérben vagy a tudtod nélkül — a helyzetet csak akkor kezeljük, ha te magad bekapcsolod a „Helyzetem megosztása” funkciót (2.6. pont). A Connect8 nem elemzi a privát üzeneteid tartalmát reklámcélokra, és nem használ más oldalakon átívelő viselkedéskövető eszközöket (pl. Google Analytics, reklámpixelek).", "h26": "2.6 Helyzet megosztása (csak ha te bekapcsolod)", "l1": "A helyzetedet (GPS-koordináták, pontosság, sebesség és a megtett útvonal) csak az általad a „Helyzetem megosztása” gombbal indított megosztás alatt kezeljük, és csak amíg a connect8 nyitva van.", "l2": "A helyzetedet csak az indításkor bejelölt barátok látják. A többi felhasználó nem látja, és azt sem tudja, hogy megosztod.", "l3": "A megosztást bármikor leállíthatod a „Leállítás” gombbal, különben a választott idő után (legfeljebb 8 óra) magától véget ér. Kijelentkezéskor azonnal véget ér.", "l4": "Leállítás után az élő helyzet és az útvonal véglegesen törlődik az adatbázisból. Csak az útvonal képe marad meg, ha magad mented vagy megosztod a hírfolyamon.", "l5": "Az a barát, aki a helyzetedet követi, a térképen a saját helyzetét is láthatja — ez csak az ő eszközén marad, és sehová sem kerül elküldésre.", "l6": "Jogalap: a hozzájárulásod (GDPR 6. cikk (1) bekezdés a) pont), amelyet a megosztás indításával és a helymeghatározás böngészőben való engedélyezésével adsz meg. A hozzájárulást a megosztás leállításával vonod vissza.", "tp": "OpenStreetMap — térképalapok a helyzet megosztásához. A térkép megjelenítésekor az IP-címed az OpenStreetMap szervereihez kerül. Bővebben: osmfoundation.org/wiki/Privacy_Policy", "sec": "A helyadatokat az adatbázisban Firebase-szabályok védik úgy, hogy csak a tulajdonosuk és az általa a megosztáskor kiválasztott barátok olvashassák. A megosztás végén törlődnek.", "upd": "Utolsó frissítés: 2026. október 17."}, "DE": {"p25": "Connect8 erfasst deinen Standort nicht im Hintergrund oder ohne dein Wissen — der Standort wird nur verarbeitet, wenn du selbst „Meinen Standort teilen“ einschaltest (Punkt 2.6). Connect8 analysiert den Inhalt deiner privaten Nachrichten nicht zu Werbezwecken und verwendet keine Tools, die das Verhalten über andere Websites hinweg verfolgen (z. B. Google Analytics, Werbepixel).", "h26": "2.6 Standortfreigabe (nur wenn du sie einschaltest)", "l1": "Deinen Standort (GPS-Koordinaten, Genauigkeit, Geschwindigkeit und zurückgelegte Strecke) verarbeiten wir nur während einer Freigabe, die du selbst mit der Schaltfläche „Meinen Standort teilen“ startest, und nur solange connect8 geöffnet ist.", "l2": "Deinen Standort sehen nur die Freunde, die du beim Start anhakst. Andere Nutzer sehen ihn nicht und wissen nicht einmal, dass du ihn teilst.", "l3": "Du kannst die Freigabe jederzeit mit „Beenden“ stoppen, sonst endet sie automatisch nach der gewählten Zeit (höchstens 8 Stunden). Beim Abmelden endet sie sofort.", "l4": "Nach dem Beenden werden Live-Standort und Strecke dauerhaft aus der Datenbank gelöscht. Es bleibt nur das Streckenbild, wenn du es selbst speicherst oder im Feed teilst.", "l5": "Ein Freund, der deinen Standort verfolgt, kann auf der Karte auch seinen eigenen Standort sehen — dieser bleibt nur auf seinem Gerät und wird nirgendwohin gesendet.", "l6": "Rechtsgrundlage: deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du durch das Starten der Freigabe und das Erlauben des Standorts im Browser erteilst. Du widerrufst sie, indem du die Freigabe beendest.", "tp": "OpenStreetMap — Kartendaten für die Standortfreigabe. Beim Anzeigen der Karte wird deine IP-Adresse an die Server von OpenStreetMap übermittelt. Mehr: osmfoundation.org/wiki/Privacy_Policy", "sec": "Standortdaten sind in der Datenbank durch Firebase-Regeln so geschützt, dass nur ihr Eigentümer und die von ihm beim Teilen ausgewählten Freunde sie lesen können. Nach Ende der Freigabe werden sie gelöscht.", "upd": "Zuletzt aktualisiert: 17. Oktober 2026"}, "IT": {"p25": "Connect8 non raccoglie la tua posizione in background o a tua insaputa — la posizione viene trattata solo quando attivi tu stesso “Condividi la mia posizione” (punto 2.6). Connect8 non analizza il contenuto dei tuoi messaggi privati a fini pubblicitari e non utilizza strumenti che tracciano il comportamento su altri siti (ad es. Google Analytics, pixel pubblicitari).", "h26": "2.6 Condivisione della posizione (solo se la attivi tu)", "l1": "Trattiamo la tua posizione (coordinate GPS, precisione, velocità e percorso effettuato) solo durante una condivisione che avvii tu stesso con il pulsante “Condividi la mia posizione”, e solo finché connect8 è aperto.", "l2": "La tua posizione la vedono solo gli amici che selezioni all’avvio. Gli altri utenti non la vedono e non sanno nemmeno che la stai condividendo.", "l3": "Puoi interrompere la condivisione in qualsiasi momento con “Interrompi”; altrimenti termina da sola dopo il tempo scelto (al massimo 8 ore). Al logout termina subito.", "l4": "Dopo l’interruzione, la posizione in tempo reale e il percorso vengono eliminati definitivamente dal database. Resta solo l’immagine del percorso, se la salvi o la condividi tu nel feed.", "l5": "Un amico che segue la tua posizione può vedere sulla mappa anche la propria — resta solo sul suo dispositivo e non viene inviata da nessuna parte.", "l6": "Base giuridica: il tuo consenso (art. 6, par. 1, lett. a) GDPR), che dai avviando la condivisione e consentendo la posizione nel browser. Revochi il consenso interrompendo la condivisione.", "tp": "OpenStreetMap — mappe per la condivisione della posizione. Quando la mappa viene visualizzata, il tuo indirizzo IP viene inviato ai server di OpenStreetMap. Altro: osmfoundation.org/wiki/Privacy_Policy", "sec": "I dati di posizione nel database sono protetti dalle regole di Firebase in modo che possano leggerli solo il proprietario e gli amici da lui scelti durante la condivisione. Vengono eliminati al termine della condivisione.", "upd": "Ultimo aggiornamento: 17 ottobre 2026"}};
+  const dict = n => { try{ return eval('LEGAL_DICT_' + n); }catch(_){ return null; } };
+  Object.keys(TR).forEach(n => { const targets = [dict(n)]; if(n === 'DE') targets.push(dict('AT'));
+    targets.forEach(d => { if(!d) return; Object.keys(NEW).forEach(k => { d[NEW[k]] = TR[n][k]; }); }); });
+})();
+</script>
+<style id="c8ll-style">
+.c8tr-col{display:flex;flex-direction:column;gap:6px;align-items:stretch;}
+.c8ll-btn{display:none;align-items:center;justify-content:center;gap:6px;border:1.5px solid #f43f5e;background:rgba(244,63,94,.08);color:#e11d48;font-weight:700;font-size:13px;letter-spacing:.02em;padding:7px 16px;border-radius:10px;cursor:pointer;white-space:nowrap;}
+.c8ll-btn.live{background:#e11d48;color:#fff;border-color:#e11d48;}
+.c8ll-btn .c8ll-pulse{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 0 rgba(225,29,72,.6);animation:c8llp 1.6s infinite;}
+@keyframes c8llp{0%{box-shadow:0 0 0 0 rgba(225,29,72,.55)}70%{box-shadow:0 0 0 8px rgba(225,29,72,0)}100%{box-shadow:0 0 0 0 rgba(225,29,72,0)}}
+.c8ll-ov{position:fixed;inset:0;z-index:100002;background:rgba(15,12,30,.5);display:flex;align-items:flex-end;justify-content:center;font-family:Inter,system-ui,sans-serif;}
+.c8ll-sheet{width:100%;max-width:480px;max-height:92vh;overflow:auto;background:#fff;border-radius:24px 24px 0 0;padding:14px 18px 20px;color:#1E1B2E;box-shadow:0 -10px 30px -10px rgba(0,0,0,.3);}
+@media(min-width:700px){.c8ll-ov{align-items:center}.c8ll-sheet{border-radius:24px}}
+.c8ll-grab{width:42px;height:5px;border-radius:3px;background:#DDD;margin:0 auto 12px;}
+.c8ll-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.c8ll-h h3{font-size:19px;margin:0;color:#1E1B2E}
+.c8ll-x{width:32px;height:32px;border-radius:50%;border:0;background:#F1F3F7;color:#555;font-size:15px;cursor:pointer;flex:0 0 auto}
+.c8ll-sub{font-size:12.5px;color:#777;margin-top:4px;line-height:1.4}
+.c8ll-lab{margin-top:14px;font-size:11.5px;font-weight:700;color:#9AA0AE;letter-spacing:.05em}
+.c8ll-fr{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid #F1F2F6;font-size:14px;color:#222;cursor:pointer;user-select:none}
+.c8ll-fr input{display:none}
+.c8ll-av{width:36px;height:36px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;background:#7C3AED center/cover no-repeat}
+.c8ll-ck{margin-left:auto;width:24px;height:24px;border-radius:7px;border:2px solid #CBD0DC;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:900;flex:0 0 auto}
+.c8ll-fr input:checked + .c8ll-ck{background:#6D5DFC;border-color:#6D5DFC}
+.c8ll-fr input:checked + .c8ll-ck::after{content:'✓'}
+.c8ll-list{max-height:38vh;overflow:auto}
+.c8ll-chips{display:flex;gap:7px;margin-top:7px}
+.c8ll-chips button{flex:1;border:1.5px solid #E3E6EE;background:#fff;border-radius:10px;padding:8px 0;font-size:12.5px;color:#555;font-weight:600;cursor:pointer}
+.c8ll-chips button.on{border-color:#6D5DFC;background:#F2F0FF;color:#4C3FE0}
+.c8ll-go{margin-top:14px;width:100%;height:50px;border:0;border-radius:14px;background:linear-gradient(135deg,#DC2626,#F97316);color:#fff;font-weight:800;font-size:16px;cursor:pointer}
+.c8ll-go:disabled{opacity:.55}
+.c8ll-priv{margin-top:8px;font-size:11px;color:#9AA0AE;text-align:center}
+.c8ll-err{margin-top:8px;font-size:12.5px;color:#DC2626;text-align:center;min-height:16px}
+.c8ll-scr{position:fixed;inset:0;z-index:100001;background:#E5E7EB;font-family:Inter,system-ui,sans-serif;}
+.c8ll-map{position:absolute;inset:0;}
+.c8ll-top{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));z-index:1000;background:#DC2626;color:#fff;border-radius:16px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 20px -8px rgba(0,0,0,.35)}
+.c8ll-top.viewer{background:#fff;color:#1E1B2E}
+.c8ll-top b{font-size:14px;display:block}.c8ll-top small{font-size:11.5px;opacity:.92;display:block}
+.c8ll-dot{width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,255,255,.35);flex:0 0 auto}
+.c8ll-off{margin-left:auto;background:#fff;color:#DC2626;font-weight:800;font-size:12.5px;padding:8px 12px;border-radius:10px;border:0;cursor:pointer;flex:0 0 auto}
+.c8ll-bot{position:absolute;left:0;right:0;bottom:0;z-index:1000;background:#fff;border-radius:22px 22px 0 0;padding:12px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px -10px rgba(0,0,0,.25);max-width:560px;margin:0 auto}
+.c8ll-stats{display:flex;gap:8px}
+.c8ll-stats div{flex:1;background:#F6F7FB;border-radius:12px;padding:9px 6px;text-align:center}
+.c8ll-stats b{display:block;font-size:18px;color:#1E1B2E}.c8ll-stats small{font-size:10.5px;color:#888}
+.c8ll-row{display:flex;gap:8px;margin-top:10px}
+.c8ll-row button{flex:1;height:44px;border-radius:12px;border:1.5px solid #E3E6EE;background:#fff;font-size:13.5px;font-weight:700;color:#333;cursor:pointer}
+.c8ll-row button.nav{background:linear-gradient(135deg,#2563EB,#16A34A);color:#fff;border:0}
+.c8ll-note{font-size:11.5px;color:#777;margin-top:9px;text-align:center}
+.c8ll-who{display:flex;align-items:center;gap:10px}
+.c8ll-who .c8ll-av{width:40px;height:40px}
+.c8ll-live{color:#16A34A;font-weight:700}.c8ll-stale{color:#9CA3AF;font-weight:700}
+.c8ll-pin{width:40px;height:40px;border-radius:50%;border:4px solid #7C3AED;background:#7C3AED center/cover no-repeat;box-shadow:0 0 0 8px rgba(124,58,237,.18),0 4px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;box-sizing:border-box}
+.c8ll-pin.stale{border-color:#9CA3AF;filter:grayscale(1);box-shadow:0 4px 10px rgba(0,0,0,.3)}
+.c8ll-me{width:18px;height:18px;border-radius:50%;background:#2563EB;border:3px solid #fff;box-shadow:0 0 0 6px rgba(37,99,235,.2);box-sizing:border-box}
+.c8ll-tag{background:#7C3AED;color:#fff;font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:11px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.c8ll-pill{position:fixed;left:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:100000;background:#DC2626;color:#fff;border:0;border-radius:24px;padding:10px 14px;font-weight:800;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 20px -6px rgba(220,38,38,.6);cursor:pointer;font-family:Inter,system-ui,sans-serif}
+.c8ll-dim{position:fixed;inset:0;z-index:100003;background:#000;color:#9CA3AF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:Inter,system-ui,sans-serif;cursor:pointer}
+.c8ll-dim b{font-size:56px;color:#E5E7EB;font-weight:800;letter-spacing:.02em}
+.c8ll-dim span{font-size:22px;color:#D1D5DB;font-weight:700}
+.c8ll-dim small{font-size:13px;margin-top:20px}
+.c8ll-sum img{width:100%;border-radius:16px;display:block;margin-top:10px;background:#F3F4F6}
+.c8ll-sum .c8ll-btns{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.c8ll-sum .c8ll-btns button{height:46px;border-radius:13px;border:0;font-weight:800;font-size:14.5px;cursor:pointer}
+.c8ll-b1{background:#16A34A;color:#fff}.c8ll-b2{background:#6D5DFC;color:#fff}.c8ll-b3{background:#F1F3F7;color:#444}
+.c8ll-toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(14px + env(safe-area-inset-top));z-index:100004;background:#fff;color:#1E1B2E;border-radius:16px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 12px 30px -8px rgba(0,0,0,.35);font-family:Inter,system-ui,sans-serif;font-size:13.5px;max-width:92vw}
+.c8ll-toast button{border:0;background:#DC2626;color:#fff;font-weight:800;border-radius:10px;padding:8px 12px;cursor:pointer}
+.c8ll-scr .leaflet-control-attribution{font-size:10px}
+</style>
+<script id="c8ll-script">
+/* =====================================================================
+   ZDIEĽAŤ MOJU POLOHU (živá poloha + trasa)
+   - spustí sa z profilu, vyberieš priateľov (tých, ktorých sleduješ)
+   - poloha sa ukladá do liveloc/{uid}; čítať ju smie len majiteľ a vybraní
+   - priatelia dostanú upozornenie a vidia ťa naživo na mape (OpenStreetMap)
+   - obrazovka nezhasne (Wake Lock); po vypnutí sa dokument zmaže
+     a vytvorí sa obrázok trasy (uložiť / zdieľať na Plochu)
+===================================================================== */
+(function(){
+  function T(s){ try{ return (typeof t === 'function') ? t(s) : s; }catch(_){ return s; } }
+  // ---------- preklady ----------
+  (function(){
+    const K = ['📍 Moja poloha','📍 Zdieľaš polohu','Vybraní priatelia uvidia naživo, kde si a kadiaľ ideš.','KTO MA MÔŽE VIDIEŤ','AUTOMATICKY VYPNÚŤ PO','1 hod','2 hod','8 hod','● Spustiť zdieľanie','🔒 Polohu vidia iba zaškrtnutí. Kedykoľvek vypneš.','Zatiaľ nikoho nesleduješ. Polohu môžeš zdieľať s ľuďmi, ktorých sleduješ.','Vyber aspoň jedného priateľa.','Zisťujem polohu…','Tento prehliadač nevie zistiť polohu.','Polohu sa nepodarilo zistiť. Povoľ prístup k polohe v prehliadači.','Zdieľanie sa nepodarilo spustiť.','Zdieľaš polohu','Vypnúť','trasa','čas','rýchlosť','🌙 Stmaviť','▾ Skryť mapu','Obrazovka ostane zapnutá, kým zdieľanie beží.','Ťukni pre návrat','naživo','aktualizované pred','posledná poloha pred','od teba','🧭 Navigovať','💬 Napísať','📞 Zavolať','Zavrieť','Zdieľanie polohy skončilo.','Načítavam mapu…','Mapu sa nepodarilo načítať.','📍 Sledovať polohu','s tebou zdieľa svoju polohu naživo','Zobraziť','Prechádzka','Jazda na bicykli','Jazda autom','vzdialenosť','km/h priemer','📤 Zdieľať na Plochu','⬇ Uložiť obrázok','Zdieľam…','✓ Zdieľané na Plochu','🗺️ Moja trasa','Naozaj vypnúť zdieľanie polohy?','Načítavam priateľov…','Trasa'];
+    const L = {
+      EN:['📍 My location','📍 Sharing location','Selected friends will see live where you are and where you go.','WHO CAN SEE ME','STOP AUTOMATICALLY AFTER','1 hr','2 hr','8 hr','● Start sharing','🔒 Only the people you tick can see your location. Stop any time.','You don\'t follow anyone yet. You can share your location with people you follow.','Choose at least one friend.','Finding your location…','This browser cannot determine location.','Could not get your location. Allow location access in the browser.','Could not start sharing.','You are sharing your location','Stop','route','time','speed','🌙 Dim screen','▾ Hide map','The screen stays on while sharing is running.','Tap to return','live','updated','last location','from you','🧭 Navigate','💬 Message','📞 Call','Close','Location sharing has ended.','Loading map…','Could not load the map.','📍 View location','is sharing their live location with you','View','Walk','Bike ride','Car ride','distance','km/h average','📤 Share to Feed','⬇ Save image','Sharing…','✓ Shared to Feed','🗺️ My route','Really stop sharing your location?','Loading friends…','Route'],
+      CZ:['📍 Moje poloha','📍 Sdílíš polohu','Vybraní přátelé uvidí živě, kde jsi a kudy jdeš.','KDO MĚ MŮŽE VIDĚT','AUTOMATICKY VYPNOUT PO','1 hod','2 hod','8 hod','● Spustit sdílení','🔒 Polohu vidí jen zaškrtnutí. Kdykoli vypneš.','Zatím nikoho nesleduješ. Polohu můžeš sdílet s lidmi, které sleduješ.','Vyber aspoň jednoho přítele.','Zjišťuji polohu…','Tento prohlížeč neumí zjistit polohu.','Polohu se nepodařilo zjistit. Povol přístup k poloze v prohlížeči.','Sdílení se nepodařilo spustit.','Sdílíš polohu','Vypnout','trasa','čas','rychlost','🌙 Ztmavit','▾ Skrýt mapu','Obrazovka zůstane zapnutá, dokud sdílení běží.','Ťukni pro návrat','živě','aktualizováno před','poslední poloha před','od tebe','🧭 Navigovat','💬 Napsat','📞 Zavolat','Zavřít','Sdílení polohy skončilo.','Načítám mapu…','Mapu se nepodařilo načíst.','📍 Sledovat polohu','s tebou sdílí svou polohu živě','Zobrazit','Procházka','Jízda na kole','Jízda autem','vzdálenost','km/h průměr','📤 Sdílet na Plochu','⬇ Uložit obrázek','Sdílím…','✓ Sdíleno na Plochu','🗺️ Moje trasa','Opravdu vypnout sdílení polohy?','Načítám přátele…','Trasa'],
+      PL:['📍 Moja lokalizacja','📍 Udostępniasz lokalizację','Wybrani znajomi zobaczą na żywo, gdzie jesteś i którędy idziesz.','KTO MOŻE MNIE WIDZIEĆ','WYŁĄCZ AUTOMATYCZNIE PO','1 godz.','2 godz.','8 godz.','● Rozpocznij udostępnianie','🔒 Lokalizację widzą tylko zaznaczeni. Wyłączysz w każdej chwili.','Jeszcze nikogo nie obserwujesz. Lokalizację możesz udostępnić osobom, które obserwujesz.','Wybierz przynajmniej jednego znajomego.','Ustalam lokalizację…','Ta przeglądarka nie potrafi ustalić lokalizacji.','Nie udało się ustalić lokalizacji. Zezwól na dostęp do lokalizacji w przeglądarce.','Nie udało się rozpocząć udostępniania.','Udostępniasz lokalizację','Wyłącz','trasa','czas','prędkość','🌙 Przyciemnij','▾ Ukryj mapę','Ekran pozostanie włączony podczas udostępniania.','Dotknij, aby wrócić','na żywo','zaktualizowano','ostatnia lokalizacja','od ciebie','🧭 Nawiguj','💬 Napisz','📞 Zadzwoń','Zamknij','Udostępnianie lokalizacji zakończone.','Wczytuję mapę…','Nie udało się wczytać mapy.','📍 Zobacz lokalizację','udostępnia ci swoją lokalizację na żywo','Pokaż','Spacer','Jazda rowerem','Jazda autem','odległość','km/h średnio','📤 Udostępnij na tablicy','⬇ Zapisz obraz','Udostępniam…','✓ Udostępniono na tablicy','🗺️ Moja trasa','Na pewno wyłączyć udostępnianie lokalizacji?','Wczytuję znajomych…','Trasa'],
+      HU:['📍 Helyzetem','📍 Helyzet megosztása folyamatban','A kiválasztott barátok élőben látják, hol vagy és merre mész.','KI LÁTHAT ENGEM','AUTOMATIKUS KIKAPCSOLÁS','1 óra','2 óra','8 óra','● Megosztás indítása','🔒 A helyzetedet csak a bejelöltek látják. Bármikor kikapcsolhatod.','Még senkit sem követsz. A helyzetedet azokkal oszthatod meg, akiket követsz.','Válassz legalább egy barátot.','Helyzet meghatározása…','Ez a böngésző nem tudja meghatározni a helyzetet.','Nem sikerült meghatározni a helyzetet. Engedélyezd a helyhozzáférést a böngészőben.','Nem sikerült elindítani a megosztást.','Megosztod a helyzeted','Leállítás','útvonal','idő','sebesség','🌙 Elsötétítés','▾ Térkép elrejtése','A képernyő bekapcsolva marad, amíg a megosztás fut.','Koppints a visszatéréshez','élő','frissítve','utolsó helyzet','tőled','🧭 Navigálás','💬 Üzenet','📞 Hívás','Bezárás','A helyzet megosztása véget ért.','Térkép betöltése…','Nem sikerült betölteni a térképet.','📍 Helyzet megtekintése','élőben megosztja veled a helyzetét','Megnéz','Séta','Kerékpározás','Autózás','távolság','km/h átlag','📤 Megosztás a hírfolyamon','⬇ Kép mentése','Megosztás…','✓ Megosztva a hírfolyamon','🗺️ Útvonalam','Biztosan leállítod a helyzet megosztását?','Barátok betöltése…','Útvonal'],
+      DE:['📍 Mein Standort','📍 Standort wird geteilt','Ausgewählte Freunde sehen live, wo du bist und wohin du gehst.','WER MICH SEHEN KANN','AUTOMATISCH BEENDEN NACH','1 Std.','2 Std.','8 Std.','● Teilen starten','🔒 Nur die Angehakten sehen deinen Standort. Jederzeit beendbar.','Du folgst noch niemandem. Du kannst deinen Standort mit Personen teilen, denen du folgst.','Wähle mindestens einen Freund aus.','Standort wird ermittelt…','Dieser Browser kann den Standort nicht ermitteln.','Standort konnte nicht ermittelt werden. Erlaube den Standortzugriff im Browser.','Teilen konnte nicht gestartet werden.','Du teilst deinen Standort','Beenden','Strecke','Zeit','Tempo','🌙 Abdunkeln','▾ Karte ausblenden','Der Bildschirm bleibt an, solange geteilt wird.','Tippen zum Zurückkehren','live','aktualisiert vor','letzter Standort vor','von dir','🧭 Navigieren','💬 Schreiben','📞 Anrufen','Schließen','Die Standortfreigabe wurde beendet.','Karte wird geladen…','Karte konnte nicht geladen werden.','📍 Standort ansehen','teilt seinen Live-Standort mit dir','Ansehen','Spaziergang','Radfahrt','Autofahrt','Distanz','km/h Schnitt','📤 Im Feed teilen','⬇ Bild speichern','Wird geteilt…','✓ Im Feed geteilt','🗺️ Meine Strecke','Standortfreigabe wirklich beenden?','Freunde werden geladen…','Strecke'],
+      IT:['📍 La mia posizione','📍 Stai condividendo la posizione','Gli amici scelti vedranno in tempo reale dove sei e dove vai.','CHI PUÒ VEDERMI','INTERROMPI AUTOMATICAMENTE DOPO','1 ora','2 ore','8 ore','● Avvia condivisione','🔒 Solo le persone selezionate vedono la tua posizione. Interrompi quando vuoi.','Non segui ancora nessuno. Puoi condividere la posizione con le persone che segui.','Scegli almeno un amico.','Rilevo la posizione…','Questo browser non può rilevare la posizione.','Impossibile rilevare la posizione. Consenti l\'accesso alla posizione nel browser.','Impossibile avviare la condivisione.','Stai condividendo la posizione','Interrompi','percorso','tempo','velocità','🌙 Oscura','▾ Nascondi mappa','Lo schermo resta acceso finché la condivisione è attiva.','Tocca per tornare','dal vivo','aggiornato','ultima posizione','da te','🧭 Naviga','💬 Scrivi','📞 Chiama','Chiudi','La condivisione della posizione è terminata.','Caricamento mappa…','Impossibile caricare la mappa.','📍 Vedi posizione','condivide con te la sua posizione in tempo reale','Vedi','Passeggiata','Giro in bici','Giro in auto','distanza','km/h media','📤 Condividi nel feed','⬇ Salva immagine','Condivisione…','✓ Condiviso nel feed','🗺️ Il mio percorso','Interrompere davvero la condivisione della posizione?','Caricamento amici…','Percorso']
+    };
+    const add = (d, m) => { try{ if(!d) return; Object.keys(m).forEach(k => { if(!Object.prototype.hasOwnProperty.call(d, k)) d[k] = m[k]; }); }catch(_){} };
+    const dict = n => { try{ return eval('UI_DICT_' + n); }catch(_){ return null; } };
+    Object.keys(L).forEach(n => { const m = {}; K.forEach((k, i) => m[k] = L[n][i]); add(dict(n), m); if(n === 'DE') add(dict('AT'), m); });
+  })();
+
+  // ---------- pomocné ----------
+  const MAXPTS = 1500;
+  const ref = uid => db.collection('liveloc').doc(uid);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  function dist(a, b){ const R = 6371000, r = Math.PI/180, dLa = (b.a - a.a)*r, dLo = (b.o - a.o)*r; const x = Math.sin(dLa/2)**2 + Math.cos(a.a*r)*Math.cos(b.a*r)*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(x)); }
+  const km = m => (m/1000).toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  function locale(){ try{ return (C8_LOCALES && C8_LOCALES[currentLang]) || 'sk-SK'; }catch(_){ return 'sk-SK'; } }
+  function dur(ms){ const s = Math.max(0, Math.floor(ms/1000)), h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60; return (h ? h + ':' + String(m).padStart(2,'0') : m) + ':' + String(x).padStart(2,'0'); }
+  function ago(ms){ const s = Math.max(0, Math.round(ms/1000)); return s < 60 ? s + ' s' : Math.round(s/60) + ' min'; }
+  function avHtml(name, photo, cls){ const ini = esc((name || '?').trim().charAt(0).toUpperCase()); return photo ? `<div class="${cls}" style="background-image:url('${esc(photo)}')"></div>` : `<div class="${cls}">${ini}</div>`; }
+  function el(html){ const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstChild; }
+  function myPhoto(){ try{ return currentUser.photoURL || null; }catch(_){ return null; } }
+
+  let leafletP = null;
+  function loadLeaflet(){
+    if(window.L && L.map) return Promise.resolve();
+    if(leafletP) return leafletP;
+    leafletP = new Promise((res, rej)=>{
+      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(css);
+      const s = document.createElement('script'); s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      s.onload = ()=>res(); s.onerror = ()=>{ leafletP = null; rej(new Error('leaflet')); };
+      document.head.appendChild(s);
+    });
+    return leafletP;
+  }
+  function mkMap(div){
+    const m = L.map(div, { zoomControl: false, attributionControl: true });
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>' }).addTo(m);
+    m.attributionControl.setPrefix(false);
+    return m;
+  }
+  function pinIcon(name, photo, stale, tag){
+    const ini = esc((name || '?').trim().charAt(0).toUpperCase());
+    const st = photo ? ` style="background-image:url('${esc(photo)}')"` : '';
+    return L.divIcon({ className: '', iconSize: [40, 40], iconAnchor: [20, 20],
+      html: `<div style="position:relative"><div class="c8ll-pin${stale ? ' stale' : ''}"${st}>${photo ? '' : ini}</div>${tag ? `<div class="c8ll-tag" style="position:absolute;left:44px;top:-6px">${esc(tag)}</div>` : ''}</div>` });
+  }
+  const meIcon = () => L.divIcon({ className: '', iconSize: [18, 18], iconAnchor: [9, 9], html: '<div class="c8ll-me"></div>' });
+
+  // ======================================================================
+  //  MAJITEĽ: zdieľanie mojej polohy
+  // ======================================================================
+  let S = null; // aktívne zdieľanie
+  const LSK = () => 'c8ll_' + (currentUser && currentUser.uid);
+  function saveLS(){ try{ if(S) localStorage.setItem(LSK(), JSON.stringify({ startedAt: S.startedAt, endsAt: S.endsAt, viewers: S.viewers, names: S.names })); else localStorage.removeItem(LSK()); }catch(_){} }
+
+  async function friends(){
+    let uids = []; try{ uids = [...followingSet]; }catch(_){}
+    const docs = await Promise.all(uids.map(u => db.collection('profiles').doc(u).get().catch(()=>null)));
+    return docs.map((d, i) => { const x = (d && d.exists && d.data()) || {}; return { uid: uids[i], name: x.name || T('Používateľ'), photo: x.avatarPhoto || null, del: !d || !d.exists || !!x.deleted }; })
+      .filter(u => !u.del).sort((a, b) => a.name.localeCompare(b.name, 'sk'));
+  }
+
+  function openSetup(){
+    const ov = el(`<div class="c8ll-ov"><div class="c8ll-sheet"><div class="c8ll-grab"></div>
+      <div class="c8ll-h"><h3>${esc(T('📍 Moja poloha'))}</h3><button class="c8ll-x" type="button">✕</button></div>
+      <div class="c8ll-sub">${esc(T('Vybraní priatelia uvidia naživo, kde si a kadiaľ ideš.'))}</div>
+      <div class="c8ll-lab">${esc(T('KTO MA MÔŽE VIDIEŤ'))}</div>
+      <div class="c8ll-list"><div class="c8ll-sub">${esc(T('Načítavam priateľov…'))}</div></div>
+      <div class="c8ll-lab">${esc(T('AUTOMATICKY VYPNÚŤ PO'))}</div>
+      <div class="c8ll-chips"><button type="button" data-m="30">30 min</button><button type="button" data-m="60" class="on">${esc(T('1 hod'))}</button><button type="button" data-m="120">${esc(T('2 hod'))}</button><button type="button" data-m="480">${esc(T('8 hod'))}</button></div>
+      <button class="c8ll-go" type="button">${esc(T('● Spustiť zdieľanie'))}</button>
+      <div class="c8ll-err"></div>
+      <div class="c8ll-priv">${esc(T('🔒 Polohu vidia iba zaškrtnutí. Kedykoľvek vypneš.'))}</div></div></div>`);
+    document.body.appendChild(ov);
+    const close = ()=>ov.remove();
+    ov.addEventListener('click', e=>{ if(e.target === ov) close(); });
+    ov.querySelector('.c8ll-x').onclick = close;
+    let mins = 60;
+    ov.querySelectorAll('.c8ll-chips button').forEach(b=> b.onclick = ()=>{ ov.querySelectorAll('.c8ll-chips button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); mins = +b.dataset.m; });
+    const list = ov.querySelector('.c8ll-list'), err = ov.querySelector('.c8ll-err'), go = ov.querySelector('.c8ll-go');
+    let people = [];
+    friends().then(fs=>{
+      people = fs;
+      if(!fs.length){ list.innerHTML = `<div class="c8ll-sub">${esc(T('Zatiaľ nikoho nesleduješ. Polohu môžeš zdieľať s ľuďmi, ktorých sleduješ.'))}</div>`; go.disabled = true; return; }
+      let prev = []; try{ prev = (JSON.parse(localStorage.getItem('c8ll_last_' + currentUser.uid) || '[]')) || []; }catch(_){}
+      list.innerHTML = fs.map(u => `<label class="c8ll-fr">${avHtml(u.name, u.photo, 'c8ll-av')}<span>${esc(u.name)}</span><input type="checkbox" value="${esc(u.uid)}"${prev.includes(u.uid) ? ' checked' : ''}><span class="c8ll-ck"></span></label>`).join('');
+    }).catch(()=>{ list.innerHTML = ''; });
+    go.onclick = async ()=>{
+      const sel = [...list.querySelectorAll('input:checked')].map(i=>i.value);
+      if(!sel.length){ err.textContent = T('Vyber aspoň jedného priateľa.'); return; }
+      if(!navigator.geolocation){ err.textContent = T('Tento prehliadač nevie zistiť polohu.'); return; }
+      err.textContent = ''; go.disabled = true; go.textContent = T('Zisťujem polohu…');
+      try{
+        const pos = await new Promise((res, rej)=> navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }));
+        const names = {}; people.forEach(p=>{ if(sel.includes(p.uid)) names[p.uid] = p.name; });
+        try{ localStorage.setItem('c8ll_last_' + currentUser.uid, JSON.stringify(sel)); }catch(_){}
+        await start(sel, names, mins, pos);
+        close();
+      }catch(e){
+        console.error(e);
+        err.textContent = (e && e.code === 1) || (e && e.code === 2) || (e && e.code === 3) ? T('Polohu sa nepodarilo zistiť. Povoľ prístup k polohe v prehliadači.') : T('Zdieľanie sa nepodarilo spustiť.');
+        go.disabled = false; go.textContent = T('● Spustiť zdieľanie');
+      }
+    };
+  }
+
+  function ptOf(p){ return { a: +p.coords.latitude.toFixed(6), o: +p.coords.longitude.toFixed(6), t: Date.now() }; }
+
+  async function start(viewers, names, mins, pos){
+    const now = Date.now(), p = ptOf(pos);
+    S = { uid: currentUser.uid, viewers, names, startedAt: now, endsAt: now + mins*60000, pts: [p], pend: [], dist: 0, last: p, lastWrite: now, lastWritePt: p, spd: 0, watch: null, tick: null, ui: null };
+    await ref(currentUser.uid).set({
+      uid: currentUser.uid, name: currentUser.name || '', photo: myPhoto(), viewers, active: true,
+      startedAt: now, endsAt: S.endsAt, lat: p.a, lng: p.o, acc: Math.round(pos.coords.accuracy || 0), spd: 0, at: now, dist: 0, pts: [p]
+    });
+    viewers.forEach(v => { try{ createNotification(v, 'liveloc', { endsAt: S.endsAt }); }catch(_){} });
+    saveLS();
+    run();
+    openOwnerScreen();
+  }
+
+  function run(){
+    if(!S) return;
+    try{ window.c8WakeOn && c8WakeOn('liveloc'); }catch(_){}
+    if(S.watch == null && navigator.geolocation){
+      S.watch = navigator.geolocation.watchPosition(onPos, e=>console.warn('poloha', e), { enableHighAccuracy: true, maximumAge: 2000, timeout: 30000 });
+    }
+    if(!S.tick) S.tick = setInterval(()=>{ if(!S) return; if(Date.now() >= S.endsAt){ stop(); return; } updateOwnerUI(); }, 1000);
+    updateProfileBtn();
+  }
+
+  function onPos(pos){
+    if(!S) return;
+    const p = ptOf(pos), acc = pos.coords.accuracy || 0;
+    let spd = pos.coords.speed;
+    if(spd == null || isNaN(spd)){ const dt = (p.t - S.last.t)/1000; spd = dt > 0 ? dist(S.last, p)/dt : 0; }
+    S.spd = Math.max(0, spd || 0); S.cur = p; S.acc = acc;
+    if(acc <= 80){
+      const d = dist(S.last, p);
+      if(d >= 12){ S.dist += d; S.last = p; S.pts.push(p); S.pend.push(p); }
+    }
+    const now = Date.now(), moved = dist(S.lastWritePt, p);
+    if(now - S.lastWrite >= 8000 && (moved >= 10 || now - S.lastWrite >= 30000)) write(p, acc);
+    updateOwnerUI();
+  }
+
+  function write(p, acc){
+    if(!S) return;
+    const now = Date.now(); S.lastWrite = now; S.lastWritePt = p;
+    const upd = { lat: p.a, lng: p.o, acc: Math.round(acc || 0), spd: Math.round(S.spd*10)/10, at: now, dist: Math.round(S.dist), active: true };
+    if(S.pts.length > MAXPTS){ // príliš veľa bodov -> prerieď a zapíš celé
+      S.pts = S.pts.filter((_, i)=> i % 2 === 0 || i === S.pts.length - 1); upd.pts = S.pts; S.pend = [];
+    } else if(S.pend.length){ upd.pts = firebase.firestore.FieldValue.arrayUnion(...S.pend); S.pend = []; }
+    ref(S.uid).update(upd).catch(e=>console.warn('poloha – zápis', e));
+  }
+
+  // ----- obrazovka majiteľa -----
+  function openOwnerScreen(){
+    if(!S) return;
+    removePill();
+    if(S.ui){ S.ui.root.style.display = ''; setTimeout(()=>S.ui.map && S.ui.map.invalidateSize(), 50); return; }
+    const root = el(`<div class="c8ll-scr"><div class="c8ll-map"></div>
+      <div class="c8ll-top"><span class="c8ll-dot"></span><div style="min-width:0"><b>${esc(T('Zdieľaš polohu'))}</b><small class="c8ll-who-names"></small></div><button class="c8ll-off" type="button">${esc(T('Vypnúť'))}</button></div>
+      <div class="c8ll-bot"><div class="c8ll-grab"></div>
+        <div class="c8ll-stats"><div><b class="v-d">0,0 km</b><small>${esc(T('trasa'))}</small></div><div><b class="v-t">0:00</b><small>${esc(T('čas'))}</small></div><div><b class="v-s">0 km/h</b><small>${esc(T('rýchlosť'))}</small></div></div>
+        <div class="c8ll-row"><button type="button" class="b-hide">${esc(T('▾ Skryť mapu'))}</button></div>
+        <div class="c8ll-note">${esc(T('Obrazovka ostane zapnutá, kým zdieľanie beží.'))}</div></div></div>`);
+    document.body.appendChild(root);
+    S.ui = { root, map: null, line: null, mk: null, follow: true };
+    root.querySelector('.c8ll-who-names').textContent = Object.values(S.names || {}).join(', ');
+    root.querySelector('.c8ll-off').onclick = ()=>{ if(confirm(T('Naozaj vypnúť zdieľanie polohy?'))) stop(); };
+    root.querySelector('.b-hide').onclick = ()=>{ root.style.display = 'none'; showPill(); };
+    loadLeaflet().then(()=>{
+      if(!S || !S.ui) return;
+      const m = mkMap(root.querySelector('.c8ll-map'));
+      const ll = S.pts.map(p=>[p.a, p.o]);
+      S.ui.map = m;
+      S.ui.line = L.polyline(ll, { color: '#7C3AED', weight: 6, opacity: .9, lineJoin: 'round' }).addTo(m);
+      L.circleMarker(ll[0], { radius: 7, color: '#fff', weight: 3, fillColor: '#16A34A', fillOpacity: 1 }).addTo(m);
+      const c = S.cur || S.last;
+      S.ui.mk = L.marker([c.a, c.o], { icon: pinIcon(currentUser.name, myPhoto(), false) }).addTo(m);
+      m.setView([c.a, c.o], 16);
+      m.on('dragstart', ()=>{ S && S.ui && (S.ui.follow = false); });
+      setTimeout(()=>m.invalidateSize(), 60);
+    }).catch(()=>{ root.querySelector('.c8ll-map').innerHTML = `<div style="padding:120px 20px;text-align:center;color:#666">${esc(T('Mapu sa nepodarilo načítať.'))}</div>`; });
+    updateOwnerUI();
+  }
+  function updateOwnerUI(){
+    if(!S) return;
+    const now = Date.now(), el2 = now - S.startedAt;
+    if(S.ui){
+      const r = S.ui.root;
+      r.querySelector('.v-d').textContent = km(S.dist) + ' km';
+      r.querySelector('.v-t').textContent = dur(el2);
+      r.querySelector('.v-s').textContent = Math.round(S.spd*3.6) + ' km/h';
+      if(S.ui.map && S.ui.line){
+        const c = S.cur || S.last;
+        S.ui.line.setLatLngs(S.pts.map(p=>[p.a, p.o]).concat(S.cur ? [[S.cur.a, S.cur.o]] : []));
+        S.ui.mk.setLatLng([c.a, c.o]);
+        if(S.ui.follow && r.style.display !== 'none') S.ui.map.panTo([c.a, c.o], { animate: true });
+      }
+    }
+    const pill = document.querySelector('.c8ll-pill span'); if(pill) pill.textContent = T('Zdieľaš polohu') + ' · ' + dur(el2);
+    const dimT = document.querySelector('.c8ll-dim b'); if(dimT){ dimT.textContent = dur(el2); document.querySelector('.c8ll-dim span').textContent = km(S.dist) + ' km · ' + Math.round(S.spd*3.6) + ' km/h'; }
+  }
+  function showPill(){ removePill(); const b = el(`<button class="c8ll-pill" type="button"><span class="c8ll-dot"></span><span></span></button>`); b.onclick = openOwnerScreen; document.body.appendChild(b); updateOwnerUI(); }
+  function removePill(){ const p = document.querySelector('.c8ll-pill'); if(p) p.remove(); }
+  function dim(){ const d = el(`<div class="c8ll-dim"><b></b><span></span><small>${esc(T('Ťukni pre návrat'))}</small></div>`); d.onclick = ()=>d.remove(); document.body.appendChild(d); updateOwnerUI(); }
+
+  async function stop(silent){
+    if(!S) return;
+    const s = S; S = null;
+    try{ if(s.watch != null) navigator.geolocation.clearWatch(s.watch); }catch(_){}
+    clearInterval(s.tick);
+    try{ window.c8WakeOff && c8WakeOff('liveloc'); }catch(_){}
+    try{ localStorage.removeItem('c8ll_' + s.uid); }catch(_){}
+    if(s.cur && dist(s.last, s.cur) >= 5){ s.dist += dist(s.last, s.cur); s.pts.push(s.cur); }
+    removePill(); const dm = document.querySelector('.c8ll-dim'); if(dm) dm.remove();
+    if(s.ui){ try{ s.ui.map && s.ui.map.remove(); }catch(_){} s.ui.root.remove(); }
+    const delP = ref(s.uid).delete().catch(e=>console.warn('poloha – zmazanie', e));
+    updateProfileBtn();
+    if(silent) return delP;
+    const endT = Date.now();
+    if(s.pts.length >= 2 && s.dist >= 20) showSummary(s, endT);
+    else alert(T('Zdieľanie polohy skončilo.'));
+  }
+
+  // ----- obrázok trasy -----
+  function lon2x(lo, z){ return (lo + 180)/360 * 256 * Math.pow(2, z); }
+  function lat2y(la, z){ const r = la*Math.PI/180; return (1 - Math.log(Math.tan(r) + 1/Math.cos(r))/Math.PI)/2 * 256 * Math.pow(2, z); }
+  function loadTile(u){ return new Promise(res=>{ const i = new Image(); i.crossOrigin = 'anonymous'; let ok = false; i.onload = ()=>{ ok = true; res(i); }; i.onerror = ()=>res(null); i.src = u; setTimeout(()=>{ if(!ok) res(null); }, 8000); }); }
+  async function routeImage(s, endT){
+    const W = 1080, H = 1350, MX = 40, MY = 210, MW = W - 2*MX, MH = 820;
+    const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+    const draw = async (withTiles)=>{
+      x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, W, H);
+      const avg = s.dist / Math.max(1, (endT - s.startedAt)/1000) * 3.6;
+      const kind = avg < 7 ? '🚶 ' + T('Prechádzka') : (avg < 30 ? '🚴 ' + T('Jazda na bicykli') : '🚗 ' + T('Jazda autom'));
+      x.fillStyle = '#1E1B2E'; x.font = '800 54px Inter, Arial, sans-serif'; x.textBaseline = 'middle'; x.textAlign = 'left';
+      x.fillText(kind, MX, 92);
+      const d0 = new Date(s.startedAt), d1 = new Date(endT);
+      const dl = d0.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' }) + ' · ' + d0.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' }) + ' – ' + d1.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
+      x.fillStyle = '#6B7280'; x.font = '500 30px Inter, Arial, sans-serif'; x.fillText(dl, MX, 152);
+      // mapa
+      let minA = 90, maxA = -90, minO = 180, maxO = -180;
+      s.pts.forEach(p=>{ minA = Math.min(minA, p.a); maxA = Math.max(maxA, p.a); minO = Math.min(minO, p.o); maxO = Math.max(maxO, p.o); });
+      let z = 17;
+      for(; z > 3; z--){ const w = lon2x(maxO, z) - lon2x(minO, z), h = lat2y(minA, z) - lat2y(maxA, z); if(w <= MW*0.82 && h <= MH*0.82) break; }
+      const cx = (lon2x(minO, z) + lon2x(maxO, z))/2, cy = (lat2y(minA, z) + lat2y(maxA, z))/2;
+      const ox = cx - MW/2, oy = cy - MH/2;
+      x.save(); rrect(x, MX, MY, MW, MH, 32); x.clip();
+      x.fillStyle = '#EEF1EA'; x.fillRect(MX, MY, MW, MH);
+      if(withTiles){
+        const t0x = Math.floor(ox/256), t1x = Math.floor((ox + MW)/256), t0y = Math.floor(oy/256), t1y = Math.floor((oy + MH)/256), n = Math.pow(2, z), jobs = [];
+        for(let tx = t0x; tx <= t1x; tx++) for(let ty = t0y; ty <= t1y; ty++){
+          if(ty < 0 || ty >= n) continue; const wx = ((tx % n) + n) % n;
+          jobs.push(loadTile(`https://tile.openstreetmap.org/${z}/${wx}/${ty}.png`).then(img=>{ if(img) x.drawImage(img, MX + tx*256 - ox, MY + ty*256 - oy, 256, 256); }));
+        }
+        await Promise.all(jobs);
+      }
+      const P = s.pts.map(p=>[MX + lon2x(p.o, z) - ox, MY + lat2y(p.a, z) - oy]);
+      x.lineJoin = 'round'; x.lineCap = 'round';
+      x.strokeStyle = '#FFFFFF'; x.lineWidth = 16; x.beginPath(); P.forEach((q, i)=> i ? x.lineTo(q[0], q[1]) : x.moveTo(q[0], q[1])); x.stroke();
+      x.strokeStyle = '#7C3AED'; x.lineWidth = 9; x.stroke();
+      const dot = (q, col)=>{ x.fillStyle = col; x.strokeStyle = '#fff'; x.lineWidth = 6; x.beginPath(); x.arc(q[0], q[1], 15, 0, 7); x.fill(); x.stroke(); };
+      dot(P[0], '#16A34A'); dot(P[P.length - 1], '#DC2626');
+      x.restore();
+      x.fillStyle = 'rgba(255,255,255,.85)'; x.fillRect(MX + MW - 270, MY + MH - 34, 262, 28);
+      x.fillStyle = '#555'; x.font = '500 18px Inter, Arial, sans-serif'; x.textAlign = 'right'; x.fillText('© OpenStreetMap contributors', MX + MW - 14, MY + MH - 20);
+      // štatistiky
+      const st = [[km(s.dist) + ' km', T('vzdialenosť')], [dur(endT - s.startedAt), T('čas')], [(Math.round(avg*10)/10).toLocaleString(locale()), T('km/h priemer')]];
+      const bw = (MW - 2*20)/3;
+      st.forEach((v, i)=>{ const bx = MX + i*(bw + 20), by = MY + MH + 30; x.fillStyle = '#F6F7FB'; rrect(x, bx, by, bw, 130, 24); x.fill();
+        x.textAlign = 'center'; x.fillStyle = '#4F46E5'; x.font = '800 46px Inter, Arial, sans-serif'; x.fillText(v[0], bx + bw/2, by + 52);
+        x.fillStyle = '#6B7280'; x.font = '500 26px Inter, Arial, sans-serif'; x.fillText(v[1], bx + bw/2, by + 98); });
+      // vodoznak
+      const logo = new Image(); logo.src = (document.querySelector('.card-logo') || {}).src || '';
+      await new Promise(r=>{ if(logo.complete) r(); else { logo.onload = r; logo.onerror = r; } });
+      const wy = H - 70; x.font = '500 32px Inter, Arial, sans-serif'; const w0 = x.measureText(T('Trasa') + ' ').width;
+      x.font = '800 32px Inter, Arial, sans-serif'; const wa = x.measureText('connect').width, wb = x.measureText('8').width, wc = x.measureText('.eu').width;
+      const L0 = 48, tot = L0 + 12 + w0 + wa + wb + wc; let tx = (W - tot)/2;
+      if(logo.naturalWidth){ x.fillStyle = '#fff'; x.beginPath(); x.arc(tx + L0/2, wy, L0/2, 0, 7); x.fill(); x.drawImage(logo, tx, wy - L0/2, L0, L0); }
+      tx += L0 + 12; x.textAlign = 'left';
+      x.font = '500 32px Inter, Arial, sans-serif'; x.fillStyle = '#64748B'; x.fillText(T('Trasa') + ' ', tx, wy); tx += w0;
+      x.font = '800 32px Inter, Arial, sans-serif'; x.fillStyle = '#1E1B2E'; x.fillText('connect', tx, wy); tx += wa; x.fillStyle = '#22C55E'; x.fillText('8', tx, wy); tx += wb; x.fillStyle = '#1E1B2E'; x.fillText('.eu', tx, wy);
+    };
+    await draw(true);
+    let blob = null;
+    try{ blob = await new Promise((res, rej)=>{ try{ c.toBlob(b=> b ? res(b) : rej(new Error('blob')), 'image/jpeg', 0.9); }catch(e){ rej(e); } }); }
+    catch(e){ await draw(false); blob = await new Promise(res=> c.toBlob(res, 'image/jpeg', 0.9)); }
+    return blob;
+  }
+  function rrect(x, X, Y, W, H, r){ x.beginPath(); x.moveTo(X + r, Y); x.arcTo(X + W, Y, X + W, Y + H, r); x.arcTo(X + W, Y + H, X, Y + H, r); x.arcTo(X, Y + H, X, Y, r); x.arcTo(X, Y, X + W, Y, r); x.closePath(); }
+
+  async function showSummary(s, endT){
+    const ov = el(`<div class="c8ll-ov"><div class="c8ll-sheet c8ll-sum"><div class="c8ll-grab"></div>
+      <div class="c8ll-h"><h3>${esc(T('Zdieľanie polohy skončilo.'))}</h3><button class="c8ll-x" type="button">✕</button></div>
+      <div class="c8ll-sub">${esc(T('Načítavam mapu…'))}</div><img alt="" style="display:none">
+      <div class="c8ll-btns"><button class="c8ll-b1" type="button" disabled>${esc(T('📤 Zdieľať na Plochu'))}</button><button class="c8ll-b2" type="button" disabled>${esc(T('⬇ Uložiť obrázok'))}</button><button class="c8ll-b3" type="button">${esc(T('Zavrieť'))}</button></div></div></div>`);
+    document.body.appendChild(ov);
+    const close = ()=>{ ov.remove(); if(url) setTimeout(()=>URL.revokeObjectURL(url), 30000); };
+    ov.querySelector('.c8ll-x').onclick = close; ov.querySelector('.c8ll-b3').onclick = close;
+    let url = null;
+    const blob = await routeImage(s, endT).catch(e=>{ console.error(e); return null; });
+    const sub = ov.querySelector('.c8ll-sub');
+    if(!blob){ sub.textContent = T('Mapu sa nepodarilo načítať.'); return; }
+    url = URL.createObjectURL(blob); const img = ov.querySelector('img'); img.src = url; img.style.display = ''; sub.textContent = '';
+    const bShare = ov.querySelector('.c8ll-b1'), bSave = ov.querySelector('.c8ll-b2');
+    bShare.disabled = false; bSave.disabled = false;
+    bSave.onclick = ()=>{ const a = document.createElement('a'); a.href = url; a.download = 'connect8-trasa.jpg'; document.body.appendChild(a); a.click(); a.remove(); };
+    bShare.onclick = async ()=>{
+      bShare.disabled = true; bShare.textContent = T('Zdieľam…');
+      try{
+        const photo = await uploadImageToCloudinary(blob);
+        const text = T('🗺️ Moja trasa') + ' · ' + km(s.dist) + ' km · ' + dur(endT - s.startedAt);
+        const newPost = { id: Date.now(), name: currentUser.name, authorId: currentUser.uid, createdAt: Date.now(), text,
+          photos: [photo], video: null, link: null, linkTitle: '', linkImage: null, file: null, img: null, likes: 0, liked: false, views: 0, comments: [], open: false };
+        posts.push(newPost); if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid].push(newPost);
+        try{ renderPosts(); }catch(_){}
+        try{ await savePost(newPost); bumpRateLimit('lastPostAt'); bShare.textContent = T('✓ Zdieľané na Plochu'); }
+        catch(err){
+          posts = posts.filter(p=>p.id !== newPost.id);
+          if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid] = ownPostsCache[currentUser.uid].filter(p=>p.id !== newPost.id);
+          try{ renderPosts(); }catch(_){}
+          bShare.disabled = false; bShare.textContent = T('📤 Zdieľať na Plochu');
+          try{ handleCreateRejection(err, null, t('príspevok'), renderPosts); }catch(_){}
+        }
+      }catch(e){ console.error(e); bShare.disabled = false; bShare.textContent = T('📤 Zdieľať na Plochu'); alert(T('Zdieľanie sa nepodarilo spustiť.')); }
+    };
+  }
+
+  // ----- obnovenie po znovuotvorení appky -----
+  let resumedFor = null;
+  async function tryResume(){
+    if(!currentUser || !db || resumedFor === currentUser.uid) return;
+    resumedFor = currentUser.uid;
+    let ls = null; try{ ls = JSON.parse(localStorage.getItem(LSK()) || 'null'); }catch(_){}
+    try{
+      const d = await ref(currentUser.uid).get();
+      if(!d.exists) { try{ localStorage.removeItem(LSK()); }catch(_){} return; }
+      const x = d.data();
+      if(!x.active || Date.now() >= x.endsAt){ await ref(currentUser.uid).delete().catch(()=>{}); try{ localStorage.removeItem(LSK()); }catch(_){} return; }
+      const pts = Array.isArray(x.pts) ? x.pts : [];
+      const last = pts[pts.length - 1] || { a: x.lat, o: x.lng, t: x.at };
+      S = { uid: currentUser.uid, viewers: x.viewers || [], names: (ls && ls.names) || {}, startedAt: x.startedAt, endsAt: x.endsAt, pts: pts.length ? pts : [last], pend: [], dist: x.dist || 0, last, lastWrite: 0, lastWritePt: last, spd: 0, watch: null, tick: null, ui: null };
+      if(!Object.keys(S.names).length){ try{ (await friends()).forEach(f=>{ if(S.viewers.includes(f.uid)) S.names[f.uid] = f.name; }); }catch(_){} }
+      run(); showPill();
+    }catch(e){ console.warn('poloha – obnovenie', e); }
+  }
+
+  document.addEventListener('visibilitychange', ()=>{
+    if(!S || document.visibilityState !== 'visible') return;
+    // niektoré prehliadače po návrate zo spánku zastavia sledovanie – zapni ho znova
+    try{ if(S.watch != null) navigator.geolocation.clearWatch(S.watch); }catch(_){}
+    S.watch = null; run();
+  });
+
+  // ======================================================================
+  //  PRIATEĽ: sledovanie polohy niekoho iného
+  // ======================================================================
+  let V = null;
+  function openViewer(uid, name, photo){
+    closeViewer();
+    const root = el(`<div class="c8ll-scr"><div class="c8ll-map"></div>
+      <div class="c8ll-top viewer"><div class="c8ll-who">${avHtml(name, photo, 'c8ll-av')}<div style="min-width:0"><b class="v-n"></b><small class="v-st">${esc(T('Načítavam mapu…'))}</small></div></div><button class="c8ll-x" type="button" style="margin-left:auto">✕</button></div>
+      <div class="c8ll-bot"><div class="c8ll-grab"></div>
+        <div class="c8ll-stats"><div><b class="v-d">–</b><small>${esc(T('trasa'))}</small></div><div><b class="v-s">–</b><small>${esc(T('rýchlosť'))}</small></div><div><b class="v-f">–</b><small>${esc(T('od teba'))}</small></div></div>
+        <div class="c8ll-row"><button type="button" class="nav">${esc(T('🧭 Navigovať'))}</button></div>
+        <div class="c8ll-row"><button type="button" class="b-msg">${esc(T('💬 Napísať'))}</button><button type="button" class="b-call">${esc(T('📞 Zavolať'))}</button></div></div></div>`);
+    root.querySelector('.v-n').textContent = name || '';
+    document.body.appendChild(root);
+    V = { uid, name, photo, root, map: null, mk: null, line: null, me: null, meWatch: null, unsub: null, data: null, fitted: false, follow: true, tick: null };
+    const user = { uid, name, photoURL: photo || null };
+    root.querySelector('.c8ll-x').onclick = closeViewer;
+    root.querySelector('.nav').onclick = ()=>{ const d = V && V.data; if(!d) return; window.open('https://www.google.com/maps/dir/?api=1&destination=' + d.lat + ',' + d.lng, '_blank', 'noopener'); };
+    root.querySelector('.b-msg').onclick = ()=>{ closeViewer(); try{ openChatWithUser(user); }catch(_){} };
+    root.querySelector('.b-call').onclick = ()=>{ closeViewer(); try{ startCall(user, 'audio'); }catch(_){} };
+    try{ window.c8WakeOn && c8WakeOn('llview'); }catch(_){}
+    loadLeaflet().then(()=>{
+      if(!V || V.root !== root) return;
+      V.map = mkMap(root.querySelector('.c8ll-map'));
+      V.map.setView([48.7, 19.5], 7);
+      V.map.on('dragstart', ()=>{ if(V) V.follow = false; });
+      setTimeout(()=>V && V.map && V.map.invalidateSize(), 60);
+      render();
+      if(navigator.geolocation){
+        V.meWatch = navigator.geolocation.watchPosition(p=>{
+          if(!V || !V.map) return; V.mePos = { a: p.coords.latitude, o: p.coords.longitude };
+          if(!V.me) V.me = L.marker([V.mePos.a, V.mePos.o], { icon: meIcon(), zIndexOffset: -10 }).addTo(V.map); else V.me.setLatLng([V.mePos.a, V.mePos.o]);
+          render();
+        }, ()=>{}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+      }
+    }).catch(()=>{ root.querySelector('.c8ll-map').innerHTML = `<div style="padding:120px 20px;text-align:center;color:#666">${esc(T('Mapu sa nepodarilo načítať.'))}</div>`; });
+    V.unsub = ref(uid).onSnapshot(s=>{
+      if(!V || V.uid !== uid) return;
+      if(!s.exists){ ended(); return; }
+      V.data = s.data();
+      if(!V.data.active || Date.now() >= V.data.endsAt){ ended(); return; }
+      render();
+    }, ()=>{ ended(); });
+    V.tick = setInterval(render, 5000);
+  }
+  function ended(){
+    if(!V) return;
+    V.ended = true;
+    const st = V.root.querySelector('.v-st'); st.innerHTML = `<span class="c8ll-stale">${esc(T('Zdieľanie polohy skončilo.'))}</span>`;
+    V.root.querySelector('.nav').disabled = true;
+    if(V.mk) V.mk.setIcon(pinIcon(V.name, V.photo, true));
+  }
+  function render(){
+    if(!V || !V.data || V.ended) return;
+    const d = V.data, now = Date.now(), age = now - (d.at || now), stale = age > 60000;
+    const st = V.root.querySelector('.v-st');
+    st.innerHTML = stale ? `<span class="c8ll-stale">● ${esc(T('posledná poloha pred'))} ${esc(ago(age))}</span>` : `<span class="c8ll-live">● ${esc(T('naživo'))}</span> · ${esc(T('aktualizované pred'))} ${esc(ago(age))}`;
+    V.root.querySelector('.v-d').textContent = km(d.dist || 0) + ' km';
+    V.root.querySelector('.v-s').textContent = stale ? '–' : Math.round((d.spd || 0)*3.6) + ' km/h';
+    const pos = { a: d.lat, o: d.lng };
+    V.root.querySelector('.v-f').textContent = V.mePos ? (dist(V.mePos, pos) < 1000 ? Math.round(dist(V.mePos, pos)) + ' m' : km(dist(V.mePos, pos)) + ' km') : '–';
+    if(!V.map) return;
+    const ll = (Array.isArray(d.pts) ? d.pts : []).map(p=>[p.a, p.o]); ll.push([pos.a, pos.o]);
+    if(!V.line){ V.line = L.polyline(ll, { color: '#7C3AED', weight: 6, opacity: .9, lineJoin: 'round' }).addTo(V.map); if(ll.length) L.circleMarker(ll[0], { radius: 7, color: '#fff', weight: 3, fillColor: '#16A34A', fillOpacity: 1 }).addTo(V.map); }
+    else V.line.setLatLngs(ll);
+    const tag = (V.name || '') + (stale ? '' : ' · ' + Math.round((d.spd || 0)*3.6) + ' km/h');
+    if(!V.mk) V.mk = L.marker([pos.a, pos.o], { icon: pinIcon(V.name, V.photo, stale, tag) }).addTo(V.map);
+    else { V.mk.setLatLng([pos.a, pos.o]); V.mk.setIcon(pinIcon(V.name, V.photo, stale, tag)); }
+    if(!V.fitted){ V.fitted = true; V.map.setView([pos.a, pos.o], 16); }
+    else if(V.follow) V.map.panTo([pos.a, pos.o], { animate: true });
+  }
+  function closeViewer(){
+    if(!V) return;
+    try{ V.unsub && V.unsub(); }catch(_){}
+    try{ if(V.meWatch != null) navigator.geolocation.clearWatch(V.meWatch); }catch(_){}
+    clearInterval(V.tick);
+    try{ V.map && V.map.remove(); }catch(_){}
+    V.root.remove(); V = null;
+    try{ window.c8WakeOff && c8WakeOff('llview'); }catch(_){}
+  }
+  window.c8LiveLocView = openViewer;
+
+  // ======================================================================
+  //  TLAČIDLO V PROFILE (pod Hologramom)
+  // ======================================================================
+  function ensureBtn(){
+    const holo = document.getElementById('c8holo-btn');
+    if(!holo) return null;
+    let b = document.getElementById('c8ll-btn');
+    if(b) return b;
+    const col = document.createElement('div'); col.className = 'c8tr-col';
+    holo.parentNode.insertBefore(col, holo); col.appendChild(holo);
+    b = document.createElement('button'); b.type = 'button'; b.className = 'c8ll-btn'; b.id = 'c8ll-btn';
+    b.onclick = ()=>{
+      if(b.dataset.mode === 'view'){ const u = viewedProfileUser; if(u) openViewer(u.uid, u.name, u.photoURL || null); return; }
+      if(S) openOwnerScreen(); else openSetup();
+    };
+    col.appendChild(b);
+    return b;
+  }
+  function updateProfileBtn(){
+    const b = ensureBtn(); if(!b) return;
+    let own = false; try{ own = !viewedProfileUser; }catch(_){}
+    if(own){
+      b.dataset.mode = 'own'; b.style.display = 'inline-flex';
+      b.classList.toggle('live', !!S);
+      b.innerHTML = S ? `<span class="c8ll-pulse"></span>${esc(T('📍 Moja poloha'))}` : esc(T('📍 Moja poloha'));
+    }
+  }
+  async function afterProfile(){
+    const b = ensureBtn(); if(!b || !currentUser) return;
+    let vu = null; try{ vu = viewedProfileUser; }catch(_){}
+    if(!vu){ updateProfileBtn(); return; }
+    b.style.display = 'none'; b.classList.remove('live'); b.dataset.mode = 'view';
+    const uid = vu.uid; if(!uid) return;
+    try{
+      const d = await ref(uid).get();
+      if(!viewedProfileUser || viewedProfileUser.uid !== uid) return;
+      const x = d.exists && d.data();
+      if(x && x.active && Date.now() < x.endsAt){ b.innerHTML = `<span class="c8ll-pulse"></span>${esc(T('📍 Sledovať polohu'))}`; b.classList.add('live'); b.style.display = 'inline-flex'; }
+    }catch(_){ /* nemám povolenie = nezdieľa so mnou */ }
+  }
+  try{
+    const _rp = window.renderProfile;
+    if(typeof _rp === 'function'){ window.renderProfile = renderProfile = function(){ const r = _rp.apply(this, arguments); try{ afterProfile(); }catch(_){} return r; }; }
+  }catch(_){}
+
+  // ======================================================================
+  //  UPOZORNENIA
+  // ======================================================================
+  try{
+    const _nt = notifText;
+    notifText = function(n){ if(n && n.type === 'liveloc') return `📍 <b>${esc(n.fromName || '')}</b> ${esc(T('s tebou zdieľa svoju polohu naživo'))}`; return _nt.apply(this, arguments); };
+    const _ont = openNotificationTarget;
+    openNotificationTarget = function(id){
+      const n = (cachedNotifications || []).find(x=>x.id === id);
+      if(n && n.type === 'liveloc'){ try{ closeNotifModal(); }catch(_){} openViewer(n.fromUid, n.fromName, n.fromPhoto || null); return; }
+      return _ont.apply(this, arguments);
+    };
+  }catch(_){}
+  // keď príde nové upozornenie o zdieľaní polohy, ukáž hore lištu
+  const toasted = new Set();
+  setInterval(()=>{
+    let list = []; try{ list = cachedNotifications || []; }catch(_){ return; }
+    list.forEach(n=>{
+      if(!n || n.type !== 'liveloc' || n.read || toasted.has(n.id)) return;
+      toasted.add(n.id);
+      if(Date.now() - (n.createdAt || 0) > 10*60000 || (n.endsAt && Date.now() > n.endsAt)) return;
+      const t0 = el(`<div class="c8ll-toast">${avHtml(n.fromName, n.fromPhoto, 'c8ll-av')}<div style="min-width:0">📍 <b></b> ${esc(T('s tebou zdieľa svoju polohu naživo'))}</div><button type="button">${esc(T('Zobraziť'))}</button></div>`);
+      t0.querySelector('b').textContent = n.fromName || '';
+      t0.querySelector('button').onclick = ()=>{ t0.remove(); openViewer(n.fromUid, n.fromName, n.fromPhoto || null); };
+      document.body.appendChild(t0); setTimeout(()=>t0.remove(), 15000);
+    });
+  }, 3000);
+
+  // pri odhlásení zdieľanie hneď ukonči a zmaž polohu
+  try{
+    const _lo = doLogout;
+    doLogout = function(){ const a = arguments, self = this; if(S){ stop(true).finally(()=>_lo.apply(self, a)); return; } return _lo.apply(this, arguments); };
+  }catch(_){}
+  // ---------- štart ----------
+  setInterval(()=>{ try{ if(S && (!currentUser || currentUser.uid !== S.uid)){ const s = S; S = null; try{ navigator.geolocation.clearWatch(s.watch); }catch(_){} clearInterval(s.tick); try{ c8WakeOff('liveloc'); }catch(_){} removePill(); if(s.ui) s.ui.root.remove(); } if(currentUser && db) tryResume(); else resumedFor = null; }catch(_){} }, 2000);
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureBtn); else ensureBtn();
 })();
 </script>
 </body>
