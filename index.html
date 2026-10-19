@@ -20080,7 +20080,7 @@ c8ApplyFriendsView();
       if(!b.mk){
         b.mk = L.marker([x.lat, x.lng], { icon: pinIcon(x.name, x.photo, stale, tag), zIndexOffset: 50 }).addTo(m);
         b.mk.on('click', ()=>{ if(S){ S.sel = b.uid; renderBack(); } });
-        if(!S.ui.backFitted){ S.ui.backFitted = true; S.ui.follow = false; setTimeout(fitOwner, 50); }
+
       } else { b.mk.setLatLng([x.lat, x.lng]); b.mk.setIcon(pinIcon(x.name, x.photo, stale, tag)); }
     });
     if(sel && me){
@@ -20143,7 +20143,11 @@ c8ApplyFriendsView();
     root.querySelector('.c8ll-who-names').textContent = Object.values(S.names || {}).join(', ') || T('Iba ty – nikto ťa nevidí');
     root.querySelector('.c8ll-off').onclick = ()=>{ if(confirm(T('Naozaj vypnúť zdieľanie polohy?'))) stop(); };
     root.querySelector('.b-hide').onclick = ()=>{ root.style.display = 'none'; showPill(); };
-    root.querySelector('.fit').onclick = ()=>{ if(S && S.ui){ S.ui.follow = false; fitOwner(); } };
+    root.querySelector('.fit').onclick = ()=>{
+      if(!S || !S.ui || !S.ui.map) return;
+      if(S.ui.follow && backList().length){ S.ui.follow = false; fitOwner(); }   // ukáž oboch
+      else { S.ui.follow = true; const c = S.cur || S.last; if(c) S.ui.map.setView([c.a, c.o], 16); } // späť: sleduj mňa
+    };
     const backUser = ()=>{ const b = S && S.sel && S.back && S.back[S.sel]; return b && b.data ? { uid: S.sel, name: b.data.name || '', photoURL: b.data.photo || null } : null; };
     root.querySelector('.nav').onclick = ()=>{ const b = S && S.sel && S.back && S.back[S.sel]; if(!b || !b.data) return; window.open('https://www.google.com/maps/dir/?api=1&destination=' + b.data.lat + ',' + b.data.lng, '_blank', 'noopener'); };
     root.querySelector('.b-msg').onclick = ()=>{ const u = backUser(); if(!u) return; root.style.display = 'none'; showPill(); try{ openChatWithUser(u); }catch(_){} };
@@ -20359,7 +20363,11 @@ c8ApplyFriendsView();
     root.querySelector('.nav').onclick = ()=>{ const d = V && V.data; if(!d) return; window.open('https://www.google.com/maps/dir/?api=1&destination=' + d.lat + ',' + d.lng, '_blank', 'noopener'); };
     root.querySelector('.b-msg').onclick = ()=>{ closeViewer(); try{ openChatWithUser(user); }catch(_){} };
     root.querySelector('.b-call').onclick = ()=>{ closeViewer(); try{ startCall(user, 'audio'); }catch(_){} };
-    root.querySelector('.fit').onclick = ()=>{ if(!V || !V.map) return; V.follow = false; fitViewer(); };
+    root.querySelector('.fit').onclick = ()=>{
+      if(!V || !V.map || !V.data) return;
+      if(V.follow && V.mePos){ V.follow = false; fitViewer(); }        // ukáž oboch
+      else { V.follow = true; V.map.setView([V.data.lat, V.data.lng], 16); } // späť: sleduj priateľa
+    };
     root.querySelector('.c8ll-share').onclick = (e)=>{ if(e.target.closest('.st')){ stopShareBack(); return; } if(!e.currentTarget.classList.contains('on')) shareBack(); };
     renderShareBtn();
     try{ window.c8WakeOn && c8WakeOn('llview'); }catch(_){}
@@ -20373,7 +20381,7 @@ c8ApplyFriendsView();
       if(navigator.geolocation){
         V.meWatch = navigator.geolocation.watchPosition(p=>{
           if(!V || !V.map) return; V.mePos = { a: p.coords.latitude, o: p.coords.longitude };
-          if(!V.me){ V.me = L.marker([V.mePos.a, V.mePos.o], { icon: meIcon(), zIndexOffset: -10 }).addTo(V.map); if(V.fitted && V.follow){ V.follow = false; fitViewer(); } } else V.me.setLatLng([V.mePos.a, V.mePos.o]);
+          if(!V.me) V.me = L.marker([V.mePos.a, V.mePos.o], { icon: meIcon(), zIndexOffset: -10 }).addTo(V.map); else V.me.setLatLng([V.mePos.a, V.mePos.o]);
           render();
         }, ()=>{}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
       }
@@ -20414,7 +20422,7 @@ c8ApplyFriendsView();
     const tag = (V.name || '') + (stale ? '' : ' · ' + Math.round((d.spd || 0)*3.6) + ' km/h');
     if(!V.mk) V.mk = L.marker([pos.a, pos.o], { icon: pinIcon(V.name, V.photo, stale, tag) }).addTo(V.map);
     else { V.mk.setLatLng([pos.a, pos.o]); V.mk.setIcon(pinIcon(V.name, V.photo, stale, tag)); }
-    if(!V.fitted){ V.fitted = true; if(V.mePos) fitViewer(); else V.map.setView([pos.a, pos.o], 16); }
+    if(!V.fitted){ V.fitted = true; V.map.setView([pos.a, pos.o], 16); }
     else if(V.follow) V.map.panTo([pos.a, pos.o], { animate: true });
   }
   function closeViewer(){
