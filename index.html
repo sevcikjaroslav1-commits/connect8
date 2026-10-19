@@ -17588,7 +17588,7 @@ function c8RenderRight(){
       const st = document.createElement('div'); st.className = 'c8r-st'; st.textContent = u.on ? '● ' + tt('Online') : tt('Offline');
       if(!u.on){ // naposledy online – len ak to má priateľ zapnuté (rovnako ako v sekcii Priatelia)
         const lo = c8rLastOnline(u.uid);
-        if(lo){ st.textContent = '🕓 ' + lo.short; st.title = tt('Naposledy online') + ' ' + lo.full; st.classList.add('lo'); }
+        if(lo){ st.textContent = lo.short; st.title = tt('Naposledy online') + ' ' + lo.full; st.classList.add('lo'); }
       }
       tx.append(nm, st);
       row.append(avw, tx);
