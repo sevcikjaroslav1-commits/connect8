@@ -2029,27 +2029,12 @@
 .c8r-avw .dot{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:#C9CBD1;border:2px solid var(--surface);}
 .c8r-f2.on .c8r-avw .dot{background:#22C55E;}
 .c8r-tx{flex:1;min-width:0;}
-.c8r-nm{font-size:13.5px;font-weight:600;color:var(--text);white-space:normal;overflow-wrap:break-word;word-break:break-word;line-height:1.25;}
+.c8r-nm{font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .c8r-f2.off .c8r-nm{color:var(--text-dim);font-weight:500;}
 .c8r-st{font-size:11px;font-weight:600;color:#16A34A;}
 .c8r-f2.off .c8r-st{color:#9CA3AF;font-weight:500;}
-.c8r-st{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.c8r-f2.off .c8r-st.lo{color:#e67e22;font-weight:600;}
-/* Návrh A: tlačidlá 30 px vedľa mena */
-#c8-right .c8r-card:has(#c8r-friends){padding:16px 14px;}
-.c8r-f2{gap:8px;padding:6px 2px;}
-.c8r-avw .avatar{width:32px;height:32px;font-size:12px;}
-.c8r-f2 .user-card-call-row{margin:0;gap:4px;flex-shrink:0;}
-.c8r-f2 .user-card-call-btn,.c8r-f2 .user-card-call-row .user-card-msg-btn{width:30px;height:30px;min-width:30px;font-size:13px;padding:0;}
-.c8r-f2 .user-card-call-btn svg,.c8r-f2 .user-card-msg-btn svg{width:15px;height:15px;}
-.c8r-f2 .user-card-call-btn{background:var(--mode-feed-soft);color:var(--mode-feed);}
-.c8r-f2 .user-card-call-btn-audio{background:#FDECEE;color:#E63946;}
-.c8r-f2 .user-card-call-row .user-card-msg-btn{background:#E4F8EC;color:#1FAE5C;}
-@media(hover:hover){
-  .c8r-f2 .user-card-call-btn:not(:disabled):hover{background:var(--mode-feed);color:#fff;}
-  .c8r-f2 .user-card-call-btn-audio:not(:disabled):hover{background:#E63946;color:#fff;}
-  .c8r-f2 .user-card-call-row .user-card-msg-btn:hover{background:#1FAE5C;color:#fff;}
-}
+.c8r-f2 .user-card-call-row{margin:0;gap:3px;flex-shrink:0;}
+.c8r-f2 .user-card-call-btn,.c8r-f2 .user-card-msg-btn{width:24px;height:24px;min-width:24px;font-size:11px;padding:0;}
 .c8r-more{display:block;width:100%;margin-top:8px;padding:8px 10px;border:0;border-radius:10px;background:var(--bg,#f1f2f4);color:var(--mode-feed,#4F46E5);font-weight:700;font-size:13.5px;cursor:pointer;}
 .c8r-more:hover{filter:brightness(.96);}
 </style>
@@ -2238,51 +2223,6 @@
 #friends-grid.c8-list .user-card-lastonline{grid-column:2;margin:0;}
 #friends-grid.c8-list .user-card-call-row{grid-column:3;grid-row:1 / span 3;margin:0;}
 #friends-grid:not(.c8-list) .c8fl-h, #friends-grid:not(.c8-list) .c8fl-st{display:none;}
-  /* ---------- PROFIL: akčné tlačidlá (Návrh B) ---------- */
-  .profile-header{flex-wrap:wrap;}
-  .profile-actions{flex-basis:100%;width:100%;max-width:440px;}
-  .profile-act-row{display:flex;gap:8px;}
-  .profile-act-btn{
-    flex:1;min-width:0;height:42px;border-radius:21px;border:0;padding:0 8px;margin:0;
-    display:flex;align-items:center;justify-content:center;gap:7px;
-    font:600 13.5px 'Inter',sans-serif;cursor:pointer;-webkit-appearance:none;appearance:none;
-    transition:background .15s,color .15s,box-shadow .15s,transform .12s;white-space:nowrap;
-  }
-  .profile-act-btn svg{width:18px;height:18px;flex-shrink:0;}
-  .profile-act-btn span{overflow:hidden;text-overflow:ellipsis;}
-  .profile-act-btn:active:not(:disabled){transform:scale(.96);}
-  .profile-act-audio{background:#FDECEE;color:#E63946;}
-  .profile-act-video{background:var(--mode-feed-soft);color:var(--mode-feed);}
-  .profile-act-msg{background:#E4F8EC;color:#1FAE5C;}
-  .profile-act-btn:disabled{opacity:.4;cursor:default;}
-  @media(hover:hover){
-    .profile-act-audio:not(:disabled):hover{background:#E63946;color:#fff;box-shadow:0 4px 12px rgba(230,57,70,.3);}
-    .profile-act-video:not(:disabled):hover{background:var(--mode-feed);color:#fff;box-shadow:0 4px 12px rgba(91,76,255,.3);}
-    .profile-act-msg:hover{background:#1FAE5C;color:#fff;box-shadow:0 4px 12px rgba(31,174,92,.3);}
-  }
-  .profile-offline-note{font-size:11.5px;color:var(--text-dim);text-align:center;margin-top:8px;}
-  .profile-actions .profile-block-row{display:flex;gap:6px;margin-top:10px;}
-  .profile-actions .profile-block-row .block-btn,.profile-actions .profile-block-row .report-btn{flex:1;text-align:center;margin:0;}
-
-  /* ---------- PRIATELIA 38px / POUŽÍVATELIA 36px: tlačidlá hovoru ---------- */
-  /* väčšie tlačidlá potrebujú širšiu kartu, aby sa 3 zmestili vedľa seba */
-  #users-grid{grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:12px;}
-  #friends-grid:not(.c8-list){grid-template-columns:repeat(auto-fill,minmax(134px,1fr));gap:12px;}
-  #users-grid .user-card,#friends-grid:not(.c8-list) .user-card{padding-left:4px;padding-right:4px;}
-  #users-grid .user-card-call-row,#friends-grid .user-card-call-row{gap:8px;flex-wrap:nowrap;}
-  #users-grid .user-card-call-row{gap:6px;}
-  #users-grid .user-card-call-btn,#users-grid .user-card-call-row .user-card-msg-btn{width:36px;height:36px;min-width:36px;}
-  #friends-grid .user-card-call-btn,#friends-grid .user-card-call-row .user-card-msg-btn{width:38px;height:38px;min-width:38px;}
-  #users-grid .user-card-call-btn svg,#users-grid .user-card-msg-btn svg{width:17px;height:17px;}
-  #friends-grid .user-card-call-btn svg,#friends-grid .user-card-msg-btn svg{width:18px;height:18px;}
-  #users-grid .user-card-call-btn,#friends-grid .user-card-call-btn{background:var(--mode-feed-soft);color:var(--mode-feed);}
-  #users-grid .user-card-call-btn-audio,#friends-grid .user-card-call-btn-audio{background:#FDECEE;color:#E63946;}
-  #users-grid .user-card-call-row .user-card-msg-btn,#friends-grid .user-card-call-row .user-card-msg-btn{background:#E4F8EC;color:#1FAE5C;}
-  @media(hover:hover){
-    #users-grid .user-card-call-btn:not(:disabled):hover,#friends-grid .user-card-call-btn:not(:disabled):hover{background:var(--mode-feed);color:#fff;}
-    #users-grid .user-card-call-btn-audio:not(:disabled):hover,#friends-grid .user-card-call-btn-audio:not(:disabled):hover{background:#E63946;color:#fff;}
-    #users-grid .user-card-call-row .user-card-msg-btn:hover,#friends-grid .user-card-call-row .user-card-msg-btn:hover{background:#1FAE5C;color:#fff;}
-  }
 </style>
 <style id="c8-mobbig">
 /* mobil: väčšie ikony v lište + väčší Messenger, zvonček a profilová fotka; menšie písmo pod ikonami */
@@ -3608,6 +3548,17 @@
                   </button>
                 </div>
                 <button class="follow-btn" id="profile-follow-btn" onclick="toggleFollowFromProfile()" style="display:none;">+ Sledovať</button>
+                <button class="call-btn call-btn-audio" id="profile-call-audio-btn" onclick="startCallFromProfile('audio')" title="Zavolať" style="display:none;">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </button>
+                <button class="call-btn" id="profile-call-video-btn" onclick="startCallFromProfile('video')" title="Videohovor" style="display:none;">🎥</button>
+                <button class="msg-icon-btn" id="profile-message-btn" onclick="openChatWithProfileUser()" title="Napísať správu" style="display:none;">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>
+                </button>
+              </div>
+              <div class="profile-block-row">
+                <button class="block-btn" id="profile-block-btn" onclick="toggleBlockFromProfile()" style="display:none;">🚫 Zablokovať</button>
+                <button class="report-btn" id="profile-report-btn" onclick="reportUserFromProfile()" style="display:none;">🚩 Nahlásiť</button>
               </div>
               <div class="profile-stats" id="profile-stats">0 príspevkov · 0 fotiek</div>
               <button class="vizitka-btn" id="vizitka-btn" onclick="openVizitkaModal()" style="display:none;">🪪 Vytvoriť vizitku</button>
@@ -3619,19 +3570,6 @@
                 </label>
               </div>
               <div class="last-online-time" id="last-online-time" style="display:none;"></div>
-            </div>
-            <!-- AKCIE PROFILU: Zavolať / Video / Správa + Zablokovať / Nahlásiť (cez celú šírku pod hlavičkou) -->
-            <div class="profile-actions" id="profile-actions">
-              <div class="profile-act-row">
-                <button class="profile-act-btn profile-act-audio" id="profile-call-audio-btn" onclick="startCallFromProfile('audio')" title="Zavolať" style="display:none;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>Zavolať</span></button>
-                <button class="profile-act-btn profile-act-video" id="profile-call-video-btn" onclick="startCallFromProfile('video')" title="Videohovor" style="display:none;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5.5h10a2.5 2.5 0 0 1 2.5 2.5v8a2.5 2.5 0 0 1-2.5 2.5H4A2.5 2.5 0 0 1 1.5 16V8A2.5 2.5 0 0 1 4 5.5zm13.5 4.2 3.9-2.6a.7.7 0 0 1 1.1.6v8.6a.7.7 0 0 1-1.1.6l-3.9-2.6z"/></svg><span>Video</span></button>
-                <button class="profile-act-btn profile-act-msg" id="profile-message-btn" onclick="openChatWithProfileUser()" title="Napísať správu" style="display:none;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg><span>Správa</span></button>
-              </div>
-              <div class="profile-offline-note" id="profile-offline-note" style="display:none;">Používateľ je offline – môžeš mu napísať správu</div>
-              <div class="profile-block-row">
-                <button class="block-btn" id="profile-block-btn" onclick="toggleBlockFromProfile()" style="display:none;">🚫 Zablokovať</button>
-                <button class="report-btn" id="profile-report-btn" onclick="reportUserFromProfile()" style="display:none;">🚩 Nahlásiť</button>
-              </div>
             </div>
           </div>
 
@@ -6315,18 +6253,11 @@ function renderProfile(){
 
   const callAudioBtn = document.getElementById('profile-call-audio-btn');
   const callVideoBtn = document.getElementById('profile-call-video-btn');
-  const actRow = document.querySelector('#profile-actions .profile-act-row');
-  if(actRow) actRow.style.display = (isOwnProfile || isBlocked) ? 'none' : 'flex';
-  const actsWrap = document.getElementById('profile-actions');
-  if(actsWrap) actsWrap.style.display = (isOwnProfile || !profileUser.uid) ? 'none' : '';
-  const offNote = document.getElementById('profile-offline-note');
-  if(offNote) offNote.style.display = 'none';
   if(callAudioBtn && callVideoBtn){
     if(isOwnProfile || isBlocked){
       callAudioBtn.style.display = 'none';
       callVideoBtn.style.display = 'none';
     } else {
-      if(offNote) offNote.style.display = (profileUser.uid && isUserOnline(profileUser.uid)) ? 'none' : 'block';
       const online = profileUser.uid ? isUserOnline(profileUser.uid) : false;
       callAudioBtn.style.display = 'flex';
       callVideoBtn.style.display = 'flex';
@@ -6546,24 +6477,22 @@ function buildCallButtonRow(u){
   const audioBtn = document.createElement('button');
   audioBtn.className = 'user-card-call-btn user-card-call-btn-audio';
   audioBtn.dataset.calluid = u.id;
-  audioBtn.dataset.calltype = 'audio';
-  audioBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+  audioBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
   audioBtn.title = online ? t('Zavolať') : t('Používateľ je offline');
   audioBtn.disabled = !online;
   audioBtn.onclick = (e)=>{ e.stopPropagation(); startCall({ uid:u.id, name:u.name, photoURL:u.photo }, 'audio'); };
 
   const videoBtn = document.createElement('button');
-  videoBtn.className = 'user-card-call-btn user-card-call-btn-video';
+  videoBtn.className = 'user-card-call-btn';
   videoBtn.dataset.calluid = u.id;
-  videoBtn.dataset.calltype = 'video';
-  videoBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M4 5.5h10a2.5 2.5 0 0 1 2.5 2.5v8a2.5 2.5 0 0 1-2.5 2.5H4A2.5 2.5 0 0 1 1.5 16V8A2.5 2.5 0 0 1 4 5.5zm13.5 4.2 3.9-2.6a.7.7 0 0 1 1.1.6v8.6a.7.7 0 0 1-1.1.6l-3.9-2.6z"/></svg>';
+  videoBtn.textContent = '🎥';
   videoBtn.title = online ? t('Videohovor') : t('Používateľ je offline');
   videoBtn.disabled = !online;
   videoBtn.onclick = (e)=>{ e.stopPropagation(); startCall({ uid:u.id, name:u.name, photoURL:u.photo }, 'video'); };
 
   const msgBtn = document.createElement('button');
   msgBtn.className = 'msg-icon-btn user-card-msg-btn';
-  msgBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>';
+  msgBtn.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M12 2C6.48 2 2 6.14 2 11.25c0 2.9 1.44 5.49 3.7 7.19V22l3.38-1.86c.93.26 1.91.4 2.92.4 5.52 0 10-4.14 10-9.25S17.52 2 12 2zm1.02 12.45l-2.55-2.72-4.98 2.72 5.48-5.82 2.61 2.72 4.92-2.72-5.48 5.82z"/></svg>';
   msgBtn.title = t('Napísať správu');
   msgBtn.onclick = (e)=>{ e.stopPropagation(); openChatWithUser({ uid:u.id, name:u.name, photoURL:u.photo }); };
 
@@ -8353,36 +8282,6 @@ function playMessageNotificationSound(){
   });
 }
 
-// Príjemná "poloha" zvučka: mäkké trojtónové stúpajúce cinknutie (G5 → C6 → E6) s dozvukom
-// + jemné zavibrovanie na mobile. Hrá sa, keď ti priateľ začne zdieľať polohu.
-function playLocationShareSound(){
-  try{ if(navigator.vibrate) navigator.vibrate([60, 60, 90]); }catch(e){}
-  const ctx = ensureNotifAudioCtx();
-  if(!ctx) return;
-  const now = ctx.currentTime + 0.02;
-  const master = ctx.createGain();
-  master.gain.value = 0.9;
-  master.connect(ctx.destination);
-  const notes = [783.99, 1046.5, 1318.5]; // G5, C6, E6
-  notes.forEach((freq, i)=>{
-    const t0 = now + i*0.14;
-    const len = i === notes.length-1 ? 0.9 : 0.45; // posledný tón doznieva dlhšie
-    [1, 2].forEach((mult, k)=>{ // základný tón + tichý vyšší alikvot = "zvonček"
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = k === 0 ? 'sine' : 'triangle';
-      osc.frequency.value = freq * mult;
-      const peak = k === 0 ? 0.2 : 0.035;
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.exponentialRampToValueAtTime(peak, t0 + 0.015);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + len);
-      osc.connect(g).connect(master);
-      osc.start(t0);
-      osc.stop(t0 + len + 0.05);
-    });
-  });
-}
-
 function cacheProfile(uid, name, photo){
   if(!uid) return;
   profilesCache[uid] = { name: name || 'Používateľ', photo: photo || null };
@@ -10080,20 +9979,6 @@ function isUserOnline(uid){
 }
 
 function updateStatusDots(){
-  // profil: Zavolať / Video + offline poznámka podľa aktuálneho stavu
-  try{
-    const pa = document.getElementById('profile-call-audio-btn');
-    const pv = document.getElementById('profile-call-video-btn');
-    const pn = document.getElementById('profile-offline-note');
-    const vpu = (typeof viewedProfileUser !== 'undefined') ? viewedProfileUser : null;
-    if(pa && pv && vpu && vpu.uid && pa.style.display !== 'none'){
-      const on = isUserOnline(vpu.uid);
-      pa.disabled = !on; pv.disabled = !on;
-      pa.title = on ? t('Zavolať') : t('Používateľ je offline');
-      pv.title = on ? t('Videohovor') : t('Používateľ je offline');
-      if(pn) pn.style.display = on ? 'none' : 'block';
-    }
-  }catch(e){}
   document.querySelectorAll('[id^="status-dot-"]').forEach(dot=>{
     const uid = dot.id.slice('status-dot-'.length);
     dot.classList.toggle('online', isUserOnline(uid));
@@ -10101,7 +9986,7 @@ function updateStatusDots(){
   document.querySelectorAll('[data-calluid]').forEach(btn=>{
     const online = isUserOnline(btn.dataset.calluid);
     btn.disabled = !online;
-    btn.title = online ? t(btn.dataset.calltype === 'video' ? 'Videohovor' : 'Zavolať') : t('Používateľ je offline');
+    btn.title = btn.textContent === '📞' ? (online ? 'Zavolať' : 'Používateľ je offline') : (online ? 'Videohovor' : 'Používateľ je offline');
   });
 }
 
@@ -17088,27 +16973,6 @@ const UI_DICT_IT = {
   add(UI_DICT_IT, {"Všetko": "Tutto", "Videá": "Video", "Fotky": "Foto", "Zatiaľ žiadne Reels.": "Ancora nessun Reels.", "Zatiaľ žiadne videá.": "Ancora nessun video."});
   add(UI_DICT_IT, {"Ikonky": "Icone", "Zoznam": "Elenco"});
   add(UI_DICT_IT, {"Štatistiky":"Statistiche","Moje Reels":"I miei Reels","Zatiaľ nemáš žiadne Reels":"Non hai ancora Reels","Meniny tento týždeň":"Onomastici questa settimana","Priatelia online":"Amici online","Zatiaľ nemáš priateľov":"Nessun amico ancora","Nastavenia":"Impostazioni","Jazyk":"Lingua","Odhlásiť sa":"Esci","Zobraziť môj profil":"Vedi il mio profilo","Upraviť profil":"Modifica profilo","Súkromie":"Privacy","Bazár":"Mercato","Pripravujeme":"Prossimamente","Zrušiť účet":"Elimina account","Aktuálny jazyk appky":"Lingua attuale dell'app","Menu":"Menu"});
-  add(UI_DICT_EN, {"Video": "Video", "Správa": "Message", "Používateľ je offline – môžeš mu napísať správu": "User is offline – you can send them a message"});
-  add(UI_DICT_CZ, {"Video": "Video", "Správa": "Zpráva", "Používateľ je offline – môžeš mu napísať správu": "Uživatel je offline – můžeš mu napsat zprávu"});
-  add(UI_DICT_PL, {"Video": "Wideo", "Správa": "Wiadomość", "Používateľ je offline – môžeš mu napísať správu": "Użytkownik jest offline – możesz napisać mu wiadomość"});
-  add(UI_DICT_HU, {"Video": "Videó", "Správa": "Üzenet", "Používateľ je offline – môžeš mu napísať správu": "A felhasználó offline – írhatsz neki üzenetet"});
-  add(UI_DICT_AT, {"Video": "Video", "Správa": "Nachricht", "Používateľ je offline – môžeš mu napísať správu": "Nutzer ist offline – du kannst ihm eine Nachricht schreiben"});
-  add(UI_DICT_DE, {"Video": "Video", "Správa": "Nachricht", "Používateľ je offline – môžeš mu napísať správu": "Nutzer ist offline – du kannst ihm eine Nachricht schreiben"});
-  add(UI_DICT_IT, {"Video": "Video", "Správa": "Messaggio", "Používateľ je offline – môžeš mu napísať správu": "L'utente è offline – puoi inviargli un messaggio"});
-  add(UI_DICT_EN, {"📍 Ukázať moju polohu": "📍 Show my location", "ťa vidí": "can see you", "Prestať": "Stop", "ti ukazuje svoju polohu": "is showing you their location", "ti ukazuje svoju polohu naživo": "is showing you their live location", "Ukázať všetkých na mape": "Show everyone on the map"});
-  add(UI_DICT_CZ, {"📍 Ukázať moju polohu": "📍 Ukázat moji polohu", "ťa vidí": "tě vidí", "Prestať": "Přestat", "ti ukazuje svoju polohu": "ti ukazuje svou polohu", "ti ukazuje svoju polohu naživo": "ti ukazuje svou polohu naživo", "Ukázať všetkých na mape": "Ukázat všechny na mapě"});
-  add(UI_DICT_PL, {"📍 Ukázať moju polohu": "📍 Pokaż moją lokalizację", "ťa vidí": "cię widzi", "Prestať": "Przestań", "ti ukazuje svoju polohu": "pokazuje ci swoją lokalizację", "ti ukazuje svoju polohu naživo": "pokazuje ci swoją lokalizację na żywo", "Ukázať všetkých na mape": "Pokaż wszystkich na mapie"});
-  add(UI_DICT_HU, {"📍 Ukázať moju polohu": "📍 Helyzetem megmutatása", "ťa vidí": "lát téged", "Prestať": "Leállítás", "ti ukazuje svoju polohu": "megmutatja neked a helyzetét", "ti ukazuje svoju polohu naživo": "élőben megmutatja neked a helyzetét", "Ukázať všetkých na mape": "Mindenki mutatása a térképen"});
-  add(UI_DICT_DE, {"📍 Ukázať moju polohu": "📍 Meinen Standort zeigen", "ťa vidí": "sieht dich", "Prestať": "Beenden", "ti ukazuje svoju polohu": "zeigt dir seinen Standort", "ti ukazuje svoju polohu naživo": "zeigt dir seinen Live-Standort", "Ukázať všetkých na mape": "Alle auf der Karte zeigen"});
-  add(UI_DICT_AT, {"📍 Ukázať moju polohu": "📍 Meinen Standort zeigen", "ťa vidí": "sieht dich", "Prestať": "Beenden", "ti ukazuje svoju polohu": "zeigt dir seinen Standort", "ti ukazuje svoju polohu naživo": "zeigt dir seinen Live-Standort", "Ukázať všetkých na mape": "Alle auf der Karte zeigen"});
-  add(UI_DICT_IT, {"📍 Ukázať moju polohu": "📍 Mostra la mia posizione", "ťa vidí": "ti vede", "Prestať": "Interrompi", "ti ukazuje svoju polohu": "ti mostra la sua posizione", "ti ukazuje svoju polohu naživo": "ti mostra la sua posizione in tempo reale", "Ukázať všetkých na mape": "Mostra tutti sulla mappa"});
-  add(UI_DICT_EN, {"dnes": "today", "včera": "yesterday"});
-  add(UI_DICT_CZ, {"dnes": "dnes", "včera": "včera"});
-  add(UI_DICT_PL, {"dnes": "dziś", "včera": "wczoraj"});
-  add(UI_DICT_HU, {"dnes": "ma", "včera": "tegnap"});
-  add(UI_DICT_DE, {"dnes": "heute", "včera": "gestern"});
-  add(UI_DICT_AT, {"dnes": "heute", "včera": "gestern"});
-  add(UI_DICT_IT, {"dnes": "oggi", "včera": "ieri"});
 })();
 
 function t(text){
@@ -17586,10 +17450,6 @@ function c8RenderRight(){
       const tx = document.createElement('div'); tx.className = 'c8r-tx';
       const nm = document.createElement('div'); nm.className = 'c8r-nm'; nm.textContent = u.name;
       const st = document.createElement('div'); st.className = 'c8r-st'; st.textContent = u.on ? '● ' + tt('Online') : tt('Offline');
-      if(!u.on){ // naposledy online – len ak to má priateľ zapnuté (rovnako ako v sekcii Priatelia)
-        const lo = c8rLastOnline(u.uid);
-        if(lo){ st.textContent = lo.short; st.title = tt('Naposledy online') + ' ' + lo.full; st.classList.add('lo'); }
-      }
       tx.append(nm, st);
       row.append(avw, tx);
       try{ row.appendChild(buildCallButtonRow({id:u.uid, name:u.name, photo:u.photo})); }catch(e){}
@@ -17604,33 +17464,6 @@ function c8RenderRight(){
       fb.appendChild(more);
     }
   }
-}
-// „Naposledy online“ pre pravý panel – rešpektuje nastavenie priateľa (showLastOnline)
-const c8rLoReq = {};
-function c8rLastOnline(uid){
-  const tt = (x)=> (typeof t === 'function' ? t(x) : x);
-  let allowed;
-  try{ allowed = profileSettingsCache[uid]; }catch(e){ return null; }
-  if(allowed === undefined){
-    // nastavenie ešte nepoznáme – načítaj raz z profilu a panel prekresli
-    if(!c8rLoReq[uid] && typeof db !== 'undefined' && db){
-      c8rLoReq[uid] = 1;
-      db.collection('profiles').doc(uid).get().then(d=>{
-        profileSettingsCache[uid] = !!(d.exists && d.data().showLastOnline);
-        if(profileSettingsCache[uid]) c8RenderRight();
-      }).catch(()=>{ c8rLoReq[uid] = 0; });
-    }
-    return null;
-  }
-  if(!allowed) return null;
-  let ts = null; try{ ts = presenceStatus[uid] && presenceStatus[uid].last_changed; }catch(e){}
-  if(!ts) return null;
-  const d = new Date(ts), now = new Date();
-  const hm = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-  const y = new Date(now); y.setDate(now.getDate() - 1);
-  const same = (a,b)=> a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
-  const short = same(d, now) ? tt('dnes') + ' ' + hm : (same(d, y) ? tt('včera') + ' ' + hm : d.getDate() + '.' + (d.getMonth()+1) + '. ' + hm);
-  return { short, full: d.getDate() + '.' + (d.getMonth()+1) + '.' + d.getFullYear() + ' ' + hm };
 }
 setInterval(c8RenderRight, 15000);
 window.addEventListener('load', ()=>setTimeout(c8RenderRight, 1500));
@@ -19824,44 +19657,6 @@ c8ApplyFriendsView();
 .c8ll-toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(14px + env(safe-area-inset-top));z-index:100004;background:#fff;color:#1E1B2E;border-radius:16px;padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 12px 30px -8px rgba(0,0,0,.35);font-family:Inter,system-ui,sans-serif;font-size:13.5px;max-width:92vw}
 .c8ll-toast button{border:0;background:#DC2626;color:#fff;font-weight:800;border-radius:10px;padding:8px 12px;cursor:pointer}
 .c8ll-scr .leaflet-control-attribution{font-size:10px}
-/* ===== mapa polohy – kompaktný dizajn (viac mapy) ===== */
-.c8ll-tw{position:absolute;left:12px;right:66px;top:calc(12px + env(safe-area-inset-top));z-index:1000;display:flex}
-.c8ll-tw.ownw{right:122px}
-.c8ll-topc{background:#fff;color:#1E1B2E;border-radius:24px;padding:5px 13px 5px 5px;display:flex;align-items:center;gap:9px;box-shadow:0 6px 16px -6px rgba(0,0,0,.35);min-width:0;max-width:100%}
-.c8ll-topc .c8ll-av{width:32px;height:32px;font-size:13px}
-.c8ll-topc b{font-size:13.5px;display:block;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.c8ll-topc small{font-size:11px;display:block;line-height:1.25;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.c8ll-topc.own{background:#DC2626;color:#fff;padding-left:12px}
-.c8ll-topc.own small{color:#fff;opacity:.92}
-.c8ll-fab{position:absolute;right:12px;z-index:1000;width:44px;height:44px;border-radius:50%;border:0;background:#fff;color:#555;font-size:17px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px -6px rgba(0,0,0,.35);cursor:pointer;padding:0;font-family:Inter,system-ui,sans-serif}
-.c8ll-fab.x{top:calc(12px + env(safe-area-inset-top))}
-.c8ll-fab.fit{top:calc(64px + env(safe-area-inset-top))}
-.c8ll-fab.offb{top:calc(12px + env(safe-area-inset-top));width:auto;padding:0 14px;border-radius:22px;color:#DC2626;font-weight:800;font-size:12.5px}
-.c8ll-sh{position:absolute;left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));z-index:1000;background:#fff;border-radius:22px;padding:11px 12px 12px;box-shadow:0 10px 30px -8px rgba(0,0,0,.35);max-width:540px;margin:0 auto;color:#1E1B2E}
-.c8ll-hdr{display:flex;align-items:center;gap:10px}
-.c8ll-big{flex:0 0 auto;padding-left:2px;min-width:0;max-width:42%}
-.c8ll-big b{display:block;font-size:24px;font-weight:800;color:#2563EB;line-height:1.05;white-space:nowrap}
-.c8ll-big small{display:block;font-size:11px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.c8ll-ms{flex:1;display:flex;background:#F6F7FB;border-radius:12px;overflow:hidden;min-width:0}
-.c8ll-ms div{flex:1;text-align:center;padding:6px 2px;min-width:0}
-.c8ll-ms div+div{border-left:1px solid #E7E9EF}
-.c8ll-ms b{display:block;font-size:13.5px;font-weight:800;line-height:1.2;white-space:nowrap;color:#1E1B2E}
-.c8ll-ms small{font-size:9.5px;color:#999;text-transform:uppercase;letter-spacing:.3px;font-weight:600}
-.c8ll-acts{display:flex;gap:8px;margin-top:10px}
-.c8ll-navb{flex:1;min-width:0;height:46px;border-radius:14px;border:0;background:linear-gradient(135deg,#2563EB,#16A34A);color:#fff;font:700 14px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 10px}
-.c8ll-navb:disabled{opacity:.5;cursor:default}
-.c8ll-ib{width:46px;height:46px;border-radius:14px;border:0;font-size:19px;flex:0 0 auto;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
-.c8ll-ib.msg{background:#E4F8EC}.c8ll-ib.call{background:#FDECEE}
-.c8ll-share{margin-top:8px;width:100%;height:40px;border-radius:12px;background:#F2F0FF;border:1.5px solid #CFC8FF;color:#4C3FE0;font:700 13px Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;padding:0 6px 0 12px}
-.c8ll-share:disabled{opacity:.6;cursor:default}
-.c8ll-share.on{background:#EAFBF1;border-color:#9BE3BA;color:#15803D;justify-content:space-between;cursor:default}
-.c8ll-share.on .l{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.c8ll-share .pz{width:9px;height:9px;border-radius:50%;background:#16A34A;box-shadow:0 0 0 4px rgba(22,163,74,.2);flex:0 0 auto;animation:c8llg 1.6s infinite}
-@keyframes c8llg{0%{box-shadow:0 0 0 0 rgba(22,163,74,.5)}70%{box-shadow:0 0 0 7px rgba(22,163,74,0)}100%{box-shadow:0 0 0 0 rgba(22,163,74,0)}}
-.c8ll-share .st{background:#fff;color:#DC2626;border:1px solid #F5C2C2;border-radius:9px;padding:5px 11px;font-size:12px;font-weight:800;cursor:pointer;flex:0 0 auto;font-family:inherit}
-.c8ll-hide{display:block;margin:8px auto 0;background:none;border:0;color:#6B7280;font:600 12.5px Inter,system-ui,sans-serif;cursor:pointer;padding:4px 10px}
-.c8ll-sh .c8ll-note{margin-top:2px;font-size:10.5px;color:#9AA0AE}
-.c8ll-dash{pointer-events:none}
 </style>
 <script id="c8ll-script">
 /* =====================================================================
@@ -19934,7 +19729,7 @@ c8ApplyFriendsView();
   // ======================================================================
   let S = null; // aktívne zdieľanie
   const LSK = () => 'c8ll_' + (currentUser && currentUser.uid);
-  function saveLS(){ try{ if(S) localStorage.setItem(LSK(), JSON.stringify({ startedAt: S.startedAt, endsAt: S.endsAt, viewers: S.viewers, names: S.names, reply: S.reply || null })); else localStorage.removeItem(LSK()); }catch(_){} }
+  function saveLS(){ try{ if(S) localStorage.setItem(LSK(), JSON.stringify({ startedAt: S.startedAt, endsAt: S.endsAt, viewers: S.viewers, names: S.names })); else localStorage.removeItem(LSK()); }catch(_){} }
 
   async function friends(){
     let uids = []; try{ uids = [...followingSet]; }catch(_){}
@@ -19988,10 +19783,9 @@ c8ApplyFriendsView();
 
   function ptOf(p){ return { a: +p.coords.latitude.toFixed(6), o: +p.coords.longitude.toFixed(6), t: Date.now() }; }
 
-  async function start(viewers, names, mins, pos, opts){
-    opts = opts || {};
+  async function start(viewers, names, mins, pos){
     const now = Date.now(), p = ptOf(pos);
-    S = { uid: currentUser.uid, viewers, names, startedAt: now, endsAt: opts.endsAt || (now + mins*60000), pts: [p], pend: [], dist: 0, last: p, lastWrite: now, lastWritePt: p, spd: 0, watch: null, tick: null, ui: null, reply: opts.reply || null, back: {}, sel: null };
+    S = { uid: currentUser.uid, viewers, names, startedAt: now, endsAt: now + mins*60000, pts: [p], pend: [], dist: 0, last: p, lastWrite: now, lastWritePt: p, spd: 0, watch: null, tick: null, ui: null };
     await ref(currentUser.uid).set({
       uid: currentUser.uid, name: currentUser.name || '', photo: myPhoto(), viewers, active: true,
       startedAt: now, endsAt: S.endsAt, lat: p.a, lng: p.o, acc: Math.round(pos.coords.accuracy || 0), spd: 0, at: now, dist: 0, pts: [p]
@@ -19999,7 +19793,7 @@ c8ApplyFriendsView();
     viewers.forEach(v => { try{ createNotification(v, 'liveloc', { endsAt: S.endsAt }); }catch(_){} });
     saveLS();
     run();
-    if(!opts.silent) openOwnerScreen();
+    openOwnerScreen();
   }
 
   function run(){
@@ -20008,94 +19802,8 @@ c8ApplyFriendsView();
     if(S.watch == null && navigator.geolocation){
       S.watch = navigator.geolocation.watchPosition(onPos, e=>console.warn('poloha', e), { enableHighAccuracy: true, maximumAge: 2000, timeout: 30000 });
     }
-    if(!S.tick) S.tick = setInterval(()=>{ if(!S) return; if(Date.now() >= S.endsAt){ stop(!!S.reply); return; } updateOwnerUI(); }, 1000);
-    if(!S.backTick){ S.backTick = setInterval(()=>{ watchBack(); checkReply(); }, 20000); setTimeout(()=>{ watchBack(); }, 500); }
+    if(!S.tick) S.tick = setInterval(()=>{ if(!S) return; if(Date.now() >= S.endsAt){ stop(); return; } updateOwnerUI(); }, 1000);
     updateProfileBtn();
-  }
-
-  // ----- priatelia, ktorí mi naspäť ukazujú svoju polohu -----
-  function watchBack(){
-    if(!S) return;
-    S.back = S.back || {};
-    (S.viewers || []).forEach(uid=>{
-      const b = S.back[uid] = S.back[uid] || { uid, data: null, unsub: null, mk: null };
-      if(b.unsub) return;
-      const me = S.uid, s0 = S;
-      try{
-        b.unsub = ref(uid).onSnapshot(d=>{
-          if(S !== s0) return;
-          const x = d.exists ? d.data() : null;
-          const ok = !!(x && x.active && Date.now() < x.endsAt && Array.isArray(x.viewers) && x.viewers.includes(me));
-          const was = !!b.data;
-          b.data = ok ? x : null;
-          if(ok && !S.sel) S.sel = uid;
-          if(!ok && S.sel === uid) S.sel = Object.keys(S.back).find(k => S.back[k].data) || null;
-          if(!ok && b.mk){ try{ b.mk.remove(); }catch(_){} b.mk = null; }
-          if(ok !== was) updateOwnerUI();
-        }, ()=>{ // nemám prístup (ešte mi nezdieľa) – skúsim znova neskôr
-          if(S !== s0) return;
-          b.unsub = null; if(b.data){ b.data = null; if(S.sel === uid) S.sel = null; } if(b.mk){ try{ b.mk.remove(); }catch(_){} b.mk = null; }
-          updateOwnerUI();
-        });
-      }catch(_){ b.unsub = null; }
-    });
-  }
-  function unwatchBack(s){
-    try{ clearInterval(s.backTick); }catch(_){}
-    Object.values(s.back || {}).forEach(b=>{ try{ b.unsub && b.unsub(); }catch(_){} });
-  }
-  // keď ukazujem polohu iba ako odpoveď niekomu a on svoje zdieľanie vypne, vypnem aj ja
-  function checkReply(){
-    if(!S || !S.reply) return;
-    const s0 = S, who = S.reply;
-    ref(who).get().then(d=>{
-      if(S !== s0) return;
-      const x = d.exists ? d.data() : null;
-      if(!x || !x.active || Date.now() >= x.endsAt) stop(true);
-    }).catch(e=>{ if(S === s0 && e && e.code === 'permission-denied') stop(true); });
-  }
-  function backList(){ return S && S.back ? Object.values(S.back).filter(b => b.data) : []; }
-  function renderBack(){
-    if(!S || !S.ui) return;
-    const r = S.ui.root, list = backList();
-    const names = Object.values(S.names || {}).join(', ') || T('Iba ty – nikto ťa nevidí');
-    const wn = r.querySelector('.c8ll-who-names');
-    if(wn) wn.textContent = list.length ? list.map(b => b.data.name || '').join(', ') + ' ' + T('ti ukazuje svoju polohu') : names;
-    const has = list.length > 0;
-    r.querySelector('.o-big').style.display = has ? '' : 'none';
-    r.querySelector('.o-acts').style.display = has ? '' : 'none';
-    if(!S.sel || !S.back[S.sel] || !S.back[S.sel].data) S.sel = has ? list[0].uid : null;
-    const sel = S.sel ? S.back[S.sel] : null;
-    const me = S.cur || S.last;
-    if(sel && me){
-      const dd = dist(me, { a: sel.data.lat, o: sel.data.lng });
-      r.querySelector('.v-f').textContent = dd < 1000 ? Math.round(dd) + ' m' : km(dd) + ' km';
-      r.querySelector('.v-fl').textContent = (sel.data.name || '') + ' · ' + T('od teba');
-    }
-    const m = S.ui.map; if(!m || !window.L) return;
-    list.forEach(b=>{
-      const x = b.data, stale = Date.now() - (x.at || 0) > 60000;
-      let tag = x.name || '';
-      if(me){ const dd = dist(me, { a: x.lat, o: x.lng }); tag += ' · ' + (dd < 1000 ? Math.round(dd) + ' m' : km(dd) + ' km'); }
-      if(!b.mk){
-        b.mk = L.marker([x.lat, x.lng], { icon: pinIcon(x.name, x.photo, stale, tag), zIndexOffset: 50 }).addTo(m);
-        b.mk.on('click', ()=>{ if(S){ S.sel = b.uid; renderBack(); } });
-
-      } else { b.mk.setLatLng([x.lat, x.lng]); b.mk.setIcon(pinIcon(x.name, x.photo, stale, tag)); }
-    });
-    if(sel && me){
-      const ll = [[me.a, me.o], [sel.data.lat, sel.data.lng]];
-      if(!S.ui.dash) S.ui.dash = L.polyline(ll, { color: '#2563EB', weight: 3, opacity: .85, dashArray: '7 8', className: 'c8ll-dash' }).addTo(m);
-      else S.ui.dash.setLatLngs(ll);
-    } else if(S.ui.dash){ try{ S.ui.dash.remove(); }catch(_){} S.ui.dash = null; }
-  }
-  function fitOwner(){
-    if(!S || !S.ui || !S.ui.map) return;
-    const me = S.cur || S.last, pts = [];
-    if(me) pts.push([me.a, me.o]);
-    backList().forEach(b=>pts.push([b.data.lat, b.data.lng]));
-    if(pts.length === 1) S.ui.map.setView(pts[0], 16);
-    else if(pts.length > 1) S.ui.map.fitBounds(pts, { paddingTopLeft: [50, 120], paddingBottomRight: [140, 230], maxZoom: 17 });
   }
 
   function onPos(pos){
@@ -20129,29 +19837,16 @@ c8ApplyFriendsView();
     removePill();
     if(S.ui){ S.ui.root.style.display = ''; setTimeout(()=>S.ui.map && S.ui.map.invalidateSize(), 50); return; }
     const root = el(`<div class="c8ll-scr"><div class="c8ll-map"></div>
-      <div class="c8ll-tw ownw"><div class="c8ll-topc own"><span class="c8ll-dot"></span><div style="min-width:0"><b>${esc(T('Zdieľaš polohu'))}</b><small class="c8ll-who-names"></small></div></div></div>
-      <button class="c8ll-fab offb c8ll-off" type="button">${esc(T('Vypnúť'))}</button>
-      <button class="c8ll-fab fit" type="button" title="${esc(T('Ukázať všetkých na mape'))}">🎯</button>
-      <div class="c8ll-sh">
-        <div class="c8ll-hdr"><div class="c8ll-big o-big" style="display:none"><b class="v-f">–</b><small class="v-fl"></small></div>
-          <div class="c8ll-ms"><div><b class="v-d">0,0 km</b><small>${esc(T('trasa'))}</small></div><div><b class="v-t">0:00</b><small>${esc(T('čas'))}</small></div><div><b class="v-s">0 km/h</b><small>${esc(T('rýchlosť'))}</small></div></div></div>
-        <div class="c8ll-acts o-acts" style="display:none"><button type="button" class="c8ll-navb nav">${esc(T('🧭 Navigovať'))}</button><button type="button" class="c8ll-ib msg b-msg" title="${esc(T('Napísať správu'))}">💬</button><button type="button" class="c8ll-ib call b-call" title="${esc(T('Zavolať'))}">📞</button></div>
-        <button type="button" class="c8ll-hide b-hide">${esc(T('▾ Skryť mapu'))}</button>
+      <div class="c8ll-top"><span class="c8ll-dot"></span><div style="min-width:0"><b>${esc(T('Zdieľaš polohu'))}</b><small class="c8ll-who-names"></small></div><button class="c8ll-off" type="button">${esc(T('Vypnúť'))}</button></div>
+      <div class="c8ll-bot"><div class="c8ll-grab"></div>
+        <div class="c8ll-stats"><div><b class="v-d">0,0 km</b><small>${esc(T('trasa'))}</small></div><div><b class="v-t">0:00</b><small>${esc(T('čas'))}</small></div><div><b class="v-s">0 km/h</b><small>${esc(T('rýchlosť'))}</small></div></div>
+        <div class="c8ll-row"><button type="button" class="b-hide">${esc(T('▾ Skryť mapu'))}</button></div>
         <div class="c8ll-note">${esc(T('Obrazovka ostane zapnutá, kým zdieľanie beží.'))}</div></div></div>`);
     document.body.appendChild(root);
     S.ui = { root, map: null, line: null, mk: null, follow: true };
     root.querySelector('.c8ll-who-names').textContent = Object.values(S.names || {}).join(', ') || T('Iba ty – nikto ťa nevidí');
     root.querySelector('.c8ll-off').onclick = ()=>{ if(confirm(T('Naozaj vypnúť zdieľanie polohy?'))) stop(); };
     root.querySelector('.b-hide').onclick = ()=>{ root.style.display = 'none'; showPill(); };
-    root.querySelector('.fit').onclick = ()=>{
-      if(!S || !S.ui || !S.ui.map) return;
-      if(S.ui.follow && backList().length){ S.ui.follow = false; fitOwner(); }   // ukáž oboch
-      else { S.ui.follow = true; const c = S.cur || S.last; if(c) S.ui.map.setView([c.a, c.o], 16); } // späť: sleduj mňa
-    };
-    const backUser = ()=>{ const b = S && S.sel && S.back && S.back[S.sel]; return b && b.data ? { uid: S.sel, name: b.data.name || '', photoURL: b.data.photo || null } : null; };
-    root.querySelector('.nav').onclick = ()=>{ const b = S && S.sel && S.back && S.back[S.sel]; if(!b || !b.data) return; window.open('https://www.google.com/maps/dir/?api=1&destination=' + b.data.lat + ',' + b.data.lng, '_blank', 'noopener'); };
-    root.querySelector('.b-msg').onclick = ()=>{ const u = backUser(); if(!u) return; root.style.display = 'none'; showPill(); try{ openChatWithUser(u); }catch(_){} };
-    root.querySelector('.b-call').onclick = ()=>{ const u = backUser(); if(!u) return; root.style.display = 'none'; showPill(); try{ startCall(u, 'audio'); }catch(_){} };
     loadLeaflet().then(()=>{
       if(!S || !S.ui) return;
       const m = mkMap(root.querySelector('.c8ll-map'));
@@ -20164,7 +19859,6 @@ c8ApplyFriendsView();
       m.setView([c.a, c.o], 16);
       m.on('dragstart', ()=>{ S && S.ui && (S.ui.follow = false); });
       setTimeout(()=>m.invalidateSize(), 60);
-      renderBack();
     }).catch(()=>{ root.querySelector('.c8ll-map').innerHTML = `<div style="padding:120px 20px;text-align:center;color:#666">${esc(T('Mapu sa nepodarilo načítať.'))}</div>`; });
     updateOwnerUI();
   }
@@ -20176,7 +19870,6 @@ c8ApplyFriendsView();
       r.querySelector('.v-d').textContent = km(S.dist) + ' km';
       r.querySelector('.v-t').textContent = dur(el2);
       r.querySelector('.v-s').textContent = Math.round(S.spd*3.6) + ' km/h';
-      renderBack();
       if(S.ui.map && S.ui.line){
         const c = S.cur || S.last;
         S.ui.line.setLatLngs(S.pts.map(p=>[p.a, p.o]).concat(S.cur ? [[S.cur.a, S.cur.o]] : []));
@@ -20194,7 +19887,6 @@ c8ApplyFriendsView();
   async function stop(silent){
     if(!S) return;
     const s = S; S = null;
-    unwatchBack(s);
     try{ if(s.watch != null) navigator.geolocation.clearWatch(s.watch); }catch(_){}
     clearInterval(s.tick);
     try{ window.c8WakeOff && c8WakeOff('liveloc'); }catch(_){}
@@ -20327,7 +20019,7 @@ c8ApplyFriendsView();
       if(!x.active || Date.now() >= x.endsAt){ await ref(currentUser.uid).delete().catch(()=>{}); try{ localStorage.removeItem(LSK()); }catch(_){} return; }
       const pts = Array.isArray(x.pts) ? x.pts : [];
       const last = pts[pts.length - 1] || { a: x.lat, o: x.lng, t: x.at };
-      S = { uid: currentUser.uid, viewers: x.viewers || [], names: (ls && ls.names) || {}, startedAt: x.startedAt, endsAt: x.endsAt, pts: pts.length ? pts : [last], pend: [], dist: x.dist || 0, last, lastWrite: 0, lastWritePt: last, spd: 0, watch: null, tick: null, ui: null, reply: (ls && ls.reply) || null, back: {}, sel: null };
+      S = { uid: currentUser.uid, viewers: x.viewers || [], names: (ls && ls.names) || {}, startedAt: x.startedAt, endsAt: x.endsAt, pts: pts.length ? pts : [last], pend: [], dist: x.dist || 0, last, lastWrite: 0, lastWritePt: last, spd: 0, watch: null, tick: null, ui: null };
       if(!Object.keys(S.names).length){ try{ (await friends()).forEach(f=>{ if(S.viewers.includes(f.uid)) S.names[f.uid] = f.name; }); }catch(_){} }
       run(); showPill();
     }catch(e){ console.warn('poloha – obnovenie', e); }
@@ -20347,14 +20039,11 @@ c8ApplyFriendsView();
   function openViewer(uid, name, photo){
     closeViewer();
     const root = el(`<div class="c8ll-scr"><div class="c8ll-map"></div>
-      <div class="c8ll-tw"><div class="c8ll-topc">${avHtml(name, photo, 'c8ll-av')}<div style="min-width:0"><b class="v-n"></b><small class="v-st">${esc(T('Načítavam mapu…'))}</small></div></div></div>
-      <button class="c8ll-fab x c8ll-x" type="button">✕</button>
-      <button class="c8ll-fab fit" type="button" title="${esc(T('Ukázať všetkých na mape'))}">🎯</button>
-      <div class="c8ll-sh">
-        <div class="c8ll-hdr"><div class="c8ll-big"><b class="v-f">–</b><small>${esc(T('od teba'))}</small></div>
-          <div class="c8ll-ms"><div><b class="v-d">–</b><small>${esc(T('trasa'))}</small></div><div><b class="v-t">–</b><small>${esc(T('čas'))}</small></div><div><b class="v-s">–</b><small>${esc(T('rýchlosť'))}</small></div></div></div>
-        <div class="c8ll-acts"><button type="button" class="c8ll-navb nav">${esc(T('🧭 Navigovať'))}</button><button type="button" class="c8ll-ib msg b-msg" title="${esc(T('Napísať správu'))}">💬</button><button type="button" class="c8ll-ib call b-call" title="${esc(T('Zavolať'))}">📞</button></div>
-        <button type="button" class="c8ll-share"></button></div></div>`);
+      <div class="c8ll-top viewer"><div class="c8ll-who">${avHtml(name, photo, 'c8ll-av')}<div style="min-width:0"><b class="v-n"></b><small class="v-st">${esc(T('Načítavam mapu…'))}</small></div></div><button class="c8ll-x" type="button" style="margin-left:auto">✕</button></div>
+      <div class="c8ll-bot"><div class="c8ll-grab"></div>
+        <div class="c8ll-stats"><div><b class="v-d">–</b><small>${esc(T('trasa'))}</small></div><div><b class="v-s">–</b><small>${esc(T('rýchlosť'))}</small></div><div><b class="v-f">–</b><small>${esc(T('od teba'))}</small></div></div>
+        <div class="c8ll-row"><button type="button" class="nav">${esc(T('🧭 Navigovať'))}</button></div>
+        <div class="c8ll-row"><button type="button" class="b-msg">${esc(T('💬 Napísať'))}</button><button type="button" class="b-call">${esc(T('📞 Zavolať'))}</button></div></div></div>`);
     root.querySelector('.v-n').textContent = name || '';
     document.body.appendChild(root);
     V = { uid, name, photo, root, map: null, mk: null, line: null, me: null, meWatch: null, unsub: null, data: null, fitted: false, follow: true, tick: null };
@@ -20363,13 +20052,6 @@ c8ApplyFriendsView();
     root.querySelector('.nav').onclick = ()=>{ const d = V && V.data; if(!d) return; window.open('https://www.google.com/maps/dir/?api=1&destination=' + d.lat + ',' + d.lng, '_blank', 'noopener'); };
     root.querySelector('.b-msg').onclick = ()=>{ closeViewer(); try{ openChatWithUser(user); }catch(_){} };
     root.querySelector('.b-call').onclick = ()=>{ closeViewer(); try{ startCall(user, 'audio'); }catch(_){} };
-    root.querySelector('.fit').onclick = ()=>{
-      if(!V || !V.map || !V.data) return;
-      if(V.follow && V.mePos){ V.follow = false; fitViewer(); }        // ukáž oboch
-      else { V.follow = true; V.map.setView([V.data.lat, V.data.lng], 16); } // späť: sleduj priateľa
-    };
-    root.querySelector('.c8ll-share').onclick = (e)=>{ if(e.target.closest('.st')){ stopShareBack(); return; } if(!e.currentTarget.classList.contains('on')) shareBack(); };
-    renderShareBtn();
     try{ window.c8WakeOn && c8WakeOn('llview'); }catch(_){}
     loadLeaflet().then(()=>{
       if(!V || V.root !== root) return;
@@ -20401,8 +20083,6 @@ c8ApplyFriendsView();
     const st = V.root.querySelector('.v-st'); st.innerHTML = `<span class="c8ll-stale">${esc(T('Zdieľanie polohy skončilo.'))}</span>`;
     V.root.querySelector('.nav').disabled = true;
     if(V.mk) V.mk.setIcon(pinIcon(V.name, V.photo, true));
-    if(S && S.reply === V.uid) stop(true).then(renderShareBtn);
-    const sb = V.root.querySelector('.c8ll-share'); if(sb){ sb.style.display = 'none'; }
   }
   function render(){
     if(!V || !V.data || V.ended) return;
@@ -20410,9 +20090,7 @@ c8ApplyFriendsView();
     const st = V.root.querySelector('.v-st');
     st.innerHTML = stale ? `<span class="c8ll-stale">● ${esc(T('posledná poloha pred'))} ${esc(ago(age))}</span>` : `<span class="c8ll-live">● ${esc(T('naživo'))}</span> · ${esc(T('aktualizované pred'))} ${esc(ago(age))}`;
     V.root.querySelector('.v-d').textContent = km(d.dist || 0) + ' km';
-    V.root.querySelector('.v-t').textContent = d.startedAt ? dur(now - d.startedAt) : '–';
     V.root.querySelector('.v-s').textContent = stale ? '–' : Math.round((d.spd || 0)*3.6) + ' km/h';
-    renderShareBtn();
     const pos = { a: d.lat, o: d.lng };
     V.root.querySelector('.v-f').textContent = V.mePos ? (dist(V.mePos, pos) < 1000 ? Math.round(dist(V.mePos, pos)) + ' m' : km(dist(V.mePos, pos)) + ' km') : '–';
     if(!V.map) return;
@@ -20433,65 +20111,6 @@ c8ApplyFriendsView();
     try{ V.map && V.map.remove(); }catch(_){}
     V.root.remove(); V = null;
     try{ window.c8WakeOff && c8WakeOff('llview'); }catch(_){}
-    if(S && !(S.ui && S.ui.root.style.display !== 'none') && !document.querySelector('.c8ll-pill')) showPill();
-  }
-  function fitViewer(){
-    if(!V || !V.map || !V.data) return;
-    const pts = [[V.data.lat, V.data.lng]];
-    if(V.mePos) pts.push([V.mePos.a, V.mePos.o]);
-    if(pts.length === 1) V.map.setView(pts[0], 16);
-    else V.map.fitBounds(pts, { paddingTopLeft: [50, 120], paddingBottomRight: [140, 250], maxZoom: 17 });
-  }
-  // ----- tlačidlo „Ukázať moju polohu“ (zdieľanie naspäť) -----
-  function renderShareBtn(){
-    if(!V) return;
-    const b = V.root.querySelector('.c8ll-share'); if(!b || b.dataset.busy) return;
-    const on = !!(S && (S.viewers || []).includes(V.uid));
-    if(on){
-      b.classList.add('on');
-      b.innerHTML = `<span class="l"><span class="pz"></span><span></span></span><span class="st" role="button">${esc(T('Prestať'))}</span>`;
-      b.querySelector('.l span:last-child').textContent = (V.name || '') + ' ' + T('ťa vidí');
-    } else {
-      b.classList.remove('on');
-      b.textContent = T('📍 Ukázať moju polohu');
-    }
-  }
-  async function shareBack(){
-    if(!V || !V.data || V.ended) return;
-    const b = V.root.querySelector('.c8ll-share');
-    const uid = V.uid, name = V.name || '', endsAt = V.data.endsAt;
-    if(!navigator.geolocation){ alert(T('Tento prehliadač nevie zistiť polohu.')); return; }
-    b.disabled = true; b.dataset.busy = '1'; b.textContent = T('Zisťujem polohu…');
-    try{
-      if(S){
-        // už zdieľam polohu (s inými) – pridám aj tohto priateľa
-        if(!S.viewers.includes(uid)){
-          await ref(S.uid).update({ viewers: firebase.firestore.FieldValue.arrayUnion(uid) });
-          S.viewers.push(uid); S.names[uid] = name; saveLS();
-          try{ createNotification(uid, 'liveloc', { endsAt: S.endsAt }); }catch(_){}
-          watchBack();
-        }
-      } else {
-        const pos = await new Promise((res, rej)=> navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }));
-        const names = {}; names[uid] = name;
-        await start([uid], names, 0, pos, { silent: true, endsAt: Math.max(Date.now() + 60000, endsAt || 0), reply: uid });
-      }
-    }catch(e){
-      console.error(e);
-      alert((e && (e.code === 1 || e.code === 2 || e.code === 3)) ? T('Polohu sa nepodarilo zistiť. Povoľ prístup k polohe v prehliadači.') : T('Zdieľanie sa nepodarilo spustiť.'));
-    }
-    b.disabled = false; delete b.dataset.busy; renderShareBtn();
-  }
-  async function stopShareBack(){
-    if(!S || !V) return;
-    const uid = V.uid;
-    if(S.reply === uid || (S.viewers.length === 1 && S.viewers[0] === uid)){ await stop(true); }
-    else {
-      S.viewers = S.viewers.filter(v => v !== uid); delete S.names[uid]; saveLS();
-      try{ await ref(S.uid).update({ viewers: firebase.firestore.FieldValue.arrayRemove(uid) }); }catch(e){ console.warn(e); }
-    }
-    removePill();
-    renderShareBtn();
   }
   window.c8LiveLocView = openViewer;
 
@@ -20545,16 +20164,14 @@ c8ApplyFriendsView();
   // ======================================================================
   try{
     const _nt = notifText;
-    notifText = function(n){ if(n && n.type === 'liveloc') return `📍 <b>${esc(n.fromName || '')}</b> ${esc(T(isBackShare(n) ? 'ti ukazuje svoju polohu naživo' : 's tebou zdieľa svoju polohu naživo'))}`; return _nt.apply(this, arguments); };
+    notifText = function(n){ if(n && n.type === 'liveloc') return `📍 <b>${esc(n.fromName || '')}</b> ${esc(T('s tebou zdieľa svoju polohu naživo'))}`; return _nt.apply(this, arguments); };
     const _ont = openNotificationTarget;
     openNotificationTarget = function(id){
       const n = (cachedNotifications || []).find(x=>x.id === id);
-      if(n && n.type === 'liveloc'){ try{ closeNotifModal(); }catch(_){} if(isBackShare(n)){ closeViewer(); openOwnerScreen(); } else openViewer(n.fromUid, n.fromName, n.fromPhoto || null); return; }
+      if(n && n.type === 'liveloc'){ try{ closeNotifModal(); }catch(_){} openViewer(n.fromUid, n.fromName, n.fromPhoto || null); return; }
       return _ont.apply(this, arguments);
     };
   }catch(_){}
-  // upozornenie od priateľa, s ktorým práve JA zdieľam polohu = ukazuje mi svoju naspäť
-  function isBackShare(n){ return !!(S && n && n.fromUid && (S.viewers || []).includes(n.fromUid)); }
   // keď príde nové upozornenie o zdieľaní polohy, ukáž hore lištu
   const toasted = new Set();
   setInterval(()=>{
@@ -20563,13 +20180,10 @@ c8ApplyFriendsView();
       if(!n || n.type !== 'liveloc' || n.read || toasted.has(n.id)) return;
       toasted.add(n.id);
       if(Date.now() - (n.createdAt || 0) > 10*60000 || (n.endsAt && Date.now() > n.endsAt)) return;
-      const back = isBackShare(n);
-      const t0 = el(`<div class="c8ll-toast">${avHtml(n.fromName, n.fromPhoto, 'c8ll-av')}<div style="min-width:0">📍 <b></b> ${esc(T(back ? 'ti ukazuje svoju polohu naživo' : 's tebou zdieľa svoju polohu naživo'))}</div><button type="button">${esc(T('Zobraziť'))}</button></div>`);
+      const t0 = el(`<div class="c8ll-toast">${avHtml(n.fromName, n.fromPhoto, 'c8ll-av')}<div style="min-width:0">📍 <b></b> ${esc(T('s tebou zdieľa svoju polohu naživo'))}</div><button type="button">${esc(T('Zobraziť'))}</button></div>`);
       t0.querySelector('b').textContent = n.fromName || '';
-      t0.querySelector('button').onclick = ()=>{ t0.remove(); if(back && S){ closeViewer(); openOwnerScreen(); try{ watchBack(); }catch(_){} } else openViewer(n.fromUid, n.fromName, n.fromPhoto || null); };
-      if(back){ try{ watchBack(); }catch(_){} }
+      t0.querySelector('button').onclick = ()=>{ t0.remove(); openViewer(n.fromUid, n.fromName, n.fromPhoto || null); };
       document.body.appendChild(t0); setTimeout(()=>t0.remove(), 15000);
-      try{ if(typeof playLocationShareSound === 'function') playLocationShareSound(); }catch(_){} // zapípa pri upozornení
     });
   }, 3000);
 
@@ -20579,7 +20193,7 @@ c8ApplyFriendsView();
     doLogout = function(){ const a = arguments, self = this; if(S){ stop(true).finally(()=>_lo.apply(self, a)); return; } return _lo.apply(this, arguments); };
   }catch(_){}
   // ---------- štart ----------
-  setInterval(()=>{ try{ if(S && (!currentUser || currentUser.uid !== S.uid)){ const s = S; S = null; try{ navigator.geolocation.clearWatch(s.watch); }catch(_){} clearInterval(s.tick); try{ unwatchBack(s); }catch(_){} try{ c8WakeOff('liveloc'); }catch(_){} removePill(); if(s.ui) s.ui.root.remove(); } if(currentUser && db) tryResume(); else resumedFor = null; }catch(_){} }, 2000);
+  setInterval(()=>{ try{ if(S && (!currentUser || currentUser.uid !== S.uid)){ const s = S; S = null; try{ navigator.geolocation.clearWatch(s.watch); }catch(_){} clearInterval(s.tick); try{ c8WakeOff('liveloc'); }catch(_){} removePill(); if(s.ui) s.ui.root.remove(); } if(currentUser && db) tryResume(); else resumedFor = null; }catch(_){} }, 2000);
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureBtn); else ensureBtn();
 })();
 </script>
