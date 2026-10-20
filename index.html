@@ -2293,9 +2293,6 @@
   #auth-screen #p-fan5 img.c8hc-m{ display:block; object-fit:cover; object-position:top center; }
 }
 </style>
-<style id="c8-onefs">
-@media(min-width:1520px){ #app .c8h.c8-one .mode-dock button{font-size:var(--c8-onefs,12.5px)!important;} #app .c8h.c8-one .mode-dock .ml{white-space:nowrap;} }
-</style>
 </head>
 <body>
 
@@ -17475,29 +17472,8 @@ function c8LayoutHeader(){
   if(window.innerWidth <= 900){ tb.classList.remove('c8-one'); return; }
   tb.classList.add('c8-one');
   const dock = tb.querySelector('.mode-dock');
-  // dlhšie popisky (napr. PL "Użytkownicy", HU "Felhasználók"): na širokom PC
-  // má lišta pevnú šírku 608px - rozšír ju len o toľko, koľko treba, prípadne
-  // trochu zmenši písmo, aby ostala 1-riadková hlavička ako pri ostatných jazykoch
-  let overlap = false;
-  if(dock){
-    dock.style.width = ''; tb.style.removeProperty('--c8-onefs');
-    if(window.innerWidth >= 1520 && dock.scrollWidth > dock.clientWidth + 1){
-      const btns = Array.from(dock.querySelectorAll(':scope > button'));
-      const need = () => { let m = 0; btns.forEach(b => { const l = b.querySelector('.ml') || b; const rg = document.createRange(); rg.selectNodeContents(l); m = Math.max(m, rg.getBoundingClientRect().width); }); return Math.ceil(btns.length * (m + 10)); };
-      const others = ['.search-box', '.user-stats', '.c8h-date'].map(q => tb.querySelector(q)).filter(Boolean);
-      const hits = () => { const r = dock.getBoundingClientRect(); return others.some(o => { const q = o.getBoundingClientRect(); return q.width && q.right > r.left - 4 && q.left < r.right + 4; }); };
-      let fs = 12.5;
-      for(let i = 0; i < 6; i++){
-        const w = need();
-        dock.style.width = Math.max(608, w) + 'px';
-        if(!hits() || fs <= 10.5) break;
-        fs -= 0.5; tb.style.setProperty('--c8-onefs', fs + 'px');
-      }
-      overlap = hits();
-    }
-  }
   const fits = tb.scrollWidth <= tb.clientWidth + 1 && (!dock || dock.scrollWidth <= dock.clientWidth + 1);
-  if(!fits || overlap){ tb.classList.remove('c8-one'); if(dock) dock.style.width = ''; tb.style.removeProperty('--c8-onefs'); }
+  if(!fits) tb.classList.remove('c8-one');
   if(typeof updateTopbarHeightVar === 'function') updateTopbarHeightVar();
 }
 window.addEventListener('resize', c8LayoutHeader);
@@ -18172,11 +18148,6 @@ c8ApplyFriendsView();
 .c8holo-x{background:transparent;border:1px solid #12304A;color:#9FD3E0;border-radius:10px;width:34px;height:34px;font-size:16px;cursor:pointer;}
 .c8holo-stage{width:100%;max-width:340px;aspect-ratio:3/4;margin:0 auto;position:relative;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;}
 .c8holo-stage canvas{width:100%;height:100%;display:block;}
-.c8holo-wm{position:absolute;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:.45em;white-space:nowrap;text-decoration:none;color:#CBD5E1;font-family:Inter,system-ui,sans-serif;font-weight:500;line-height:1;z-index:2;cursor:pointer;}
-.c8holo-wm img{width:1.45em;height:1.45em;border-radius:50%;background:rgba(255,255,255,.92);}
-.c8holo-wm b{color:#fff;font-weight:800;margin-left:-.15em;}
-.c8holo-wm b i{color:#22C55E;font-style:normal;}
-.c8holo-wm:hover b{text-decoration:underline;}
 .c8holo-hint{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);font-size:11px;letter-spacing:.12em;color:#7FA9B8;white-space:nowrap;pointer-events:none;}
 .c8holo-sec{border-top:1px solid #12304A;margin-top:14px;padding-top:14px;display:flex;flex-direction:column;gap:10px;}
 .c8holo-sec h4{margin:0;font-size:14px;color:#9FE9FF;letter-spacing:.04em;}
@@ -18269,29 +18240,8 @@ c8ApplyFriendsView();
   let segResolve = null;
 
   function $(id){ return document.getElementById(id); }
-
-  // ---------- preklady hologramu (EN, CZ, PL, HU, AT, DE, IT) ----------
-  (function(){
-    const add = (dict, map) => { if(!dict) return; Object.keys(map).forEach(k => { if(!Object.prototype.hasOwnProperty.call(dict, k)) dict[k] = map[k]; }); };
-    try{ add(UI_DICT_EN, {"✨ Môj hologram": "✨ My hologram", "Ukáž môj hologram každému, kto príde na môj profil": "Show my hologram to everyone who visits my profile", "📤 Zdieľať môj hologram na Plochu": "📤 Share my hologram to the Feed", "🗑 Vymazať hologram": "🗑 Delete hologram", "Vytvoriť hologram": "Create hologram", "1. Z 2 fotiek": "1. From 2 photos", "Odfoť sa spredu a zozadu. Postava bude stále spredu, otočiť sa dá myšou alebo prstom.": "Take a photo of yourself from the front and the back. The figure always faces forward and can be turned with the mouse or a finger.", "📷 Fotka spredu": "📷 Front photo", "📷 Fotka zozadu": "📷 Back photo", "Vytvoriť z fotiek": "Create from photos", "2. Z videa (max 20 s)": "2. From a video (max 20 s)", "Nahraj krátke video, kde hovoríš a hýbeš sa. Hologram bude aj so zvukom.": "Upload a short video of yourself talking and moving. The hologram will include sound.", "🎥 Vybrať video": "🎥 Choose video", "Vytvoriť z videa": "Create from video", "Tip: stoj pred jednoduchou stenou, mobil maj položený, svetlo spredu a celú postavu v zábere.": "Tip: stand in front of a plain wall, keep the phone steady, light from the front and your whole body in the shot.", "Spredu": "Front", "Zozadu": "Back", "Video": "Video", "Nepodarilo sa načítať nástroj na vystrihnutie postavy.": "Could not load the figure cut-out tool.", "Fotku sa nepodarilo načítať.": "Could not load the photo.", "Na fotke sa nepodarilo nájsť postavu. Skús fotku s celou postavou pred jednoduchým pozadím.": "No person was found in the photo. Try a photo of your whole body against a plain background.", "Video sa nepodarilo načítať.": "Could not load the video.", "Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.": "This browser cannot record video. Try Chrome or an up-to-date Safari.", "potiahni a otoč": "drag to rotate", "Hologram sa nepodarilo načítať": "Could not load the hologram", "Vytvoriť nový hologram (nahradí terajší)": "Create a new hologram (replaces the current one)", "Ukážka beží bez zvuku. Návštevníci ho uvidia aj so zvukom.": "The preview plays without sound. Visitors will see it with sound.", "Vyber aspoň fotku spredu.": "Choose at least the front photo.", "Nahrávanie nie je nastavené.": "Uploading is not set up.", "Načítavam nástroj na vystrihnutie postavy…": "Loading the figure cut-out tool…", "Vystrihujem postavu spredu…": "Cutting out the figure (front)…", "Vystrihujem postavu zozadu…": "Cutting out the figure (back)…", "Nahrávam hologram…": "Uploading hologram…", "Nahrávam…": "Uploading…", "Ukladám do profilu…": "Saving to profile…", "✓ Hologram je hotový": "✓ Hologram is ready", "Hologram sa nepodarilo vytvoriť.": "Could not create the hologram.", "Najprv vyber video.": "Choose a video first.", "Video je príliš veľké (max 50 MB).": "The video is too large (max 50 MB).", "Tento prehliadač nepodporuje spracovanie zvuku.": "This browser does not support audio processing.", "Video je dlhšie ako 20 s, použijem prvých 20 sekúnd…": "The video is longer than 20 s, using the first 20 seconds…", "Vytváram hologram…": "Creating hologram…", "✓ Návštevníci tvojho profilu uvidia hologram.": "✓ Visitors to your profile will see the hologram.", "Hologram sa návštevníkom nezobrazí.": "The hologram will not be shown to visitors.", "⚠️ Nepodarilo sa uložiť.": "⚠️ Could not save.", "Klikni ešte raz na „Vymazať hologram“ pre potvrdenie.": "Click „Delete hologram“ once more to confirm.", "Hologram bol vymazaný.": "The hologram has been deleted.", "⚠️ Nepodarilo sa vymazať.": "⚠️ Could not delete.", "Zdieľam…": "Sharing…", "✨ Môj hologram na Connect8": "✨ My hologram on Connect8", "✓ Zdieľané na Plochu": "✓ Shared to the Feed", "Hologram je na Ploche, uvidia ho všetci.": "The hologram is in the Feed, everyone will see it.", "✕ Zavrieť": "✕ Close", "🔊 Zapnúť zvuk": "🔊 Turn on sound", "🔊 Prehrať so zvukom": "🔊 Play with sound", "▶ Prehrať": "▶ Play", "▶ Prehrať znova": "▶ Play again"}); }catch(_){}
-    try{ add(UI_DICT_CZ, {"✨ Môj hologram": "✨ Můj hologram", "Ukáž môj hologram každému, kto príde na môj profil": "Ukaž můj hologram každému, kdo přijde na můj profil", "📤 Zdieľať môj hologram na Plochu": "📤 Sdílet můj hologram na Plochu", "🗑 Vymazať hologram": "🗑 Smazat hologram", "Vytvoriť hologram": "Vytvořit hologram", "1. Z 2 fotiek": "1. Ze 2 fotek", "Odfoť sa spredu a zozadu. Postava bude stále spredu, otočiť sa dá myšou alebo prstom.": "Vyfoť se zepředu a zezadu. Postava bude stále zepředu, otočit se dá myší nebo prstem.", "📷 Fotka spredu": "📷 Fotka zepředu", "📷 Fotka zozadu": "📷 Fotka zezadu", "Vytvoriť z fotiek": "Vytvořit z fotek", "2. Z videa (max 20 s)": "2. Z videa (max 20 s)", "Nahraj krátke video, kde hovoríš a hýbeš sa. Hologram bude aj so zvukom.": "Nahraj krátké video, kde mluvíš a hýbeš se. Hologram bude i se zvukem.", "🎥 Vybrať video": "🎥 Vybrat video", "Vytvoriť z videa": "Vytvořit z videa", "Tip: stoj pred jednoduchou stenou, mobil maj položený, svetlo spredu a celú postavu v zábere.": "Tip: stůj před jednoduchou stěnou, mobil měj položený, světlo zepředu a celou postavu v záběru.", "Spredu": "Zepředu", "Zozadu": "Zezadu", "Video": "Video", "Nepodarilo sa načítať nástroj na vystrihnutie postavy.": "Nepodařilo se načíst nástroj na vystřižení postavy.", "Fotku sa nepodarilo načítať.": "Fotku se nepodařilo načíst.", "Na fotke sa nepodarilo nájsť postavu. Skús fotku s celou postavou pred jednoduchým pozadím.": "Na fotce se nepodařilo najít postavu. Zkus fotku s celou postavou před jednoduchým pozadím.", "Video sa nepodarilo načítať.": "Video se nepodařilo načíst.", "Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.": "Tento prohlížeč neumí nahrávat video. Zkus Chrome nebo aktuální Safari.", "potiahni a otoč": "potáhni a otoč", "Hologram sa nepodarilo načítať": "Hologram se nepodařilo načíst", "Vytvoriť nový hologram (nahradí terajší)": "Vytvořit nový hologram (nahradí stávající)", "Ukážka beží bez zvuku. Návštevníci ho uvidia aj so zvukom.": "Ukázka běží bez zvuku. Návštěvníci ho uvidí i se zvukem.", "Vyber aspoň fotku spredu.": "Vyber aspoň fotku zepředu.", "Nahrávanie nie je nastavené.": "Nahrávání není nastaveno.", "Načítavam nástroj na vystrihnutie postavy…": "Načítám nástroj na vystřižení postavy…", "Vystrihujem postavu spredu…": "Vystřihuji postavu zepředu…", "Vystrihujem postavu zozadu…": "Vystřihuji postavu zezadu…", "Nahrávam hologram…": "Nahrávám hologram…", "Nahrávam…": "Nahrávám…", "Ukladám do profilu…": "Ukládám do profilu…", "✓ Hologram je hotový": "✓ Hologram je hotový", "Hologram sa nepodarilo vytvoriť.": "Hologram se nepodařilo vytvořit.", "Najprv vyber video.": "Nejdřív vyber video.", "Video je príliš veľké (max 50 MB).": "Video je příliš velké (max 50 MB).", "Tento prehliadač nepodporuje spracovanie zvuku.": "Tento prohlížeč nepodporuje zpracování zvuku.", "Video je dlhšie ako 20 s, použijem prvých 20 sekúnd…": "Video je delší než 20 s, použiji prvních 20 sekund…", "Vytváram hologram…": "Vytvářím hologram…", "✓ Návštevníci tvojho profilu uvidia hologram.": "✓ Návštěvníci tvého profilu uvidí hologram.", "Hologram sa návštevníkom nezobrazí.": "Hologram se návštěvníkům nezobrazí.", "⚠️ Nepodarilo sa uložiť.": "⚠️ Nepodařilo se uložit.", "Klikni ešte raz na „Vymazať hologram“ pre potvrdenie.": "Klikni ještě jednou na „Smazat hologram“ pro potvrzení.", "Hologram bol vymazaný.": "Hologram byl smazán.", "⚠️ Nepodarilo sa vymazať.": "⚠️ Nepodařilo se smazat.", "Zdieľam…": "Sdílím…", "✨ Môj hologram na Connect8": "✨ Můj hologram na Connect8", "✓ Zdieľané na Plochu": "✓ Sdíleno na Plochu", "Hologram je na Ploche, uvidia ho všetci.": "Hologram je na Ploše, uvidí ho všichni.", "✕ Zavrieť": "✕ Zavřít", "🔊 Zapnúť zvuk": "🔊 Zapnout zvuk", "🔊 Prehrať so zvukom": "🔊 Přehrát se zvukem", "▶ Prehrať": "▶ Přehrát", "▶ Prehrať znova": "▶ Přehrát znovu"}); }catch(_){}
-    try{ add(UI_DICT_PL, {"✨ Môj hologram": "✨ Mój hologram", "Ukáž môj hologram každému, kto príde na môj profil": "Pokaż mój hologram każdemu, kto odwiedzi mój profil", "📤 Zdieľať môj hologram na Plochu": "📤 Udostępnij mój hologram na tablicy", "🗑 Vymazať hologram": "🗑 Usuń hologram", "Vytvoriť hologram": "Utwórz hologram", "1. Z 2 fotiek": "1. Z 2 zdjęć", "Odfoť sa spredu a zozadu. Postava bude stále spredu, otočiť sa dá myšou alebo prstom.": "Zrób sobie zdjęcie z przodu i z tyłu. Postać będzie zawsze przodem, obrócisz ją myszą lub palcem.", "📷 Fotka spredu": "📷 Zdjęcie z przodu", "📷 Fotka zozadu": "📷 Zdjęcie z tyłu", "Vytvoriť z fotiek": "Utwórz ze zdjęć", "2. Z videa (max 20 s)": "2. Z filmu (maks. 20 s)", "Nahraj krátke video, kde hovoríš a hýbeš sa. Hologram bude aj so zvukom.": "Wgraj krótki film, na którym mówisz i się ruszasz. Hologram będzie z dźwiękiem.", "🎥 Vybrať video": "🎥 Wybierz film", "Vytvoriť z videa": "Utwórz z filmu", "Tip: stoj pred jednoduchou stenou, mobil maj položený, svetlo spredu a celú postavu v zábere.": "Wskazówka: stań przed gładką ścianą, połóż telefon, światło z przodu i cała postać w kadrze.", "Spredu": "Przód", "Zozadu": "Tył", "Video": "Film", "Nepodarilo sa načítať nástroj na vystrihnutie postavy.": "Nie udało się wczytać narzędzia do wycinania postaci.", "Fotku sa nepodarilo načítať.": "Nie udało się wczytać zdjęcia.", "Na fotke sa nepodarilo nájsť postavu. Skús fotku s celou postavou pred jednoduchým pozadím.": "Nie znaleziono postaci na zdjęciu. Spróbuj zdjęcia całej postaci na prostym tle.", "Video sa nepodarilo načítať.": "Nie udało się wczytać filmu.", "Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.": "Ta przeglądarka nie potrafi nagrywać wideo. Spróbuj Chrome lub aktualnego Safari.", "potiahni a otoč": "przeciągnij i obróć", "Hologram sa nepodarilo načítať": "Nie udało się wczytać hologramu", "Vytvoriť nový hologram (nahradí terajší)": "Utwórz nowy hologram (zastąpi obecny)", "Ukážka beží bez zvuku. Návštevníci ho uvidia aj so zvukom.": "Podgląd jest bez dźwięku. Odwiedzający zobaczą go z dźwiękiem.", "Vyber aspoň fotku spredu.": "Wybierz przynajmniej zdjęcie z przodu.", "Nahrávanie nie je nastavené.": "Przesyłanie nie jest skonfigurowane.", "Načítavam nástroj na vystrihnutie postavy…": "Wczytuję narzędzie do wycinania postaci…", "Vystrihujem postavu spredu…": "Wycinam postać z przodu…", "Vystrihujem postavu zozadu…": "Wycinam postać z tyłu…", "Nahrávam hologram…": "Przesyłam hologram…", "Nahrávam…": "Przesyłam…", "Ukladám do profilu…": "Zapisuję w profilu…", "✓ Hologram je hotový": "✓ Hologram gotowy", "Hologram sa nepodarilo vytvoriť.": "Nie udało się utworzyć hologramu.", "Najprv vyber video.": "Najpierw wybierz film.", "Video je príliš veľké (max 50 MB).": "Film jest za duży (maks. 50 MB).", "Tento prehliadač nepodporuje spracovanie zvuku.": "Ta przeglądarka nie obsługuje przetwarzania dźwięku.", "Video je dlhšie ako 20 s, použijem prvých 20 sekúnd…": "Film jest dłuższy niż 20 s, użyję pierwszych 20 sekund…", "Vytváram hologram…": "Tworzę hologram…", "✓ Návštevníci tvojho profilu uvidia hologram.": "✓ Odwiedzający twój profil zobaczą hologram.", "Hologram sa návštevníkom nezobrazí.": "Hologram nie będzie wyświetlany odwiedzającym.", "⚠️ Nepodarilo sa uložiť.": "⚠️ Nie udało się zapisać.", "Klikni ešte raz na „Vymazať hologram“ pre potvrdenie.": "Kliknij jeszcze raz „Usuń hologram“, aby potwierdzić.", "Hologram bol vymazaný.": "Hologram został usunięty.", "⚠️ Nepodarilo sa vymazať.": "⚠️ Nie udało się usunąć.", "Zdieľam…": "Udostępniam…", "✨ Môj hologram na Connect8": "✨ Mój hologram na Connect8", "✓ Zdieľané na Plochu": "✓ Udostępniono na tablicy", "Hologram je na Ploche, uvidia ho všetci.": "Hologram jest na tablicy, wszyscy go zobaczą.", "✕ Zavrieť": "✕ Zamknij", "🔊 Zapnúť zvuk": "🔊 Włącz dźwięk", "🔊 Prehrať so zvukom": "🔊 Odtwórz z dźwiękiem", "▶ Prehrať": "▶ Odtwórz", "▶ Prehrať znova": "▶ Odtwórz ponownie"}); }catch(_){}
-    try{ add(UI_DICT_HU, {"✨ Môj hologram": "✨ Hologramom", "Ukáž môj hologram každému, kto príde na môj profil": "Mutasd a hologramomat mindenkinek, aki meglátogatja a profilomat", "📤 Zdieľať môj hologram na Plochu": "📤 Hologramom megosztása a hírfolyamon", "🗑 Vymazať hologram": "🗑 Hologram törlése", "Vytvoriť hologram": "Hologram készítése", "1. Z 2 fotiek": "1. 2 fotóból", "Odfoť sa spredu a zozadu. Postava bude stále spredu, otočiť sa dá myšou alebo prstom.": "Fotózd le magad elölről és hátulról. Az alak mindig szemből látszik, egérrel vagy ujjal forgatható.", "📷 Fotka spredu": "📷 Elölről", "📷 Fotka zozadu": "📷 Hátulról", "Vytvoriť z fotiek": "Készítés fotókból", "2. Z videa (max 20 s)": "2. Videóból (max. 20 mp)", "Nahraj krátke video, kde hovoríš a hýbeš sa. Hologram bude aj so zvukom.": "Tölts fel egy rövid videót, amelyen beszélsz és mozogsz. A hologram hanggal együtt készül.", "🎥 Vybrať video": "🎥 Videó kiválasztása", "Vytvoriť z videa": "Készítés videóból", "Tip: stoj pred jednoduchou stenou, mobil maj položený, svetlo spredu a celú postavu v zábere.": "Tipp: állj egy egyszerű fal elé, a telefon legyen letéve, a fény elölről jöjjön, és az egész alakod látszódjon.", "Spredu": "Elöl", "Zozadu": "Hátul", "Video": "Videó", "Nepodarilo sa načítať nástroj na vystrihnutie postavy.": "Nem sikerült betölteni az alak kivágó eszközét.", "Fotku sa nepodarilo načítať.": "Nem sikerült betölteni a fotót.", "Na fotke sa nepodarilo nájsť postavu. Skús fotku s celou postavou pred jednoduchým pozadím.": "Nem található alak a fotón. Próbálj egy egész alakos fotót egyszerű háttér előtt.", "Video sa nepodarilo načítať.": "Nem sikerült betölteni a videót.", "Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.": "Ez a böngésző nem tud videót rögzíteni. Próbáld Chrome-mal vagy friss Safarival.", "potiahni a otoč": "húzd és forgasd", "Hologram sa nepodarilo načítať": "Nem sikerült betölteni a hologramot", "Vytvoriť nový hologram (nahradí terajší)": "Új hologram készítése (lecseréli a jelenlegit)", "Ukážka beží bez zvuku. Návštevníci ho uvidia aj so zvukom.": "Az előnézet hang nélkül fut. A látogatók hanggal látják.", "Vyber aspoň fotku spredu.": "Válassz legalább egy elölről készült fotót.", "Nahrávanie nie je nastavené.": "A feltöltés nincs beállítva.", "Načítavam nástroj na vystrihnutie postavy…": "Az alak kivágó eszköz betöltése…", "Vystrihujem postavu spredu…": "Az alak kivágása (elöl)…", "Vystrihujem postavu zozadu…": "Az alak kivágása (hátul)…", "Nahrávam hologram…": "Hologram feltöltése…", "Nahrávam…": "Feltöltés…", "Ukladám do profilu…": "Mentés a profilba…", "✓ Hologram je hotový": "✓ A hologram elkészült", "Hologram sa nepodarilo vytvoriť.": "Nem sikerült elkészíteni a hologramot.", "Najprv vyber video.": "Előbb válassz videót.", "Video je príliš veľké (max 50 MB).": "A videó túl nagy (max. 50 MB).", "Tento prehliadač nepodporuje spracovanie zvuku.": "Ez a böngésző nem támogatja a hangfeldolgozást.", "Video je dlhšie ako 20 s, použijem prvých 20 sekúnd…": "A videó hosszabb 20 mp-nél, az első 20 másodpercet használom…", "Vytváram hologram…": "Hologram készítése…", "✓ Návštevníci tvojho profilu uvidia hologram.": "✓ A profilod látogatói látni fogják a hologramot.", "Hologram sa návštevníkom nezobrazí.": "A hologram nem jelenik meg a látogatóknak.", "⚠️ Nepodarilo sa uložiť.": "⚠️ Nem sikerült menteni.", "Klikni ešte raz na „Vymazať hologram“ pre potvrdenie.": "Kattints még egyszer a „Hologram törlése“ gombra a megerősítéshez.", "Hologram bol vymazaný.": "A hologram törölve.", "⚠️ Nepodarilo sa vymazať.": "⚠️ Nem sikerült törölni.", "Zdieľam…": "Megosztás…", "✨ Môj hologram na Connect8": "✨ Hologramom a Connect8-on", "✓ Zdieľané na Plochu": "✓ Megosztva a hírfolyamon", "Hologram je na Ploche, uvidia ho všetci.": "A hologram a hírfolyamon van, mindenki látja.", "✕ Zavrieť": "✕ Bezárás", "🔊 Zapnúť zvuk": "🔊 Hang bekapcsolása", "🔊 Prehrať so zvukom": "🔊 Lejátszás hanggal", "▶ Prehrať": "▶ Lejátszás", "▶ Prehrať znova": "▶ Újra lejátszás"}); }catch(_){}
-    try{ add(UI_DICT_DE, {"✨ Môj hologram": "✨ Mein Hologramm", "Ukáž môj hologram každému, kto príde na môj profil": "Mein Hologramm allen zeigen, die mein Profil besuchen", "📤 Zdieľať môj hologram na Plochu": "📤 Mein Hologramm im Feed teilen", "🗑 Vymazať hologram": "🗑 Hologramm löschen", "Vytvoriť hologram": "Hologramm erstellen", "1. Z 2 fotiek": "1. Aus 2 Fotos", "Odfoť sa spredu a zozadu. Postava bude stále spredu, otočiť sa dá myšou alebo prstom.": "Fotografiere dich von vorne und von hinten. Die Figur zeigt immer nach vorne und lässt sich mit der Maus oder dem Finger drehen.", "📷 Fotka spredu": "📷 Foto von vorne", "📷 Fotka zozadu": "📷 Foto von hinten", "Vytvoriť z fotiek": "Aus Fotos erstellen", "2. Z videa (max 20 s)": "2. Aus einem Video (max. 20 s)", "Nahraj krátke video, kde hovoríš a hýbeš sa. Hologram bude aj so zvukom.": "Lade ein kurzes Video hoch, in dem du sprichst und dich bewegst. Das Hologramm hat auch Ton.", "🎥 Vybrať video": "🎥 Video auswählen", "Vytvoriť z videa": "Aus Video erstellen", "Tip: stoj pred jednoduchou stenou, mobil maj položený, svetlo spredu a celú postavu v zábere.": "Tipp: Stell dich vor eine schlichte Wand, leg das Handy ab, Licht von vorne und die ganze Figur im Bild.", "Spredu": "Vorne", "Zozadu": "Hinten", "Video": "Video", "Nepodarilo sa načítať nástroj na vystrihnutie postavy.": "Das Werkzeug zum Ausschneiden der Figur konnte nicht geladen werden.", "Fotku sa nepodarilo načítať.": "Das Foto konnte nicht geladen werden.", "Na fotke sa nepodarilo nájsť postavu. Skús fotku s celou postavou pred jednoduchým pozadím.": "Auf dem Foto wurde keine Person gefunden. Versuche ein Foto der ganzen Figur vor einem schlichten Hintergrund.", "Video sa nepodarilo načítať.": "Das Video konnte nicht geladen werden.", "Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.": "Dieser Browser kann kein Video aufnehmen. Versuche Chrome oder ein aktuelles Safari.", "potiahni a otoč": "ziehen und drehen", "Hologram sa nepodarilo načítať": "Das Hologramm konnte nicht geladen werden", "Vytvoriť nový hologram (nahradí terajší)": "Neues Hologramm erstellen (ersetzt das aktuelle)", "Ukážka beží bez zvuku. Návštevníci ho uvidia aj so zvukom.": "Die Vorschau läuft ohne Ton. Besucher sehen es mit Ton.", "Vyber aspoň fotku spredu.": "Wähle mindestens das Foto von vorne.", "Nahrávanie nie je nastavené.": "Das Hochladen ist nicht eingerichtet.", "Načítavam nástroj na vystrihnutie postavy…": "Werkzeug zum Ausschneiden wird geladen…", "Vystrihujem postavu spredu…": "Figur von vorne wird ausgeschnitten…", "Vystrihujem postavu zozadu…": "Figur von hinten wird ausgeschnitten…", "Nahrávam hologram…": "Hologramm wird hochgeladen…", "Nahrávam…": "Wird hochgeladen…", "Ukladám do profilu…": "Wird im Profil gespeichert…", "✓ Hologram je hotový": "✓ Hologramm ist fertig", "Hologram sa nepodarilo vytvoriť.": "Das Hologramm konnte nicht erstellt werden.", "Najprv vyber video.": "Wähle zuerst ein Video.", "Video je príliš veľké (max 50 MB).": "Das Video ist zu groß (max. 50 MB).", "Tento prehliadač nepodporuje spracovanie zvuku.": "Dieser Browser unterstützt keine Tonverarbeitung.", "Video je dlhšie ako 20 s, použijem prvých 20 sekúnd…": "Das Video ist länger als 20 s, die ersten 20 Sekunden werden verwendet…", "Vytváram hologram…": "Hologramm wird erstellt…", "✓ Návštevníci tvojho profilu uvidia hologram.": "✓ Besucher deines Profils sehen das Hologramm.", "Hologram sa návštevníkom nezobrazí.": "Das Hologramm wird Besuchern nicht angezeigt.", "⚠️ Nepodarilo sa uložiť.": "⚠️ Speichern fehlgeschlagen.", "Klikni ešte raz na „Vymazať hologram“ pre potvrdenie.": "Klicke zur Bestätigung noch einmal auf „Hologramm löschen“.", "Hologram bol vymazaný.": "Das Hologramm wurde gelöscht.", "⚠️ Nepodarilo sa vymazať.": "⚠️ Löschen fehlgeschlagen.", "Zdieľam…": "Wird geteilt…", "✨ Môj hologram na Connect8": "✨ Mein Hologramm auf Connect8", "✓ Zdieľané na Plochu": "✓ Im Feed geteilt", "Hologram je na Ploche, uvidia ho všetci.": "Das Hologramm ist im Feed, alle sehen es.", "✕ Zavrieť": "✕ Schließen", "🔊 Zapnúť zvuk": "🔊 Ton einschalten", "🔊 Prehrať so zvukom": "🔊 Mit Ton abspielen", "▶ Prehrať": "▶ Abspielen", "▶ Prehrať znova": "▶ Erneut abspielen"}); }catch(_){}
-    try{ add(UI_DICT_IT, {"✨ Môj hologram": "✨ Il mio ologramma", "Ukáž môj hologram každému, kto príde na môj profil": "Mostra il mio ologramma a chiunque visiti il mio profilo", "📤 Zdieľať môj hologram na Plochu": "📤 Condividi il mio ologramma nel feed", "🗑 Vymazať hologram": "🗑 Elimina ologramma", "Vytvoriť hologram": "Crea ologramma", "1. Z 2 fotiek": "1. Da 2 foto", "Odfoť sa spredu a zozadu. Postava bude stále spredu, otočiť sa dá myšou alebo prstom.": "Fotografati davanti e dietro. La figura resta sempre di fronte e si può ruotare con il mouse o con un dito.", "📷 Fotka spredu": "📷 Foto davanti", "📷 Fotka zozadu": "📷 Foto dietro", "Vytvoriť z fotiek": "Crea dalle foto", "2. Z videa (max 20 s)": "2. Da un video (max 20 s)", "Nahraj krátke video, kde hovoríš a hýbeš sa. Hologram bude aj so zvukom.": "Carica un breve video in cui parli e ti muovi. L'ologramma avrà anche l'audio.", "🎥 Vybrať video": "🎥 Scegli video", "Vytvoriť z videa": "Crea dal video", "Tip: stoj pred jednoduchou stenou, mobil maj položený, svetlo spredu a celú postavu v zábere.": "Consiglio: mettiti davanti a una parete semplice, appoggia il telefono, luce frontale e tutta la figura nell'inquadratura.", "Spredu": "Davanti", "Zozadu": "Dietro", "Video": "Video", "Nepodarilo sa načítať nástroj na vystrihnutie postavy.": "Impossibile caricare lo strumento per ritagliare la figura.", "Fotku sa nepodarilo načítať.": "Impossibile caricare la foto.", "Na fotke sa nepodarilo nájsť postavu. Skús fotku s celou postavou pred jednoduchým pozadím.": "Nessuna persona trovata nella foto. Prova una foto a figura intera su uno sfondo semplice.", "Video sa nepodarilo načítať.": "Impossibile caricare il video.", "Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.": "Questo browser non può registrare video. Prova Chrome o un Safari aggiornato.", "potiahni a otoč": "trascina e ruota", "Hologram sa nepodarilo načítať": "Impossibile caricare l'ologramma", "Vytvoriť nový hologram (nahradí terajší)": "Crea un nuovo ologramma (sostituisce quello attuale)", "Ukážka beží bez zvuku. Návštevníci ho uvidia aj so zvukom.": "L'anteprima è senza audio. I visitatori lo vedranno con l'audio.", "Vyber aspoň fotku spredu.": "Scegli almeno la foto davanti.", "Nahrávanie nie je nastavené.": "Il caricamento non è configurato.", "Načítavam nástroj na vystrihnutie postavy…": "Caricamento dello strumento di ritaglio…", "Vystrihujem postavu spredu…": "Ritaglio la figura (davanti)…", "Vystrihujem postavu zozadu…": "Ritaglio la figura (dietro)…", "Nahrávam hologram…": "Caricamento dell'ologramma…", "Nahrávam…": "Caricamento…", "Ukladám do profilu…": "Salvataggio nel profilo…", "✓ Hologram je hotový": "✓ Ologramma pronto", "Hologram sa nepodarilo vytvoriť.": "Impossibile creare l'ologramma.", "Najprv vyber video.": "Prima scegli un video.", "Video je príliš veľké (max 50 MB).": "Il video è troppo grande (max 50 MB).", "Tento prehliadač nepodporuje spracovanie zvuku.": "Questo browser non supporta l'elaborazione audio.", "Video je dlhšie ako 20 s, použijem prvých 20 sekúnd…": "Il video supera i 20 s, uso i primi 20 secondi…", "Vytváram hologram…": "Creazione dell'ologramma…", "✓ Návštevníci tvojho profilu uvidia hologram.": "✓ I visitatori del tuo profilo vedranno l'ologramma.", "Hologram sa návštevníkom nezobrazí.": "L'ologramma non verrà mostrato ai visitatori.", "⚠️ Nepodarilo sa uložiť.": "⚠️ Impossibile salvare.", "Klikni ešte raz na „Vymazať hologram“ pre potvrdenie.": "Clicca di nuovo su „Elimina ologramma“ per confermare.", "Hologram bol vymazaný.": "L'ologramma è stato eliminato.", "⚠️ Nepodarilo sa vymazať.": "⚠️ Impossibile eliminare.", "Zdieľam…": "Condivisione…", "✨ Môj hologram na Connect8": "✨ Il mio ologramma su Connect8", "✓ Zdieľané na Plochu": "✓ Condiviso nel feed", "Hologram je na Ploche, uvidia ho všetci.": "L'ologramma è nel feed, lo vedranno tutti.", "✕ Zavrieť": "✕ Chiudi", "🔊 Zapnúť zvuk": "🔊 Attiva l'audio", "🔊 Prehrať so zvukom": "🔊 Riproduci con audio", "▶ Prehrať": "▶ Riproduci", "▶ Prehrať znova": "▶ Riproduci di nuovo"}); }catch(_){}
-    try{ add(UI_DICT_AT, {"✨ Môj hologram": "✨ Mein Hologramm", "Ukáž môj hologram každému, kto príde na môj profil": "Mein Hologramm allen zeigen, die mein Profil besuchen", "📤 Zdieľať môj hologram na Plochu": "📤 Mein Hologramm im Feed teilen", "🗑 Vymazať hologram": "🗑 Hologramm löschen", "Vytvoriť hologram": "Hologramm erstellen", "1. Z 2 fotiek": "1. Aus 2 Fotos", "Odfoť sa spredu a zozadu. Postava bude stále spredu, otočiť sa dá myšou alebo prstom.": "Fotografiere dich von vorne und von hinten. Die Figur zeigt immer nach vorne und lässt sich mit der Maus oder dem Finger drehen.", "📷 Fotka spredu": "📷 Foto von vorne", "📷 Fotka zozadu": "📷 Foto von hinten", "Vytvoriť z fotiek": "Aus Fotos erstellen", "2. Z videa (max 20 s)": "2. Aus einem Video (max. 20 s)", "Nahraj krátke video, kde hovoríš a hýbeš sa. Hologram bude aj so zvukom.": "Lade ein kurzes Video hoch, in dem du sprichst und dich bewegst. Das Hologramm hat auch Ton.", "🎥 Vybrať video": "🎥 Video auswählen", "Vytvoriť z videa": "Aus Video erstellen", "Tip: stoj pred jednoduchou stenou, mobil maj položený, svetlo spredu a celú postavu v zábere.": "Tipp: Stell dich vor eine schlichte Wand, leg das Handy ab, Licht von vorne und die ganze Figur im Bild.", "Spredu": "Vorne", "Zozadu": "Hinten", "Video": "Video", "Nepodarilo sa načítať nástroj na vystrihnutie postavy.": "Das Werkzeug zum Ausschneiden der Figur konnte nicht geladen werden.", "Fotku sa nepodarilo načítať.": "Das Foto konnte nicht geladen werden.", "Na fotke sa nepodarilo nájsť postavu. Skús fotku s celou postavou pred jednoduchým pozadím.": "Auf dem Foto wurde keine Person gefunden. Versuche ein Foto der ganzen Figur vor einem schlichten Hintergrund.", "Video sa nepodarilo načítať.": "Das Video konnte nicht geladen werden.", "Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.": "Dieser Browser kann kein Video aufnehmen. Versuche Chrome oder ein aktuelles Safari.", "potiahni a otoč": "ziehen und drehen", "Hologram sa nepodarilo načítať": "Das Hologramm konnte nicht geladen werden", "Vytvoriť nový hologram (nahradí terajší)": "Neues Hologramm erstellen (ersetzt das aktuelle)", "Ukážka beží bez zvuku. Návštevníci ho uvidia aj so zvukom.": "Die Vorschau läuft ohne Ton. Besucher sehen es mit Ton.", "Vyber aspoň fotku spredu.": "Wähle mindestens das Foto von vorne.", "Nahrávanie nie je nastavené.": "Das Hochladen ist nicht eingerichtet.", "Načítavam nástroj na vystrihnutie postavy…": "Werkzeug zum Ausschneiden wird geladen…", "Vystrihujem postavu spredu…": "Figur von vorne wird ausgeschnitten…", "Vystrihujem postavu zozadu…": "Figur von hinten wird ausgeschnitten…", "Nahrávam hologram…": "Hologramm wird hochgeladen…", "Nahrávam…": "Wird hochgeladen…", "Ukladám do profilu…": "Wird im Profil gespeichert…", "✓ Hologram je hotový": "✓ Hologramm ist fertig", "Hologram sa nepodarilo vytvoriť.": "Das Hologramm konnte nicht erstellt werden.", "Najprv vyber video.": "Wähle zuerst ein Video.", "Video je príliš veľké (max 50 MB).": "Das Video ist zu groß (max. 50 MB).", "Tento prehliadač nepodporuje spracovanie zvuku.": "Dieser Browser unterstützt keine Tonverarbeitung.", "Video je dlhšie ako 20 s, použijem prvých 20 sekúnd…": "Das Video ist länger als 20 s, die ersten 20 Sekunden werden verwendet…", "Vytváram hologram…": "Hologramm wird erstellt…", "✓ Návštevníci tvojho profilu uvidia hologram.": "✓ Besucher deines Profils sehen das Hologramm.", "Hologram sa návštevníkom nezobrazí.": "Das Hologramm wird Besuchern nicht angezeigt.", "⚠️ Nepodarilo sa uložiť.": "⚠️ Speichern fehlgeschlagen.", "Klikni ešte raz na „Vymazať hologram“ pre potvrdenie.": "Klicke zur Bestätigung noch einmal auf „Hologramm löschen“.", "Hologram bol vymazaný.": "Das Hologramm wurde gelöscht.", "⚠️ Nepodarilo sa vymazať.": "⚠️ Löschen fehlgeschlagen.", "Zdieľam…": "Wird geteilt…", "✨ Môj hologram na Connect8": "✨ Mein Hologramm auf Connect8", "✓ Zdieľané na Plochu": "✓ Im Feed geteilt", "Hologram je na Ploche, uvidia ho všetci.": "Das Hologramm ist im Feed, alle sehen es.", "✕ Zavrieť": "✕ Schließen", "🔊 Zapnúť zvuk": "🔊 Ton einschalten", "🔊 Prehrať so zvukom": "🔊 Mit Ton abspielen", "▶ Prehrať": "▶ Abspielen", "▶ Prehrať znova": "▶ Erneut abspielen"}); }catch(_){}
-  })();
-  function T(s){ try{ return (typeof t === 'function') ? t(s) : s; }catch(_){ return s; } }
-  // preloží aj správy s číslom na konci ("… 42 %") a s "⚠️ " na začiatku
-  function TS(msg){
-    if(!msg) return msg;
-    let pre = '';
-    if(msg.indexOf('⚠️ ') === 0){ pre = '⚠️ '; msg = msg.slice(3); }
-    const m = msg.match(/^(.*?)(\s+\d+\s*%)$/);
-    return pre + (m ? T(m[1]) + m[2] : T(msg));
-  }
   function setStatus(msg, pct){
-    const s = $('c8holo-status'); if(s) s.textContent = TS(msg || '');
+    const s = $('c8holo-status'); if(s) s.textContent = msg || '';
     const b = $('c8holo-bar'); if(b && pct != null) b.style.width = Math.max(0, Math.min(100, pct)) + '%';
   }
 
@@ -18300,7 +18250,7 @@ c8ApplyFriendsView();
     return new Promise((res, rej)=>{
       if(window.SelfieSegmentation) return res();
       const s = document.createElement('script'); s.src = src; s.crossOrigin = 'anonymous';
-      s.onload = ()=>res(); s.onerror = ()=>rej(new Error(T('Nepodarilo sa načítať nástroj na vystrihnutie postavy.')));
+      s.onload = ()=>res(); s.onerror = ()=>rej(new Error('Nepodarilo sa načítať nástroj na vystrihnutie postavy.'));
       document.head.appendChild(s);
     });
   }
@@ -18343,7 +18293,7 @@ c8ApplyFriendsView();
       const url = URL.createObjectURL(file);
       const img = new Image();
       img.onload = ()=>{ res(img); setTimeout(()=>URL.revokeObjectURL(url), 2000); };
-      img.onerror = ()=>rej(new Error(T('Fotku sa nepodarilo načítať.')));
+      img.onerror = ()=>rej(new Error('Fotku sa nepodarilo načítať.'));
       img.src = url;
     });
   }
@@ -18369,7 +18319,7 @@ c8ApplyFriendsView();
     const mask = document.createElement('canvas'); mask.width = w; mask.height = h;
     await segment(seg, col, mask);
     const bb = maskBBox(mask);
-    if(!bb) throw new Error(T('Na fotke sa nepodarilo nájsť postavu. Skús fotku s celou postavou pred jednoduchým pozadím.'));
+    if(!bb) throw new Error('Na fotke sa nepodarilo nájsť postavu. Skús fotku s celou postavou pred jednoduchým pozadím.');
     const out = document.createElement('canvas'); out.width = bb.w * 2; out.height = bb.h;
     const ox = out.getContext('2d');
     ox.drawImage(col, bb.x, bb.y, bb.w, bb.h, 0, 0, bb.w, bb.h);
@@ -18379,7 +18329,7 @@ c8ApplyFriendsView();
 
   // video -> zbalené video (vľavo postava, vpravo maska) + zvuk, max 20 s
   function pickMime(){
-    const list = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4;codecs=avc1.4D401F,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    const list = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
     if(!window.MediaRecorder) return null;
     for(const m of list){ try{ if(MediaRecorder.isTypeSupported(m)) return m; }catch(_){} }
     return '';
@@ -18387,7 +18337,7 @@ c8ApplyFriendsView();
   async function packVideo(seg, file, onProg, unlock){
     unlock.started = true;
     const v = unlock.video;
-    await new Promise((res, rej)=>{ if(v.readyState >= 1) return res(); v.onloadedmetadata = ()=>res(); v.onerror = ()=>rej(new Error(T('Video sa nepodarilo načítať.'))); });
+    await new Promise((res, rej)=>{ if(v.readyState >= 1) return res(); v.onloadedmetadata = ()=>res(); v.onerror = ()=>rej(new Error('Video sa nepodarilo načítať.')); });
     const dur = Math.min(20, v.duration || 20);
     let w, h;
     if(v.videoHeight >= v.videoWidth){ h = 640; w = Math.round(v.videoWidth * 640 / v.videoHeight / 2) * 2; }
@@ -18459,7 +18409,7 @@ c8ApplyFriendsView();
     else if(audioBuf){ srcNode = ac.createBufferSource(); srcNode.buffer = audioBuf; srcNode.connect(gainNode); }
     dest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
     const mime = pickMime();
-    if(mime === null) throw new Error(T('Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.'));
+    if(mime === null) throw new Error('Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.');
     const rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 1500000, audioBitsPerSecond: 96000 } : { videoBitsPerSecond: 1500000, audioBitsPerSecond: 96000 });
     const chunks = [];
     rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
@@ -18566,17 +18516,13 @@ c8ApplyFriendsView();
   // opts: {sound:bool, loop:bool, onEnd:fn, onNeedSound:fn}
   function mountPlayer(stage, holo, opts){
     opts = opts || {};
-    const wmLogo = (document.querySelector('.card-logo') || {}).src || '';
-    stage.innerHTML = '<canvas></canvas><a class="c8holo-wm" href="https://connect8.eu/" target="_blank" rel="noopener">' + (wmLogo ? '<img alt="" src="' + wmLogo + '">' : '') + '<span>Hologram</span><b>connect<i>8</i>.eu</b></a><div class="c8holo-hint">⟵ ' + T('potiahni a otoč') + ' ⟶</div>';
+    stage.innerHTML = '<canvas></canvas><div class="c8holo-hint">⟵ potiahni a otoč ⟶</div>';
     const cv = stage.querySelector('canvas'), ctx = cv.getContext('2d'), hint = stage.querySelector('.c8holo-hint');
-    const wm = stage.querySelector('.c8holo-wm');
-    wm.addEventListener('pointerdown', e=>e.stopPropagation());
-    const placeWm = ()=>{ if(!W || !H) return; wm.style.top = (H*0.84 + W*0.055 + Math.max(5, H*0.012)) + 'px'; wm.style.fontSize = Math.max(10, Math.min(16, W*0.042)) + 'px'; };
     const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     const off = document.createElement('canvas'), octx = off.getContext('2d');
     let W = 0, H = 0, dpr = 1, dead = false, raf = 0;
-    const size = ()=>{ dpr = opts.dpr || Math.min(2, window.devicePixelRatio || 1); const r = stage.getBoundingClientRect(); W = r.width; H = r.height; cv.width = Math.max(1, Math.round(W*dpr)); cv.height = Math.max(1, Math.round(H*dpr)); };
-    size(); placeWm(); const onRs = ()=>{ size(); placeWm(); }; window.addEventListener('resize', onRs);
+    const size = ()=>{ dpr = Math.min(2, window.devicePixelRatio || 1); const r = stage.getBoundingClientRect(); W = r.width; H = r.height; cv.width = Math.max(1, Math.round(W*dpr)); cv.height = Math.max(1, Math.round(H*dpr)); };
+    size(); const onRs = ()=>size(); window.addEventListener('resize', onRs);
     let ang = 0, vel = 0, drag = false, lx = 0, lastInteract = -1e9, used = false;
     const parts = Array.from({ length: 50 }, ()=>({ x: Math.random()*2-1, y: Math.random(), s: .6 + Math.random()*1.5, v: .04 + Math.random()*.08 }));
     const down = e=>{ drag = true; lx = e.clientX; vel = 0; stage.style.cursor = 'grabbing'; try{ stage.setPointerCapture(e.pointerId); }catch(_){} if(!used){ used = true; hint.style.opacity = '0'; } };
@@ -18589,7 +18535,7 @@ c8ApplyFriendsView();
     if(holo.type === 'photo'){
       Promise.all([loadImg(holo.front), holo.back ? loadImg(holo.back) : Promise.resolve(null)]).then(([f, b])=>{
         if(dead) return; front = tintPacked(f); back = b ? tintPacked(b) : null;
-      }).catch(()=>{ hint.textContent = T('Hologram sa nepodarilo načítať'); });
+      }).catch(()=>{ hint.textContent = 'Hologram sa nepodarilo načítať'; });
     } else {
       gl = makeGL();
       video = document.createElement('video');
@@ -18615,15 +18561,14 @@ c8ApplyFriendsView();
       if(dead) return;
       if(!stage.isConnected){ if(ctl) ctl.destroy(); return; }
       const t = now / 1000;
-      if(opts.spin){ ang = opts.spin(now); }
-      else if(!drag){
+      if(!drag){
         if(Math.abs(vel) > 0.05){ ang += vel; vel *= 0.92; lastInteract = now; }
         else if(now - lastInteract > 1400){ const home = Math.round(ang/360)*360; ang += (home - ang) * 0.05; }
       }
       const cs = Math.cos(ang*Math.PI/180), local = ((ang + 90) % 180 + 180) % 180 - 90, wf = ss((cs + 0.22) / 0.44);
-      if(!W || !H){ size(); placeWm(); }
+      if(!W || !H) size();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-      const cx = W/2, baseY = H*0.84, speak = talking ? 1 : 0;
+      const cx = W/2, baseY = H*0.88, speak = talking ? 1 : 0;
       const flick = reduce ? 1 : (0.93 + 0.05*Math.sin(t*37) + 0.03*Math.random());
       let g = ctx.createLinearGradient(0, H*0.08, 0, baseY);
       g.addColorStop(0, 'rgba(63,224,255,0)'); g.addColorStop(1, 'rgba(63,224,255,' + ((0.20 + 0.08*speak)*flick) + ')');
@@ -18637,7 +18582,7 @@ c8ApplyFriendsView();
       if(holo.type === 'photo'){ srcF = front; srcB = back || front; }
       else if(gl && video && gl.render(video, 1 - wf)){ srcF = gl.canvas; srcB = gl.canvas; }
       if(srcF){
-        const ref = srcF, h = H*0.76, wF = srcF.width*h/srcF.height, wB = srcB.width*h/srcB.height;
+        const ref = srcF, h = H*0.80, wF = srcF.width*h/srcF.height, wB = srcB.width*h/srcB.height;
         const fy = baseY - H*0.02 - h + (reduce ? 0 : Math.sin(t*1.6)*H*0.006);
         const ow = Math.ceil(Math.max(wF, wB)) + 40, oh = Math.ceil(h) + 20;
         if(off.width !== Math.round(ow*dpr) || off.height !== Math.round(oh*dpr)){ off.width = Math.round(ow*dpr); off.height = Math.round(oh*dpr); }
@@ -18679,8 +18624,7 @@ c8ApplyFriendsView();
   window.c8HoloMountPlayer = mountPlayer;
 
   // ---------- dáta ----------
-  let myHolo = null, myHoloUid = null, previewPlayer = null;
-  window.c8HoloMine = ()=> (currentUser && myHoloUid === currentUser.uid) ? myHolo : null;
+  let myHolo = null, previewPlayer = null;
   const holoCache = {};
   async function loadHolo(uid, fresh){
     const c = holoCache[uid];
@@ -18695,7 +18639,7 @@ c8ApplyFriendsView();
   }
   async function saveHolo(h){
     await db.collection('profiles').doc(currentUser.uid).set({ hologram: h }, { merge: true });
-    myHolo = h; myHoloUid = currentUser.uid; currentUser.hologram = h; holoCache[currentUser.uid] = { h, at: Date.now() };
+    myHolo = h; currentUser.hologram = h; holoCache[currentUser.uid] = { h, at: Date.now() };
   }
 
   // ---------- modal (vlastný profil) ----------
@@ -18703,20 +18647,20 @@ c8ApplyFriendsView();
     const l = $(labelId); if(!l) return;
     const f = input.files && input.files[0];
     l.classList.toggle('ok', !!f);
-    l.querySelector('span').textContent = f ? ('✓ ' + T(name) + ': ' + (f.name.length > 22 ? f.name.slice(0, 20) + '…' : f.name)) : l.querySelector('span').textContent;
+    l.querySelector('span').textContent = f ? ('✓ ' + name + ': ' + (f.name.length > 22 ? f.name.slice(0, 20) + '…' : f.name)) : l.querySelector('span').textContent;
   };
   function showHave(){
     const have = $('c8holo-have'); if(!have) return;
     if(previewPlayer){ previewPlayer.destroy(); previewPlayer = null; }
     if(myHolo){
       have.style.display = '';
-      $('c8holo-create-title').textContent = T('Vytvoriť nový hologram (nahradí terajší)');
+      $('c8holo-create-title').textContent = 'Vytvoriť nový hologram (nahradí terajší)';
       $('c8holo-show').checked = !!myHolo.show;
       previewPlayer = mountPlayer($('c8holo-preview'), myHolo, { loop: true, sound: false });
-      $('c8holo-have-status').textContent = myHolo.type === 'video' ? T('Ukážka beží bez zvuku. Návštevníci ho uvidia aj so zvukom.') : '';
+      $('c8holo-have-status').textContent = myHolo.type === 'video' ? 'Ukážka beží bez zvuku. Návštevníci ho uvidia aj so zvukom.' : '';
     } else {
       have.style.display = 'none';
-      $('c8holo-create-title').textContent = T('Vytvoriť hologram');
+      $('c8holo-create-title').textContent = 'Vytvoriť hologram';
     }
   }
   window.c8HoloOpen = async function(){
@@ -18726,11 +18670,8 @@ c8ApplyFriendsView();
       return;
     }
     $('c8holo-modal').classList.add('open');
-    try{ if(typeof translateStaticDom === 'function') translateStaticDom($('c8holo-modal')); }catch(_){}
     setStatus('', 0);
-    // iný používateľ na tom istom zariadení (odhlásenie/prihlásenie) -> zahoď hologram predošlého účtu
-    if(currentUser && myHoloUid !== currentUser.uid){ myHolo = null; myHoloUid = null; if(previewPlayer){ previewPlayer.destroy(); previewPlayer = null; } }
-    if(myHolo === null && currentUser){ const uid = currentUser.uid; const h = await loadHolo(uid, true); if(currentUser && currentUser.uid === uid){ myHolo = h; myHoloUid = uid; } }
+    if(myHolo === null && currentUser) myHolo = await loadHolo(currentUser.uid, true);
     showHave();
   };
   window.c8HoloClose = function(){
@@ -18803,21 +18744,21 @@ c8ApplyFriendsView();
   window.c8HoloToggleShow = async function(on){
     if(!myHolo) return;
     const h = Object.assign({}, myHolo, { show: !!on });
-    try{ await saveHolo(h); $('c8holo-have-status').textContent = on ? T('✓ Návštevníci tvojho profilu uvidia hologram.') : T('Hologram sa návštevníkom nezobrazí.'); }
-    catch(e){ $('c8holo-have-status').textContent = T('⚠️ Nepodarilo sa uložiť.'); }
+    try{ await saveHolo(h); $('c8holo-have-status').textContent = on ? '✓ Návštevníci tvojho profilu uvidia hologram.' : 'Hologram sa návštevníkom nezobrazí.'; }
+    catch(e){ $('c8holo-have-status').textContent = '⚠️ Nepodarilo sa uložiť.'; }
   };
   window.c8HoloDelete = async function(){
     const st = $('c8holo-have-status');
-    if(!st.dataset.confirm){ st.dataset.confirm = '1'; st.textContent = T('Klikni ešte raz na „Vymazať hologram“ pre potvrdenie.'); setTimeout(()=>{ delete st.dataset.confirm; }, 4000); return; }
+    if(!st.dataset.confirm){ st.dataset.confirm = '1'; st.textContent = 'Klikni ešte raz na „Vymazať hologram“ pre potvrdenie.'; setTimeout(()=>{ delete st.dataset.confirm; }, 4000); return; }
     delete st.dataset.confirm;
     try{
       await db.collection('profiles').doc(currentUser.uid).set({ hologram: firebase.firestore.FieldValue.delete() }, { merge: true });
-      myHolo = null; myHoloUid = currentUser.uid; currentUser.hologram = null; showHave(); setStatus('Hologram bol vymazaný.', 0);
-    }catch(e){ st.textContent = T('⚠️ Nepodarilo sa vymazať.'); }
+      myHolo = null; currentUser.hologram = null; showHave(); setStatus('Hologram bol vymazaný.', 0);
+    }catch(e){ st.textContent = '⚠️ Nepodarilo sa vymazať.'; }
   };
   window.c8HoloShare = async function(){
     if(!myHolo || !currentUser) return;
-    const btn = $('c8holo-share'); btn.disabled = true; btn.textContent = T('Zdieľam…');
+    const btn = $('c8holo-share'); btn.disabled = true; btn.textContent = 'Zdieľam…';
     const h = { type: myHolo.type, front: myHolo.front || null, back: myHolo.back || null, video: myHolo.video || null };
     const newPost = {
       id: Date.now(), name: currentUser.name, authorId: currentUser.uid, createdAt: Date.now(),
@@ -18831,14 +18772,14 @@ c8ApplyFriendsView();
     try{
       await savePost(newPost);
       bumpRateLimit('lastPostAt');
-      btn.textContent = T('✓ Zdieľané na Plochu');
-      $('c8holo-have-status').textContent = T('Hologram je na Ploche, uvidia ho všetci.');
-      setTimeout(()=>{ btn.disabled = false; btn.textContent = T('📤 Zdieľať môj hologram na Plochu'); }, 4000);
+      btn.textContent = '✓ Zdieľané na Plochu';
+      $('c8holo-have-status').textContent = 'Hologram je na Ploche, uvidia ho všetci.';
+      setTimeout(()=>{ btn.disabled = false; btn.textContent = '📤 Zdieľať môj hologram na Plochu'; }, 4000);
     }catch(err){
       posts = posts.filter(p=>p.id !== newPost.id);
       if(ownPostsCache[currentUser.uid]) ownPostsCache[currentUser.uid] = ownPostsCache[currentUser.uid].filter(p=>p.id !== newPost.id);
       renderPosts();
-      btn.disabled = false; btn.textContent = T('📤 Zdieľať môj hologram na Plochu');
+      btn.disabled = false; btn.textContent = '📤 Zdieľať môj hologram na Plochu';
       handleCreateRejection(err, null, t('príspevok'), renderPosts);
     }
   };
@@ -18854,7 +18795,7 @@ c8ApplyFriendsView();
   function showOverlay(h, name){
     closeOverlay();
     const ov = document.createElement('div'); ov.className = 'c8holo-ov';
-    ov.innerHTML = '<button class="c8holo-ov-close" type="button">' + T('✕ Zavrieť') + '</button><div class="c8holo-ov-name"></div><div class="c8holo-stage"></div><div class="c8holo-row" style="justify-content:center"></div>';
+    ov.innerHTML = '<button class="c8holo-ov-close" type="button">✕ Zavrieť</button><div class="c8holo-ov-name"></div><div class="c8holo-stage"></div><div class="c8holo-row" style="justify-content:center"></div>';
     ov.querySelector('.c8holo-ov-name').textContent = '✨ ' + (name || '');
     document.body.appendChild(ov);
     requestAnimationFrame(()=>ov.classList.add('show'));
@@ -18864,7 +18805,7 @@ c8ApplyFriendsView();
       sound: h.type === 'video', loop: false,
       onEnd: ()=>setTimeout(closeOverlay, 600),
       onNeedSound: ()=>{
-        row.innerHTML = '<button class="c8holo-go" type="button">' + T('🔊 Zapnúť zvuk') + '</button>';
+        row.innerHTML = '<button class="c8holo-go" type="button">🔊 Zapnúť zvuk</button>';
         row.querySelector('button').onclick = ()=>{ if(ovPlayer) ovPlayer.unmute(); row.innerHTML = ''; };
       }
     });
@@ -18912,7 +18853,7 @@ c8ApplyFriendsView();
     const btn = box.querySelector('.c8holo-snd'); if(!btn) return;
     if(state === 'hide'){ btn.style.display = 'none'; return; }
     btn.style.display = '';
-    btn.textContent = state === 'sound' ? T('🔊 Prehrať so zvukom') : (state === 'play' ? T('▶ Prehrať') : T('▶ Prehrať znova'));
+    btn.textContent = state === 'sound' ? '🔊 Prehrať so zvukom' : (state === 'play' ? '▶ Prehrať' : '▶ Prehrať znova');
   }
   function mountPost(box){
     if(postPlayers.has(box)) return;
@@ -18964,9 +18905,8 @@ c8ApplyFriendsView();
   if(typeof _buildPostCard === 'function'){
     window.buildPostCard = buildPostCard = function(p, o){
       let html = _buildPostCard.apply(this, arguments);
-      if(p && p.isHologram && currentLang !== 'sk'){ const k = '✨ Môj hologram na Connect8'; if(html.indexOf(k) >= 0) html = html.split(k).join(T(k)); }
       if(p && p.hologram && (p.hologram.front || p.hologram.video)){
-        const block = '<div class="c8holo-post" data-hpid="' + p.id + '"><div class="c8holo-stage"></div><button type="button" class="c8holo-snd" style="display:none">' + T('▶ Prehrať') + '</button></div>';
+        const block = '<div class="c8holo-post" data-hpid="' + p.id + '"><div class="c8holo-stage"></div><button type="button" class="c8holo-snd" style="display:none">▶ Prehrať</button></div>';
         const anchor = '<div class="post-text-translation" id="post-tr-' + p.id + '"></div>';
         html = html.indexOf(anchor) >= 0 ? html.replace(anchor, anchor + block) : html + block;
       }
@@ -19246,331 +19186,6 @@ c8ApplyFriendsView();
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-})();
-</script>
-<style id="c8hx-style">
-.c8hx-ov{position:fixed;inset:0;z-index:100000;background:rgba(2,8,18,.82);display:flex;align-items:center;justify-content:center;padding:16px;}
-.c8hx-card{width:100%;max-width:380px;background:#071423;border:1px solid #13405a;border-radius:18px;padding:20px 18px 18px;color:#D9F6FF;box-shadow:0 20px 60px rgba(0,0,0,.5);font-family:inherit;}
-.c8hx-card h3{margin:0 0 6px;font-size:18px;color:#fff;}
-.c8hx-card p{margin:0 0 12px;font-size:13px;line-height:1.45;color:#9CCFE0;}
-.c8hx-bar{height:8px;border-radius:6px;background:#0B2a3d;overflow:hidden;margin:6px 0 8px;}
-.c8hx-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#22d3ee,#34d399);transition:width .2s;}
-.c8hx-st{font-size:13px;color:#BFEFFF;min-height:18px;margin-bottom:10px;}
-.c8hx-btns{display:flex;flex-direction:column;gap:8px;}
-.c8hx-btns button{border:0;border-radius:12px;padding:12px 14px;font-weight:700;font-size:14px;cursor:pointer;}
-.c8hx-share{background:#16A34A;color:#fff;}
-.c8hx-dl{background:#0E7490;color:#fff;}
-.c8hx-close{background:transparent;color:#9CCFE0;border:1px solid #1E4A66 !important;}
-.c8hx-plat{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
-.c8hx-plat a{flex:1 1 30%;text-align:center;text-decoration:none;font-size:12.5px;font-weight:700;color:#D9F6FF;border:1px solid #1E4A66;border-radius:10px;padding:8px 6px;}
-.c8holo-stage.c8hx-stage{position:fixed;left:0;top:0;width:600px;height:840px;max-width:none;max-height:none;aspect-ratio:auto;opacity:0;pointer-events:none;z-index:-1;}
-.share-holo-note{display:none;margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#ECFEFF;border:1px solid #A5F3FC;color:#0E7490;font-size:13px;line-height:1.4;font-weight:600;}
-.share-modal.c8hx-mode .share-holo-note{display:block;}
-</style>
-<script id="c8hx-script">
-/* =====================================================================
-   HOLOGRAM -> VIDEO NA SOCIÁLNE SIETE
-   - hologram (so všetkými efektmi a zvukom) sa nahrá priamo v zariadení
-     ako zvislé video 9:16 s logom connect8.eu dole
-   - mobil: otvorí sa ponuka zdieľania telefónu (FB, Instagram, TikTok, WhatsApp…)
-   - PC: video sa stiahne a dá sa nahrať na FB / Instagram / TikTok
-   - nemíňa kredity (hologram sa len raz načíta, video sa nikam neukladá)
-===================================================================== */
-(function(){
-  function T(s){ try{ return (typeof t === 'function') ? t(s) : s; }catch(_){ return s; } }
-  (function(){
-    const add = (d, m) => { try{ if(!d) return; Object.keys(m).forEach(k => { if(!Object.prototype.hasOwnProperty.call(d, k)) d[k] = m[k]; }); }catch(_){} };
-    const K = ['📤 Zdieľať','Hologram ako video','Vytváram video hologramu…','Hologram sa nahrá ako video so zvukom a logom connect8.eu. Nechaj túto stránku otvorenú.','✓ Video je hotové','📤 Zdieľať video (Facebook, Instagram, TikTok…)','⬇ Stiahnuť video','Zavrieť','Video sa stiahlo. Nahraj ho na sociálnu sieť ako Reel alebo príbeh:','⚠️ Video sa nepodarilo vytvoriť.','Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.','🎬 Hologram sa zdieľa ako video – vyber sieť a video sa najprv vytvorí.','Hologram z Connect8 ✨ Vytvor si svoj zadarmo: https://connect8.eu','Načítavam hologram…'];
-    const L = {
-      EN:['📤 Share','Hologram as a video','Creating hologram video…','The hologram will be recorded as a video with sound and the connect8.eu logo. Keep this page open.','✓ Video is ready','📤 Share video (Facebook, Instagram, TikTok…)','⬇ Download video','Close','The video has been downloaded. Upload it to a social network as a Reel or story:','⚠️ Could not create the video.','This browser cannot record video. Try Chrome or an up-to-date Safari.','🎬 The hologram is shared as a video – choose a network and the video will be created first.','Hologram from Connect8 ✨ Create yours for free: https://connect8.eu','Loading hologram…'],
-      CZ:['📤 Sdílet','Hologram jako video','Vytvářím video hologramu…','Hologram se nahraje jako video se zvukem a logem connect8.eu. Nech tuto stránku otevřenou.','✓ Video je hotové','📤 Sdílet video (Facebook, Instagram, TikTok…)','⬇ Stáhnout video','Zavřít','Video se stáhlo. Nahraj ho na sociální síť jako Reel nebo příběh:','⚠️ Video se nepodařilo vytvořit.','Tento prohlížeč neumí nahrávat video. Zkus Chrome nebo aktuální Safari.','🎬 Hologram se sdílí jako video – vyber síť a video se nejdřív vytvoří.','Hologram z Connect8 ✨ Vytvoř si svůj zdarma: https://connect8.eu','Načítám hologram…'],
-      PL:['📤 Udostępnij','Hologram jako wideo','Tworzę wideo hologramu…','Hologram zostanie nagrany jako wideo z dźwiękiem i logo connect8.eu. Nie zamykaj tej strony.','✓ Wideo gotowe','📤 Udostępnij wideo (Facebook, Instagram, TikTok…)','⬇ Pobierz wideo','Zamknij','Wideo zostało pobrane. Wgraj je do sieci społecznościowej jako Reel lub relację:','⚠️ Nie udało się utworzyć wideo.','Ta przeglądarka nie potrafi nagrywać wideo. Spróbuj Chrome lub aktualnego Safari.','🎬 Hologram udostępniasz jako wideo – wybierz sieć, a wideo zostanie najpierw utworzone.','Hologram z Connect8 ✨ Stwórz swój za darmo: https://connect8.eu','Wczytuję hologram…'],
-      HU:['📤 Megosztás','Hologram videóként','Hologram videó készítése…','A hologram hanggal és connect8.eu logóval videóként rögzül. Hagyd nyitva ezt az oldalt.','✓ A videó elkészült','📤 Videó megosztása (Facebook, Instagram, TikTok…)','⬇ Videó letöltése','Bezárás','A videó letöltődött. Töltsd fel a közösségi oldalra Reelként vagy történetként:','⚠️ Nem sikerült elkészíteni a videót.','Ez a böngésző nem tud videót rögzíteni. Próbáld Chrome-mal vagy friss Safarival.','🎬 A hologram videóként osztható meg – válassz oldalt, és előbb elkészül a videó.','Hologram a Connect8-ról ✨ Készítsd el a sajátodat ingyen: https://connect8.eu','Hologram betöltése…'],
-      DE:['📤 Teilen','Hologramm als Video','Hologramm-Video wird erstellt…','Das Hologramm wird als Video mit Ton und connect8.eu-Logo aufgenommen. Lass diese Seite geöffnet.','✓ Video ist fertig','📤 Video teilen (Facebook, Instagram, TikTok…)','⬇ Video herunterladen','Schließen','Das Video wurde heruntergeladen. Lade es als Reel oder Story hoch:','⚠️ Das Video konnte nicht erstellt werden.','Dieser Browser kann kein Video aufnehmen. Versuche Chrome oder ein aktuelles Safari.','🎬 Das Hologramm wird als Video geteilt – wähle ein Netzwerk, das Video wird zuerst erstellt.','Hologramm von Connect8 ✨ Erstelle deins kostenlos: https://connect8.eu','Hologramm wird geladen…'],
-      IT:['📤 Condividi','Ologramma come video','Creazione del video dell\'ologramma…','L\'ologramma verrà registrato come video con audio e logo connect8.eu. Tieni aperta questa pagina.','✓ Video pronto','📤 Condividi video (Facebook, Instagram, TikTok…)','⬇ Scarica video','Chiudi','Il video è stato scaricato. Caricalo sul social come Reel o storia:','⚠️ Impossibile creare il video.','Questo browser non può registrare video. Prova Chrome o un Safari aggiornato.','🎬 L\'ologramma si condivide come video – scegli il social e il video verrà creato prima.','Ologramma da Connect8 ✨ Crea il tuo gratis: https://connect8.eu','Caricamento dell\'ologramma…']
-    };
-    const dict = n => { try{ return eval('UI_DICT_' + n); }catch(_){ return null; } };
-    Object.keys(L).forEach(n => { const m = {}; K.forEach((k, i) => m[k] = L[n][i]); add(dict(n), m); if(n === 'DE') add(dict('AT'), m); });
-  })();
-
-  function pickMime(){
-    const list = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
-    if(!window.MediaRecorder) return null;
-    for(const m of list){ try{ if(MediaRecorder.isTypeSupported(m)) return m; }catch(_){} }
-    return '';
-  }
-  function rr(x, X, Y, W, H, r){ x.beginPath(); x.moveTo(X+r, Y); x.arcTo(X+W, Y, X+W, Y+H, r); x.arcTo(X+W, Y+H, X, Y+H, r); x.arcTo(X, Y+H, X, Y, r); x.arcTo(X, Y, X+W, Y, r); x.closePath(); }
-
-  // ---------- nahratie hologramu do videa ----------
-  // MUSÍ sa zavolať priamo z kliknutia (kvôli zvuku na mobile)
-  function exportHolo(holo, name, onProg){
-    const mime = pickMime();
-    if(mime === null || !window.c8HoloMountPlayer) return Promise.reject(new Error(T('Tento prehliadač nevie nahrávať video. Skús Chrome alebo aktuálny Safari.')));
-    const isVideo = holo.type === 'video';
-    const AC = window.AudioContext || window.webkitAudioContext;
-    const ac = (isVideo && AC) ? new AC() : null;
-    if(ac && ac.resume) ac.resume();
-    const stage = document.createElement('div'); stage.className = 'c8holo-stage c8hx-stage';
-    document.body.appendChild(stage);
-    const SPIN_T0 = 1800, SPIN_D = 2600, PHOTO_LEN = 7200;
-    let spinStart = null;
-    const spin = (now)=>{ if(spinStart === null) return 0; const e = now - spinStart - SPIN_T0; if(e <= 0) return 0; if(e >= SPIN_D) return 360; const k = e / SPIN_D; return 360 * (k*k*(3 - 2*k)); };
-    let ended = false;
-    const pl = window.c8HoloMountPlayer(stage, holo, { sound: true, loop: false, autoplay: false, spin: isVideo ? null : spin, dpr: 1.2, onEnd: ()=>{ ended = true; } });
-    const v = pl.video;
-    let elSrc = null;
-    if(v){
-      v.muted = false;
-      try{ if(ac) elSrc = ac.createMediaElementSource(v); }catch(_){ elSrc = null; }
-      // odomknutie prehrávania so zvukom ešte počas kliknutia (iPhone)
-      const up = v.play(); if(up && up.then) up.then(()=>{ if(!recStarted){ try{ v.pause(); v.currentTime = 0; }catch(_){} } }).catch(()=>{});
-    }
-    let recStarted = false;
-    const cleanup = ()=>{ try{ pl.destroy(); }catch(_){} stage.remove(); try{ ac && ac.close(); }catch(_){} };
-    return (async ()=>{
-      try{
-        // počkaj, kým je hologram načítaný
-        onProg && onProg(T('Načítavam hologram…'), 2);
-        if(v){
-          await new Promise((res, rej)=>{ if(v.readyState >= 2) return res(); const to = setTimeout(()=>rej(new Error('load')), 30000); v.addEventListener('loadeddata', ()=>{ clearTimeout(to); res(); }, { once: true }); v.addEventListener('error', ()=>{ clearTimeout(to); rej(new Error('load')); }, { once: true }); });
-        } else {
-          await new Promise(r => setTimeout(r, 1200));
-        }
-        const src = stage.querySelector('canvas');
-        const OW = 720, OH = 1280;
-        const out = document.createElement('canvas'); out.width = OW; out.height = OH;
-        const x = out.getContext('2d');
-        const bg = x.createRadialGradient(OW/2, OH*0.45, 40, OW/2, OH*0.45, OH*0.75);
-        bg.addColorStop(0, '#0A2238'); bg.addColorStop(1, '#030A14');
-        const title = (name || 'Hologram');
-        const logoImg = new Image(); logoImg.src = (document.querySelector('.card-logo') || {}).src || '';
-        const draw = ()=>{
-          x.fillStyle = bg; x.fillRect(0, 0, OW, OH);
-          // názov hore
-          x.fillStyle = '#FFFFFF'; x.font = '700 40px Inter, Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-          x.fillText(title, OW/2, 96, OW - 80);
-          // hologram
-          if(src && src.width){ const sh = 1000, sw = sh * src.width / src.height; x.drawImage(src, (OW - sw)/2, 140, sw, sh); }
-          // vodoznak pod kruhmi: logo + „Hologram connect8.eu“
-          if(src && src.width){
-            const k = 1000 / src.height * (src.height / (stage.getBoundingClientRect().height || 840));
-            const sH = stage.getBoundingClientRect().height || 840, sW = stage.getBoundingClientRect().width || 600, kk = 1000 / sH;
-            const wy = 140 + (sH*0.84 + sW*0.055) * kk + 36;
-            void k;
-            x.textBaseline = 'middle'; x.textAlign = 'left';
-            const f1 = '500 30px Inter, Arial, sans-serif', f2 = '800 30px Inter, Arial, sans-serif';
-            x.font = f1; const w0 = x.measureText('Hologram ').width;
-            x.font = f2; const wa = x.measureText('connect').width, wb = x.measureText('8').width, wc = x.measureText('.eu').width;
-            const L = 44, gap = 12, tot = L + gap + w0 + wa + wb + wc;
-            let tx = (OW - tot) / 2;
-            if(logoImg.complete && logoImg.naturalWidth){
-              x.save(); x.fillStyle = 'rgba(255,255,255,0.92)'; x.beginPath(); x.arc(tx + L/2, wy, L/2, 0, Math.PI*2); x.fill(); x.restore();
-              x.drawImage(logoImg, tx, wy - L/2, L, L);
-            }
-            tx += L + gap;
-            x.font = f1; x.fillStyle = '#CBD5E1'; x.fillText('Hologram ', tx, wy); tx += w0;
-            x.font = f2; x.fillStyle = '#FFFFFF'; x.fillText('connect', tx, wy); tx += wa;
-            x.fillStyle = '#22C55E'; x.fillText('8', tx, wy); tx += wb;
-            x.fillStyle = '#FFFFFF'; x.fillText('.eu', tx, wy);
-          }
-        };
-        draw();
-        const stream = out.captureStream(30);
-        if(ac && elSrc){
-          const dest = ac.createMediaStreamDestination();
-          elSrc.connect(dest);
-          dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
-          if(ac.state === 'suspended'){ try{ await ac.resume(); }catch(_){} }
-        }
-        const opt = { videoBitsPerSecond: 3500000, audioBitsPerSecond: 128000 }; if(mime) opt.mimeType = mime;
-        const rec = new MediaRecorder(stream, opt);
-        const chunks = []; rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
-        const stopped = new Promise(r => rec.onstop = r);
-        recStarted = true;
-        rec.start(250);
-        const t0 = performance.now(); spinStart = t0;
-        let total = PHOTO_LEN;
-        if(v){
-          try{ v.currentTime = 0; }catch(_){}
-          try{ await v.play(); }catch(e){ v.muted = true; await v.play().catch(()=>{}); }
-          total = Math.min(21000, ((v.duration && isFinite(v.duration)) ? v.duration : 20) * 1000 + 600);
-        }
-        await new Promise(res => {
-          const step = ()=>{
-            draw();
-            const el = performance.now() - t0;
-            onProg && onProg(T('Vytváram video hologramu…') + ' ' + Math.min(99, Math.round(el / total * 100)) + ' %', 5 + 90 * Math.min(1, el / total));
-            if(el >= total || (ended && v && v.ended && el > 800)){ setTimeout(res, ended ? 400 : 0); return; }
-            requestAnimationFrame(step);
-          };
-          step();
-        });
-        draw(); rec.stop(); await stopped;
-        stream.getTracks().forEach(tr => tr.stop());
-        const type = (rec.mimeType || mime || 'video/webm').split(';')[0];
-        const ext = type.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
-        const blob = new Blob(chunks, { type });
-        cleanup();
-        return new File([blob], 'connect8-hologram.' + ext, { type });
-      }catch(e){ cleanup(); throw e; }
-    })();
-  }
-
-  // ---------- okno s priebehom a zdieľaním ----------
-  const PLAT = { facebook: ['Facebook', 'https://www.facebook.com/'], instagram: ['Instagram', 'https://www.instagram.com/'], tiktok: ['TikTok', 'https://www.tiktok.com/upload'] };
-  function download(file){
-    const u = URL.createObjectURL(file), a = document.createElement('a');
-    a.href = u; a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(u), 60000);
-  }
-  window.c8HoloShareSocial = function(holo, name){
-    if(!holo || !(holo.front || holo.video)) return;
-    const ov = document.createElement('div'); ov.className = 'c8hx-ov';
-    ov.innerHTML = '<div class="c8hx-card"><h3></h3><p></p><div class="c8hx-bar"><i></i></div><div class="c8hx-st"></div><div class="c8hx-btns"></div></div>';
-    ov.querySelector('h3').textContent = '🎬 ' + T('Hologram ako video');
-    ov.querySelector('p').textContent = T('Hologram sa nahrá ako video so zvukom a logom connect8.eu. Nechaj túto stránku otvorenú.');
-    document.body.appendChild(ov);
-    try{ window.c8WakeOn && c8WakeOn('holoShare'); }catch(_){}
-    const bar = ov.querySelector('.c8hx-bar i'), st = ov.querySelector('.c8hx-st'), btns = ov.querySelector('.c8hx-btns');
-    const close = ()=>{ ov.remove(); try{ window.c8WakeOff && c8WakeOff('holoShare'); }catch(_){} };
-    const addBtn = (cls, label, fn)=>{ const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = label; b.onclick = fn; btns.appendChild(b); return b; };
-    let cancelled = false;
-    addBtn('c8hx-close', T('Zavrieť'), ()=>{ cancelled = true; close(); });
-    exportHolo(holo, name, (msg, pct)=>{ st.textContent = msg; bar.style.width = pct + '%'; }).then(file=>{
-      if(cancelled) return;
-      try{ window.c8WakeOff && c8WakeOff('holoShare'); }catch(_){}
-      bar.style.width = '100%'; st.textContent = T('✓ Video je hotové');
-      ov.querySelector('p').textContent = '';
-      btns.innerHTML = '';
-      const text = T('Hologram z Connect8 ✨ Vytvor si svoj zadarmo: https://connect8.eu');
-      let canFiles = false; try{ canFiles = !!(navigator.canShare && navigator.canShare({ files: [file] })); }catch(_){}
-      if(canFiles){
-        addBtn('c8hx-share', T('📤 Zdieľať video (Facebook, Instagram, TikTok…)'), async ()=>{
-          try{ await navigator.share({ files: [file], title: 'Connect8', text }); }catch(e){ if(e && e.name === 'AbortError') return; download(file); }
-        });
-      }
-      addBtn('c8hx-dl', T('⬇ Stiahnuť video'), ()=>{
-        download(file);
-        if(!ov.querySelector('.c8hx-plat')){
-          const p = document.createElement('p'); p.style.margin = '6px 0 0'; p.textContent = T('Video sa stiahlo. Nahraj ho na sociálnu sieť ako Reel alebo príbeh:');
-          const row = document.createElement('div'); row.className = 'c8hx-plat';
-          Object.keys(PLAT).forEach(k=>{ const a = document.createElement('a'); a.href = PLAT[k][1]; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = PLAT[k][0]; row.appendChild(a); });
-          btns.appendChild(p); btns.appendChild(row);
-        }
-      });
-      addBtn('c8hx-close', T('Zavrieť'), close);
-    }).catch(e=>{
-      console.error(e);
-      try{ window.c8WakeOff && c8WakeOff('holoShare'); }catch(_){}
-      if(cancelled) return;
-      st.textContent = T('⚠️ Video sa nepodarilo vytvoriť.') + (e && e.message && e.message !== 'load' ? ' ' + e.message : '');
-      bar.style.width = '0';
-    });
-  };
-
-  // ---------- tlačidlo v okne „Môj hologram“ ----------
-  function addModalBtn(){
-    const del = document.querySelector('#c8holo-have .c8holo-go.red');
-    if(!del || document.getElementById('c8holo-social')) return;
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'c8holo-go'; b.id = 'c8holo-social';
-    b.textContent = T('📤 Zdieľať');
-    b.onclick = ()=>{
-      let h = null;
-      try{ h = (window.c8HoloMine && c8HoloMine()) || null; }catch(_){}
-      if(!h) return;
-      window.c8HoloShareSocial(h, (currentUser && currentUser.name) || '');
-    };
-    del.insertAdjacentElement('afterend', b);
-  }
-  const _open = window.c8HoloOpen;
-  if(typeof _open === 'function'){
-    window.c8HoloOpen = async function(){ const r = await _open.apply(this, arguments); try{ addModalBtn(); const b = document.getElementById('c8holo-social'); if(b) b.textContent = T('📤 Zdieľať'); }catch(_){} return r; };
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addModalBtn); else addModalBtn();
-
-  // ---------- Plocha: zdieľanie príspevku s hologramom = video ----------
-  let shareHolo = null;
-  function findAnyPost(id){
-    try{ return (posts || []).find(x=>x.id === id) || Object.values(ownPostsCache || {}).flat().find(x=>x.id === id) || null; }catch(_){ return null; }
-  }
-  const modal = document.getElementById('share-modal');
-  if(modal){
-    const opts = modal.querySelector('.share-options');
-    if(opts && !modal.querySelector('.share-holo-note')){
-      const n = document.createElement('div'); n.className = 'share-holo-note';
-      n.textContent = T('🎬 Hologram sa zdieľa ako video – vyber sieť a video sa najprv vytvorí.');
-      opts.parentNode.insertBefore(n, opts);
-    }
-  }
-  if(typeof openShareModal === 'function'){
-    const _osm = openShareModal;
-    window.openShareModal = openShareModal = function(postId){
-      const p = findAnyPost(postId);
-      const hs = (p && p.hologram && (p.hologram.front || p.hologram.video)) ? { h: p.hologram, name: p.name || '' } : null;
-      try{ return _osm.apply(this, arguments); }
-      finally{
-        shareHolo = hs;
-        const m = document.getElementById('share-modal');
-        if(m){ m.classList.toggle('c8hx-mode', !!hs); const n = m.querySelector('.share-holo-note'); if(n) n.textContent = T('🎬 Hologram sa zdieľa ako video – vyber sieť a video sa najprv vytvorí.'); }
-      }
-    };
-  }
-  if(typeof openVideoShareModal === 'function'){
-    const _ovsm = openVideoShareModal;
-    window.openVideoShareModal = openVideoShareModal = function(){ shareHolo = null; const m = document.getElementById('share-modal'); if(m) m.classList.remove('c8hx-mode'); return _ovsm.apply(this, arguments); };
-  }
-  function holoGo(){
-    const s = shareHolo; if(!s) return false;
-    try{ closeShareModal(); }catch(_){}
-    shareHolo = null;
-    window.c8HoloShareSocial(s.h, s.name);
-    return true;
-  }
-  const fb = document.getElementById('share-fb-link');
-  if(fb) fb.addEventListener('click', e=>{ if(shareHolo){ e.preventDefault(); e.stopImmediatePropagation(); holoGo(); } }, true);
-  ['shareToInstagram', 'shareToTikTok', 'shareToWhatsApp', 'shareToEmail'].forEach(fn=>{
-    try{
-      const orig = eval(fn);
-      if(typeof orig !== 'function') return;
-      const wrapped = function(){ if(holoGo()) return; return orig.apply(this, arguments); };
-      window[fn] = wrapped; eval(fn + ' = wrapped');
-    }catch(_){}
-  });
-  // „Kopírovať odkaz“ ostáva – skopíruje odkaz na príspevok
-  const _csm = (typeof closeShareModal === 'function') ? closeShareModal : null;
-  if(_csm){ window.closeShareModal = closeShareModal = function(){ const m = document.getElementById('share-modal'); if(m) m.classList.remove('c8hx-mode'); return _csm.apply(this, arguments); }; }
-})();
-</script>
-<script id="c8wake-script">
-/* Obrazovka nezhasne počas: vytvárania hologramu, tvorby videa na zdieľanie,
-   hovoru a videohovoru (Screen Wake Lock API). Po skončení sa vráti normál. */
-(function(){
-  const keys = new Set(); let lock = null, busy = false;
-  async function apply(){
-    if(busy) return; busy = true;
-    try{
-      if(keys.size && !lock && 'wakeLock' in navigator && document.visibilityState === 'visible'){
-        lock = await navigator.wakeLock.request('screen');
-        lock.addEventListener('release', ()=>{ lock = null; });
-      } else if(!keys.size && lock){ const l = lock; lock = null; await l.release(); }
-    }catch(_){ lock = null; }
-    busy = false;
-    if((keys.size && !lock && document.visibilityState === 'visible' && 'wakeLock' in navigator) || (!keys.size && lock)) setTimeout(apply, 300);
-  }
-  window.c8WakeOn = k => { keys.add(k); apply(); };
-  window.c8WakeOff = k => { keys.delete(k); apply(); };
-  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible' && keys.size) apply(); });
-  // hovor / videohovor
-  try{
-    if(typeof openCallScreen === 'function'){ const o = openCallScreen; openCallScreen = function(){ c8WakeOn('call'); return o.apply(this, arguments); }; }
-    if(typeof endCall === 'function'){ const e = endCall; endCall = function(){ c8WakeOff('call'); return e.apply(this, arguments); }; }
-  }catch(_){}
-  // vytváranie hologramu
-  ['c8HoloCreatePhoto', 'c8HoloCreateVideo'].forEach(fn=>{
-    const f = window[fn]; if(typeof f !== 'function') return;
-    window[fn] = async function(){ c8WakeOn(fn); try{ return await f.apply(this, arguments); } finally { c8WakeOff(fn); } };
-  });
 })();
 </script>
 </body>
