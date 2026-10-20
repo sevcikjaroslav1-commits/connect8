@@ -20634,9 +20634,10 @@ c8ApplyFriendsView();
 </script>
 <style id="c8ai-style">
 /* ================= AI MÔJ HOLOGRAM ================= */
-.c8ai-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;background:linear-gradient(135deg,#0EA5E9,#7C3AED);color:#fff;font-weight:700;font-size:13px;letter-spacing:.02em;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px -8px rgba(124,58,237,.7);font-family:inherit}
-.c8ai-btn small{font-size:10.5px;font-weight:700;background:rgba(255,255,255,.22);padding:2px 6px;border-radius:6px}
-.c8ai-btn.off small{background:rgba(0,0,0,.18)}
+.c8ai-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1.5px solid #8B5CF6;background:rgba(139,92,246,.08);color:#7C3AED;font-weight:700;font-size:13px;letter-spacing:.02em;padding:7px 16px;border-radius:10px;cursor:pointer;white-space:nowrap;font-family:inherit;}
+.c8ai-btn:hover{background:rgba(139,92,246,.16);}
+.c8ai-btn .c8ai-dot{width:8px;height:8px;border-radius:50%;background:#9CA3AF;flex:0 0 auto;}
+.c8ai-btn.on .c8ai-dot{background:#22C55E;box-shadow:0 0 8px #22C55E;}
 /* karta na cudzom profile */
 .c8ai-card{flex-basis:100%;width:100%;max-width:440px;margin-top:12px;border-radius:18px;padding:13px;background:radial-gradient(120% 120% at 20% 0%,#123049,#0B1424);color:#E0F2FE;display:flex;gap:12px;align-items:center;box-shadow:0 10px 24px -10px rgba(14,165,233,.6);cursor:pointer}
 .c8ai-card .ic{width:46px;height:62px;flex:0 0 auto;border-radius:10px;background:radial-gradient(60% 50% at 50% 30%,rgba(125,211,252,.9),rgba(14,165,233,.15) 70%,transparent);position:relative}
@@ -21236,7 +21237,7 @@ c8ApplyFriendsView();
   // ---------- profil: tlačidlo (vlastný) a karta (cudzí, offline) ----------
   function refreshBtn(av){
     const b = $('c8ai-btn'); if(!b) return;
-    const set = v => { const on = !!(v && v.on); b.classList.toggle('off', !on); b.innerHTML = esc(T('🤖 AI môj Hologram')) + ' <small>' + (on ? '● ' + esc(T('zapnutý')) : esc(T('vypnutý'))) + '</small>'; };
+    const set = v => { const on = !!(v && v.on); b.classList.toggle('on', on); b.classList.toggle('off', !on); b.innerHTML = '<span class="c8ai-dot"></span>' + esc(T('AI Hologram')); b.title = T('🤖 AI môj Hologram') + ' · ' + T(on ? 'zapnutý' : 'vypnutý'); };
     if(av !== undefined) set(av); else if(currentUser) loadAv(currentUser.uid).then(d=>set(d.av));
   }
   function ensureOwnBtn(){
@@ -21285,6 +21286,7 @@ c8ApplyFriendsView();
   }
   // stav online sa mení -> karta sa ukáže/skryje
   setInterval(()=>{ try{ const pv = document.getElementById('view-profile'); if(pv && pv.classList.contains('active')) afterProfile(); }catch(_){} }, 15000);
+  try{ [['EN','AI Hologram'],['CZ','AI Hologram'],['PL','Hologram AI'],['HU','AI Hologram'],['DE','KI-Hologramm'],['AT','KI-Hologramm'],['IT','Ologramma IA']].forEach(([n,v])=>{ const d = eval('UI_DICT_' + n); if(d && !d['AI Hologram']) d['AI Hologram'] = v; }); }catch(_){}
   window.c8AiAvatarOpenSettings = openSettings;
   window.c8AiAvatarOpen = (uid)=> loadAv(uid, true).then(d=>openAvatar({ uid, name: d.name }, d, !!(currentUser && currentUser.uid === uid)));
 })();
