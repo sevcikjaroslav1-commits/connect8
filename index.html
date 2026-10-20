@@ -1106,6 +1106,7 @@
     border:2px solid var(--surface);background:#e74c3c;
   }
   .status-dot.online{background:#2ecc71;}
+  .status-dot.away{background:#F59E0B;}
   .product{
     background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;
     position:relative;cursor:pointer;
@@ -2028,6 +2029,8 @@
 .c8r-avw .avatar{width:34px;height:34px;font-size:12px;}
 .c8r-avw .dot{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:#C9CBD1;border:2px solid var(--surface);}
 .c8r-f2.on .c8r-avw .dot{background:#22C55E;}
+.c8r-f2.away .c8r-avw .dot{background:#F59E0B;}
+.c8r-f2.away .c8r-st{color:#D97706;}
 .c8r-tx{flex:1;min-width:0;}
 .c8r-nm{font-size:13.5px;font-weight:600;color:var(--text);white-space:normal;overflow-wrap:break-word;word-break:break-word;line-height:1.25;}
 .c8r-f2.off .c8r-nm{color:var(--text-dim);font-weight:500;}
@@ -2231,6 +2234,9 @@
 #friends-grid.c8-list .user-card .avatar{width:42px;height:42px;font-size:15px;}
 #friends-grid.c8-list .status-dot{width:12px;height:12px;right:-1px;bottom:-1px;background:#C9CBD1;}
 #friends-grid.c8-list .status-dot.online{background:#22C55E;}
+#friends-grid.c8-list .status-dot.away{background:#F59E0B;}
+#friends-grid.c8-list .user-card.c8-away .c8fl-st{color:#D97706;}
+#friends-grid.c8-list .c8fl-st .ago{display:block;font-size:11px;font-weight:600;color:#D97706;}
 #friends-grid.c8-list .user-card-name{grid-column:2;font-size:15px;align-self:end;}
 #friends-grid.c8-list .c8fl-st{grid-column:2;font-size:12px;font-weight:600;color:#16A34A;align-self:start;}
 #friends-grid.c8-list .user-card.c8-off .user-card-name{color:var(--text-dim);font-weight:500;}
@@ -2619,7 +2625,7 @@
         <ul>
           <li>Ak zapneš „AI môj Hologram“, uložíme krátke hologram-videá, ktoré sám nahráš (čakacie video a odpovede so zvukom), a texty tvojich odpovedí. Videá sú uložené na Cloudinary a odkazy na ne v tvojom profile vo Firebase.</li>
           <li>Keď si offline, tvojho AI avatara uvidia a vypočujú si ho návštevníci tvojho profilu. Avatar je vždy viditeľne označený „AI avatar – nie živý človek“ a hovorí iba to, čo si sám nahral alebo napísal. Nevymýšľa si vlastné vety a nenapodobňuje tvoj hlas.</li>
-          <li>Otázka, ktorú návštevník avatarovi položí (hlasom alebo textom), sa spracuje iba na okamih, aby sa k nej priradila jedna z tvojich odpovedí. Reč rozpoznáva prehliadač návštevníka a otázku k odpovedi priradí model umelej inteligencie Cloudflare Workers AI. Otázky neukladáme.</li>
+          <li>Otázka, ktorú návštevník avatarovi položí (hlasom alebo textom), sa spracuje iba na okamih priamo v jeho prehliadači: prehliadač rozpozná reč a podľa kľúčových slov vyberie jednu z tvojich odpovedí. Otázka sa nikam neodosiela, nepoužíva sa na to žiadna umelá inteligencia a otázky neukladáme.</li>
           <li>Odkaz, ktorý návštevník cez avatara zanechá (hlas alebo text), sa po jeho súhlase pošle ako bežná správa do Správ majiteľa profilu. Platia preň rovnaké pravidlá ako pre súkromné správy (bod 5).</li>
           <li>Avatara kedykoľvek vypneš a jednotlivé videá zmažeš v nastaveniach „AI môj Hologram“. Pri vymazaní účtu sa vymažú spolu s profilom.</li>
           <li>Právny základ: tvoj súhlas (čl. 6 ods. 1 písm. a) GDPR), ktorý dávaš zapnutím avatara a nahratím videí; pri odkazoch súhlas návštevníka, ktorý ho potvrdí pred odoslaním. Súhlas odvoláš vypnutím avatara.</li>
@@ -2644,7 +2650,7 @@
           <li><strong>Cloudinary</strong> — ukladanie a spracovanie nahraných obrázkov a videí. Viac: <a href="https://cloudinary.com/privacy" target="_blank" rel="noopener">cloudinary.com/privacy</a></li>
           <li><strong>YouTube / Google</strong> — prehrávanie vložených YouTube videí sa riadi zásadami YouTube/Google, nie Connect8</li>
           <li>OpenStreetMap — mapové podklady pri zdieľaní polohy. Pri zobrazení mapy sa tvoja IP adresa odošle serverom OpenStreetMap. Viac: osmfoundation.org/wiki/Privacy_Policy</li>
-          <li>Cloudflare — hosting stránky connect8.eu a služba Workers AI, ktorá pri AI avatarovi priradí otázku návštevníka k jednej z nahratých odpovedí. Otázky sa neukladajú. Viac: cloudflare.com/privacypolicy</li>
+          <li>Cloudflare — hosting stránky connect8.eu a ochrana pred útokmi. Pri návšteve stránky spracúva technické údaje, napríklad IP adresu. Viac: cloudflare.com/privacypolicy</li>
         </ul>
         <p>Connect8 nepredáva tvoje osobné údaje tretím stranám na marketingové účely.</p>
 
@@ -6656,7 +6662,8 @@ async function renderUsersList(){
       const dot = document.createElement('div');
       dot.className = 'status-dot';
       dot.id = 'status-dot-' + u.id;
-      dot.classList.toggle('online', isUserOnline(u.id));
+      dot.classList.toggle('online', getPresenceState(u.id) === 'online');
+      dot.classList.toggle('away', getPresenceState(u.id) === 'away');
 
       avWrap.appendChild(av);
       avWrap.appendChild(dot);
@@ -6781,7 +6788,8 @@ async function renderFriendsList(){
     const dot = document.createElement('div');
     dot.className = 'status-dot';
     dot.id = 'status-dot-' + u.id;
-    dot.classList.toggle('online', isUserOnline(u.id));
+    dot.classList.toggle('online', getPresenceState(u.id) === 'online');
+    dot.classList.toggle('away', getPresenceState(u.id) === 'away');
 
     avWrap.appendChild(av);
     avWrap.appendChild(dot);
@@ -10087,8 +10095,29 @@ function updateUserStats(){
   if(onlineEl) onlineEl.textContent = onlineUsersCount;
 }
 
+// TRI STAVY: 'online' = má appku na obrazovke, 'away' = Nedávno (appka v pozadí /
+// zhasnutý displej, ale spojenie žije – dá sa mu zavolať), 'offline' = appka nebeží
+function c8PresVal(v){
+  if(!v) return 'offline';
+  if(v.state === 'away' || (v.state === 'online' && v.away)) return 'away';
+  return v.state === 'online' ? 'online' : 'offline';
+}
+function getPresenceState(uid){ return c8PresVal(presenceStatus && presenceStatus[uid]); }
+// "pred 3 min" – odkedy je človek v stave Nedávno
+function getPresenceAgo(uid){
+  const p = presenceStatus && presenceStatus[uid];
+  const ts = p && p.last_changed; if(!ts) return '';
+  const m = Math.max(0, Math.floor((Date.now() - ts) / 60000));
+  const tt = x => (typeof t === 'function' ? t(x) : x);
+  if(m < 1) return tt('pred chvíľou');
+  if(m < 60) return tt('pred') + ' ' + m + ' min';
+  const h = Math.floor(m / 60);
+  if(h < 24) return tt('pred') + ' ' + h + ' h';
+  return formatLastOnline(ts);
+}
+// dá sa mu zavolať? (online alebo Nedávno)
 function isUserOnline(uid){
-  return !!(presenceStatus[uid] && presenceStatus[uid].state === 'online');
+  return getPresenceState(uid) !== 'offline';
 }
 
 function updateStatusDots(){
@@ -10108,7 +10137,9 @@ function updateStatusDots(){
   }catch(e){}
   document.querySelectorAll('[id^="status-dot-"]').forEach(dot=>{
     const uid = dot.id.slice('status-dot-'.length);
-    dot.classList.toggle('online', isUserOnline(uid));
+    const st = getPresenceState(uid);
+    dot.classList.toggle('online', st === 'online');
+    dot.classList.toggle('away', st === 'away');
   });
   document.querySelectorAll('[data-calluid]').forEach(btn=>{
     const online = isUserOnline(btn.dataset.calluid);
@@ -10129,17 +10160,22 @@ function c8PresenceStop(){
 function c8PresenceWake(){
   if(!c8Presence.active || !rtdb) return;
   try{ rtdb.goOnline(); }catch(e){}
+  c8Presence.wrote = null;
   if(c8Presence.goOnline) c8Presence.goOnline();
 }
-document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) c8PresenceWake(); });
+// Odchod z appky / zhasnutý displej -> hneď "Nedávno"; návrat -> hneď "Online"
+document.addEventListener('visibilitychange', ()=>{ c8PresenceWake(); });
+window.addEventListener('pagehide', ()=>{ try{ c8Presence.wrote = null; if(c8Presence.goOnline) c8Presence.goOnline(); }catch(e){} });
 window.addEventListener('focus', c8PresenceWake);
 window.addEventListener('online', c8PresenceWake);
 setInterval(()=>{
   // každú minútu: ak sme podľa databázy offline, vrátime sa na online
   if(!c8Presence.active || !currentUser) return;
-  const p = presenceStatus && presenceStatus[currentUser.uid];
-  if(!p || p.state !== 'online') c8PresenceWake();
+  if(getPresenceState(currentUser.uid) !== c8PresenceWant()) c8PresenceWake();
 }, 60000);
+
+// aký stav má mať toto okno: na obrazovke = online, inak Nedávno
+function c8PresenceWant(){ return document.hidden ? 'away' : 'online'; }
 
 function setPresenceOffline(){
   c8PresenceStop();
@@ -10163,7 +10199,18 @@ function startPresenceHeartbeat(){
       .set({state:'offline', name: currentUser.name, last_changed: firebase.database.ServerValue.TIMESTAMP})
       .then(()=>{
         if(!c8Presence.active || !currentUser) return;
-        return myStatusRef.set({state:'online', name: currentUser.name, last_changed: firebase.database.ServerValue.TIMESTAMP});
+        const want = c8PresenceWant();
+        const cur = presenceStatus && presenceStatus[currentUser.uid];
+        if(cur && c8PresVal(cur) === want && c8Presence.wrote === want) return; // nič sa nezmenilo
+        c8Presence.wrote = want;
+        const TS = firebase.database.ServerValue.TIMESTAMP;
+        if(want === 'online') return myStatusRef.set({state:'online', name: currentUser.name, last_changed: TS});
+        // Nedávno: ak by pravidlá databázy nepovolili stav 'away', zapíše sa online + príznak away
+        if(c8Presence.awayFlag) return myStatusRef.set({state:'online', away: true, name: currentUser.name, last_changed: TS});
+        return myStatusRef.set({state:'away', name: currentUser.name, last_changed: TS}).catch(()=>{
+          c8Presence.awayFlag = true;
+          return myStatusRef.set({state:'online', away: true, name: currentUser.name, last_changed: TS});
+        });
       }).catch(()=>{});
   };
   c8Presence.goOnline = goOnline;
@@ -10179,7 +10226,8 @@ function startPresenceHeartbeat(){
   // hneď sa vráti na online.
   c8Presence.selfCb = myStatusRef.on('value', (snap)=>{
     const v = snap.val();
-    if(c8Presence.active && c8Presence.connected && (!v || v.state !== 'online')){
+    if(c8Presence.active && c8Presence.connected && c8PresVal(v) !== c8PresenceWant()){
+      c8Presence.wrote = null;
       clearTimeout(c8Presence.t); c8Presence.t = setTimeout(goOnline, 800);
     }
   });
@@ -10187,7 +10235,7 @@ function startPresenceHeartbeat(){
   rtdb.ref('status').on('value', (snap)=>{
     const val = snap.val() || {};
     presenceStatus = val;
-    onlineUsersCount = Object.values(val).filter(v=>v.state==='online').length;
+    onlineUsersCount = Object.values(val).filter(v=>c8PresVal(v)==='online').length;
     updateUserStats();
 
     const usersView = document.getElementById('view-users');
@@ -10195,6 +10243,7 @@ function startPresenceHeartbeat(){
     const friendsView = document.getElementById('view-friends');
     if(friendsView && friendsView.classList.contains('active')) updateStatusDots();
     refreshLastOnlineDisplays();
+    try{ if(window.c8PresPaint) window.c8PresPaint(); }catch(e){}
   });
 
   // OPRAVA (bola tu chyba): predchádzajúca verzia používala
@@ -17571,24 +17620,25 @@ function c8RenderRight(){
     try{ pc = profilesCache || {}; }catch(e){}
     if(!uids.length){ fb.innerHTML = '<div class="c8r-empty">'+tt('Zatiaľ nemáš priateľov')+'</div>'; return; }
     const list = uids.map(uid => {
-      const on = !!(ps[uid] && ps[uid].state === 'online');
+      const s3 = (typeof getPresenceState === 'function') ? getPresenceState(uid) : ((ps[uid] && ps[uid].state === 'online') ? 'online' : 'offline');
+      const on = s3 === 'online', away = s3 === 'away';
       const name = (pc[uid] && pc[uid].name) || (ps[uid] && ps[uid].name) || tt('Používateľ');
       const photo = pc[uid] && pc[uid].photo;
-      return {uid, on, name, photo};
-    }).sort((a,b)=> (b.on - a.on) || a.name.localeCompare(b.name,'sk'));
+      return {uid, on, away, rank: on ? 0 : (away ? 1 : 2), name, photo};
+    }).sort((a,b)=> (a.rank - b.rank) || a.name.localeCompare(b.name,'sk'));
     const total = list.length;
     const shown = window.c8rShowAll ? list : list.slice(0,10);
     fb.innerHTML = '';
-    const onN = list.filter(u=>u.on).length, offN = total - onN;
+    const onN = list.filter(u=>u.on).length, awN = list.filter(u=>u.away).length, offN = total - onN - awN;
     let lastOn = null;
     shown.forEach(u => {
-      if(u.on !== lastOn){
+      if(u.rank !== lastOn){
         const h = document.createElement('div'); h.className = 'c8r-h';
-        h.textContent = (u.on ? tt('Online') + ' (' + onN + ')' : tt('Offline') + ' (' + offN + ')');
-        fb.appendChild(h); lastOn = u.on;
+        h.textContent = (u.on ? tt('Online') + ' (' + onN + ')' : (u.away ? tt('Nedávno') + ' (' + awN + ')' : tt('Offline') + ' (' + offN + ')'));
+        fb.appendChild(h); lastOn = u.rank;
       }
       const row = document.createElement('div');
-      row.className = 'c8r-f2 ' + (u.on ? 'on' : 'off');
+      row.className = 'c8r-f2 ' + (u.on ? 'on' : (u.away ? 'away' : 'off'));
       const avw = document.createElement('div'); avw.className = 'c8r-avw';
       const av = document.createElement('div'); av.className = 'avatar';
       if(u.photo){ av.style.backgroundImage = 'url("'+u.photo+'")'; av.style.backgroundSize='cover'; av.style.backgroundPosition='center'; }
@@ -17598,7 +17648,8 @@ function c8RenderRight(){
       const tx = document.createElement('div'); tx.className = 'c8r-tx';
       const nm = document.createElement('div'); nm.className = 'c8r-nm'; nm.textContent = u.name;
       const st = document.createElement('div'); st.className = 'c8r-st'; st.textContent = u.on ? '● ' + tt('Online') : tt('Offline');
-      if(!u.on){ // naposledy online – len ak to má priateľ zapnuté (rovnako ako v sekcii Priatelia)
+      if(u.away){ st.textContent = (typeof getPresenceAgo === 'function' ? getPresenceAgo(u.uid) : '') || tt('Nedávno'); st.title = tt('Nedávno'); }
+      else if(!u.on){ // naposledy online – len ak to má priateľ zapnuté (rovnako ako v sekcii Priatelia)
         const lo = c8rLastOnline(u.uid);
         if(lo){ st.textContent = lo.short; st.title = tt('Naposledy online') + ' ' + lo.full; st.classList.add('lo'); }
       }
@@ -17848,7 +17899,7 @@ function c8RenderStats(){
   let fol = [], ps = {};
   try{ fol = [...followingSet]; }catch(e){}
   try{ ps = presenceStatus||{}; }catch(e){}
-  const onl = fol.filter(u=>ps[u] && ps[u].state==='online').length;
+  const onl = fol.filter(u=>(typeof c8PresVal === 'function') ? c8PresVal(ps[u]) === 'online' : (ps[u] && ps[u].state==='online')).length;
   h += `<div class="c8st-sec"><h4>🛒 ${tt('Môj bazár')} &nbsp;·&nbsp; 👥 ${tt('Priatelia')}</h4><div class="c8st-tiles">`+
        tile(c8Fmt(myPr.length),'Inzerátov','#FFF1E6','#EA580C')+tile(c8Fmt(fol.length),'Sledujem','#EEF2FF','#4F46E5')+
        tile(c8Fmt(onl),'Práve online','#E9F9EF','#16A34A')+tile(fol.length?Math.round(onl/fol.length*100)+' %':'0 %','Online z priateľov','#F3F4F6','#374151')+`</div></div>`;
@@ -17990,18 +18041,25 @@ function c8ApplyFriendsView(){
   if(!cards.length) return;
   const tt = (x)=> (typeof t === 'function' ? t(x) : x);
   const nm = c=> ((c.querySelector('.user-card-name')||{}).textContent||'');
-  const isOn = c=> !!c.querySelector('.status-dot.online');
+  const uidOf = c=>{ const d = c.querySelector('[id^="status-dot-"]'); return d ? d.id.slice('status-dot-'.length) : ''; };
+  const stOf = c=>{ const u = uidOf(c); return (u && typeof getPresenceState === 'function') ? getPresenceState(u) : (c.querySelector('.status-dot.online') ? 'online' : 'offline'); };
+  const isOn = c=> stOf(c) === 'online';
   cards.forEach(c=>{
     let st = c.querySelector('.c8fl-st');
     if(!st){ st = document.createElement('span'); st.className = 'c8fl-st'; const n = c.querySelector('.user-card-name'); if(n) n.after(st); }
-    const on = isOn(c); st.textContent = on ? '● ' + tt('Online') : tt('Offline');
-    c.classList.toggle('c8-off', !on);
+    const s3 = stOf(c);
+    if(s3 === 'online') st.textContent = '● ' + tt('Online');
+    else if(s3 === 'away'){ st.textContent = '● ' + tt('Nedávno'); const a = document.createElement('span'); a.className = 'ago'; a.textContent = (typeof getPresenceAgo === 'function') ? getPresenceAgo(uidOf(c)) : ''; st.appendChild(a); }
+    else st.textContent = tt('Offline');
+    c.classList.toggle('c8-off', s3 === 'offline');
+    c.classList.toggle('c8-away', s3 === 'away');
   });
   cards.sort((a,b)=> nm(a).localeCompare(nm(b),'sk'));
   if(!list){ cards.forEach(c=>g.appendChild(c)); return; }
-  const on = cards.filter(isOn), off = cards.filter(c=>!isOn(c));
+  const on = cards.filter(isOn), aw = cards.filter(c=>stOf(c)==='away'), off = cards.filter(c=>stOf(c)==='offline');
   const head = (txt)=>{ const h=document.createElement('div'); h.className='c8fl-h'; h.textContent=txt; return h; };
   if(on.length){ g.appendChild(head(tt('Online') + ' (' + on.length + ')')); on.forEach(c=>g.appendChild(c)); }
+  if(aw.length){ g.appendChild(head(tt('Nedávno') + ' (' + aw.length + ')')); aw.forEach(c=>g.appendChild(c)); }
   if(off.length){ g.appendChild(head(tt('Offline') + ' (' + off.length + ')')); off.forEach(c=>g.appendChild(c)); }
 }
 if(typeof renderFriendsList === 'function'){
@@ -19776,8 +19834,8 @@ c8ApplyFriendsView();
 </script>
 <script id="c8ai-legal">
 (function(){
-  const NEW = {"h": "2.7 AI môj Hologram (iba ak ho sám zapneš)", "a1": "Ak zapneš „AI môj Hologram“, uložíme krátke hologram-videá, ktoré sám nahráš (čakacie video a odpovede so zvukom), a texty tvojich odpovedí. Videá sú uložené na Cloudinary a odkazy na ne v tvojom profile vo Firebase.", "a2": "Keď si offline, tvojho AI avatara uvidia a vypočujú si ho návštevníci tvojho profilu. Avatar je vždy viditeľne označený „AI avatar – nie živý človek“ a hovorí iba to, čo si sám nahral alebo napísal. Nevymýšľa si vlastné vety a nenapodobňuje tvoj hlas.", "a3": "Otázka, ktorú návštevník avatarovi položí (hlasom alebo textom), sa spracuje iba na okamih, aby sa k nej priradila jedna z tvojich odpovedí. Reč rozpoznáva prehliadač návštevníka a otázku k odpovedi priradí model umelej inteligencie Cloudflare Workers AI. Otázky neukladáme.", "a4": "Odkaz, ktorý návštevník cez avatara zanechá (hlas alebo text), sa po jeho súhlase pošle ako bežná správa do Správ majiteľa profilu. Platia preň rovnaké pravidlá ako pre súkromné správy (bod 5).", "a5": "Avatara kedykoľvek vypneš a jednotlivé videá zmažeš v nastaveniach „AI môj Hologram“. Pri vymazaní účtu sa vymažú spolu s profilom.", "a6": "Právny základ: tvoj súhlas (čl. 6 ods. 1 písm. a) GDPR), ktorý dávaš zapnutím avatara a nahratím videí; pri odkazoch súhlas návštevníka, ktorý ho potvrdí pred odoslaním. Súhlas odvoláš vypnutím avatara.", "cf": "Cloudflare — hosting stránky connect8.eu a služba Workers AI, ktorá pri AI avatarovi priradí otázku návštevníka k jednej z nahratých odpovedí. Otázky sa neukladajú. Viac: cloudflare.com/privacypolicy"};
-  const TR = {"EN": {"h": "2.7 AI my Hologram (only if you turn it on)", "a1": "If you turn on “AI my Hologram”, we store the short hologram videos you record yourself (an idle video and answers with sound) and the texts of your answers. The videos are stored on Cloudinary and the links to them in your profile in Firebase.", "a2": "When you are offline, visitors to your profile can see and hear your AI avatar. The avatar is always visibly labelled “AI avatar – not a live person” and says only what you recorded or wrote yourself. It does not make up its own sentences and does not imitate your voice.", "a3": "A question a visitor asks the avatar (by voice or text) is processed only for a moment to match it to one of your answers. Speech is recognised by the visitor’s browser and the question is matched by the Cloudflare Workers AI artificial intelligence model. We do not store the questions.", "a4": "A message a visitor leaves via the avatar (voice or text) is sent, with their consent, as a normal message to the profile owner’s Messages. The same rules apply to it as to private messages (section 5).", "a5": "You can turn the avatar off at any time and delete individual videos in the “AI my Hologram” settings. When you delete your account, they are deleted together with your profile.", "a6": "Legal basis: your consent (Art. 6(1)(a) GDPR), which you give by turning on the avatar and recording videos; for messages, the consent of the visitor, who confirms it before sending. You withdraw consent by turning the avatar off.", "cf": "Cloudflare — hosting of the connect8.eu website and the Workers AI service, which matches a visitor’s question to one of the recorded answers of the AI avatar. Questions are not stored. More: cloudflare.com/privacypolicy"}, "CZ": {"h": "2.7 AI můj Hologram (jen pokud ho sám zapneš)", "a1": "Pokud zapneš „AI můj Hologram“, uložíme krátká hologram-videa, která sám nahraješ (čekací video a odpovědi se zvukem), a texty tvých odpovědí. Videa jsou uložena na Cloudinary a odkazy na ně v tvém profilu ve Firebase.", "a2": "Když jsi offline, tvého AI avatara uvidí a uslyší návštěvníci tvého profilu. Avatar je vždy viditelně označen „AI avatar – ne živý člověk“ a říká jen to, co jsi sám nahrál nebo napsal. Nevymýšlí si vlastní věty a nenapodobuje tvůj hlas.", "a3": "Otázka, kterou návštěvník avatarovi položí (hlasem nebo textem), se zpracuje jen na okamžik, aby se k ní přiřadila jedna z tvých odpovědí. Řeč rozpoznává prohlížeč návštěvníka a otázku k odpovědi přiřadí model umělé inteligence Cloudflare Workers AI. Otázky neukládáme.", "a4": "Vzkaz, který návštěvník přes avatara zanechá (hlas nebo text), se s jeho souhlasem pošle jako běžná zpráva do Zpráv majitele profilu. Platí pro něj stejná pravidla jako pro soukromé zprávy (bod 5).", "a5": "Avatara kdykoli vypneš a jednotlivá videa smažeš v nastavení „AI můj Hologram“. Při smazání účtu se smažou spolu s profilem.", "a6": "Právní základ: tvůj souhlas (čl. 6 odst. 1 písm. a) GDPR), který dáváš zapnutím avatara a nahráním videí; u vzkazů souhlas návštěvníka, který ho potvrdí před odesláním. Souhlas odvoláš vypnutím avatara.", "cf": "Cloudflare — hosting stránky connect8.eu a služba Workers AI, která u AI avatara přiřadí otázku návštěvníka k jedné z nahraných odpovědí. Otázky se neukládají. Více: cloudflare.com/privacypolicy"}, "PL": {"h": "2.7 AI mój Hologram (tylko jeśli go włączysz)", "a1": "Jeśli włączysz „AI mój Hologram”, zapiszemy krótkie filmy-hologramy, które sam nagrasz (film oczekiwania i odpowiedzi z dźwiękiem), oraz teksty twoich odpowiedzi. Filmy są przechowywane w Cloudinary, a linki do nich w twoim profilu w Firebase.", "a2": "Gdy jesteś offline, odwiedzający twój profil mogą zobaczyć i usłyszeć twojego awatara AI. Awatar jest zawsze wyraźnie oznaczony „Awatar AI – nie żywa osoba” i mówi tylko to, co sam nagrałeś lub napisałeś. Nie wymyśla własnych zdań i nie naśladuje twojego głosu.", "a3": "Pytanie zadane awatarowi przez odwiedzającego (głosem lub tekstem) jest przetwarzane tylko przez chwilę, aby dopasować je do jednej z twoich odpowiedzi. Mowę rozpoznaje przeglądarka odwiedzającego, a pytanie dopasowuje model sztucznej inteligencji Cloudflare Workers AI. Nie zapisujemy pytań.", "a4": "Wiadomość pozostawiona przez odwiedzającego przez awatara (głos lub tekst) jest za jego zgodą wysyłana jako zwykła wiadomość do Wiadomości właściciela profilu. Obowiązują ją te same zasady co wiadomości prywatne (punkt 5).", "a5": "Awatara możesz w każdej chwili wyłączyć, a poszczególne filmy usunąć w ustawieniach „AI mój Hologram”. Po usunięciu konta zostaną usunięte razem z profilem.", "a6": "Podstawa prawna: twoja zgoda (art. 6 ust. 1 lit. a) RODO), którą wyrażasz, włączając awatara i nagrywając filmy; w przypadku wiadomości zgoda odwiedzającego, potwierdzona przed wysłaniem. Zgodę wycofujesz, wyłączając awatara.", "cf": "Cloudflare — hosting strony connect8.eu oraz usługa Workers AI, która przy awatarze AI dopasowuje pytanie odwiedzającego do jednej z nagranych odpowiedzi. Pytania nie są zapisywane. Więcej: cloudflare.com/privacypolicy"}, "HU": {"h": "2.7 AI Hologramom (csak ha bekapcsolod)", "a1": "Ha bekapcsolod az „AI Hologramom” funkciót, tároljuk az általad felvett rövid hologram-videókat (várakozó videó és hangos válaszok), valamint a válaszaid szövegét. A videók a Cloudinary-n, a rájuk mutató hivatkozások a Firebase-ben lévő profilodban vannak.", "a2": "Amikor offline vagy, a profilod látogatói láthatják és hallhatják az AI avatarodat. Az avatar mindig jól láthatóan „AI avatar – nem élő ember” jelöléssel szerepel, és csak azt mondja, amit te magad vettél fel vagy írtál. Nem talál ki saját mondatokat, és nem utánozza a hangodat.", "a3": "A látogató avatarnak feltett kérdése (hanggal vagy szöveggel) csak egy pillanatra kerül feldolgozásra, hogy hozzárendeljük az egyik válaszodhoz. A beszédet a látogató böngészője ismeri fel, a kérdést a Cloudflare Workers AI mesterséges intelligencia modell rendeli hozzá. A kérdéseket nem tároljuk.", "a4": "Az avataron keresztül hagyott üzenet (hang vagy szöveg) a látogató hozzájárulásával normál üzenetként kerül a profil tulajdonosának Üzenetei közé. Ugyanazok a szabályok vonatkoznak rá, mint a privát üzenetekre (5. pont).", "a5": "Az avatart bármikor kikapcsolhatod, és az egyes videókat törölheted az „AI Hologramom” beállításaiban. A fiók törlésekor a profillal együtt törlődnek.", "a6": "Jogalap: a hozzájárulásod (GDPR 6. cikk (1) a) pont), amelyet az avatar bekapcsolásával és a videók felvételével adsz meg; az üzeneteknél a látogató hozzájárulása, amelyet küldés előtt megerősít. A hozzájárulást az avatar kikapcsolásával vonhatod vissza.", "cf": "Cloudflare — a connect8.eu weboldal tárhelye és a Workers AI szolgáltatás, amely az AI avatarnál a látogató kérdését az egyik felvett válaszhoz rendeli. A kérdéseket nem tároljuk. Bővebben: cloudflare.com/privacypolicy"}, "DE": {"h": "2.7 KI mein Hologramm (nur wenn du es einschaltest)", "a1": "Wenn du „KI mein Hologramm“ einschaltest, speichern wir die kurzen Hologramm-Videos, die du selbst aufnimmst (ein Warte-Video und Antworten mit Ton), sowie die Texte deiner Antworten. Die Videos liegen bei Cloudinary, die Links darauf in deinem Profil in Firebase.", "a2": "Wenn du offline bist, können Besucher deines Profils deinen KI-Avatar sehen und hören. Der Avatar ist immer sichtbar als „KI-Avatar – kein echter Mensch“ gekennzeichnet und sagt nur, was du selbst aufgenommen oder geschrieben hast. Er erfindet keine eigenen Sätze und ahmt deine Stimme nicht nach.", "a3": "Eine Frage, die ein Besucher dem Avatar stellt (per Stimme oder Text), wird nur kurz verarbeitet, um sie einer deiner Antworten zuzuordnen. Die Sprache erkennt der Browser des Besuchers, die Zuordnung übernimmt das KI-Modell Cloudflare Workers AI. Wir speichern die Fragen nicht.", "a4": "Eine Nachricht, die ein Besucher über den Avatar hinterlässt (Stimme oder Text), wird mit seiner Zustimmung als normale Nachricht in die Nachrichten des Profilinhabers gesendet. Für sie gelten dieselben Regeln wie für private Nachrichten (Punkt 5).", "a5": "Du kannst den Avatar jederzeit ausschalten und einzelne Videos in den Einstellungen „KI mein Hologramm“ löschen. Beim Löschen des Kontos werden sie zusammen mit dem Profil gelöscht.", "a6": "Rechtsgrundlage: deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du durch Einschalten des Avatars und Aufnehmen der Videos erteilst; bei Nachrichten die Einwilligung des Besuchers, die er vor dem Senden bestätigt. Du widerrufst die Einwilligung, indem du den Avatar ausschaltest.", "cf": "Cloudflare — Hosting der Website connect8.eu und der Dienst Workers AI, der beim KI-Avatar die Frage eines Besuchers einer der aufgenommenen Antworten zuordnet. Fragen werden nicht gespeichert. Mehr: cloudflare.com/privacypolicy"}, "IT": {"h": "2.7 IA il mio Ologramma (solo se lo attivi)", "a1": "Se attivi „IA il mio Ologramma“, salviamo i brevi video-ologramma che registri tu stesso (un video di attesa e risposte con audio) e i testi delle tue risposte. I video sono salvati su Cloudinary e i link nel tuo profilo su Firebase.", "a2": "Quando sei offline, i visitatori del tuo profilo possono vedere e ascoltare il tuo avatar IA. L’avatar è sempre chiaramente indicato come „Avatar IA – non una persona reale“ e dice solo ciò che hai registrato o scritto tu. Non inventa frasi proprie e non imita la tua voce.", "a3": "La domanda che un visitatore pone all’avatar (a voce o per iscritto) viene elaborata solo per un istante per associarla a una delle tue risposte. Il parlato è riconosciuto dal browser del visitatore e l’associazione è fatta dal modello di intelligenza artificiale Cloudflare Workers AI. Non salviamo le domande.", "a4": "Il messaggio che un visitatore lascia tramite l’avatar (voce o testo) viene inviato, con il suo consenso, come normale messaggio nei Messaggi del proprietario del profilo. Valgono le stesse regole dei messaggi privati (punto 5).", "a5": "Puoi disattivare l’avatar in qualsiasi momento ed eliminare i singoli video nelle impostazioni „IA il mio Ologramma“. Con l’eliminazione dell’account vengono eliminati insieme al profilo.", "a6": "Base giuridica: il tuo consenso (art. 6, par. 1, lett. a) GDPR), che dai attivando l’avatar e registrando i video; per i messaggi, il consenso del visitatore, confermato prima dell’invio. Revochi il consenso disattivando l’avatar.", "cf": "Cloudflare — hosting del sito connect8.eu e servizio Workers AI, che per l’avatar IA associa la domanda di un visitatore a una delle risposte registrate. Le domande non vengono salvate. Maggiori informazioni: cloudflare.com/privacypolicy"}};
+  const NEW = {"h": "2.7 AI môj Hologram (iba ak ho sám zapneš)", "a1": "Ak zapneš „AI môj Hologram“, uložíme krátke hologram-videá, ktoré sám nahráš (čakacie video a odpovede so zvukom), a texty tvojich odpovedí. Videá sú uložené na Cloudinary a odkazy na ne v tvojom profile vo Firebase.", "a2": "Keď si offline, tvojho AI avatara uvidia a vypočujú si ho návštevníci tvojho profilu. Avatar je vždy viditeľne označený „AI avatar – nie živý človek“ a hovorí iba to, čo si sám nahral alebo napísal. Nevymýšľa si vlastné vety a nenapodobňuje tvoj hlas.", "a3": "Otázka, ktorú návštevník avatarovi položí (hlasom alebo textom), sa spracuje iba na okamih priamo v jeho prehliadači: prehliadač rozpozná reč a podľa kľúčových slov vyberie jednu z tvojich odpovedí. Otázka sa nikam neodosiela, nepoužíva sa na to žiadna umelá inteligencia a otázky neukladáme.", "a4": "Odkaz, ktorý návštevník cez avatara zanechá (hlas alebo text), sa po jeho súhlase pošle ako bežná správa do Správ majiteľa profilu. Platia preň rovnaké pravidlá ako pre súkromné správy (bod 5).", "a5": "Avatara kedykoľvek vypneš a jednotlivé videá zmažeš v nastaveniach „AI môj Hologram“. Pri vymazaní účtu sa vymažú spolu s profilom.", "a6": "Právny základ: tvoj súhlas (čl. 6 ods. 1 písm. a) GDPR), ktorý dávaš zapnutím avatara a nahratím videí; pri odkazoch súhlas návštevníka, ktorý ho potvrdí pred odoslaním. Súhlas odvoláš vypnutím avatara.", "cf": "Cloudflare — hosting stránky connect8.eu a ochrana pred útokmi. Pri návšteve stránky spracúva technické údaje, napríklad IP adresu. Viac: cloudflare.com/privacypolicy"};
+  const TR = {"EN": {"h": "2.7 AI my Hologram (only if you turn it on)", "a1": "If you turn on “AI my Hologram”, we store the short hologram videos you record yourself (an idle video and answers with sound) and the texts of your answers. The videos are stored on Cloudinary and the links to them in your profile in Firebase.", "a2": "When you are offline, visitors to your profile can see and hear your AI avatar. The avatar is always visibly labelled “AI avatar – not a live person” and says only what you recorded or wrote yourself. It does not make up its own sentences and does not imitate your voice.", "a3": "A question a visitor asks the avatar (by voice or text) is processed only for a moment directly in their browser: the browser recognises the speech and picks one of your answers by keywords. The question is not sent anywhere, no artificial intelligence is used for this and we do not store the questions.", "a4": "A message a visitor leaves via the avatar (voice or text) is sent, with their consent, as a normal message to the profile owner’s Messages. The same rules apply to it as to private messages (section 5).", "a5": "You can turn the avatar off at any time and delete individual videos in the “AI my Hologram” settings. When you delete your account, they are deleted together with your profile.", "a6": "Legal basis: your consent (Art. 6(1)(a) GDPR), which you give by turning on the avatar and recording videos; for messages, the consent of the visitor, who confirms it before sending. You withdraw consent by turning the avatar off.", "cf": "Cloudflare — hosting of the connect8.eu website and protection against attacks. When you visit the website it processes technical data such as your IP address. More: cloudflare.com/privacypolicy"}, "CZ": {"h": "2.7 AI můj Hologram (jen pokud ho sám zapneš)", "a1": "Pokud zapneš „AI můj Hologram“, uložíme krátká hologram-videa, která sám nahraješ (čekací video a odpovědi se zvukem), a texty tvých odpovědí. Videa jsou uložena na Cloudinary a odkazy na ně v tvém profilu ve Firebase.", "a2": "Když jsi offline, tvého AI avatara uvidí a uslyší návštěvníci tvého profilu. Avatar je vždy viditelně označen „AI avatar – ne živý člověk“ a říká jen to, co jsi sám nahrál nebo napsal. Nevymýšlí si vlastní věty a nenapodobuje tvůj hlas.", "a3": "Otázka, kterou návštěvník avatarovi položí (hlasem nebo textem), se zpracuje jen na okamžik přímo v jeho prohlížeči: prohlížeč rozpozná řeč a podle klíčových slov vybere jednu z tvých odpovědí. Otázka se nikam neodesílá, nepoužívá se k tomu žádná umělá inteligence a otázky neukládáme.", "a4": "Vzkaz, který návštěvník přes avatara zanechá (hlas nebo text), se s jeho souhlasem pošle jako běžná zpráva do Zpráv majitele profilu. Platí pro něj stejná pravidla jako pro soukromé zprávy (bod 5).", "a5": "Avatara kdykoli vypneš a jednotlivá videa smažeš v nastavení „AI můj Hologram“. Při smazání účtu se smažou spolu s profilem.", "a6": "Právní základ: tvůj souhlas (čl. 6 odst. 1 písm. a) GDPR), který dáváš zapnutím avatara a nahráním videí; u vzkazů souhlas návštěvníka, který ho potvrdí před odesláním. Souhlas odvoláš vypnutím avatara.", "cf": "Cloudflare — hosting stránky connect8.eu a ochrana před útoky. Při návštěvě stránky zpracovává technické údaje, například IP adresu. Více: cloudflare.com/privacypolicy"}, "PL": {"h": "2.7 AI mój Hologram (tylko jeśli go włączysz)", "a1": "Jeśli włączysz „AI mój Hologram”, zapiszemy krótkie filmy-hologramy, które sam nagrasz (film oczekiwania i odpowiedzi z dźwiękiem), oraz teksty twoich odpowiedzi. Filmy są przechowywane w Cloudinary, a linki do nich w twoim profilu w Firebase.", "a2": "Gdy jesteś offline, odwiedzający twój profil mogą zobaczyć i usłyszeć twojego awatara AI. Awatar jest zawsze wyraźnie oznaczony „Awatar AI – nie żywa osoba” i mówi tylko to, co sam nagrałeś lub napisałeś. Nie wymyśla własnych zdań i nie naśladuje twojego głosu.", "a3": "Pytanie zadane awatarowi przez odwiedzającego (głosem lub tekstem) jest przetwarzane tylko przez chwilę bezpośrednio w jego przeglądarce: przeglądarka rozpoznaje mowę i według słów kluczowych wybiera jedną z twoich odpowiedzi. Pytanie nie jest nigdzie wysyłane, nie używa się do tego sztucznej inteligencji i nie zapisujemy pytań.", "a4": "Wiadomość pozostawiona przez odwiedzającego przez awatara (głos lub tekst) jest za jego zgodą wysyłana jako zwykła wiadomość do Wiadomości właściciela profilu. Obowiązują ją te same zasady co wiadomości prywatne (punkt 5).", "a5": "Awatara możesz w każdej chwili wyłączyć, a poszczególne filmy usunąć w ustawieniach „AI mój Hologram”. Po usunięciu konta zostaną usunięte razem z profilem.", "a6": "Podstawa prawna: twoja zgoda (art. 6 ust. 1 lit. a) RODO), którą wyrażasz, włączając awatara i nagrywając filmy; w przypadku wiadomości zgoda odwiedzającego, potwierdzona przed wysłaniem. Zgodę wycofujesz, wyłączając awatara.", "cf": "Cloudflare — hosting strony connect8.eu i ochrona przed atakami. Podczas odwiedzin strony przetwarza dane techniczne, np. adres IP. Więcej: cloudflare.com/privacypolicy"}, "HU": {"h": "2.7 AI Hologramom (csak ha bekapcsolod)", "a1": "Ha bekapcsolod az „AI Hologramom” funkciót, tároljuk az általad felvett rövid hologram-videókat (várakozó videó és hangos válaszok), valamint a válaszaid szövegét. A videók a Cloudinary-n, a rájuk mutató hivatkozások a Firebase-ben lévő profilodban vannak.", "a2": "Amikor offline vagy, a profilod látogatói láthatják és hallhatják az AI avatarodat. Az avatar mindig jól láthatóan „AI avatar – nem élő ember” jelöléssel szerepel, és csak azt mondja, amit te magad vettél fel vagy írtál. Nem talál ki saját mondatokat, és nem utánozza a hangodat.", "a3": "A látogató avatarnak feltett kérdése (hanggal vagy szöveggel) csak egy pillanatra, közvetlenül a böngészőjében kerül feldolgozásra: a böngésző felismeri a beszédet, és kulcsszavak alapján kiválasztja az egyik válaszodat. A kérdés sehova nem kerül elküldésre, ehhez nem használunk mesterséges intelligenciát, és a kérdéseket nem tároljuk.", "a4": "Az avataron keresztül hagyott üzenet (hang vagy szöveg) a látogató hozzájárulásával normál üzenetként kerül a profil tulajdonosának Üzenetei közé. Ugyanazok a szabályok vonatkoznak rá, mint a privát üzenetekre (5. pont).", "a5": "Az avatart bármikor kikapcsolhatod, és az egyes videókat törölheted az „AI Hologramom” beállításaiban. A fiók törlésekor a profillal együtt törlődnek.", "a6": "Jogalap: a hozzájárulásod (GDPR 6. cikk (1) a) pont), amelyet az avatar bekapcsolásával és a videók felvételével adsz meg; az üzeneteknél a látogató hozzájárulása, amelyet küldés előtt megerősít. A hozzájárulást az avatar kikapcsolásával vonhatod vissza.", "cf": "Cloudflare — a connect8.eu weboldal tárhelye és támadások elleni védelme. Az oldal látogatásakor technikai adatokat, például IP-címet kezel. Bővebben: cloudflare.com/privacypolicy"}, "DE": {"h": "2.7 KI mein Hologramm (nur wenn du es einschaltest)", "a1": "Wenn du „KI mein Hologramm“ einschaltest, speichern wir die kurzen Hologramm-Videos, die du selbst aufnimmst (ein Warte-Video und Antworten mit Ton), sowie die Texte deiner Antworten. Die Videos liegen bei Cloudinary, die Links darauf in deinem Profil in Firebase.", "a2": "Wenn du offline bist, können Besucher deines Profils deinen KI-Avatar sehen und hören. Der Avatar ist immer sichtbar als „KI-Avatar – kein echter Mensch“ gekennzeichnet und sagt nur, was du selbst aufgenommen oder geschrieben hast. Er erfindet keine eigenen Sätze und ahmt deine Stimme nicht nach.", "a3": "Eine Frage, die ein Besucher dem Avatar stellt (per Stimme oder Text), wird nur kurz direkt in seinem Browser verarbeitet: Der Browser erkennt die Sprache und wählt anhand von Schlüsselwörtern eine deiner Antworten. Die Frage wird nirgendwohin gesendet, es wird dafür keine künstliche Intelligenz verwendet und wir speichern die Fragen nicht.", "a4": "Eine Nachricht, die ein Besucher über den Avatar hinterlässt (Stimme oder Text), wird mit seiner Zustimmung als normale Nachricht in die Nachrichten des Profilinhabers gesendet. Für sie gelten dieselben Regeln wie für private Nachrichten (Punkt 5).", "a5": "Du kannst den Avatar jederzeit ausschalten und einzelne Videos in den Einstellungen „KI mein Hologramm“ löschen. Beim Löschen des Kontos werden sie zusammen mit dem Profil gelöscht.", "a6": "Rechtsgrundlage: deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du durch Einschalten des Avatars und Aufnehmen der Videos erteilst; bei Nachrichten die Einwilligung des Besuchers, die er vor dem Senden bestätigt. Du widerrufst die Einwilligung, indem du den Avatar ausschaltest.", "cf": "Cloudflare — Hosting der Website connect8.eu und Schutz vor Angriffen. Beim Besuch der Website verarbeitet es technische Daten, z. B. die IP-Adresse. Mehr: cloudflare.com/privacypolicy"}, "IT": {"h": "2.7 IA il mio Ologramma (solo se lo attivi)", "a1": "Se attivi „IA il mio Ologramma“, salviamo i brevi video-ologramma che registri tu stesso (un video di attesa e risposte con audio) e i testi delle tue risposte. I video sono salvati su Cloudinary e i link nel tuo profilo su Firebase.", "a2": "Quando sei offline, i visitatori del tuo profilo possono vedere e ascoltare il tuo avatar IA. L’avatar è sempre chiaramente indicato come „Avatar IA – non una persona reale“ e dice solo ciò che hai registrato o scritto tu. Non inventa frasi proprie e non imita la tua voce.", "a3": "La domanda che un visitatore pone all’avatar (a voce o per iscritto) viene elaborata solo per un istante direttamente nel suo browser: il browser riconosce il parlato e sceglie una delle tue risposte in base a parole chiave. La domanda non viene inviata da nessuna parte, non si usa alcuna intelligenza artificiale e non salviamo le domande.", "a4": "Il messaggio che un visitatore lascia tramite l’avatar (voce o testo) viene inviato, con il suo consenso, come normale messaggio nei Messaggi del proprietario del profilo. Valgono le stesse regole dei messaggi privati (punto 5).", "a5": "Puoi disattivare l’avatar in qualsiasi momento ed eliminare i singoli video nelle impostazioni „IA il mio Ologramma“. Con l’eliminazione dell’account vengono eliminati insieme al profilo.", "a6": "Base giuridica: il tuo consenso (art. 6, par. 1, lett. a) GDPR), che dai attivando l’avatar e registrando i video; per i messaggi, il consenso del visitatore, confermato prima dell’invio. Revochi il consenso disattivando l’avatar.", "cf": "Cloudflare — hosting del sito connect8.eu e protezione dagli attacchi. Durante la visita del sito tratta dati tecnici, ad esempio l’indirizzo IP. Maggiori informazioni: cloudflare.com/privacypolicy"}};
   const dict = n => { try{ return eval('LEGAL_DICT_' + n); }catch(_){ return null; } };
   Object.keys(TR).forEach(n => { const targets = [dict(n)]; if(n === 'DE') targets.push(dict('AT'));
     targets.forEach(d => { if(!d) return; Object.keys(NEW).forEach(k => { d[NEW[k]] = TR[n][k]; }); }); });
@@ -21061,7 +21119,9 @@ c8ApplyFriendsView();
     });
     return bestScore > 0 ? best : FALLBACK;
   }
+  const USE_AI = false; // otázky sa NEPOSIELAJÚ na server – hľadá sa iba podľa kľúčových slov v prehliadači
   async function matchAI(q){
+    if(!USE_AI) return 0;
     if(!/^https?:/.test(location.protocol)) return 0;
     const ctl = ('AbortController' in window) ? new AbortController() : null;
     const tmo = setTimeout(()=>{ try{ ctl && ctl.abort(); }catch(_){} }, 4000);
@@ -21270,7 +21330,7 @@ c8ApplyFriendsView();
     let cur = null; try{ cur = viewedProfileUser; }catch(_){}
     if(!cur || cur.uid !== u.uid) return;
     let blocked = false; try{ blocked = blockedSet.has(u.uid); }catch(_){}
-    let online = false; try{ online = isUserOnline(u.uid); }catch(_){}
+    let online = false; try{ online = (typeof getPresenceState === 'function') ? getPresenceState(u.uid) === 'online' : isUserOnline(u.uid); }catch(_){}
     if(!d.av || !d.av.on || !hasContent(d.av) || blocked || online){ removeCard(); return; }
     showCard(u, d);
   }
@@ -21298,12 +21358,76 @@ c8ApplyFriendsView();
   // je AI avatar tohto človeka práve aktívny? (zapnutý, má nahraté videá, majiteľ je offline)
   window.c8AiAvatarActiveFor = async function(uid){
     const d = await loadAv(uid);
-    let online = false; try{ online = isUserOnline(uid); }catch(_){}
+    let online = false; try{ online = (typeof getPresenceState === 'function') ? getPresenceState(uid) === 'online' : isUserOnline(uid); }catch(_){}
     return !!(d.av && d.av.on && hasContent(d.av) && !online);
   };
   window.c8AiAvatarOpen = (uid)=> loadAv(uid, true).then(d=>openAvatar({ uid, name: d.name }, d, !!(currentUser && currentUser.uid === uid)));
 })();
 </script>
 
+<style id="c8pres-style">
+.c8u-st{display:block;font-size:10.5px;font-weight:600;margin-top:1px;white-space:nowrap}
+.c8u-st.online{color:#16A34A}.c8u-st.away{color:#D97706}.c8u-st.offline{color:#9CA3AF;font-weight:500}
+#friends-grid .c8u-st{display:none}
+.c8pres-line{font-size:13px;font-weight:600;margin-top:3px}
+.c8pres-line.online{color:#16A34A}.c8pres-line.away{color:#D97706}
+</style>
+<script id="c8pres-script">
+/* ===== TRI STAVY (Online · Nedávno · Offline) – zobrazenie v Používateľoch a na profile ===== */
+(function(){
+  const tt = x => (typeof t === 'function' ? t(x) : x);
+  try{
+    const TR = { EN:['Recently','just now','ago','Was here recently – it will ring via notification'], CZ:['Nedávno','před chvílí','před','Byl tu nedávno – zazvoní mu to přes notifikaci'], PL:['Niedawno','przed chwilą','temu','Był tu niedawno – zadzwoni przez powiadomienie'], HU:['Nemrég','az imént','ezelőtt','Nemrég itt volt – értesítésen keresztül csörögni fog'], DE:['Kürzlich','gerade eben','vor','War kürzlich hier – es klingelt über eine Benachrichtigung'], IT:['Di recente','poco fa','fa','È stato qui di recente – squillerà tramite notifica'] };
+    const K = ['Nedávno','pred chvíľou','pred','Bol tu nedávno – zazvoní mu to cez notifikáciu'];
+    Object.keys(TR).forEach(n=>{ [n].concat(n === 'DE' ? ['AT'] : []).forEach(m=>{ let d = null; try{ d = eval('UI_DICT_' + m); }catch(_){} if(!d) return; K.forEach((k,i)=>{ if(!Object.prototype.hasOwnProperty.call(d, k)) d[k] = TR[n][i]; }); }); });
+  }catch(_){}
+  const stateOf = uid => (typeof getPresenceState === 'function') ? getPresenceState(uid) : 'offline';
+  function paintUsers(){
+    document.querySelectorAll('#users-grid .user-card').forEach(c=>{
+      const d = c.querySelector('[id^="status-dot-"]'); if(!d) return;
+      const s3 = stateOf(d.id.slice('status-dot-'.length));
+      let el = c.querySelector('.c8u-st');
+      if(!el){ const n = c.querySelector('.user-card-name'); if(!n) return; el = document.createElement('span'); n.after(el); }
+      el.className = 'c8u-st ' + s3;
+      el.textContent = s3 === 'online' ? '● ' + tt('Online') : (s3 === 'away' ? '● ' + tt('Nedávno') : tt('Offline'));
+    });
+  }
+  function paintProfile(){
+    let vpu = null; try{ vpu = viewedProfileUser; }catch(_){}
+    let line = document.getElementById('c8pres-line');
+    const note = document.getElementById('profile-offline-note');
+    if(!vpu || !vpu.uid){ if(line) line.style.display = 'none'; return; }
+    const s3 = stateOf(vpu.uid);
+    if(!line){
+      const stats = document.getElementById('profile-stats'); if(!stats) return;
+      line = document.createElement('div'); line.id = 'c8pres-line'; stats.parentNode.insertBefore(line, stats);
+    }
+    line.className = 'c8pres-line ' + s3;
+    if(s3 === 'online'){ line.textContent = '● ' + tt('Online'); line.style.display = ''; }
+    else if(s3 === 'away'){ const ago = (typeof getPresenceAgo === 'function') ? getPresenceAgo(vpu.uid) : ''; line.textContent = '● ' + tt('Nedávno') + (ago ? ' · ' + ago : ''); line.style.display = ''; }
+    else line.style.display = 'none';
+    // poznámka pod tlačidlami Zavolať / Video / Správa
+    if(note){
+      if(!note.dataset.offText) note.dataset.offText = note.textContent;
+      let blocked = false; try{ blocked = blockedSet.has(vpu.uid); }catch(_){}
+      const btn = document.getElementById('profile-call-audio-btn');
+      const shown = !blocked && btn && btn.style.display !== 'none';
+      if(!shown || s3 === 'online') note.style.display = 'none';
+      else { note.textContent = s3 === 'away' ? tt('Bol tu nedávno – zazvoní mu to cez notifikáciu') : note.dataset.offText; note.style.display = 'block'; }
+    }
+  }
+  function paintAll(){ try{ paintUsers(); }catch(_){} try{ paintProfile(); }catch(_){} }
+  window.c8PresPaint = function(){
+    paintAll();
+    try{ const v = document.getElementById('view-friends'); if(v && v.classList.contains('active') && typeof c8ApplyFriendsView === 'function') c8ApplyFriendsView(); }catch(_){}
+    try{ if(typeof c8RenderRight === 'function') c8RenderRight(); }catch(_){}
+  };
+  if(typeof updateStatusDots === 'function'){ const o = updateStatusDots; updateStatusDots = function(){ const r = o.apply(this, arguments); paintAll(); return r; }; }
+  if(typeof renderUsersList === 'function'){ const o = renderUsersList; renderUsersList = async function(){ const r = await o.apply(this, arguments); paintAll(); return r; }; }
+  if(typeof renderProfile === 'function'){ const o = renderProfile; window.renderProfile = renderProfile = function(){ const r = o.apply(this, arguments); setTimeout(paintAll, 0); return r; }; }
+  // „pred X min“ sa obnovuje
+  setInterval(()=>{ try{ window.c8PresPaint(); }catch(_){} }, 30000);
+})();
+</script>
 </body>
 </html>
