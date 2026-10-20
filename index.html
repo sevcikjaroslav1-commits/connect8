@@ -18839,7 +18839,7 @@ c8ApplyFriendsView();
     stage.addEventListener('pointerdown', down); stage.addEventListener('pointermove', move);
     stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
 
-    let front = null, back = null, video = null, gl = null, talking = false;
+    let front = null, back = null, video = null, gl = null, talking = false, blobUrl = null;
     if(holo.type === 'photo'){
       Promise.all([loadImg(holo.front), holo.back ? loadImg(holo.back) : Promise.resolve(null)]).then(([f, b])=>{
         if(dead) return; front = tintPacked(f); back = b ? tintPacked(b) : null;
@@ -18849,19 +18849,31 @@ c8ApplyFriendsView();
       video = document.createElement('video');
       video.crossOrigin = 'anonymous'; video.playsInline = true; video.setAttribute('playsinline', ''); video.setAttribute('webkit-playsinline', '');
       video.preload = 'auto'; video.loop = !!opts.loop; video.muted = !opts.sound;
-      video.src = (typeof optimizeCloudinaryVideoUrl === 'function') ? optimizeCloudinaryVideoUrl(holo.video) : holo.video;
+      const vurl = (typeof optimizeCloudinaryVideoUrl === 'function') ? optimizeCloudinaryVideoUrl(holo.video) : holo.video;
       video.addEventListener('playing', ()=>{ talking = !video.muted; });
       video.addEventListener('ended', ()=>{ talking = false; if(opts.onEnd) opts.onEnd(); });
-      if(opts.autoplay === false){
-        // bez automatického prehratia: ukáž prvý snímok a čakaj na ťuknutie
-        video.addEventListener('loadeddata', ()=>{ try{ video.currentTime = 0.05; }catch(_){} }, { once: true });
-      } else {
-        const p = video.play();
-        if(p && p.then) p.then(()=>{ if(opts.onStart) opts.onStart(!video.muted); });
-        if(p && p.catch) p.catch(()=>{
-          if(!video.muted){ video.muted = true; video.play().then(()=>{ if(opts.onStart) opts.onStart(false); }).catch(()=>{}); if(opts.onNeedSound) opts.onNeedSound(); }
-        });
-      }
+      const startPlay = ()=>{
+        if(dead) return;
+        if(opts.autoplay === false){
+          // bez automatického prehratia: ukáž prvý snímok a čakaj na ťuknutie
+          video.addEventListener('loadeddata', ()=>{ try{ video.currentTime = 0.05; }catch(_){} }, { once: true });
+        } else {
+          const p = video.play();
+          if(p && p.then) p.then(()=>{ if(opts.onStart) opts.onStart(!video.muted); });
+          if(p && p.catch) p.catch(()=>{
+            if(!video.muted){ video.muted = true; video.play().then(()=>{ if(opts.onStart) opts.onStart(false); }).catch(()=>{}); if(opts.onNeedSound) opts.onNeedSound(); }
+          });
+        }
+      };
+      // iPhone: video sa najprv celé stiahne a až potom prehrá. Pri prehrávaní
+      // "počas sťahovania" sa na iPhone hologram zasekával a stále znova načítaval.
+      let isIOS = false; try{ isIOS = (typeof isIOSDevice === 'function') && isIOSDevice(); }catch(_){}
+      if(isIOS && window.fetch && window.URL && URL.createObjectURL){
+        fetch(vurl, { mode: 'cors' }).then(r=>{ if(!r.ok) throw new Error('http ' + r.status); return r.blob(); }).then(b=>{
+          if(dead) return;
+          blobUrl = URL.createObjectURL(b); video.src = blobUrl; startPlay();
+        }).catch(()=>{ if(dead) return; video.src = vurl; startPlay(); });
+      } else { video.src = vurl; startPlay(); }
     }
     const ss = x=>{ x = Math.min(1, Math.max(0, x)); return x*x*(3 - 2*x); };
     let ctl = null;
@@ -18927,7 +18939,7 @@ c8ApplyFriendsView();
         return video.play().then(()=>{ talking = true; return true; }).catch(()=>{ video.muted = true; return video.play().then(()=>false).catch(()=>false); }); },
       stop(){ if(video){ try{ video.pause(); }catch(_){} talking = false; } },
       isPlaying(){ return !!(video && !video.paused && !video.ended); },
-      destroy(){ dead = true; cancelAnimationFrame(raf); window.removeEventListener('resize', onRs); if(video){ try{ video.pause(); video.removeAttribute('src'); video.load(); }catch(_){} } stage.innerHTML = ''; }
+      destroy(){ dead = true; cancelAnimationFrame(raf); window.removeEventListener('resize', onRs); if(video){ try{ video.pause(); video.removeAttribute('src'); video.load(); }catch(_){} } if(blobUrl){ try{ URL.revokeObjectURL(blobUrl); }catch(_){} blobUrl = null; } stage.innerHTML = ''; }
     };
   }
   window.c8HoloMountPlayer = mountPlayer;
