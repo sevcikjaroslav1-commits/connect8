@@ -18824,6 +18824,10 @@ c8ApplyFriendsView();
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     const uBack = gl.getUniformLocation(prog, 'back');
+    // OPRAVA iPhone: snímka videa sa do grafickej karty nahrá LEN keď je nová
+    // a do tej istej pamäte (texSubImage2D). Predtým sa 60x za sekundu vytvárala
+    // nová textúra – iPhone pri tom zaplnil pamäť, zamrzol a obnovil celú stránku.
+    let texW = 0, texH = 0, lastT = -1;
     return {
       canvas: gc,
       render(video, backAmt){
@@ -18832,7 +18836,15 @@ c8ApplyFriendsView();
         if(vw && vh){ const nh = 640, nw = Math.round(nh * vw / vh); if(gc.width !== nw){ gc.width = nw; gc.height = nh; } }
         gl.viewport(0, 0, gc.width, gc.height); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
         gl.bindTexture(gl.TEXTURE_2D, tex);
-        try{ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, video); }catch(e){ return false; }
+        try{
+          if(texW !== video.videoWidth || texH !== video.videoHeight){
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, video);
+            texW = video.videoWidth; texH = video.videoHeight; lastT = video.currentTime;
+          } else if(video.currentTime !== lastT){
+            gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, video);
+            lastT = video.currentTime;
+          }
+        }catch(e){ return false; }
         gl.uniform1f(uBack, backAmt); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); return true;
       }
     };
@@ -18851,7 +18863,8 @@ c8ApplyFriendsView();
     const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     const off = document.createElement('canvas'), octx = off.getContext('2d');
     let W = 0, H = 0, dpr = 1, dead = false, raf = 0;
-    const size = ()=>{ dpr = opts.dpr || Math.min(2, window.devicePixelRatio || 1); const r = stage.getBoundingClientRect(); W = r.width; H = r.height; cv.width = Math.max(1, Math.round(W*dpr)); cv.height = Math.max(1, Math.round(H*dpr)); };
+    let iosLite = false; try{ iosLite = (typeof isIOSDevice === 'function') && isIOSDevice(); }catch(_){}
+    const size = ()=>{ dpr = opts.dpr || Math.min(iosLite ? 1.5 : 2, window.devicePixelRatio || 1); const r = stage.getBoundingClientRect(); W = r.width; H = r.height; cv.width = Math.max(1, Math.round(W*dpr)); cv.height = Math.max(1, Math.round(H*dpr)); };
     size(); placeWm(); const onRs = ()=>{ size(); placeWm(); }; window.addEventListener('resize', onRs);
     let ang = 0, vel = 0, drag = false, lx = 0, lastInteract = -1e9, used = false;
     const parts = Array.from({ length: 50 }, ()=>({ x: Math.random()*2-1, y: Math.random(), s: .6 + Math.random()*1.5, v: .04 + Math.random()*.08 }));
@@ -18942,7 +18955,7 @@ c8ApplyFriendsView();
         octx.globalCompositeOperation = 'source-over';
         const flip = 1 - Math.abs(wf*2 - 1), glitch = (!reduce) && ((t % 2.6) < 0.1 || flip > 0.35);
         const dx = cx - ow/2, dy = fy - 10;
-        ctx.save(); ctx.globalAlpha = (0.45 + 0.15*speak)*flick; ctx.shadowColor = 'rgba(63,224,255,1)'; ctx.shadowBlur = 24; ctx.drawImage(off, dx, dy, ow, oh); ctx.restore();
+        ctx.save(); ctx.globalAlpha = (0.45 + 0.15*speak)*flick; ctx.shadowColor = 'rgba(63,224,255,1)'; ctx.shadowBlur = iosLite ? 12 : 24; ctx.drawImage(off, dx, dy, ow, oh); ctx.restore();
         ctx.save(); ctx.globalAlpha = 0.95*flick*(1 - 0.25*flip);
         if(glitch){ for(let i = 0; i < 5; i++){ const sy = Math.random()*oh, shh = 6 + Math.random()*24, sx = (Math.random()*2 - 1)*(8 + 16*flip); ctx.drawImage(off, 0, sy*dpr, off.width, shh*dpr, dx + sx, dy + sy, ow, shh); } ctx.globalAlpha *= 0.85; }
         ctx.drawImage(off, dx, dy, ow, oh); ctx.restore();
