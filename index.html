@@ -19007,6 +19007,8 @@ c8ApplyFriendsView();
     if(previewPlayer){ previewPlayer.destroy(); previewPlayer = null; }
   };
   function busyUI(on){
+    // počas tvorby hologramu nesmie zhasnúť obrazovka (inak sa spracovanie zastaví)
+    try{ if(on){ window.c8WakeOn && window.c8WakeOn('holoCreate'); } else { window.c8WakeOff && window.c8WakeOff('holoCreate'); } }catch(_){}
     ['c8holo-go-photo', 'c8holo-go-video'].forEach(id=>{ const b = $(id); if(b) b.disabled = on; });
   }
   window.c8HoloCreatePhoto = async function(){
@@ -19823,18 +19825,39 @@ c8ApplyFriendsView();
    hovoru a videohovoru (Screen Wake Lock API). Po skončení sa vráti normál. */
 (function(){
   const keys = new Set(); let lock = null, busy = false;
+  // ZÁLOHA: keď telefón Wake Lock odmietne (šetrič batérie, starší iPhone), obrazovku
+  // udrží zapnutú malé neviditeľné video, ktoré hrá dookola (rovnaký trik ako NoSleep.js)
+  let nsVid = null;
+  function fallbackOn(){
+    try{
+      if(!nsVid){
+        nsVid = document.createElement('video');
+        nsVid.setAttribute('playsinline', ''); nsVid.setAttribute('muted', ''); nsVid.muted = true; nsVid.loop = true;
+        nsVid.setAttribute('title', 'Connect8');
+        nsVid.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;';
+        const a = document.createElement('source'); a.src = 'data:video/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAAH9EU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHYTbuMU6uEElTDZ1OsggEeTbuMU6uEHFO7a1OsggHn7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsirXsYMPQkBNgI1MYXZmNjAuMTYuMTAwV0GNTGF2ZjYwLjE2LjEwMESJiECfQAAAAAAAFlSua8GuAQAAAAAAADjXgQFzxYhCEIAskgG8+5yBACK1nIN1bmSIgQCGhVZfVlA4g4EBI+ODhDuaygDgibCBELqBEJqBAhJUw2f8c3OgY8CAZ8iaRaOHRU5DT0RFUkSHjUxhdmY2MC4xNi4xMDBzc9ZjwItjxYhCEIAskgG8+2fIoUWjh0VOQ09ERVJEh5RMYXZjNjAuMzEuMTAyIGxpYnZweGfIoUWjiERVUkFUSU9ORIeTMDA6MDA6MDIuMDAwMDAwMDAwAB9DtnXD54EAo6OBAACAEAIAnQEqEAAQAABHCIWFiJmEiAICAAwNYAD+/6tQgKOZgQPoALEBAAEQEAAYADA/9AwAAAD+/6tQgBxTu2uRu4+zgQC3iveBAfGCAZ/wgQM='; a.type = 'video/webm';
+        const b = document.createElement('source'); b.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMrbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAlV0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAABAAAAAQAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHNbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABeG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAThzdGJsAAAAuHN0c2QAAAAAAAAAAQAAAKhhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAABAAEABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAALmF2Y0MBQsAK/+EAFmdCwArZHsBEAAADAAQAAAMACDxImSABAAVoy4PLIAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAApAAAAKQAAAABhzdHRzAAAAAAAAAAEAAAACAABAAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAACAAAAAQAAABxzdHN6AAAAAAAAAAAAAAACAAAChgAAAAoAAAAUc3RjbwAAAAAAAAABAAADWwAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjAuMTYuMTAwAAAACGZyZWUAAAKYbWRhdAAAAnAGBf//bNxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjQgcjMxMDggMzFlMTlmOSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjMgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0zIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMTEgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MSBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAOZYiEBb///w9FAAFPf4AAAAAGQZo4CvqA'; b.type = 'video/mp4';
+        nsVid.appendChild(a); nsVid.appendChild(b);
+        document.body.appendChild(nsVid);
+      }
+      const p = nsVid.play(); if(p && p.catch) p.catch(()=>{});
+    }catch(_){}
+  }
+  function fallbackOff(){ try{ if(nsVid){ nsVid.pause(); } }catch(_){} }
   async function apply(){
     if(busy) return; busy = true;
     try{
       if(keys.size && !lock && 'wakeLock' in navigator && document.visibilityState === 'visible'){
         lock = await navigator.wakeLock.request('screen');
-        lock.addEventListener('release', ()=>{ lock = null; });
+        lock.addEventListener('release', ()=>{ lock = null; if(keys.size) fallbackOn(); });
       } else if(!keys.size && lock){ const l = lock; lock = null; await l.release(); }
     }catch(_){ lock = null; }
+    // ak Wake Lock nie je alebo ho telefón odmietol, zapni zálohu; inak ju vypni
+    if(keys.size && !lock) fallbackOn(); else fallbackOff();
     busy = false;
     if((keys.size && !lock && document.visibilityState === 'visible' && 'wakeLock' in navigator) || (!keys.size && lock)) setTimeout(apply, 300);
   }
-  window.c8WakeOn = k => { keys.add(k); apply(); };
+  window.c8WakeOn = k => { keys.add(k); if(!('wakeLock' in navigator)) fallbackOn(); apply(); };
   window.c8WakeOff = k => { keys.delete(k); apply(); };
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'visible' && keys.size) apply(); });
   // hovor / videohovor
@@ -20956,9 +20979,10 @@ c8ApplyFriendsView();
     })();
   }
   function busy(){
+    try{ window.c8WakeOn && window.c8WakeOn('aiBusy'); }catch(_){}
     const b = el(`<div class="c8ai-busy"><div class="m">${esc(T('Spracúvam video…'))}</div><div class="c8ai-bar"><i></i></div></div>`);
     document.body.appendChild(b);
-    return { set(msg, pct){ b.querySelector('.m').textContent = msg; if(pct != null) b.querySelector('i').style.width = Math.max(0, Math.min(100, pct)) + '%'; }, close(){ b.remove(); } };
+    return { set(msg, pct){ b.querySelector('.m').textContent = msg; if(pct != null) b.querySelector('i').style.width = Math.max(0, Math.min(100, pct)) + '%'; }, close(){ b.remove(); try{ window.c8WakeOff && window.c8WakeOff('aiBusy'); }catch(_){} } };
   }
   // slot: 'idle' alebo číslo odpovede
   function saveClip(slot, blob, after){
@@ -20998,7 +21022,8 @@ c8ApplyFriendsView();
     const vid = r.querySelector('video'); vid.srcObject = stream;
     const rb = r.querySelector('.c8ai-rbtn'), tm = r.querySelector('.c8ai-tm'), cd = r.querySelector('.c8ai-cd'), bot = r.querySelector('.bot');
     let rec = null, chunks = [], t0 = 0, timer = null, blob = null, state = 'ready';
-    const stopAll = ()=>{ try{ stream.getTracks().forEach(t=>t.stop()); }catch(_){} clearInterval(timer); };
+    try{ window.c8WakeOn && window.c8WakeOn('aiRec'); }catch(_){}
+    const stopAll = ()=>{ try{ stream.getTracks().forEach(t=>t.stop()); }catch(_){} clearInterval(timer); try{ window.c8WakeOff && window.c8WakeOff('aiRec'); }catch(_){} };
     const close = ()=>{ stopAll(); r.remove(); };
     r.querySelector('.x').onclick = ()=>{ if(rec && rec.state === 'recording'){ state = 'cancel'; rec.stop(); } close(); };
     const begin = ()=>{
@@ -21041,13 +21066,14 @@ c8ApplyFriendsView();
   async function openSettings(){
     if(!currentUser) return;
     closeSettings();
+    try{ window.c8WakeOn && window.c8WakeOn('aiSet'); }catch(_){}
     setRoot = el(`<div class="c8ai-modal"><div class="c8ai-set"><div class="c8ai-h"><h3>${esc(T('🤖 AI môj Hologram'))}</h3><button class="c8ai-x" type="button">✕</button></div><div class="c8ai-body"><div class="c8ai-note">…</div></div></div></div>`);
     document.body.appendChild(setRoot);
     setRoot.querySelector('.c8ai-x').onclick = closeSettings;
     setRoot.addEventListener('click', e=>{ if(e.target === setRoot) closeSettings(); });
     await renderSettings(true);
   }
-  function closeSettings(){ if(setRoot){ setRoot.remove(); setRoot = null; } refreshBtn(); }
+  function closeSettings(){ if(setRoot){ setRoot.remove(); setRoot = null; } try{ window.c8WakeOff && window.c8WakeOff('aiSet'); }catch(_){} refreshBtn(); }
   async function renderSettings(fresh){
     if(!setRoot) return;
     const { av } = await loadAv(currentUser.uid, fresh);
