@@ -10164,8 +10164,25 @@ function c8PresenceWake(){
   if(c8Presence.goOnline) c8Presence.goOnline();
 }
 // Odchod z appky / zhasnutý displej -> hneď "Nedávno"; návrat -> hneď "Online"
-document.addEventListener('visibilitychange', ()=>{ c8PresenceWake(); });
-window.addEventListener('pagehide', ()=>{ try{ c8Presence.wrote = null; if(c8Presence.goOnline) c8Presence.goOnline(); }catch(e){} });
+// POZOR: telefón appku po odchode takmer hneď zmrazí, preto sa "Nedávno"
+// zapíše OKAMŽITE (bez čakania na server), inak by sa zápis nestihol odoslať.
+function c8PresenceAwayNow(){
+  if(!c8Presence.active || !c8Presence.ref || !currentUser) return;
+  const TS = firebase.database.ServerValue.TIMESTAMP;
+  c8Presence.wrote = 'away';
+  const data = c8Presence.awayFlag ? {state:'online', away: true, name: currentUser.name, last_changed: TS} : {state:'away', name: currentUser.name, last_changed: TS};
+  try{
+    c8Presence.ref.set(data).catch(e=>{
+      console.warn('Stav Nedávno sa nepodarilo zapísať, skúšam náhradný spôsob', e);
+      c8Presence.awayFlag = true;
+      if(document.hidden) c8Presence.ref.set({state:'online', away: true, name: currentUser.name, last_changed: TS}).catch(e2=>console.warn('Stav Nedávno – zlyhal aj náhradný zápis', e2));
+    });
+  }catch(e){ console.warn(e); }
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) c8PresenceAwayNow(); else c8PresenceWake(); });
+window.addEventListener('pagehide', ()=>{ try{ c8PresenceAwayNow(); }catch(e){} });
+window.addEventListener('freeze', ()=>{ try{ c8PresenceAwayNow(); }catch(e){} });
+window.addEventListener('blur', ()=>{ setTimeout(()=>{ if(document.hidden) c8PresenceAwayNow(); }, 300); });
 window.addEventListener('focus', c8PresenceWake);
 window.addEventListener('online', c8PresenceWake);
 setInterval(()=>{
