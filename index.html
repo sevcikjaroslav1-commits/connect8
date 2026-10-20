@@ -18066,7 +18066,7 @@ function c8ApplyFriendsView(){
     if(!st){ st = document.createElement('span'); st.className = 'c8fl-st'; const n = c.querySelector('.user-card-name'); if(n) n.after(st); }
     const s3 = stOf(c);
     if(s3 === 'online') st.textContent = '● ' + tt('Online');
-    else if(s3 === 'away'){ st.textContent = '● ' + tt('Nedávno'); const a = document.createElement('span'); a.className = 'ago'; a.textContent = (typeof getPresenceAgo === 'function') ? getPresenceAgo(uidOf(c)) : ''; st.appendChild(a); }
+    else if(s3 === 'away'){ st.textContent = ((typeof getPresenceAgo === 'function') ? getPresenceAgo(uidOf(c)) : '') || tt('Nedávno'); }
     else st.textContent = tt('Offline');
     c.classList.toggle('c8-off', s3 === 'offline');
     c.classList.toggle('c8-away', s3 === 'away');
@@ -21106,7 +21106,11 @@ c8ApplyFriendsView();
       const see = it.querySelector('.see');
       if(see) see.onclick = ()=>{
         const url = slot === 'idle' ? a.idle.video : ansVideo(a, slot);
-        if(window.c8HoloShowOverlay) window.c8HoloShowOverlay({ type: 'video', video: url }, slot === 'idle' ? T('Čakacie video') : info.t);
+        if(window.c8HoloShowOverlay){
+          window.c8HoloShowOverlay({ type: 'video', video: url }, slot === 'idle' ? T('Čakacie video') : info.t);
+          // ukážka musí byť NAD oknom nastavení avatara (inak hrá schovaná za ním)
+          document.querySelectorAll('.c8holo-ov').forEach(o => { o.style.zIndex = '10065'; });
+        }
       };
       const del = it.querySelector('.del');
       if(del) del.onclick = async ()=>{
@@ -21321,7 +21325,7 @@ c8ApplyFriendsView();
   // ---------- profil: tlačidlo (vlastný) a karta (cudzí, offline) ----------
   function refreshBtn(av){
     const b = $('c8ai-btn'); if(!b) return;
-    const set = v => { const on = !!(v && v.on); b.classList.toggle('on', on); b.classList.toggle('off', !on); b.innerHTML = '<span class="c8ai-dot"></span>' + esc(T('AI Hologram')); b.title = T('🤖 AI môj Hologram') + ' · ' + T(on ? 'zapnutý' : 'vypnutý'); };
+    const set = v => { const on = !!(v && v.on); b.classList.toggle('on', on); b.classList.toggle('off', !on); b.innerHTML = '<span class="c8ai-dot"></span>' + esc('AI AvatarHol'); b.title = T('🤖 AI môj Hologram') + ' · ' + T(on ? 'zapnutý' : 'vypnutý'); };
     if(av !== undefined) set(av); else if(currentUser) loadAv(currentUser.uid).then(d=>set(d.av));
   }
   function ensureOwnBtn(){
@@ -21406,7 +21410,7 @@ c8ApplyFriendsView();
       let el = c.querySelector('.c8u-st');
       if(!el){ const n = c.querySelector('.user-card-name'); if(!n) return; el = document.createElement('span'); n.after(el); }
       el.className = 'c8u-st ' + s3;
-      el.textContent = s3 === 'online' ? '● ' + tt('Online') : (s3 === 'away' ? '● ' + tt('Nedávno') : tt('Offline'));
+      el.textContent = s3 === 'online' ? '● ' + tt('Online') : (s3 === 'away' ? (((typeof getPresenceAgo === 'function') ? getPresenceAgo(d.id.slice('status-dot-'.length)) : '') || tt('Nedávno')) : tt('Offline'));
     });
   }
   function paintProfile(){
@@ -21421,7 +21425,7 @@ c8ApplyFriendsView();
     }
     line.className = 'c8pres-line ' + s3;
     if(s3 === 'online'){ line.textContent = '● ' + tt('Online'); line.style.display = ''; }
-    else if(s3 === 'away'){ const ago = (typeof getPresenceAgo === 'function') ? getPresenceAgo(vpu.uid) : ''; line.textContent = '● ' + tt('Nedávno') + (ago ? ' · ' + ago : ''); line.style.display = ''; }
+    else if(s3 === 'away'){ const ago = (typeof getPresenceAgo === 'function') ? getPresenceAgo(vpu.uid) : ''; line.textContent = ago || tt('Nedávno'); line.style.display = ''; }
     else line.style.display = 'none';
     // poznámka pod tlačidlami Zavolať / Video / Správa
     if(note){
