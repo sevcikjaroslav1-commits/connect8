@@ -18850,6 +18850,43 @@ c8ApplyFriendsView();
     };
   }
 
+  // iPhone: ľahké kreslenie hologramu BEZ WebGL (len 2D canvas, nič sa nealokuje
+  // pri každom snímku) – iPhone pri WebGL kreslení videa zapĺňal pamäť a obnovoval stránku
+  function makeLite(){
+    const c = document.createElement('canvas'), x = c.getContext('2d');
+    // maska postavy v malom rozlíšení -> priehľadnosť (malé = rýchle a šetrné k pamäti)
+    const mc = document.createElement('canvas'), mx = mc.getContext('2d', { willReadFrequently: true });
+    let lastT = -1;
+    return {
+      canvas: c,
+      render(video){
+        if(video.readyState < 2) return false;
+        const vw = Math.floor(video.videoWidth / 2), vh = video.videoHeight;
+        if(!vw || !vh) return false;
+        const nh = Math.min(640, vh), nw = Math.round(nh * vw / vh);
+        const mw = Math.max(1, Math.round(nw / 3)), mh = Math.max(1, Math.round(nh / 3));
+        if(c.width !== nw || c.height !== nh){ c.width = nw; c.height = nh; mc.width = mw; mc.height = mh; lastT = -1; }
+        if(video.currentTime === lastT) return true;
+        lastT = video.currentTime;
+        // 1) maska (pravá polovica videa) -> priehľadnosť
+        mx.globalCompositeOperation = 'source-over'; mx.clearRect(0, 0, mw, mh);
+        mx.drawImage(video, vw, 0, vw, vh, 0, 0, mw, mh);
+        const id = mx.getImageData(0, 0, mw, mh), d = id.data;
+        for(let i = 0; i < d.length; i += 4){ let m = d[i] / 255; m = m < 0.12 ? 0 : (m > 0.88 ? 1 : (m - 0.12) / 0.76); d[i] = d[i+1] = d[i+2] = 255; d[i+3] = m * 255; }
+        mx.putImageData(id, 0, 0);
+        // 2) obraz (ľavá polovica) prefarbený na modrý hologram
+        x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, nw, nh);
+        x.drawImage(video, 0, 0, vw, vh, 0, 0, nw, nh);
+        x.globalCompositeOperation = 'color'; x.fillStyle = 'rgb(64,224,255)'; x.fillRect(0, 0, nw, nh);
+        x.globalCompositeOperation = 'screen'; x.fillStyle = 'rgb(18,80,100)'; x.fillRect(0, 0, nw, nh);
+        // 3) vystrihnutie postavy podľa masky
+        x.globalCompositeOperation = 'destination-in'; x.imageSmoothingEnabled = true; x.drawImage(mc, 0, 0, nw, nh);
+        x.globalCompositeOperation = 'source-over';
+        return true;
+      }
+    };
+  }
+
   // holo = {type:'photo', front, back} alebo {type:'video', video}
   // opts: {sound:bool, loop:bool, onEnd:fn, onNeedSound:fn}
   function mountPlayer(stage, holo, opts){
@@ -18874,13 +18911,13 @@ c8ApplyFriendsView();
     stage.addEventListener('pointerdown', down); stage.addEventListener('pointermove', move);
     stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
 
-    let front = null, back = null, video = null, gl = null, talking = false, blobUrl = null;
+    let front = null, back = null, video = null, gl = null, lite = null, talking = false, blobUrl = null;
     if(holo.type === 'photo'){
       Promise.all([loadImg(holo.front), holo.back ? loadImg(holo.back) : Promise.resolve(null)]).then(([f, b])=>{
         if(dead) return; front = tintPacked(f); back = b ? tintPacked(b) : null;
       }).catch(()=>{ hint.textContent = T('Hologram sa nepodarilo načítať'); });
     } else {
-      gl = makeGL();
+      if(iosLite) lite = makeLite(); else gl = makeGL();
       video = document.createElement('video');
       video.crossOrigin = 'anonymous'; video.playsInline = true; video.setAttribute('playsinline', ''); video.setAttribute('webkit-playsinline', '');
       video.preload = 'auto'; video.loop = !!opts.loop; video.muted = !opts.sound;
@@ -18937,6 +18974,7 @@ c8ApplyFriendsView();
       let srcF = null, srcB = null;
       if(holo.type === 'photo'){ srcF = front; srcB = back || front; }
       else if(gl && video && gl.render(video, 1 - wf)){ srcF = gl.canvas; srcB = gl.canvas; }
+      else if(lite && video && lite.render(video)){ srcF = lite.canvas; srcB = lite.canvas; }
       if(srcF){
         const ref = srcF, h = H*0.76, wF = srcF.width*h/srcF.height, wB = srcB.width*h/srcB.height;
         const fy = baseY - H*0.02 - h + (reduce ? 0 : Math.sin(t*1.6)*H*0.006);
@@ -18955,7 +18993,12 @@ c8ApplyFriendsView();
         octx.globalCompositeOperation = 'source-over';
         const flip = 1 - Math.abs(wf*2 - 1), glitch = (!reduce) && ((t % 2.6) < 0.1 || flip > 0.35);
         const dx = cx - ow/2, dy = fy - 10;
-        ctx.save(); ctx.globalAlpha = (0.45 + 0.15*speak)*flick; ctx.shadowColor = 'rgba(63,224,255,1)'; ctx.shadowBlur = iosLite ? 12 : 24; ctx.drawImage(off, dx, dy, ow, oh); ctx.restore();
+        if(lite){
+          // iPhone: žiara bez shadowBlur – jemne zväčšená kópia, sčítaná so svetlom
+          ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (0.18 + 0.08*speak)*flick; ctx.drawImage(off, dx - ow*0.02, dy - oh*0.01, ow*1.04, oh*1.02); ctx.restore();
+        } else {
+          ctx.save(); ctx.globalAlpha = (0.45 + 0.15*speak)*flick; ctx.shadowColor = 'rgba(63,224,255,1)'; ctx.shadowBlur = iosLite ? 12 : 24; ctx.drawImage(off, dx, dy, ow, oh); ctx.restore();
+        }
         ctx.save(); ctx.globalAlpha = 0.95*flick*(1 - 0.25*flip);
         if(glitch){ for(let i = 0; i < 5; i++){ const sy = Math.random()*oh, shh = 6 + Math.random()*24, sx = (Math.random()*2 - 1)*(8 + 16*flip); ctx.drawImage(off, 0, sy*dpr, off.width, shh*dpr, dx + sx, dy + sy, ow, shh); } ctx.globalAlpha *= 0.85; }
         ctx.drawImage(off, dx, dy, ow, oh); ctx.restore();
