@@ -6279,6 +6279,37 @@ function profileBack(){
   }
 }
 
+// ---- šetrenie pamäte na profile ----
+let c8ProfPostsQueue = [];
+const C8_PROF_PAGE = 10;
+// malý náhľad fotky z Cloudinary (namiesto plnej veľkosti v mriežke)
+function c8Thumb(src){
+  if(typeof src !== 'string' || src.indexOf('res.cloudinary.com') < 0 || src.indexOf('/image/upload/') < 0) return src;
+  if(/\/image\/upload\/[^/]*(w_|c_)/.test(src)) return src;
+  return src.replace('/image/upload/', '/image/upload/w_360,c_limit,q_auto,f_auto/');
+}
+// obrázky a videá v príspevkoch sa načítajú, až keď sú na obrazovke
+function c8LazyHtml(h){
+  h = h.replace(/<img (?![^>]*loading=)/g, '<img loading="lazy" decoding="async" ');
+  let ios = false; try{ ios = isIOSDevice(); }catch(_){}
+  if(ios) h = h.replace(/preload="metadata"/g, 'preload="none"');
+  return h;
+}
+function c8ProfMorePosts(){
+  const list = document.getElementById('profile-posts-list'); if(!list) return;
+  const old = document.getElementById('c8prof-more'); if(old) old.remove();
+  const chunk = c8ProfPostsQueue.splice(0, C8_PROF_PAGE);
+  list.insertAdjacentHTML('beforeend', chunk.map(p=>`<div class="post">${c8LazyHtml(buildPostCard(p, {showComments:false}))}</div>`).join(''));
+  if(c8ProfPostsQueue.length){
+    const b = document.createElement('button');
+    b.id = 'c8prof-more'; b.type = 'button'; b.className = 'c8r-more';
+    b.style.cssText = 'margin:10px auto 0;max-width:420px;display:block;';
+    b.textContent = t('Zobraziť ďalšie príspevky') + ' (' + c8ProfPostsQueue.length + ')';
+    b.onclick = c8ProfMorePosts;
+    list.appendChild(b);
+  }
+}
+
 function renderProfile(){
   const profileUser = viewedProfileUser || currentUser;
   const isOwnProfile = !viewedProfileUser;
@@ -6369,14 +6400,17 @@ function renderProfile(){
   if(reportBtn) reportBtn.style.display = (isOwnProfile || !profileUser.uid) ? 'none' : 'inline-block';
 
   const grid = document.getElementById('profile-photos-grid');
+  // ŠETRENIE PAMÄTE (hlavne iPhone): v mriežke sa ukazujú malé náhľady a načítajú sa,
+  // až keď sú na obrazovke. Po ťuknutí sa otvorí fotka v plnej veľkosti.
   grid.innerHTML = allPhotos.length
-    ? allPhotos.slice().reverse().map(src=>`<img src="${src}" onclick="openLightbox('${src}')">`).join('')
+    ? allPhotos.slice().reverse().map(src=>`<img src="${c8Thumb(src)}" loading="lazy" decoding="async" onclick="openLightbox('${src}')">`).join('')
     : `<div class="profile-empty">${t('Zatiaľ žiadne fotky.')}</div>`;
 
   const postsList = document.getElementById('profile-posts-list');
-  postsList.innerHTML = myPosts.length
-    ? myPosts.slice().reverse().map(p=>`<div class="post">${buildPostCard(p, {showComments:false})}</div>`).join('')
-    : `<div class="profile-empty">${t('Zatiaľ žiadne príspevky.')}</div>`;
+  // príspevky po 10 (predtým sa naraz vykreslili všetky – iPhone pri tom vyčerpal pamäť)
+  c8ProfPostsQueue = myPosts.slice().reverse();
+  postsList.innerHTML = c8ProfPostsQueue.length ? '' : `<div class="profile-empty">${t('Zatiaľ žiadne príspevky.')}</div>`;
+  if(c8ProfPostsQueue.length) c8ProfMorePosts();
 
   const lastOnlineRow = document.getElementById('last-online-setting-row');
   if(lastOnlineRow){
@@ -18031,7 +18065,7 @@ function c8ApplyProfTab(){
   }
   if(c8ProfTab==='vid'){
     const l = document.getElementById('c8pt-vid-list');
-    l.innerHTML = vidPosts.length ? vidPosts.slice().reverse().map(p=>'<div class="post">'+buildPostCard(p,{showComments:false})+'</div>').join('')
+    l.innerHTML = vidPosts.length ? vidPosts.slice().reverse().map(p=>'<div class="post">'+((typeof c8LazyHtml==='function')?c8LazyHtml(buildPostCard(p,{showComments:false})):buildPostCard(p,{showComments:false}))+'</div>').join('')
                                   : '<div class="profile-empty">'+tt('Zatiaľ žiadne videá.')+'</div>';
   }
 }
@@ -18850,43 +18884,6 @@ c8ApplyFriendsView();
     };
   }
 
-  // iPhone: ľahké kreslenie hologramu BEZ WebGL (len 2D canvas, nič sa nealokuje
-  // pri každom snímku) – iPhone pri WebGL kreslení videa zapĺňal pamäť a obnovoval stránku
-  function makeLite(){
-    const c = document.createElement('canvas'), x = c.getContext('2d');
-    // maska postavy v malom rozlíšení -> priehľadnosť (malé = rýchle a šetrné k pamäti)
-    const mc = document.createElement('canvas'), mx = mc.getContext('2d', { willReadFrequently: true });
-    let lastT = -1;
-    return {
-      canvas: c,
-      render(video){
-        if(video.readyState < 2) return false;
-        const vw = Math.floor(video.videoWidth / 2), vh = video.videoHeight;
-        if(!vw || !vh) return false;
-        const nh = Math.min(640, vh), nw = Math.round(nh * vw / vh);
-        const mw = Math.max(1, Math.round(nw / 3)), mh = Math.max(1, Math.round(nh / 3));
-        if(c.width !== nw || c.height !== nh){ c.width = nw; c.height = nh; mc.width = mw; mc.height = mh; lastT = -1; }
-        if(video.currentTime === lastT) return true;
-        lastT = video.currentTime;
-        // 1) maska (pravá polovica videa) -> priehľadnosť
-        mx.globalCompositeOperation = 'source-over'; mx.clearRect(0, 0, mw, mh);
-        mx.drawImage(video, vw, 0, vw, vh, 0, 0, mw, mh);
-        const id = mx.getImageData(0, 0, mw, mh), d = id.data;
-        for(let i = 0; i < d.length; i += 4){ let m = d[i] / 255; m = m < 0.12 ? 0 : (m > 0.88 ? 1 : (m - 0.12) / 0.76); d[i] = d[i+1] = d[i+2] = 255; d[i+3] = m * 255; }
-        mx.putImageData(id, 0, 0);
-        // 2) obraz (ľavá polovica) prefarbený na modrý hologram
-        x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, nw, nh);
-        x.drawImage(video, 0, 0, vw, vh, 0, 0, nw, nh);
-        x.globalCompositeOperation = 'color'; x.fillStyle = 'rgb(64,224,255)'; x.fillRect(0, 0, nw, nh);
-        x.globalCompositeOperation = 'screen'; x.fillStyle = 'rgb(18,80,100)'; x.fillRect(0, 0, nw, nh);
-        // 3) vystrihnutie postavy podľa masky
-        x.globalCompositeOperation = 'destination-in'; x.imageSmoothingEnabled = true; x.drawImage(mc, 0, 0, nw, nh);
-        x.globalCompositeOperation = 'source-over';
-        return true;
-      }
-    };
-  }
-
   // holo = {type:'photo', front, back} alebo {type:'video', video}
   // opts: {sound:bool, loop:bool, onEnd:fn, onNeedSound:fn}
   function mountPlayer(stage, holo, opts){
@@ -18911,13 +18908,13 @@ c8ApplyFriendsView();
     stage.addEventListener('pointerdown', down); stage.addEventListener('pointermove', move);
     stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
 
-    let front = null, back = null, video = null, gl = null, lite = null, talking = false, blobUrl = null;
+    let front = null, back = null, video = null, gl = null, talking = false, blobUrl = null;
     if(holo.type === 'photo'){
       Promise.all([loadImg(holo.front), holo.back ? loadImg(holo.back) : Promise.resolve(null)]).then(([f, b])=>{
         if(dead) return; front = tintPacked(f); back = b ? tintPacked(b) : null;
       }).catch(()=>{ hint.textContent = T('Hologram sa nepodarilo načítať'); });
     } else {
-      if(iosLite) lite = makeLite(); else gl = makeGL();
+      gl = makeGL();
       video = document.createElement('video');
       video.crossOrigin = 'anonymous'; video.playsInline = true; video.setAttribute('playsinline', ''); video.setAttribute('webkit-playsinline', '');
       video.preload = 'auto'; video.loop = !!opts.loop; video.muted = !opts.sound;
@@ -18974,7 +18971,6 @@ c8ApplyFriendsView();
       let srcF = null, srcB = null;
       if(holo.type === 'photo'){ srcF = front; srcB = back || front; }
       else if(gl && video && gl.render(video, 1 - wf)){ srcF = gl.canvas; srcB = gl.canvas; }
-      else if(lite && video && lite.render(video)){ srcF = lite.canvas; srcB = lite.canvas; }
       if(srcF){
         const ref = srcF, h = H*0.76, wF = srcF.width*h/srcF.height, wB = srcB.width*h/srcB.height;
         const fy = baseY - H*0.02 - h + (reduce ? 0 : Math.sin(t*1.6)*H*0.006);
@@ -18993,12 +18989,7 @@ c8ApplyFriendsView();
         octx.globalCompositeOperation = 'source-over';
         const flip = 1 - Math.abs(wf*2 - 1), glitch = (!reduce) && ((t % 2.6) < 0.1 || flip > 0.35);
         const dx = cx - ow/2, dy = fy - 10;
-        if(lite){
-          // iPhone: žiara bez shadowBlur – jemne zväčšená kópia, sčítaná so svetlom
-          ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = (0.18 + 0.08*speak)*flick; ctx.drawImage(off, dx - ow*0.02, dy - oh*0.01, ow*1.04, oh*1.02); ctx.restore();
-        } else {
-          ctx.save(); ctx.globalAlpha = (0.45 + 0.15*speak)*flick; ctx.shadowColor = 'rgba(63,224,255,1)'; ctx.shadowBlur = iosLite ? 12 : 24; ctx.drawImage(off, dx, dy, ow, oh); ctx.restore();
-        }
+        ctx.save(); ctx.globalAlpha = (0.45 + 0.15*speak)*flick; ctx.shadowColor = 'rgba(63,224,255,1)'; ctx.shadowBlur = iosLite ? 12 : 24; ctx.drawImage(off, dx, dy, ow, oh); ctx.restore();
         ctx.save(); ctx.globalAlpha = 0.95*flick*(1 - 0.25*flip);
         if(glitch){ for(let i = 0; i < 5; i++){ const sy = Math.random()*oh, shh = 6 + Math.random()*24, sx = (Math.random()*2 - 1)*(8 + 16*flip); ctx.drawImage(off, 0, sy*dpr, off.width, shh*dpr, dx + sx, dy + sy, ow, shh); } ctx.globalAlpha *= 0.85; }
         ctx.drawImage(off, dx, dy, ow, oh); ctx.restore();
@@ -19189,14 +19180,23 @@ c8ApplyFriendsView();
 
   // ---------- návšteva profilu: hologram vyskočí ----------
   let ovPlayer = null;
+  let overlayOpen = false;
   function closeOverlay(){
     const ov = document.querySelector('.c8holo-ov'); if(!ov) return;
     ov.classList.remove('show');
-    setTimeout(()=>{ if(ovPlayer){ ovPlayer.destroy(); ovPlayer = null; } ov.remove(); }, 350);
+    setTimeout(()=>{
+      if(ovPlayer){ ovPlayer.destroy(); ovPlayer = null; } ov.remove();
+      overlayOpen = !!document.querySelector('.c8holo-ov');
+      // hologramy v príspevkoch na obrazovke sa znova spustia
+      if(!overlayOpen && io) document.querySelectorAll('.c8holo-post[data-hobs]').forEach(b=>{ try{ io.unobserve(b); io.observe(b); }catch(_){} });
+    }, 350);
   }
   window.c8HoloCloseOverlay = closeOverlay;
   function showOverlay(h, name){
     closeOverlay();
+    // šetrenie pamäte: kým beží veľký hologram, hologramy v príspevkoch sa zastavia
+    overlayOpen = true;
+    try{ postPlayers.forEach((pl, box)=>unmountPost(box)); }catch(_){}
     const ov = document.createElement('div'); ov.className = 'c8holo-ov';
     ov.innerHTML = '<button class="c8holo-ov-close" type="button">' + T('✕ Zavrieť') + '</button><div class="c8holo-ov-name"></div><div class="c8holo-stage"></div><div class="c8holo-row" style="justify-content:center"></div>';
     ov.querySelector('.c8holo-ov-name').textContent = '✨ ' + (name || '');
@@ -19260,6 +19260,10 @@ c8ApplyFriendsView();
   }
   function mountPost(box){
     if(postPlayers.has(box)) return;
+    if(overlayOpen) return;
+    // iPhone: naraz beží najviac 1 hologram v príspevkoch (každý zaberá veľa pamäte)
+    let ios = false; try{ ios = isIOSDevice(); }catch(_){}
+    if(ios && postPlayers.size){ try{ [...postPlayers.keys()].forEach(b=>unmountPost(b)); }catch(_){} }
     const id = Number(box.dataset.hpid);
     const p = findPost(id); if(!p || !p.hologram) return;
     const stage = box.querySelector('.c8holo-stage');
