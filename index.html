@@ -19085,7 +19085,14 @@ c8ApplyFriendsView();
     const h = await loadHolo(uid);
     if(!viewedProfileUser || viewedProfileUser.uid !== uid) return;
     if(h){ btn.style.display = 'inline-flex'; btn.querySelector('.c8holo-lbl').textContent = 'Hologram'; }
-    if(h && h.show && pendingVisit === uid){ pendingVisit = null; showOverlay(h, viewedProfileUser.name); }
+    if(h && h.show && pendingVisit === uid){
+      pendingVisit = null;
+      // keď má majiteľ zapnutého AI avatara a je offline, 20 s hologram sa sám nespustí –
+      // návštevníka privíta karta AI avatara (hologram sa dá stále pustiť tlačidlom)
+      let aiOn = false;
+      try{ if(typeof window.c8AiAvatarActiveFor === 'function') aiOn = await window.c8AiAvatarActiveFor(uid); }catch(_){}
+      if(!aiOn && viewedProfileUser && viewedProfileUser.uid === uid) showOverlay(h, viewedProfileUser.name);
+    }
     else if(pendingVisit === uid) pendingVisit = null;
   }
   const _renderProfile = window.renderProfile;
@@ -21288,6 +21295,12 @@ c8ApplyFriendsView();
   setInterval(()=>{ try{ const pv = document.getElementById('view-profile'); if(pv && pv.classList.contains('active')) afterProfile(); }catch(_){} }, 15000);
   try{ [['EN','AI Hologram'],['CZ','AI Hologram'],['PL','Hologram AI'],['HU','AI Hologram'],['DE','KI-Hologramm'],['AT','KI-Hologramm'],['IT','Ologramma IA']].forEach(([n,v])=>{ const d = eval('UI_DICT_' + n); if(d && !d['AI Hologram']) d['AI Hologram'] = v; }); }catch(_){}
   window.c8AiAvatarOpenSettings = openSettings;
+  // je AI avatar tohto človeka práve aktívny? (zapnutý, má nahraté videá, majiteľ je offline)
+  window.c8AiAvatarActiveFor = async function(uid){
+    const d = await loadAv(uid);
+    let online = false; try{ online = isUserOnline(uid); }catch(_){}
+    return !!(d.av && d.av.on && hasContent(d.av) && !online);
+  };
   window.c8AiAvatarOpen = (uid)=> loadAv(uid, true).then(d=>openAvatar({ uid, name: d.name }, d, !!(currentUser && currentUser.uid === uid)));
 })();
 </script>
