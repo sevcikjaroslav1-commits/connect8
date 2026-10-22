@@ -20842,7 +20842,9 @@ c8ApplyFriendsView();
 })();
 </script>
 <style id="c8cv-style">
-.c8cv-btn{display:none;align-items:center;justify-content:center;gap:6px;border:1.5px solid #5B4CFF;background:rgba(91,76,255,.08);color:#5B4CFF;font-weight:700;font-size:13px;letter-spacing:.02em;padding:7px 16px;border-radius:10px;cursor:pointer;white-space:nowrap;}
+.c8cv-btn{display:none;align-items:center;justify-content:center;gap:6px;border:1.5px solid #5B4CFF;background:rgba(91,76,255,.08);color:#5B4CFF;font-weight:700;font-size:13px;letter-spacing:.02em;padding:7px 16px;border-radius:10px;cursor:pointer;white-space:nowrap;
+  /* nerozširuje stĺpec – šírku určujú Hologram a Moja poloha */
+  width:0;min-width:100%;box-sizing:border-box;overflow:hidden;}
 .c8cv-ov{position:fixed;inset:0;z-index:100002;background:rgba(15,12,30,.5);display:flex;align-items:flex-end;justify-content:center;font-family:Inter,system-ui,sans-serif;}
 .c8cv-sheet{width:100%;max-width:980px;height:94vh;display:flex;flex-direction:column;background:#fff;border-radius:24px 24px 0 0;color:#1E1B2E;box-shadow:0 -10px 30px -10px rgba(0,0,0,.3);overflow:hidden;}
 @media(min-width:700px){.c8cv-ov{align-items:center}.c8cv-sheet{border-radius:24px;height:92vh}}
@@ -21232,6 +21234,18 @@ c8ApplyFriendsView();
     let own = false; try{ own = !viewedProfileUser; }catch(_){}
     b.textContent = T('📄 Vytvor životopis');
     b.style.display = (own && CU()) ? 'inline-flex' : 'none';
+    if(b.style.display !== 'none') requestAnimationFrame(()=>fitBtn(b));
+  }
+  // ak sa text nezmestí do šírky ostatných tlačidiel, mierne zmenší písmo/okraje
+  function fitBtn(b){
+    b.style.fontSize = ''; b.style.paddingLeft = b.style.paddingRight = ''; b.style.letterSpacing = '';
+    if(!b.clientWidth) return;
+    let fs = 13, pad = 16, n = 0;
+    while(b.scrollWidth > b.clientWidth && n++ < 12){
+      if(pad > 8){ pad -= 2; b.style.paddingLeft = b.style.paddingRight = pad + 'px'; }
+      else { fs -= 0.5; b.style.fontSize = fs + 'px'; b.style.letterSpacing = '0'; }
+      if(fs <= 10.5) break;
+    }
   }
   try{
     const _rp = window.renderProfile;
