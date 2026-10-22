@@ -20841,5 +20841,405 @@ c8ApplyFriendsView();
   setInterval(()=>{ try{ window.c8PresPaint(); }catch(_){} }, 30000);
 })();
 </script>
+<style id="c8cv-style">
+.c8cv-btn{display:none;align-items:center;justify-content:center;gap:6px;border:1.5px solid #5B4CFF;background:rgba(91,76,255,.08);color:#5B4CFF;font-weight:700;font-size:13px;letter-spacing:.02em;padding:7px 16px;border-radius:10px;cursor:pointer;white-space:nowrap;}
+.c8cv-ov{position:fixed;inset:0;z-index:100002;background:rgba(15,12,30,.5);display:flex;align-items:flex-end;justify-content:center;font-family:Inter,system-ui,sans-serif;}
+.c8cv-sheet{width:100%;max-width:980px;height:94vh;display:flex;flex-direction:column;background:#fff;border-radius:24px 24px 0 0;color:#1E1B2E;box-shadow:0 -10px 30px -10px rgba(0,0,0,.3);overflow:hidden;}
+@media(min-width:700px){.c8cv-ov{align-items:center}.c8cv-sheet{border-radius:24px;height:92vh}}
+.c8cv-top{padding:14px 18px 8px;border-bottom:1px solid #EEF0F5}
+.c8cv-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.c8cv-h h3{font-size:19px;margin:0;color:#1E1B2E}
+.c8cv-x{width:32px;height:32px;border-radius:50%;border:0;background:#F1F3F7;color:#555;font-size:15px;cursor:pointer;flex:0 0 auto}
+.c8cv-seg{display:flex;margin-top:10px;background:#F1F2F7;border-radius:11px;padding:3px}
+.c8cv-seg button{flex:1;border:0;background:transparent;font-weight:700;font-size:13.5px;padding:8px;border-radius:9px;color:#6B7486;cursor:pointer}
+.c8cv-seg button.on{background:#fff;color:#5B4CFF;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.c8cv-body{flex:1;overflow:auto;padding:4px 18px 18px;-webkit-overflow-scrolling:touch}
+.c8cv-foot{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #EEF0F5;background:#fff}
+.c8cv-foot button{flex:1 1 28%;height:46px;border-radius:13px;border:0;font-weight:800;font-size:14px;cursor:pointer;background:#F1F2F7;color:#1E1B2E}
+.c8cv-foot button.pri{background:#5B4CFF;color:#fff}
+.c8cv-foot button.full{flex:1 1 100%}
+.c8cv-foot select{flex:0 0 auto;height:46px;border-radius:13px;border:1px solid #E3E6EE;background:#fff;font-weight:700;padding:0 10px;font-size:14px}
+.c8cv-sec{font-size:11.5px;font-weight:800;color:#9AA0AE;letter-spacing:.06em;text-transform:uppercase;margin:16px 0 7px}
+.c8cv-f{display:block;margin-bottom:8px}
+.c8cv-f span{display:block;font-size:11px;color:#8A90A0;margin:0 0 3px 2px}
+.c8cv-f input,.c8cv-f textarea,.c8cv-f select,.c8cv-item input,.c8cv-item textarea,.c8cv-item select{width:100%;box-sizing:border-box;border:1px solid #E3E6EE;border-radius:10px;padding:9px 11px;font-size:14px;font-family:inherit;background:#FAFBFD;color:#1E1B2E;outline:none}
+.c8cv-f input:focus,.c8cv-f textarea:focus,.c8cv-item input:focus,.c8cv-item textarea:focus{border-color:#5B4CFF;background:#fff}
+.c8cv-f textarea,.c8cv-item textarea{min-height:64px;resize:vertical}
+.c8cv-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.c8cv-item{border:1px solid #E3E6EE;border-radius:12px;padding:10px;margin-bottom:8px;position:relative;display:flex;flex-direction:column;gap:7px}
+.c8cv-del{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;border:0;background:#FFF0F2;color:#E11D48;cursor:pointer;font-size:13px}
+.c8cv-item .c8cv-first{padding-right:34px}
+.c8cv-add{width:100%;border:1.5px dashed #C9C2FF;background:#fff;color:#5B4CFF;border-radius:12px;padding:9px;font-weight:700;font-size:13.5px;cursor:pointer;margin-bottom:4px}
+.c8cv-photo{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.c8cv-photo .pv{width:64px;height:64px;border-radius:50%;background:#EEF0F6 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#9AA0AE;font-size:22px;flex:0 0 auto}
+.c8cv-photo label,.c8cv-photo button{border:1px solid #E3E6EE;background:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer;color:#1E1B2E}
+.c8cv-photo input{display:none}
+.c8cv-rng{display:flex;align-items:center;gap:8px}.c8cv-rng input[type=range]{flex:1;accent-color:#5B4CFF;padding:0;border:0;background:none}
+.c8cv-pimg{display:flex;align-items:center;gap:8px}
+.c8cv-pimg .pv{width:70px;height:44px;border-radius:8px;background:#EEF0F6 center/cover no-repeat;flex:0 0 auto}
+.c8cv-pimg label{border:1px solid #E3E6EE;border-radius:9px;padding:6px 10px;font-size:12.5px;font-weight:700;cursor:pointer}
+.c8cv-pimg input{display:none}
+.c8cv-msg{font-size:12.5px;color:#16A34A;text-align:center;min-height:18px;margin-top:6px}
+.c8cv-msg.err{color:#E11D48}
+.c8cv-pvs{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-top:12px}
+@media(max-width:560px){.c8cv-pvs{gap:8px}}
+.c8cv-pvs .lab{font-size:12px;font-weight:800;color:#5B4CFF;margin-bottom:5px}
+.c8cv-frame{position:relative;overflow:hidden;border-radius:4px;box-shadow:0 4px 16px rgba(0,0,0,.14);background:#fff;cursor:zoom-in}
+.c8cv-frame>div{position:absolute;left:0;top:0;transform-origin:0 0}
+.c8cv-pvs.one{grid-template-columns:1fr}.c8cv-pvs.one .c8cv-frame{cursor:zoom-out}
+.c8cv-hint{font-size:11.5px;color:#9AA0AE;text-align:center;margin-top:8px}
+
+/* ===== ŽIVOTOPIS A – moderný (A4 = 794 x 1123 px) ===== */
+.c8cvA{width:794px;height:1123px;display:grid;grid-template-columns:36% 64%;background:#fff;color:#1b2330;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:calc(13px*var(--s,1));line-height:1.45;overflow:hidden;box-sizing:border-box}
+.c8cvA *{box-sizing:border-box}
+.c8cvA .sd{background:#13233d;color:#dfe7f3;padding:38px 26px}
+.c8cvA .ph{width:150px;height:150px;border-radius:50%;margin:0 auto 18px;background:#2b3e5e center/cover no-repeat;border:4px solid #f2c14e}
+.c8cvA h4{color:#f2c14e;font-size:calc(12px*var(--s,1));letter-spacing:.14em;text-transform:uppercase;margin:24px 0 8px}
+.c8cvA .sd p{margin:0 0 5px;word-break:break-word}
+.c8cvA .bar{height:6px;border-radius:3px;background:#2b3e5e;margin:3px 0 10px}.c8cvA .bar i{display:block;height:100%;border-radius:3px;background:#f2c14e}
+.c8cvA .mn{padding:44px 34px}
+.c8cvA .nm{font-family:Georgia,'Times New Roman',serif;font-size:calc(38px*var(--s,1));font-weight:700;line-height:1.08;color:#13233d;word-break:break-word}
+.c8cvA .ro{color:#c28a12;font-weight:700;font-size:calc(15px*var(--s,1));margin:8px 0 16px}
+.c8cvA h3{font-size:calc(13px*var(--s,1));letter-spacing:.12em;text-transform:uppercase;border-bottom:2px solid #13233d;padding-bottom:4px;margin:22px 0 10px;color:#13233d}
+.c8cvA .it{margin:0 0 12px}.c8cvA .it b{font-size:calc(14px*var(--s,1))}.c8cvA .it .d{color:#6a7686;font-size:calc(12px*var(--s,1))}
+.c8cvA .it p{margin:3px 0 0;white-space:pre-line}
+.c8cvA .ab{white-space:pre-line;margin:0}
+
+/* ===== ŽIVOTOPIS C – tmavý moderný ===== */
+.c8cvC{width:794px;height:1123px;background:#0c1018;color:#e7ecf3;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:calc(13px*var(--s,1));line-height:1.45;overflow:hidden;box-sizing:border-box}
+.c8cvC *{box-sizing:border-box}
+.c8cvC .hero{padding:44px 44px 32px;background:radial-gradient(120% 100% at 15% 0%,#1d3b6e 0%,#0c1018 72%)}
+.c8cvC .who{display:flex;gap:24px;align-items:center}
+.c8cvC .ph{width:120px;height:120px;border-radius:50%;background:#1c2738 center/cover no-repeat;box-shadow:0 0 0 4px #f2c14e;flex:0 0 auto}
+.c8cvC .nm{font-family:Georgia,'Times New Roman',serif;font-size:calc(36px*var(--s,1));font-weight:700;line-height:1.1;word-break:break-word}
+.c8cvC .ro{color:#f2c14e;font-weight:700;font-size:calc(15px*var(--s,1));margin-top:6px}
+.c8cvC .ct{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:18px;color:#c4cede;font-size:calc(12.5px*var(--s,1))}
+.c8cvC .bd{padding:6px 44px 40px}
+.c8cvC h3{font-size:calc(12px*var(--s,1));letter-spacing:.16em;text-transform:uppercase;color:#93a3ba;margin:22px 0 10px}
+.c8cvC .ab{white-space:pre-line;margin:0;color:#d5dce8}
+.c8cvC .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.c8cvC .card{background:#151c28;border:1px solid #243149;border-radius:12px;padding:12px}
+.c8cvC .card .th{height:90px;border-radius:8px;margin-bottom:9px;background:center/cover no-repeat}
+.c8cvC .card b{display:block;font-size:calc(14px*var(--s,1));margin-bottom:3px}.c8cvC .card .d{color:#93a3ba;font-size:calc(12px*var(--s,1));white-space:pre-line}
+.c8cvC .tl{border-left:2px solid #2c3c58;padding-left:16px}
+.c8cvC .tl .it{position:relative;margin-bottom:12px}.c8cvC .tl .it::before{content:"";position:absolute;left:-22px;top:5px;width:10px;height:10px;border-radius:50%;background:#f2c14e}
+.c8cvC .tl .d{color:#93a3ba;font-size:calc(12px*var(--s,1))}.c8cvC .tl p{margin:3px 0 0;white-space:pre-line;color:#d5dce8}
+.c8cvC .two{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
+.c8cvC .chip{display:inline-flex;align-items:center;gap:6px;background:#1c2738;border-radius:14px;padding:4px 11px;margin:0 6px 7px 0;font-size:calc(12.5px*var(--s,1))}
+.c8cvC .dots i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#34445e;margin-left:2px}.c8cvC .dots i.on{background:#f2c14e}
+</style>
+<script id="c8cv-script">
+/* =====================================================================
+   VYTVOR ŽIVOTOPIS
+   - tlačidlo v profile pod „Moja poloha“ (len vo vlastnom profile)
+   - prázdny formulár → z tých istých údajov sa vytvorí životopis A
+     (svetlý) aj C (tmavý), oba sa dajú stiahnuť ako PDF (A4)
+   - údaje sa ukladajú LEN v tomto zariadení (localStorage prehliadača),
+     na server nič neodchádza
+   - PDF sa tvorí priamo v prehliadači (html2canvas + jsPDF z cdnjs)
+===================================================================== */
+(function(){
+  function T(s){ try{ return (typeof t === 'function') ? t(s) : s; }catch(_){ return s; } }
+  const CU = () => { try{ return currentUser; }catch(_){ return null; } };
+  const DB = () => { try{ return db; }catch(_){ return null; } };
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // ---------- preklady rozhrania ----------
+  (function(){
+    const K = ['📄 Vytvor životopis','📄 Môj životopis','✏️ Údaje','👁 Náhľad','Osobné údaje','Meno a priezvisko','Pozícia / titulok','E-mail','Telefón','Mesto','Web / LinkedIn','O mne','Krátko o sebe (2–3 vety)','Fotka','Nahrať fotku','Odstrániť','Skúsenosti','+ Pridať skúsenosť','Pozícia','Firma','Od','Do','Čo si tam robil','Vzdelanie','+ Pridať školu','Škola','Odbor','Zručnosti','+ Pridať zručnosť','Zručnosť','Jazyky','+ Pridať jazyk','Jazyk','Projekty','+ Pridať projekt','Názov projektu','Krátky popis','Obrázok','Záujmy','💾 Uložiť','⬇ PDF A','⬇ PDF C','⬇ Stiahnuť oba (A + C)','Uložené ✓','Uložené len v tomto zariadení','Pripravujem PDF…','PDF sa nepodarilo vytvoriť','Ťukni na životopis pre zväčšenie','Jazyk životopisu','napr. Ján Novák','napr. Predavač, Programátor…','A · Moderný','C · Tmavý moderný','Najprv vyplň meno','Úroveň'];
+    const L = {
+      EN:['📄 Create CV','📄 My CV','✏️ Details','👁 Preview','Personal details','Full name','Position / headline','E-mail','Phone','City','Web / LinkedIn','About me','Briefly about you (2–3 sentences)','Photo','Upload photo','Remove','Experience','+ Add experience','Position','Company','From','To','What you did there','Education','+ Add school','School','Field','Skills','+ Add skill','Skill','Languages','+ Add language','Language','Projects','+ Add project','Project name','Short description','Image','Interests','💾 Save','⬇ PDF A','⬇ PDF C','⬇ Download both (A + C)','Saved ✓','Saved on this device only','Preparing PDF…','Could not create PDF','Tap a CV to enlarge','CV language','e.g. John Smith','e.g. Sales assistant, Developer…','A · Modern','C · Dark modern','Fill in your name first','Level'],
+      CZ:['📄 Vytvořit životopis','📄 Můj životopis','✏️ Údaje','👁 Náhled','Osobní údaje','Jméno a příjmení','Pozice / titulek','E-mail','Telefon','Město','Web / LinkedIn','O mně','Krátce o sobě (2–3 věty)','Fotka','Nahrát fotku','Odstranit','Zkušenosti','+ Přidat zkušenost','Pozice','Firma','Od','Do','Co jsi tam dělal','Vzdělání','+ Přidat školu','Škola','Obor','Dovednosti','+ Přidat dovednost','Dovednost','Jazyky','+ Přidat jazyk','Jazyk','Projekty','+ Přidat projekt','Název projektu','Krátký popis','Obrázek','Zájmy','💾 Uložit','⬇ PDF A','⬇ PDF C','⬇ Stáhnout oba (A + C)','Uloženo ✓','Uloženo jen v tomto zařízení','Připravuji PDF…','PDF se nepodařilo vytvořit','Ťukni na životopis pro zvětšení','Jazyk životopisu','např. Jan Novák','např. Prodavač, Programátor…','A · Moderní','C · Tmavý moderní','Nejdřív vyplň jméno','Úroveň'],
+      PL:['📄 Utwórz CV','📄 Moje CV','✏️ Dane','👁 Podgląd','Dane osobowe','Imię i nazwisko','Stanowisko / nagłówek','E-mail','Telefon','Miasto','Strona / LinkedIn','O mnie','Krótko o sobie (2–3 zdania)','Zdjęcie','Prześlij zdjęcie','Usuń','Doświadczenie','+ Dodaj doświadczenie','Stanowisko','Firma','Od','Do','Czym się zajmowałeś','Wykształcenie','+ Dodaj szkołę','Szkoła','Kierunek','Umiejętności','+ Dodaj umiejętność','Umiejętność','Języki','+ Dodaj język','Język','Projekty','+ Dodaj projekt','Nazwa projektu','Krótki opis','Obraz','Zainteresowania','💾 Zapisz','⬇ PDF A','⬇ PDF C','⬇ Pobierz oba (A + C)','Zapisano ✓','Zapisano tylko na tym urządzeniu','Przygotowuję PDF…','Nie udało się utworzyć PDF','Dotknij CV, aby powiększyć','Język CV','np. Jan Kowalski','np. Sprzedawca, Programista…','A · Nowoczesne','C · Ciemne nowoczesne','Najpierw wpisz imię','Poziom'],
+      HU:['📄 Önéletrajz készítése','📄 Önéletrajzom','✏️ Adatok','👁 Előnézet','Személyes adatok','Teljes név','Pozíció / cím','E-mail','Telefon','Város','Web / LinkedIn','Rólam','Röviden magadról (2–3 mondat)','Fotó','Fotó feltöltése','Törlés','Tapasztalat','+ Tapasztalat hozzáadása','Pozíció','Cég','Ettől','Eddig','Mit csináltál ott','Végzettség','+ Iskola hozzáadása','Iskola','Szak','Készségek','+ Készség hozzáadása','Készség','Nyelvek','+ Nyelv hozzáadása','Nyelv','Projektek','+ Projekt hozzáadása','Projekt neve','Rövid leírás','Kép','Érdeklődés','💾 Mentés','⬇ PDF A','⬇ PDF C','⬇ Mindkettő letöltése (A + C)','Mentve ✓','Csak ezen az eszközön mentve','PDF készítése…','Nem sikerült a PDF','Koppints a nagyításhoz','Önéletrajz nyelve','pl. Kovács János','pl. Eladó, Programozó…','A · Modern','C · Sötét modern','Előbb add meg a neved','Szint'],
+      DE:['📄 Lebenslauf erstellen','📄 Mein Lebenslauf','✏️ Angaben','👁 Vorschau','Persönliche Daten','Vor- und Nachname','Position / Titel','E-Mail','Telefon','Ort','Web / LinkedIn','Über mich','Kurz über dich (2–3 Sätze)','Foto','Foto hochladen','Entfernen','Berufserfahrung','+ Erfahrung hinzufügen','Position','Firma','Von','Bis','Was du dort gemacht hast','Ausbildung','+ Schule hinzufügen','Schule','Fachrichtung','Fähigkeiten','+ Fähigkeit hinzufügen','Fähigkeit','Sprachen','+ Sprache hinzufügen','Sprache','Projekte','+ Projekt hinzufügen','Projektname','Kurzbeschreibung','Bild','Interessen','💾 Speichern','⬇ PDF A','⬇ PDF C','⬇ Beide herunterladen (A + C)','Gespeichert ✓','Nur auf diesem Gerät gespeichert','PDF wird erstellt…','PDF konnte nicht erstellt werden','Tippe auf den Lebenslauf zum Vergrößern','Sprache des Lebenslaufs','z. B. Max Mustermann','z. B. Verkäufer, Programmierer…','A · Modern','C · Dunkel modern','Bitte zuerst den Namen ausfüllen','Niveau'],
+      IT:['📄 Crea CV','📄 Il mio CV','✏️ Dati','👁 Anteprima','Dati personali','Nome e cognome','Posizione / titolo','E-mail','Telefono','Città','Web / LinkedIn','Su di me','Breve presentazione (2–3 frasi)','Foto','Carica foto','Rimuovi','Esperienza','+ Aggiungi esperienza','Posizione','Azienda','Dal','Al','Cosa facevi','Istruzione','+ Aggiungi scuola','Scuola','Indirizzo','Competenze','+ Aggiungi competenza','Competenza','Lingue','+ Aggiungi lingua','Lingua','Progetti','+ Aggiungi progetto','Nome del progetto','Breve descrizione','Immagine','Interessi','💾 Salva','⬇ PDF A','⬇ PDF C','⬇ Scarica entrambi (A + C)','Salvato ✓','Salvato solo su questo dispositivo','Preparo il PDF…','Impossibile creare il PDF','Tocca il CV per ingrandire','Lingua del CV','es. Mario Rossi','es. Commesso, Programmatore…','A · Moderno','C · Scuro moderno','Prima inserisci il nome','Livello']
+    };
+    const add = (d, m) => { try{ if(!d) return; Object.keys(m).forEach(k => { if(!Object.prototype.hasOwnProperty.call(d, k)) d[k] = m[k]; }); }catch(_){} };
+    const dict = n => { try{ return eval('UI_DICT_' + n); }catch(_){ return null; } };
+    Object.keys(L).forEach(n => { const m = {}; K.forEach((k, i) => m[k] = L[n][i]); add(dict(n), m); if(n === 'DE') add(dict('AT'), m); });
+  })();
+
+  // ---------- nadpisy v samotnom životopise ----------
+  const HL = {
+    SK:{contact:'Kontakt',skills:'Zručnosti',langs:'Jazyky',hobby:'Záujmy',about:'O mne',exp:'Skúsenosti',edu:'Vzdelanie',proj:'Projekty',work:'Ukážky práce',now:'teraz',native:'materinský'},
+    CZ:{contact:'Kontakt',skills:'Dovednosti',langs:'Jazyky',hobby:'Zájmy',about:'O mně',exp:'Zkušenosti',edu:'Vzdělání',proj:'Projekty',work:'Ukázky práce',now:'dosud',native:'rodilý mluvčí'},
+    EN:{contact:'Contact',skills:'Skills',langs:'Languages',hobby:'Interests',about:'About me',exp:'Experience',edu:'Education',proj:'Projects',work:'Portfolio',now:'present',native:'native'},
+    DE:{contact:'Kontakt',skills:'Fähigkeiten',langs:'Sprachen',hobby:'Interessen',about:'Über mich',exp:'Berufserfahrung',edu:'Ausbildung',proj:'Projekte',work:'Arbeitsproben',now:'heute',native:'Muttersprache'}
+  };
+  const LEVELS = ['native','C2','C1','B2','B1','A2','A1'];
+
+  // ---------- dáta ----------
+  const EMPTY = () => ({name:'',title:'',photo:'',email:'',phone:'',city:'',web:'',about:'',exp:[],edu:[],skills:[],langs:[],projects:[],hobby:'',lang:''});
+  let cv = EMPTY();
+  const LS = () => 'c8cv_' + ((CU() && CU().uid) || 'x');
+  const lsSave = () => { try{ localStorage.setItem(LS(), JSON.stringify(cv)); }catch(_){} };
+  const lsLoad = () => { try{ const s = localStorage.getItem(LS()); return s ? JSON.parse(s) : null; }catch(_){ return null; } };
+  function norm(x){ const e = EMPTY(); x = x || {}; Object.keys(e).forEach(k => { if(x[k] == null) x[k] = e[k]; }); ['exp','edu','skills','langs','projects'].forEach(k => { if(!Array.isArray(x[k])) x[k] = []; }); return x; }
+  function defLang(){ try{ const l = String(currentLang || 'sk').toUpperCase(); return l === 'AT' ? 'DE' : (HL[l] ? l : (l === 'SK' ? 'SK' : 'EN')); }catch(_){ return 'SK'; } }
+
+  // zmenšenie obrázka (fotka / projekt) → data URL
+  function shrink(file, maxW, maxH, cb){
+    const r = new FileReader();
+    r.onload = () => { const im = new Image(); im.onload = () => {
+      const k = Math.min(1, maxW / im.width, maxH / im.height);
+      const c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      try{ cb(c.toDataURL('image/jpeg', 0.82)); }catch(_){ cb(''); }
+    }; im.onerror = () => cb(''); im.src = r.result; };
+    r.onerror = () => cb(''); r.readAsDataURL(file);
+  }
+
+  // ---------- šablóny ----------
+  const yrs = (a, b, H) => { a = (a || '').trim(); b = (b || '').trim(); if(!a && !b) return ''; if(!a) return esc(b); return esc(a) + ' – ' + esc(b || H.now); };
+  const lvl = (v, H) => v === 'native' ? H.native : esc(v || '');
+  function tplA(c, H){
+    const ct = [c.email && '✉ ' + esc(c.email), c.phone && '☎ ' + esc(c.phone), c.city && '⌂ ' + esc(c.city), c.web && '🌐 ' + esc(c.web)].filter(Boolean);
+    return `<div class="c8cvA">
+      <div class="sd">
+        ${c.photo ? `<div class="ph" style="background-image:url('${c.photo}')"></div>` : ''}
+        ${ct.length ? `<h4>${esc(H.contact)}</h4>${ct.map(x => `<p>${x}</p>`).join('')}` : ''}
+        ${c.skills.some(s => s.name) ? `<h4>${esc(H.skills)}</h4>${c.skills.filter(s => s.name).map(s => `<p>${esc(s.name)}</p><div class="bar"><i style="width:${Math.max(1, Math.min(5, +s.level || 3)) * 20}%"></i></div>`).join('')}` : ''}
+        ${c.langs.some(s => s.name) ? `<h4>${esc(H.langs)}</h4>${c.langs.filter(s => s.name).map(s => `<p>${esc(s.name)}${s.level ? ' – ' + lvl(s.level, H) : ''}</p>`).join('')}` : ''}
+        ${c.hobby ? `<h4>${esc(H.hobby)}</h4><p>${esc(c.hobby)}</p>` : ''}
+      </div>
+      <div class="mn">
+        <div class="nm">${esc(c.name)}</div>
+        ${c.title ? `<div class="ro">${esc(c.title)}</div>` : '<div style="height:16px"></div>'}
+        ${c.about ? `<p class="ab">${esc(c.about)}</p>` : ''}
+        ${c.exp.some(e => e.role || e.company) ? `<h3>${esc(H.exp)}</h3>${c.exp.filter(e => e.role || e.company).map(e => `<div class="it"><b>${esc(e.role)}</b>${e.company ? ` <span class="d">· ${esc(e.company)}</span>` : ''}${yrs(e.from, e.to, H) ? ` <span class="d">· ${yrs(e.from, e.to, H)}</span>` : ''}${e.desc ? `<p>${esc(e.desc)}</p>` : ''}</div>`).join('')}` : ''}
+        ${c.edu.some(e => e.school || e.field) ? `<h3>${esc(H.edu)}</h3>${c.edu.filter(e => e.school || e.field).map(e => `<div class="it"><b>${esc(e.school)}</b>${e.field ? ` <span class="d">· ${esc(e.field)}</span>` : ''}${yrs(e.from, e.to, H) ? ` <span class="d">· ${yrs(e.from, e.to, H)}</span>` : ''}</div>`).join('')}` : ''}
+        ${c.projects.some(p => p.name) ? `<h3>${esc(H.proj)}</h3>${c.projects.filter(p => p.name).map(p => `<div class="it"><b>${esc(p.name)}</b>${p.desc ? `<p>${esc(p.desc)}</p>` : ''}</div>`).join('')}` : ''}
+      </div></div>`;
+  }
+  const GRAD = ['linear-gradient(135deg,#5b4cff,#40e0ff)','linear-gradient(135deg,#c9a24b,#2b2f3a)','linear-gradient(135deg,#1f3a2a,#3fa873)','linear-gradient(135deg,#6b3d1e,#e0a868)','linear-gradient(135deg,#7c2d6b,#ff7ab6)','linear-gradient(135deg,#1e3a5f,#7fb2ff)'];
+  function tplC(c, H){
+    const ct = [c.email && '✉ ' + esc(c.email), c.phone && '☎ ' + esc(c.phone), c.city && '⌂ ' + esc(c.city), c.web && '🌐 ' + esc(c.web)].filter(Boolean);
+    const sk = c.skills.filter(s => s.name), lg = c.langs.filter(s => s.name);
+    return `<div class="c8cvC">
+      <div class="hero"><div class="who">${c.photo ? `<div class="ph" style="background-image:url('${c.photo}')"></div>` : ''}
+        <div><div class="nm">${esc(c.name)}</div>${c.title ? `<div class="ro">${esc(c.title)}</div>` : ''}</div></div>
+        ${ct.length ? `<div class="ct">${ct.map(x => `<span>${x}</span>`).join('')}</div>` : ''}
+      </div>
+      <div class="bd">
+        ${c.about ? `<h3>${esc(H.about)}</h3><p class="ab">${esc(c.about)}</p>` : ''}
+        ${c.projects.some(p => p.name) ? `<h3>${esc(H.work)}</h3><div class="cards">${c.projects.filter(p => p.name).map((p, i) => `<div class="card"><div class="th" style="${p.img ? `background-image:url('${p.img}')` : `background:${GRAD[i % GRAD.length]}`}"></div><b>${esc(p.name)}</b>${p.desc ? `<div class="d">${esc(p.desc)}</div>` : ''}</div>`).join('')}</div>` : ''}
+        ${c.exp.some(e => e.role || e.company) ? `<h3>${esc(H.exp)}</h3><div class="tl">${c.exp.filter(e => e.role || e.company).map(e => `<div class="it"><b>${esc(e.role)}</b>${e.company ? ' · ' + esc(e.company) : ''}${yrs(e.from, e.to, H) ? `<div class="d">${yrs(e.from, e.to, H)}</div>` : ''}${e.desc ? `<p>${esc(e.desc)}</p>` : ''}</div>`).join('')}</div>` : ''}
+        ${c.edu.some(e => e.school || e.field) ? `<h3>${esc(H.edu)}</h3><div class="tl">${c.edu.filter(e => e.school || e.field).map(e => `<div class="it"><b>${esc(e.school)}</b>${e.field ? ' · ' + esc(e.field) : ''}${yrs(e.from, e.to, H) ? `<div class="d">${yrs(e.from, e.to, H)}</div>` : ''}</div>`).join('')}</div>` : ''}
+        <div class="two">
+          <div>${sk.length ? `<h3>${esc(H.skills)}</h3>${sk.map(s => { const n = Math.max(1, Math.min(5, +s.level || 3)); return `<span class="chip">${esc(s.name)}<span class="dots">${[1,2,3,4,5].map(k => `<i class="${k <= n ? 'on' : ''}"></i>`).join('')}</span></span>`; }).join('')}` : ''}</div>
+          <div>${lg.length ? `<h3>${esc(H.langs)}</h3>${lg.map(s => `<span class="chip">${esc(s.name)}${s.level ? ' · ' + lvl(s.level, H) : ''}</span>`).join('')}` : ''}
+          ${c.hobby ? `<h3>${esc(H.hobby)}</h3><p class="ab">${esc(c.hobby)}</p>` : ''}</div>
+        </div>
+      </div></div>`;
+  }
+  // vloží stránku a zmenší písmo, kým sa celá zmestí na A4
+  function buildPage(kind){
+    const H = HL[cv.lang] || HL.SK;
+    const w = document.createElement('div');
+    w.innerHTML = kind === 'A' ? tplA(cv, H) : tplC(cv, H);
+    return w.firstElementChild;
+  }
+  function fit(page){
+    let s = 1; page.style.setProperty('--s', s);
+    const inner = page.classList.contains('c8cvA') ? page.querySelector('.mn') : page;
+    const side  = page.classList.contains('c8cvA') ? page.querySelector('.sd') : null;
+    const over = () => { if(page.classList.contains('c8cvA')) return inner.scrollHeight > 1123 || side.scrollHeight > 1123; const b = page.querySelector('.bd'), h = page.querySelector('.hero'); return (h.offsetHeight + b.scrollHeight) > 1123; };
+    let n = 0;
+    while(over() && s > 0.62 && n++ < 20){ s -= 0.04; page.style.setProperty('--s', s.toFixed(2)); }
+  }
+
+  // ---------- PDF ----------
+  let libP = null;
+  function loadLibs(){
+    if(libP) return libP;
+    const add = src => new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+    libP = Promise.all([
+      window.html2canvas ? 0 : add('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+      (window.jspdf && window.jspdf.jsPDF) ? 0 : add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+    ]).catch(e => { libP = null; throw e; });
+    return libP;
+  }
+  const fname = k => 'Zivotopis_' + k + '_' + ((cv.name || 'CV').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '') || 'CV') + '.pdf';
+  async function makePdf(kind){
+    await loadLibs();
+    const host = document.createElement('div');
+    host.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;overflow:hidden;z-index:-1';
+    const page = buildPage(kind); host.appendChild(page); document.body.appendChild(host);
+    try{
+      fit(page);
+      await new Promise(r => setTimeout(r, 60));
+      const canvas = await window.html2canvas(page, {scale:2, useCORS:true, backgroundColor: kind === 'C' ? '#0c1018' : '#ffffff', width:794, height:1123, windowWidth:794});
+      const pdf = new window.jspdf.jsPDF({orientation:'p', unit:'mm', format:'a4'});
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297);
+      pdf.save(fname(kind));
+    } finally { host.remove(); }
+  }
+
+  // ---------- okno ----------
+  let ov = null, tab = 'form', big = null;
+  function msg(txt, err){ const m = ov && ov.querySelector('.c8cv-msg'); if(m){ m.textContent = txt || ''; m.classList.toggle('err', !!err); } }
+
+  function field(k, label, ph, type){
+    const v = esc(cv[k]);
+    if(type === 'ta') return `<label class="c8cv-f"><span>${esc(T(label))}</span><textarea data-k="${k}" placeholder="${esc(ph ? T(ph) : '')}">${v}</textarea></label>`;
+    return `<label class="c8cv-f"><span>${esc(T(label))}</span><input data-k="${k}" type="${type || 'text'}" value="${v}" placeholder="${esc(ph ? T(ph) : '')}"></label>`;
+  }
+  function listHtml(key){
+    const arr = cv[key];
+    const inp = (i, f, ph, extra) => `<input data-l="${key}" data-i="${i}" data-f="${f}" value="${esc(arr[i][f])}" placeholder="${esc(T(ph))}" ${extra || ''}>`;
+    const del = i => `<button class="c8cv-del" type="button" data-del="${key}" data-i="${i}" aria-label="${esc(T('Odstrániť'))}">🗑</button>`;
+    return arr.map((it, i) => {
+      if(key === 'exp') return `<div class="c8cv-item">${del(i)}<div class="c8cv-first">${inp(i,'role','Pozícia')}</div>${inp(i,'company','Firma')}<div class="c8cv-grid2">${inp(i,'from','Od')}${inp(i,'to','Do')}</div><textarea data-l="exp" data-i="${i}" data-f="desc" placeholder="${esc(T('Čo si tam robil'))}">${esc(it.desc)}</textarea></div>`;
+      if(key === 'edu') return `<div class="c8cv-item">${del(i)}<div class="c8cv-first">${inp(i,'school','Škola')}</div>${inp(i,'field','Odbor')}<div class="c8cv-grid2">${inp(i,'from','Od')}${inp(i,'to','Do')}</div></div>`;
+      if(key === 'skills') return `<div class="c8cv-item">${del(i)}<div class="c8cv-first">${inp(i,'name','Zručnosť')}</div><div class="c8cv-rng"><span style="font-size:12px;color:#8A90A0">${esc(T('Úroveň'))}</span><input type="range" min="1" max="5" step="1" data-l="skills" data-i="${i}" data-f="level" value="${esc(it.level || 3)}"></div></div>`;
+      if(key === 'langs') return `<div class="c8cv-item">${del(i)}<div class="c8cv-first">${inp(i,'name','Jazyk')}</div><select data-l="langs" data-i="${i}" data-f="level"><option value="">${esc(T('Úroveň'))}</option>${LEVELS.map(l => `<option value="${l}" ${it.level === l ? 'selected' : ''}>${l === 'native' ? esc((HL[cv.lang] || HL.SK).native) : l}</option>`).join('')}</select></div>`;
+      if(key === 'projects') return `<div class="c8cv-item">${del(i)}<div class="c8cv-first">${inp(i,'name','Názov projektu')}</div><textarea data-l="projects" data-i="${i}" data-f="desc" placeholder="${esc(T('Krátky popis'))}">${esc(it.desc)}</textarea><div class="c8cv-pimg"><div class="pv" style="${it.img ? `background-image:url('${it.img}')` : ''}"></div><label>🖼 ${esc(T('Obrázok'))}<input type="file" accept="image/*" data-pimg="${i}"></label>${it.img ? `<button type="button" class="c8cv-x" style="width:auto;height:auto;border-radius:9px;padding:6px 10px;font-size:12px" data-pimgdel="${i}">${esc(T('Odstrániť'))}</button>` : ''}</div></div>`;
+      return '';
+    }).join('');
+  }
+  function formHtml(){
+    return `
+      <div class="c8cv-sec">${esc(T('Osobné údaje'))}</div>
+      <div class="c8cv-photo"><div class="pv" style="${cv.photo ? `background-image:url('${cv.photo}')` : ''}">${cv.photo ? '' : '👤'}</div>
+        <label>📷 ${esc(T('Nahrať fotku'))}<input type="file" accept="image/*" data-photo="1"></label>
+        ${cv.photo ? `<button type="button" data-photodel="1">${esc(T('Odstrániť'))}</button>` : ''}</div>
+      ${field('name','Meno a priezvisko','napr. Ján Novák')}
+      ${field('title','Pozícia / titulok','napr. Predavač, Programátor…')}
+      <div class="c8cv-grid2">${field('email','E-mail','', 'email')}${field('phone','Telefón','', 'tel')}</div>
+      <div class="c8cv-grid2">${field('city','Mesto')}${field('web','Web / LinkedIn')}</div>
+      ${field('about','O mne','Krátko o sebe (2–3 vety)','ta')}
+      ${['exp','edu','skills','langs','projects'].map(k => {
+        const H = {exp:['Skúsenosti','+ Pridať skúsenosť'],edu:['Vzdelanie','+ Pridať školu'],skills:['Zručnosti','+ Pridať zručnosť'],langs:['Jazyky','+ Pridať jazyk'],projects:['Projekty','+ Pridať projekt']}[k];
+        return `<div class="c8cv-sec">${esc(T(H[0]))}</div><div data-list="${k}">${listHtml(k)}</div><button class="c8cv-add" type="button" data-add="${k}">${esc(T(H[1]))}</button>`;
+      }).join('')}
+      <div class="c8cv-sec">${esc(T('Záujmy'))}</div>
+      <label class="c8cv-f"><textarea data-k="hobby">${esc(cv.hobby)}</textarea></label>
+      <div class="c8cv-msg"></div>`;
+  }
+  function previewHtml(){
+    return `<div class="c8cv-pvs ${big ? 'one' : ''}">
+      ${(!big || big === 'A') ? `<div><div class="lab">${esc(T('A · Moderný'))}</div><div class="c8cv-frame" data-zoom="A"></div></div>` : ''}
+      ${(!big || big === 'C') ? `<div><div class="lab">${esc(T('C · Tmavý moderný'))}</div><div class="c8cv-frame" data-zoom="C"></div></div>` : ''}
+    </div><div class="c8cv-hint">${esc(T('Ťukni na životopis pre zväčšenie'))}</div><div class="c8cv-msg"></div>`;
+  }
+  function drawPreview(){
+    if(!ov) return;
+    ov.querySelectorAll('.c8cv-frame').forEach(fr => {
+      const page = buildPage(fr.dataset.zoom);
+      const holder = document.createElement('div'); holder.appendChild(page);
+      fr.innerHTML = ''; fr.appendChild(holder);
+      fit(page);
+      const k = fr.clientWidth / 794;
+      holder.style.transform = `scale(${k})`;
+      fr.style.height = Math.round(1123 * k) + 'px';
+    });
+  }
+  function footHtml(){
+    if(tab === 'form') return `<button type="button" data-act="save">${esc(T('💾 Uložiť'))}</button><button type="button" class="pri" data-act="pv">${esc(T('👁 Náhľad'))}</button>`;
+    return `<select data-act="lang" aria-label="${esc(T('Jazyk životopisu'))}">${Object.keys(HL).map(l => `<option value="${l}" ${cv.lang === l ? 'selected' : ''}>🔤 ${l}</option>`).join('')}</select>
+      <button type="button" data-act="pdfA">${esc(T('⬇ PDF A'))}</button><button type="button" data-act="pdfC">${esc(T('⬇ PDF C'))}</button>
+      <button type="button" class="pri full" data-act="pdfAll">${esc(T('⬇ Stiahnuť oba (A + C)'))}</button>`;
+  }
+  function render(){
+    if(!ov) return;
+    ov.querySelectorAll('.c8cv-seg button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+    const body = ov.querySelector('.c8cv-body');
+    body.innerHTML = tab === 'form' ? formHtml() : previewHtml();
+    ov.querySelector('.c8cv-foot').innerHTML = footHtml();
+    if(tab === 'pv') requestAnimationFrame(drawPreview);
+  }
+  function rerenderList(k){ const box = ov.querySelector(`[data-list="${k}"]`); if(box) box.innerHTML = listHtml(k); }
+
+  function save(){
+    try{ localStorage.setItem(LS(), JSON.stringify(cv)); msg(T('Uložené ✓')); }
+    catch(_){ msg(T('Uložené len v tomto zariadení'), true); }
+  }
+  async function pdf(kinds){
+    if(!String(cv.name || '').trim()){ msg(T('Najprv vyplň meno'), true); return; }
+    msg(T('Pripravujem PDF…'));
+    try{
+      for(let i = 0; i < kinds.length; i++){ await makePdf(kinds[i]); if(i < kinds.length - 1) await new Promise(r => setTimeout(r, 900)); }
+      msg('');
+    }catch(e){ msg(T('PDF sa nepodarilo vytvoriť'), true); }
+  }
+
+  async function open(){
+    if(!CU()) return;
+    cv = norm(lsLoad() || EMPTY());
+    if(!cv.lang) cv.lang = defLang();
+    tab = 'form'; big = null;
+    ov = document.createElement('div'); ov.className = 'c8cv-ov';
+    ov.innerHTML = `<div class="c8cv-sheet" role="dialog" aria-modal="true">
+      <div class="c8cv-top"><div class="c8cv-h"><h3>${esc(T('📄 Môj životopis'))}</h3><button class="c8cv-x" type="button" data-act="close">✕</button></div>
+      <div class="c8cv-seg"><button type="button" data-tab="form">${esc(T('✏️ Údaje'))}</button><button type="button" data-tab="pv">${esc(T('👁 Náhľad'))}</button></div></div>
+      <div class="c8cv-body"></div><div class="c8cv-foot"></div></div>`;
+    document.body.appendChild(ov);
+    render();
+
+    ov.addEventListener('click', e => {
+      const el = e.target.closest('[data-act],[data-tab],[data-add],[data-del],[data-zoom],[data-photodel],[data-pimgdel]');
+      if(e.target === ov){ close(); return; }
+      if(!el) return;
+      if(el.dataset.act === 'close') return close();
+      if(el.dataset.tab){ tab = el.dataset.tab; big = null; return render(); }
+      if(el.dataset.act === 'pv'){ tab = 'pv'; big = null; return render(); }
+      if(el.dataset.act === 'save') return save();
+      if(el.dataset.act === 'pdfA') return pdf(['A']);
+      if(el.dataset.act === 'pdfC') return pdf(['C']);
+      if(el.dataset.act === 'pdfAll') return pdf(['A','C']);
+      if(el.dataset.zoom){ big = big ? null : el.dataset.zoom; return render(); }
+      if(el.dataset.add){ const k = el.dataset.add;
+        cv[k].push(k === 'exp' ? {role:'',company:'',from:'',to:'',desc:''} : k === 'edu' ? {school:'',field:'',from:'',to:''} : k === 'skills' ? {name:'',level:3} : k === 'langs' ? {name:'',level:''} : {name:'',desc:'',img:''});
+        rerenderList(k); lsSave();
+        const items = ov.querySelectorAll(`[data-list="${k}"] .c8cv-item`); const last = items[items.length - 1]; if(last){ const f = last.querySelector('input,textarea'); if(f) f.focus(); }
+        return; }
+      if(el.dataset.del){ cv[el.dataset.del].splice(+el.dataset.i, 1); rerenderList(el.dataset.del); lsSave(); return; }
+      if(el.dataset.photodel){ cv.photo = ''; lsSave(); return render(); }
+      if(el.dataset.pimgdel != null){ cv.projects[+el.dataset.pimgdel].img = ''; rerenderList('projects'); lsSave(); return; }
+    });
+    ov.addEventListener('input', e => {
+      const el = e.target;
+      if(el.dataset.k){ cv[el.dataset.k] = el.value; lsSave(); return; }
+      if(el.dataset.l){ const it = cv[el.dataset.l][+el.dataset.i]; if(it){ it[el.dataset.f] = el.dataset.f === 'level' && el.dataset.l === 'skills' ? +el.value : el.value; lsSave(); } }
+    });
+    ov.addEventListener('change', e => {
+      const el = e.target;
+      if(el.dataset.act === 'lang'){ cv.lang = el.value; lsSave(); drawPreview(); return; }
+      if(el.dataset.l){ const it = cv[el.dataset.l][+el.dataset.i]; if(it){ it[el.dataset.f] = el.value; lsSave(); } return; }
+      if(el.dataset.photo && el.files && el.files[0]){ shrink(el.files[0], 360, 360, u => { if(u){ cv.photo = u; lsSave(); render(); } }); return; }
+      if(el.dataset.pimg != null && el.files && el.files[0]){ const i = +el.dataset.pimg; shrink(el.files[0], 520, 320, u => { if(u && cv.projects[i]){ cv.projects[i].img = u; lsSave(); rerenderList('projects'); } }); }
+    });
+    window.addEventListener('resize', onRz);
+  }
+  function onRz(){ if(ov && tab === 'pv') drawPreview(); }
+  function close(){ lsSave(); if(ov){ ov.remove(); ov = null; } window.removeEventListener('resize', onRz); }
+
+  // ---------- tlačidlo v profile (pod „Moja poloha“) ----------
+  function ensureBtn(){
+    const ll = document.getElementById('c8ll-btn');
+    if(!ll) return null;
+    let b = document.getElementById('c8cv-btn');
+    if(!b){
+      b = document.createElement('button'); b.type = 'button'; b.id = 'c8cv-btn'; b.className = 'c8cv-btn';
+      b.onclick = open;
+    }
+    if(b.previousElementSibling !== ll) ll.parentNode.insertBefore(b, ll.nextSibling);
+    return b;
+  }
+  function afterProfile(){
+    const b = ensureBtn(); if(!b) return;
+    let own = false; try{ own = !viewedProfileUser; }catch(_){}
+    b.textContent = T('📄 Vytvor životopis');
+    b.style.display = (own && CU()) ? 'inline-flex' : 'none';
+  }
+  try{
+    const _rp = window.renderProfile;
+    if(typeof _rp === 'function'){ window.renderProfile = renderProfile = function(){ try{ return _rp.apply(this, arguments); } finally { try{ afterProfile(); }catch(_){} } }; }
+  }catch(_){}
+  window.c8CvOpen = open;
+})();
+</script>
+
 </body>
 </html>
