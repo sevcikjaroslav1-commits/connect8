@@ -1726,6 +1726,10 @@
   .chat-time{font-size:10.5px;line-height:1.2;color:var(--text-muted,#8A8F98);margin-top:-5px;padding:0 6px;}
   .chat-time.mine{align-self:flex-end;}
   .chat-time.theirs{align-self:flex-start;}
+  /* prečítané správy */
+  .c8rr-ck{margin-left:4px;font-weight:800;letter-spacing:-2px;color:#9AA0AE;}
+  .c8rr-ck.read{color:#1D9BF0;}
+  .c8rr-seen{align-self:flex-end;font-size:11px;font-weight:600;color:#1D9BF0;padding:0 6px;margin:1px 0 4px;}
   .chat-bubble.mine{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
   .chat-input-row{
     display:flex;gap:5px;padding:10px 10px;border-top:1px solid var(--line);flex-shrink:0;align-items:center;
@@ -3142,7 +3146,6 @@
       <button data-mode="video" onclick="switchMode('video')"><span class="mi">🎬</span><span class="ml">Videá</span></button>
       <button data-mode="market" onclick="switchMode('market')"><span class="mi">🛒</span><span class="ml">Bazár</span></button>
       <button data-mode="news" class="c8h-hidden" onclick="switchMode('news')"><span class="mi">📰</span><span class="ml">Správy</span></button>
-      <button data-mode="movies" onclick="switchMode('movies')"><span class="mi">🍿</span><span class="ml">Filmy</span></button>
       <button data-mode="games" onclick="openGamesDirect()"><span class="mi">🎮</span><span class="ml">Hry</span></button>
       <button id="mobile-nav-profile" class="c8p c8p-v" onclick="openProfile()"><span class="mi"><span class="avatar" id="mobile-quick-avatar">?</span></span><span class="ml">Môj profil</span></button>
       <button id="mobile-nav-friends" class="c8p c8p-g" onclick="openFriendsList()"><span class="mi">👥</span><span class="ml">Priatelia</span></button>
@@ -3559,28 +3562,6 @@
           </div>
         </section>
 
-        <!-- FILMY / DOKUMENTY -->
-        <section class="view" id="view-movies">
-          <div class="movies-subtabs">
-            <button class="movies-subtab active" id="movies-subtab-film" onclick="setMovieCategory('film')">🎬 Filmy</button>
-            <button class="movies-subtab" id="movies-subtab-dokument" onclick="setMovieCategory('dokument')">🎥 Dokumenty</button>
-          </div>
-
-          <div class="movies-composer">
-            <input type="text" id="movie-title-input" placeholder="Názov filmu/dokumentu">
-            <input type="url" id="movie-link-input" placeholder="Odkaz na YouTube video">
-            <div class="movies-category-choice">
-              <label><input type="radio" name="movie-category" value="film" checked><span>🎬 Film</span></label>
-              <label><input type="radio" name="movie-category" value="dokument"><span>🎥 Dokument</span></label>
-            </div>
-            <button class="movies-add-btn" onclick="addMovie()">Pridať</button>
-          </div>
-
-          <div class="movies-grid" id="movies-grid">
-            <div class="movies-status">Zatiaľ tu nič nie je.</div>
-          </div>
-        </section>
-
         <!-- HRY -->
         <section class="view" id="view-games">
           <div class="games-cta-card">
@@ -3594,7 +3575,7 @@
         <!-- PROFIL -->
         <section class="view" id="view-profile">
           <div class="c8pt-row" id="c8pt-row"><button type="button" class="c8pt c8pt-all" data-tab="all" onclick="c8SetProfTab('all')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" class="f"/><rect x="13" y="3" width="8" height="8" rx="2" class="f" opacity=".7"/><rect x="3" y="13" width="8" height="8" rx="2" class="f" opacity=".7"/><rect x="13" y="13" width="8" height="8" rx="2" class="f"/></svg><span class="c8pt-lbl"><span>Všetko</span><span class="c8pt-cnt" id="c8pt-cnt-all">0</span></span></button><button type="button" class="c8pt c8pt-reels" data-tab="reels" onclick="c8SetProfTab('reels')"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="3" class="f"/><g class="b"><rect x="3.6" y="5" width="2" height="2" rx=".5"/><rect x="3.6" y="9" width="2" height="2" rx=".5"/><rect x="3.6" y="13" width="2" height="2" rx=".5"/><rect x="3.6" y="17" width="2" height="2" rx=".5"/><rect x="18.4" y="5" width="2" height="2" rx=".5"/><rect x="18.4" y="9" width="2" height="2" rx=".5"/><rect x="18.4" y="13" width="2" height="2" rx=".5"/><rect x="18.4" y="17" width="2" height="2" rx=".5"/></g><path d="M10 8.5v7l5.5-3.5z" class="b"/></svg><span class="c8pt-lbl"><span>Reels</span><span class="c8pt-cnt" id="c8pt-cnt-reels">0</span></span></button><button type="button" class="c8pt c8pt-vid" data-tab="vid" onclick="c8SetProfTab('vid')"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="14" height="14" rx="3" class="f"/><path d="M17 10l5-3v10l-5-3z" class="f"/><path d="M7.5 9v6l4.5-3z" class="b"/></svg><span class="c8pt-lbl"><span>Videá</span><span class="c8pt-cnt" id="c8pt-cnt-vid">0</span></span></button><button type="button" class="c8pt c8pt-foto" data-tab="foto" onclick="c8SetProfTab('foto')"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="3" class="f"/><circle cx="8" cy="9.5" r="2" class="b"/><path d="M3 18l5.5-5.5 4 4 3-3L21 18z" class="b"/></svg><span class="c8pt-lbl"><span>Fotky</span><span class="c8pt-cnt" id="c8pt-cnt-foto">0</span></span></button></div>
-          <div class="c8holo-toprow"><button class="profile-back-btn" id="profile-back-btn" onclick="profileBack()">← Späť do Feedu</button><button type="button" class="c8holo-btn" id="c8holo-btn" onclick="c8HoloOpen()"><span class="c8holo-dot"></span><span class="c8holo-lbl">Hologram</span></button></div>
+          <div class="c8holo-toprow"><button class="profile-back-btn" id="profile-back-btn" onclick="profileBack()">← Späť na Plochu</button><button type="button" class="c8holo-btn" id="c8holo-btn" onclick="c8HoloOpen()"><span class="c8holo-dot"></span><span class="c8holo-lbl">Hologram</span></button></div>
           <div class="profile-header">
             <div class="profile-avatar-wrap">
               <div class="avatar profile-avatar" id="profile-avatar" onclick="openProfileAvatarLightbox()">?</div>
@@ -4557,13 +4538,7 @@ function loadState(){
       // dva samostatné dotazy (jeden per kategória) - to ale vyžaduje
       // composite index (category + createdAt) vo Firestore, ktorý
       // musí byť vytvorený PRED nasadením takého kódu.
-      db.collection('movies').orderBy('createdAt','desc').limit(120).onSnapshot((snap)=>{
-        movies = docsToArray(snap);
-        movies.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-        if(document.getElementById('app').style.display === 'block') renderMovies();
-      }, (err)=>{
-        console.error("Firestore chyba (movies):", err);
-      });
+      // Sekcia Filmy bola odstránená (2026) - zoznam filmov sa už nenačítava.
     });
   });
 
@@ -4737,7 +4712,7 @@ async function doRegister(){
 function doLogout(){
   if(typeof pcalUnsubscribe === 'function') pcalUnsubscribe();
   setPresenceOffline();
-  if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; }
+  if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; } if(typeof c8rrStop==='function') c8rrStop();
   if(conversationsUnsub){ conversationsUnsub(); conversationsUnsub = null; }
   if(incomingCallsUnsub){ incomingCallsUnsub(); incomingCallsUnsub = null; }
   if(pc || currentCallDocId) endCall();
@@ -4842,7 +4817,7 @@ async function deleteMyAccount(){
     }
 
     alert('Tvoj profil bol vymazaný.');
-    if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; }
+    if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; } if(typeof c8rrStop==='function') c8rrStop();
     if(conversationsUnsub){ conversationsUnsub(); conversationsUnsub = null; }
     if(incomingCallsUnsub){ incomingCallsUnsub(); incomingCallsUnsub = null; }
     if(pc || currentCallDocId) endCall();
@@ -6347,7 +6322,7 @@ function renderProfile(){
   if(isOwnProfile){ pcalSubscribe(); renderProfileCalendar(); }
 
   const backBtn = document.getElementById('profile-back-btn');
-  if(backBtn) backBtn.textContent = isOwnProfile ? t('← Späť do Feedu') : t('← Späť na Používateľov');
+  if(backBtn) backBtn.textContent = isOwnProfile ? t('← Späť na Plochu') : t('← Späť na Používateľov');
 
   const msgBtn = document.getElementById('profile-message-btn');
   if(msgBtn) msgBtn.style.display = (isOwnProfile || isBlocked) ? 'none' : 'flex';
@@ -8537,7 +8512,7 @@ async function openChatWithUser(user){
 }
 
 function closeChatModal(){
-  if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; }
+  if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; } if(typeof c8rrStop==='function') c8rrStop();
   document.getElementById('chat-modal').classList.remove('open');
   currentChatUser = null;
   currentChatId = null;
@@ -8569,14 +8544,16 @@ function formatChatMsgTime(ts){
 }
 
 function subscribeToChatMessages(){
-  if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; }
+  if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; } if(typeof c8rrStop==='function') c8rrStop();
   const container = document.getElementById('chat-messages');
   container.innerHTML = '<div class="profile-empty">Načítavam správy...</div>';
+  c8rrWatch();
 
   chatMessagesUnsub = db.collection('chats').doc(currentChatId).collection('messages')
     .orderBy('createdAt', 'asc')
     .onSnapshot(snap=>{
       container.innerHTML = '';
+      c8rrMine = [];
       if(snap.empty){
         container.innerHTML = '<div class="profile-empty">Zatiaľ žiadne správy. Napíš prvú!</div>';
         return;
@@ -8604,7 +8581,9 @@ function subscribeToChatMessages(){
         tEl.textContent = tInfo.short;
         tEl.title = tInfo.full;
         container.appendChild(tEl);
+        if(mine) c8rrMine.push({ el: tEl, base: tInfo.short, ts: c8rrMs(m.createdAt) });
       });
+      c8rrUpdate();
       container.scrollTop = container.scrollHeight;
       // Ak je chat otvorený a prídu nové správy pre mňa, hneď ich označím ako prečítané
       markChatAsRead();
@@ -8731,7 +8710,77 @@ function markChatAsRead(){
   db.collection('chats').doc(currentChatId)
     .update({ ['unread.' + currentUser.uid]: 0 })
     .catch(()=>{}); // ak dokument ešte neexistuje (žiadna správa), jednoducho preskočíme
+  // Prečítané: čas, kedy som chat naposledy videl (len ak je stránka naozaj na obrazovke).
+  // Samostatný zápis - ak by ho pravidlá nepovolili, nepokazí nulovanie "unread".
+  if(document.visibilityState === 'visible'){
+    db.collection('chats').doc(currentChatId)
+      .update({ ['lastRead.' + currentUser.uid]: firebase.firestore.FieldValue.serverTimestamp() })
+      .catch(()=>{});
+  }
 }
+
+/* ---------- PREČÍTANÉ SPRÁVY ----------
+   Pri mojich správach: sivá ✓ = odoslané, modré ✓✓ = druhý si ju prečítal.
+   Pod poslednou prečítanou správou "Prečítané 16:03". Druhá strana pri
+   otvorení chatu zapíše do chats/{id} pole lastRead.{uid} (čas servera). */
+let c8rrMine = [], c8rrOtherRead = 0, c8rrUnsub = null;
+function c8rrMs(ts){
+  if(ts && typeof ts.toMillis === 'function') return ts.toMillis();
+  if(ts && typeof ts.seconds === 'number') return ts.seconds * 1000;
+  if(typeof ts === 'number') return ts;
+  return Infinity; // ešte neuložená správa = zatiaľ neprečítaná
+}
+function c8rrStop(){
+  if(c8rrUnsub){ c8rrUnsub(); c8rrUnsub = null; }
+  c8rrOtherRead = 0;
+}
+function c8rrWatch(){
+  c8rrStop();
+  if(!db || !currentChatId || !currentChatUser) return;
+  const other = currentChatUser.uid;
+  c8rrUnsub = db.collection('chats').doc(currentChatId).onSnapshot(d=>{
+    const data = d.exists ? d.data() : null;
+    const lr = data && data.lastRead ? data.lastRead[other] : null;
+    const ms = lr ? c8rrMs(lr) : 0;
+    c8rrOtherRead = (ms === Infinity) ? 0 : ms;
+    c8rrUpdate();
+  }, ()=>{});
+}
+function c8rrUpdate(){
+  const box = document.getElementById('chat-messages');
+  if(!box) return;
+  const old = box.querySelector('.c8rr-seen');
+  if(old) old.remove();
+  const tr = (typeof t === 'function') ? t : (x => x);
+  let lastRead = null;
+  c8rrMine.forEach(x=>{
+    const read = x.ts <= c8rrOtherRead;
+    x.el.textContent = x.base;
+    const ck = document.createElement('span');
+    ck.className = 'c8rr-ck' + (read ? ' read' : '');
+    ck.textContent = read ? '✓✓' : '✓';
+    x.el.appendChild(ck);
+    if(read) lastRead = x;
+  });
+  const lastMine = c8rrMine[c8rrMine.length - 1];
+  if(lastMine && !(lastMine.ts <= c8rrOtherRead)){
+    lastMine.el.appendChild(document.createTextNode(' ' + tr('Odoslané')));
+  }
+  // "Prečítané" len pod úplne poslednou správou v chate (ako v Messengeri)
+  if(lastRead && lastRead === lastMine && lastRead.el === box.lastElementChild){
+    const seen = document.createElement('div');
+    seen.className = 'c8rr-seen';
+    seen.textContent = tr('Prečítané') + ' ' + formatChatMsgTime(c8rrOtherRead).short;
+    box.appendChild(seen);
+  }
+}
+// keď sa vrátim do appky s otvoreným chatom, správy sa označia ako prečítané
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible' && currentChatId){
+    const m = document.getElementById('chat-modal');
+    if(m && m.classList.contains('open')) markChatAsRead();
+  }
+});
 
 /* =================================================================
    HLASOVÉ SPRÁVY V CHATE
@@ -17233,6 +17282,20 @@ const UI_DICT_IT = {
   add(UI_DICT_DE, {"dnes": "heute", "včera": "gestern"});
   add(UI_DICT_AT, {"dnes": "heute", "včera": "gestern"});
   add(UI_DICT_IT, {"dnes": "oggi", "včera": "ieri"});
+  add(UI_DICT_EN, {"Odoslané": "Sent", "Prečítané": "Seen"});
+  add(UI_DICT_CZ, {"Odoslané": "Odesláno", "Prečítané": "Přečteno"});
+  add(UI_DICT_PL, {"Odoslané": "Wysłano", "Prečítané": "Przeczytano"});
+  add(UI_DICT_HU, {"Odoslané": "Elküldve", "Prečítané": "Olvasva"});
+  add(UI_DICT_DE, {"Odoslané": "Gesendet", "Prečítané": "Gelesen"});
+  add(UI_DICT_AT, {"Odoslané": "Gesendet", "Prečítané": "Gelesen"});
+  add(UI_DICT_IT, {"Odoslané": "Inviato", "Prečítané": "Letto"});
+  add(UI_DICT_EN, {"← Späť na Plochu": "← Back to Feed"});
+  add(UI_DICT_CZ, {"← Späť na Plochu": "← Zpět na Plochu"});
+  add(UI_DICT_PL, {"← Späť na Plochu": "← Wróć na Tablicę"});
+  add(UI_DICT_HU, {"← Späť na Plochu": "← Vissza a Kezdőlapra"});
+  add(UI_DICT_DE, {"← Späť na Plochu": "← Zurück zum Start"});
+  add(UI_DICT_AT, {"← Späť na Plochu": "← Zurück zum Start"});
+  add(UI_DICT_IT, {"← Späť na Plochu": "← Torna alla Bacheca"});
 })();
 
 function t(text){
