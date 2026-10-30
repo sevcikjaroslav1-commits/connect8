@@ -2366,11 +2366,6 @@
 <style id="c8-onefs">
 @media(min-width:1520px){ #app .c8h.c8-one .mode-dock button{font-size:var(--c8-onefs,12.5px)!important;} #app .c8h.c8-one .mode-dock .ml{white-space:nowrap;} }
 </style>
-<style id="c8-hide-financie">
-/* DOČASNE skryté tlačidlo Financie (počas kontroly v Google Play).
-   Na vrátenie stačí zmazať celý tento <style> blok. */
-.finance-btn, .translator-financie-inline{display:none !important;}
-</style>
 </head>
 <body>
 
@@ -2604,7 +2599,7 @@
           <li>Komentáre a lajky pod príspevkami a videami</li>
           <li>Inzeráty v marketplace (názov, popis, cena, fotky tovaru)</li>
           <li>Hologram (ak si ho vytvoríš) — 2 fotky alebo krátke video (max 20 s) aj so zvukom. Postava sa vystrihne priamo v tvojom zariadení a výsledok sa uloží na Cloudinary. Ak zapneš „Ukáž môj hologram“, uvidí ho každý, kto príde na tvoj profil. Hologram môžeš kedykoľvek vymazať.</li>
-          <li>Odkazy na YouTube videá vložené k príspevku alebo do sekcie Filmy (prehrávanie beží priamo cez servery YouTube/Google)</li>
+          <li>Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)</li>
         </ul>
         <p><strong>2.3 Komunikácia medzi používateľmi</strong></p>
         <ul>
@@ -2763,7 +2758,6 @@
         <ul>
           <li><strong>Feed</strong> — zdieľanie príspevkov, ktoré môžeš lajkovať, komentovať a zdieľať</li>
           <li><strong>Videá</strong> — krátke vertikálne videá v štýle TikTok</li>
-          <li><strong>Filmy</strong> — pozeranie schválených YouTube videí priamo v appke</li>
           <li><strong>Správy</strong> — textové a hlasové správy, posielanie súborov medzi používateľmi</li>
           <li><strong>Hovory</strong> — audio aj videohovory medzi používateľmi</li>
           <li><strong>Marketplace</strong> — predaj a nákup vecí, ktoré už nepotrebuješ, priamo medzi používateľmi</li>
@@ -2811,8 +2805,8 @@
         <h2>6. Správy, hovory a videohovory</h2>
         <p>Súkromné správy, hlasové správy, zdieľané súbory a hovory/videohovory slúžia na komunikáciu medzi používateľmi. Connect8 tento obsah pri prenose neupravuje ani neschvaľuje — používatelia sú povinní správať sa k sebe navzájom slušne a v súlade so zákonom.</p>
 
-        <h2>7. Filmy (YouTube obsah)</h2>
-        <p>Sekcia Filmy zobrazuje výhradne odkazy na videá hostované na YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.</p>
+        <h2>7. YouTube obsah</h2>
+        <p>Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.</p>
 
         <h2>8. Zablokovanie a zrušenie účtu</h2>
         <p>Ak porušíš tieto podmienky, môžeme obmedziť alebo zrušiť tvoj prístup k Connect8. Rovnako máš možnosť kedykoľvek zablokovať iného používateľa, ktorý ťa obťažuje, alebo natrvalo zrušiť svoj vlastný účet.</p>
@@ -2885,7 +2879,7 @@
         <p>Nahrávaním príspevku, videa, fotky, súboru alebo inzerátu na Connect8 potvrdzuješ, že si autorom daného obsahu alebo že naň máš potrebné práva/súhlas na jeho zdieľanie. Nahrávanie cudzích fotiek, videí, hudby alebo textu bez súhlasu autora je zakázané.</p>
 
         <h2>Vloženie YouTube videa</h2>
-        <p>Vkladanie odkazu na YouTube video (v príspevku alebo v sekcii Filmy) nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.</p>
+        <p>Vkladanie odkazu na YouTube video do príspevku nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.</p>
 
         <h2>Nahlásenie porušenia autorských práv</h2>
         <p>Ak si vlastníkom autorských práv a myslíš si, že tvoje dielo bolo na Connect8 zdieľané bez tvojho súhlasu, napíš na <strong>sevcikjaroslav1@gmail.com</strong> a prilož:</p>
@@ -14195,6 +14189,10 @@ const LANG_STORAGE_KEY = 'c8_lang';
 let currentLang = localStorage.getItem(LANG_STORAGE_KEY) || 'sk';
 
 const LEGAL_DICT_EN = {
+  "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Links to YouTube videos added to a post (playback runs directly via YouTube/Google servers)",
+  "7. YouTube obsah": "7. YouTube content",
+  "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Links to YouTube videos added to posts are played directly via YouTube. YouTube/Google and the video creators, not Connect8, are responsible for the content of these videos.",
+  "Vkladanie odkazu na YouTube video do príspevku nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.": "Adding a YouTube video link to a post does not copy the video itself — playback runs directly via YouTube and is governed by its terms and the video creator's copyright.",
   "Posledná aktualizácia: 5. septembra 2026": "Last updated: September 5, 2026",
   "1. Kto sme (prevádzkovateľ)": "1. Who we are (data controller)",
   "Prevádzkovateľom platformy Connect8 („Connect8\" alebo „appka\") a správcom osobných údajov je:": "The operator of the Connect8 platform (\"Connect8\" or the \"app\") and the controller of personal data is:",
@@ -14429,6 +14427,10 @@ const LEGAL_DICT_EN = {
 // pôvodným slovenským textom, aby oficiálne slovenské znenie zostalo
 // vždy zachované a viditeľné.
 const LEGAL_DICT_CZ = {
+  "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Odkazy na YouTube videa vložené k příspěvku (přehrávání probíhá přímo přes servery YouTube/Google)",
+  "7. YouTube obsah": "7. Obsah z YouTube",
+  "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Odkazy na YouTube videa vložené do příspěvků se přehrávají přímo přes YouTube. Za obsah těchto videí odpovídá YouTube/Google a jejich tvůrci, nikoli Connect8.",
+  "Vkladanie odkazu na YouTube video do príspevku nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.": "Vložení odkazu na YouTube video do příspěvku nekopíruje samotné video — přehrávání probíhá přímo přes YouTube a řídí se jeho podmínkami a autorskými právy tvůrce videa.",
   "Posledná aktualizácia: 5. septembra 2026": "Poslední aktualizace: 5. září 2026",
   "1. Kto sme (prevádzkovateľ)": "1. Kdo jsme (provozovatel)",
   "Prevádzkovateľom platformy Connect8 („Connect8\" alebo „appka\") a správcom osobných údajov je:": "Provozovatelem platformy Connect8 („Connect8“ nebo „aplikace“) a správcem osobních údajů je:",
@@ -14661,6 +14663,10 @@ const LEGAL_DICT_CZ = {
 // Rovnaký princíp ako LEGAL_DICT_EN/LEGAL_DICT_CZ vyššie (preklad textu
 // právnych dokumentov po odsekoch/nadpisoch), len pre poľštinu.
 const LEGAL_DICT_PL = {
+  "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Linki do filmów YouTube dodane do posta (odtwarzanie odbywa się bezpośrednio przez serwery YouTube/Google)",
+  "7. YouTube obsah": "7. Treści z YouTube",
+  "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Linki do filmów YouTube dodane do postów są odtwarzane bezpośrednio przez YouTube. Za treść tych filmów odpowiada YouTube/Google i ich twórcy, a nie Connect8.",
+  "Vkladanie odkazu na YouTube video do príspevku nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.": "Dodanie linku do filmu YouTube do posta nie kopiuje samego filmu — odtwarzanie odbywa się bezpośrednio przez YouTube i podlega jego warunkom oraz prawom autorskim twórcy filmu.",
   "Posledná aktualizácia: 5. septembra 2026": "Ostatnia aktualizacja: 5 września 2026",
   "1. Kto sme (prevádzkovateľ)": "1. Kim jesteśmy (administrator)",
   "Prevádzkovateľom platformy Connect8 („Connect8\" alebo „appka\") a správcom osobných údajov je:": "Administratorem platformy Connect8 („Connect8” lub „aplikacja”) i administratorem danych osobowych jest:",
@@ -14892,6 +14898,10 @@ const LEGAL_DICT_PL = {
 
 // Rovnaký princíp ako LEGAL_DICT_EN/CZ/PL vyššie, len pre maďarčinu.
 const LEGAL_DICT_HU = {
+  "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "A bejegyzéshez csatolt YouTube-videók linkjei (a lejátszás közvetlenül a YouTube/Google szerverein keresztül történik)",
+  "7. YouTube obsah": "7. YouTube-tartalom",
+  "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "A bejegyzésekhez csatolt YouTube-videók közvetlenül a YouTube-on keresztül játszódnak le. Ezeknek a videóknak a tartalmáért a YouTube/Google és a készítőik felelnek, nem a Connect8.",
+  "Vkladanie odkazu na YouTube video do príspevku nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.": "Egy YouTube-videó linkjének bejegyzéshez csatolása nem másolja magát a videót — a lejátszás közvetlenül a YouTube-on keresztül történik, és annak feltételei, valamint a videó készítőjének szerzői jogai vonatkoznak rá.",
   "Posledná aktualizácia: 5. septembra 2026": "Utolsó frissítés: 2026. szeptember 5.",
   "1. Kto sme (prevádzkovateľ)": "1. Kik vagyunk (adatkezelő)",
   "Prevádzkovateľom platformy Connect8 („Connect8\" alebo „appka\") a správcom osobných údajov je:": "A Connect8 platform („Connect8” vagy „alkalmazás”) üzemeltetője és a személyes adatok kezelője:",
@@ -15123,6 +15133,10 @@ const LEGAL_DICT_HU = {
 
 // Rovnaký princíp ako LEGAL_DICT_EN/CZ/PL/HU vyššie, len pre nemčinu (AT).
 const LEGAL_DICT_AT = {
+  "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Links zu YouTube-Videos, die einem Beitrag hinzugefügt wurden (die Wiedergabe läuft direkt über die Server von YouTube/Google)",
+  "7. YouTube obsah": "7. YouTube-Inhalte",
+  "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Links zu YouTube-Videos in Beiträgen werden direkt über YouTube abgespielt. Für den Inhalt dieser Videos sind YouTube/Google und deren Ersteller verantwortlich, nicht Connect8.",
+  "Vkladanie odkazu na YouTube video do príspevku nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.": "Das Einfügen eines YouTube-Videolinks in einen Beitrag kopiert nicht das Video selbst — die Wiedergabe läuft direkt über YouTube und unterliegt dessen Bedingungen und dem Urheberrecht des Videoerstellers.",
   "Posledná aktualizácia: 5. septembra 2026": "Letzte Aktualisierung: 5. September 2026",
   "1. Kto sme (prevádzkovateľ)": "1. Wer wir sind (Verantwortlicher)",
   "Prevádzkovateľom platformy Connect8 („Connect8\" alebo „appka\") a správcom osobných údajov je:": "Betreiber der Plattform Connect8 („Connect8“ oder „App“) und Verantwortlicher für personenbezogene Daten ist:",
@@ -15355,6 +15369,10 @@ const LEGAL_DICT_AT = {
 // Rovnaké nemecké preklady ako LEGAL_DICT_AT vyššie (ide o ten istý jazyk),
 // len s vlastným názvom pre nemeckú vlajku (DE).
 const LEGAL_DICT_DE = {
+  "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Links zu YouTube-Videos, die einem Beitrag hinzugefügt wurden (die Wiedergabe läuft direkt über die Server von YouTube/Google)",
+  "7. YouTube obsah": "7. YouTube-Inhalte",
+  "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Links zu YouTube-Videos in Beiträgen werden direkt über YouTube abgespielt. Für den Inhalt dieser Videos sind YouTube/Google und deren Ersteller verantwortlich, nicht Connect8.",
+  "Vkladanie odkazu na YouTube video do príspevku nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.": "Das Einfügen eines YouTube-Videolinks in einen Beitrag kopiert nicht das Video selbst — die Wiedergabe läuft direkt über YouTube und unterliegt dessen Bedingungen und dem Urheberrecht des Videoerstellers.",
   "Posledná aktualizácia: 5. septembra 2026": "Letzte Aktualisierung: 5. September 2026",
   "1. Kto sme (prevádzkovateľ)": "1. Wer wir sind (Verantwortlicher)",
   "Prevádzkovateľom platformy Connect8 („Connect8\" alebo „appka\") a správcom osobných údajov je:": "Betreiber der Plattform Connect8 („Connect8“ oder „App“) und Verantwortlicher für personenbezogene Daten ist:",
@@ -15586,6 +15604,10 @@ const LEGAL_DICT_DE = {
 
 // Rovnaký princíp ako LEGAL_DICT_EN/CZ/PL/HU/AT vyššie, len pre taliančinu.
 const LEGAL_DICT_IT = {
+  "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Link a video YouTube aggiunti a un post (la riproduzione avviene direttamente tramite i server di YouTube/Google)",
+  "7. YouTube obsah": "7. Contenuti YouTube",
+  "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "I link a video YouTube aggiunti ai post vengono riprodotti direttamente tramite YouTube. Del contenuto di questi video sono responsabili YouTube/Google e i loro autori, non Connect8.",
+  "Vkladanie odkazu na YouTube video do príspevku nekopíruje samotné video — prehrávanie beží priamo cez YouTube a riadi sa jeho podmienkami a autorskými právami tvorcu videa.": "L'inserimento di un link a un video YouTube in un post non copia il video stesso — la riproduzione avviene direttamente tramite YouTube ed è regolata dai suoi termini e dai diritti d'autore del creatore del video.",
   "Posledná aktualizácia: 5. septembra 2026": "Ultimo aggiornamento: 5 settembre 2026",
   "1. Kto sme (prevádzkovateľ)": "1. Chi siamo (titolare del trattamento)",
   "Prevádzkovateľom platformy Connect8 („Connect8\" alebo „appka\") a správcom osobných údajov je:": "Il titolare della piattaforma Connect8 („Connect8” o „l'app”) e responsabile del trattamento dei dati personali è:",
