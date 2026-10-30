@@ -2379,9 +2379,6 @@
 .c8gp-t b{display:block;font-size:17px;font-weight:800;line-height:1.15;}
 .c8gp-new{position:absolute;top:-8px;right:-8px;background:#ff3d71;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;}
 .c8gp-hide .c8gp-wrap{display:none !important;}
-/* volanie offline používateľovi = žlté slúchadlo */
-.c8-offcall, button.c8-offcall, #app .c8-offcall{background:#FFF4C2 !important;border-color:#F5DE7A !important;color:#B8860B !important;box-shadow:none !important;}
-.c8-offcall svg{fill:#B8860B !important;color:#B8860B !important;}
 </style>
 </head>
 <body>
@@ -6367,11 +6364,10 @@ function renderProfile(){
       const online = profileUser.uid ? isUserOnline(profileUser.uid) : false;
       callAudioBtn.style.display = 'flex';
       callVideoBtn.style.display = 'flex';
-      callAudioBtn.disabled = false;   // offline používateľ dostane push upozornenie
-      callVideoBtn.disabled = false;
-      { const g = profileUser.uid && getPresenceState(profileUser.uid) === 'online'; callAudioBtn.classList.toggle('c8-offcall', !g); callVideoBtn.classList.toggle('c8-offcall', !g); }
-      callAudioBtn.title = t('Zavolať');
-      callVideoBtn.title = t('Videohovor');
+      callAudioBtn.disabled = !online;
+      callVideoBtn.disabled = !online;
+      callAudioBtn.title = online ? t('Zavolať') : t('Používateľ je offline');
+      callVideoBtn.title = online ? t('Videohovor') : t('Používateľ je offline');
     }
   }
 
@@ -6589,9 +6585,8 @@ function buildCallButtonRow(u){
   audioBtn.dataset.calluid = u.id;
   audioBtn.dataset.calltype = 'audio';
   audioBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
-  audioBtn.title = t('Zavolať');
-  audioBtn.disabled = false;
-  audioBtn.classList.toggle('c8-offcall', getPresenceState(u.id) !== 'online');
+  audioBtn.title = online ? t('Zavolať') : t('Používateľ je offline');
+  audioBtn.disabled = !online;
   audioBtn.onclick = (e)=>{ e.stopPropagation(); startCall({ uid:u.id, name:u.name, photoURL:u.photo }, 'audio'); };
 
   const videoBtn = document.createElement('button');
@@ -6599,9 +6594,8 @@ function buildCallButtonRow(u){
   videoBtn.dataset.calluid = u.id;
   videoBtn.dataset.calltype = 'video';
   videoBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M4 5.5h10a2.5 2.5 0 0 1 2.5 2.5v8a2.5 2.5 0 0 1-2.5 2.5H4A2.5 2.5 0 0 1 1.5 16V8A2.5 2.5 0 0 1 4 5.5zm13.5 4.2 3.9-2.6a.7.7 0 0 1 1.1.6v8.6a.7.7 0 0 1-1.1.6l-3.9-2.6z"/></svg>';
-  videoBtn.title = t('Videohovor');
-  videoBtn.disabled = false;
-  videoBtn.classList.toggle('c8-offcall', getPresenceState(u.id) !== 'online');
+  videoBtn.title = online ? t('Videohovor') : t('Používateľ je offline');
+  videoBtn.disabled = !online;
   videoBtn.onclick = (e)=>{ e.stopPropagation(); startCall({ uid:u.id, name:u.name, photoURL:u.photo }, 'video'); };
 
   const msgBtn = document.createElement('button');
@@ -10250,10 +10244,9 @@ function updateStatusDots(){
     const vpu = (typeof viewedProfileUser !== 'undefined') ? viewedProfileUser : null;
     if(pa && pv && vpu && vpu.uid && pa.style.display !== 'none'){
       const on = isUserOnline(vpu.uid);
-      pa.disabled = false; pv.disabled = false;
-      { const g = getPresenceState(vpu.uid) === 'online'; pa.classList.toggle('c8-offcall', !g); pv.classList.toggle('c8-offcall', !g); }
-      pa.title = t('Zavolať');
-      pv.title = t('Videohovor');
+      pa.disabled = !on; pv.disabled = !on;
+      pa.title = on ? t('Zavolať') : t('Používateľ je offline');
+      pv.title = on ? t('Videohovor') : t('Používateľ je offline');
       if(pn) pn.style.display = on ? 'none' : 'block';
     }
   }catch(e){}
@@ -10265,9 +10258,8 @@ function updateStatusDots(){
   });
   document.querySelectorAll('[data-calluid]').forEach(btn=>{
     const online = isUserOnline(btn.dataset.calluid);
-    btn.disabled = false;
-    btn.classList.toggle('c8-offcall', getPresenceState(btn.dataset.calluid) !== 'online');
-    btn.title = t(btn.dataset.calltype === 'video' ? 'Videohovor' : 'Zavolať');
+    btn.disabled = !online;
+    btn.title = online ? t(btn.dataset.calltype === 'video' ? 'Videohovor' : 'Zavolať') : t('Používateľ je offline');
   });
 }
 
@@ -13877,10 +13869,7 @@ function listenForIncomingCalls(){
     .onSnapshot(qs=>{
       qs.docChanges().forEach(change=>{
         if(change.type === 'added' && !currentCallDocId){
-          const cd = change.doc.data();
-          const ts = cd.createdAt && cd.createdAt.toMillis ? cd.createdAt.toMillis() : Date.now();
-          if(Date.now() - ts > 60000) return;   // starý nezdvihnutý hovor - nezvoniť
-          showIncomingCall(change.doc.id, cd);
+          showIncomingCall(change.doc.id, change.doc.data());
         }
       });
     }, e=>console.error('Hovory: chyba pri sledovaní prichádzajúcich hovorov', e));
@@ -13980,21 +13969,6 @@ async function startCall(user, type){
   // toto zafunguje aj vtedy, keď callee nemá Connect8 práve otvorený.
   triggerCallPushNotification(user.uid, currentUser.name, type, callDoc.id)
     .catch(e=>console.warn('Connect8: push na hovor sa nepodarilo poslať:', e));
-
-  // ak druhá strana do 45 s nezdvihne (napr. mala telefón zamknutý), hovor sa ukončí
-  const c8RingId = callDoc.id;
-  setTimeout(async ()=>{
-    try{
-      if(currentCallDocId !== c8RingId) return;
-      const snap = await callDoc.get();
-      if(snap.exists && snap.data().status === 'ringing'){
-        await callDoc.update({ status:'ended' }).catch(()=>{});
-        const st = document.getElementById('call-status');
-        if(st) st.textContent = (typeof t === 'function' ? t('Neodpovedá') : 'Neodpovedá');
-        setTimeout(()=>{ if(currentCallDocId === c8RingId) endCall(true); }, 1500);
-      }
-    }catch(e){}
-  }, 45000);
 
   callDocUnsub = callDoc.onSnapshot(async doc=>{
     const d = doc.data();
@@ -17364,7 +17338,6 @@ const UI_DICT_IT = {
   add(UI_DICT_AT, {"Odoslané": "Gesendet", "Prečítané": "Gelesen"});
   add(UI_DICT_IT, {"Odoslané": "Inviato", "Prečítané": "Letto"});
   add(UI_DICT_EN, {"← Späť na Plochu": "← Back to Feed"});
-  add(UI_DICT_EN, {"Neodpovedá": "No answer"}); add(UI_DICT_CZ, {"Neodpovedá": "Neodpovídá"}); add(UI_DICT_PL, {"Neodpovedá": "Brak odpowiedzi"}); add(UI_DICT_HU, {"Neodpovedá": "Nem válaszol"}); add(UI_DICT_DE, {"Neodpovedá": "Keine Antwort"}); add(UI_DICT_AT, {"Neodpovedá": "Keine Antwort"}); add(UI_DICT_IT, {"Neodpovedá": "Nessuna risposta"});
   add(UI_DICT_CZ, {"← Späť na Plochu": "← Zpět na Plochu"});
   add(UI_DICT_PL, {"← Späť na Plochu": "← Wróć na Tablicę"});
   add(UI_DICT_HU, {"← Späť na Plochu": "← Vissza a Kezdőlapra"});
