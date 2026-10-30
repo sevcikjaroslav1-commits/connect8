@@ -2366,6 +2366,20 @@
 <style id="c8-onefs">
 @media(min-width:1520px){ #app .c8h.c8-one .mode-dock button{font-size:var(--c8-onefs,12.5px)!important;} #app .c8h.c8-one .mode-dock .ml{white-space:nowrap;} }
 </style>
+<style id="c8gp-style">
+/* tlačidlo "Stiahni appku z Google Play" na úvodnej stránke */
+.c8gp-wrap{display:flex;justify-content:center;margin:6px 0 18px;max-width:392px;width:100%;}
+.c8gp-btn{position:relative;display:inline-flex;align-items:center;gap:12px;padding:10px 20px 10px 14px;border-radius:16px;
+  background:linear-gradient(135deg,#7c3aed,#5b4cff);color:#fff !important;text-decoration:none !important;
+  box-shadow:0 8px 22px rgba(91,76,255,.35);transition:transform .15s,box-shadow .15s;}
+.c8gp-btn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(91,76,255,.45);}
+.c8gp-ic{width:34px;height:34px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.c8gp-t{text-align:left;}
+.c8gp-t small{display:block;font-size:11px;opacity:.85;font-weight:500;letter-spacing:.02em;}
+.c8gp-t b{display:block;font-size:17px;font-weight:800;line-height:1.15;}
+.c8gp-new{position:absolute;top:-8px;right:-8px;background:#ff3d71;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;}
+.c8gp-hide .c8gp-wrap{display:none !important;}
+</style>
 </head>
 <body>
 
@@ -2388,6 +2402,13 @@
       <div class="hero-title"><img class="hero-logo" src="data:image/webp;base64,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" alt="Connect8"><h1>Connect8</h1></div>
       <p class="sub">Plocha, videá, kúp/predaj aj správy — všetko na jednej platforme, postavenej pre komunitu okolo teba.</p>
 
+      <div class="c8gp-wrap" id="c8gp-wrap">
+        <a class="c8gp-btn" href="https://play.google.com/store/apps/details?id=eu.connect8.twa" target="_blank" rel="noopener">
+          <span class="c8gp-ic"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 1.8 13.4 12 3.6 22.2c-.4-.2-.6-.7-.6-1.2V3c0-.5.2-1 .6-1.2z" fill="#2196f3"/><path d="M16.8 8.6 13.4 12l-9.8-10.2c.3-.2.8-.2 1.2 0z" fill="#4caf50"/><path d="m16.8 15.4-12 6.8c-.4.2-.9.2-1.2 0L13.4 12z" fill="#f44336"/><path d="M20.4 10.6c.9.5.9 2.3 0 2.8l-3.6 2L13.4 12l3.4-3.4z" fill="#ffc107"/></svg></span>
+          <span class="c8gp-t"><small id="c8gp-small">STIAHNI APLIKÁCIU Z</small><b>Google Play</b></span>
+          <span class="c8gp-new" id="c8gp-new">NOVÉ</span>
+        </a>
+      </div>
       <div class="lang-switch">
         <span class="lang-flag active" id="lang-flag-sk" onclick="setAppLanguage('sk')" title="Slovenčina (aktuálny jazyk)"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
           <defs><clipPath id="sk-flag-clip-ls"><path d="M10.4,8.4 H23.6 V22 Q23.6,28.8 17,31.9 Q10.4,28.8 10.4,22 Z"/></clipPath></defs><rect width="60" height="40" fill="#fff"/><rect y="13.33" width="60" height="13.34" fill="#0B4EA2"/><rect y="26.67" width="60" height="13.33" fill="#EE1C25"/><path d="M9,7 H25 V22 Q25,29.8 17,33.5 Q9,29.8 9,22 Z" fill="#fff"/><path d="M10.4,8.4 H23.6 V22 Q23.6,28.8 17,31.9 Q10.4,28.8 10.4,22 Z" fill="#EE1C25"/><g clip-path="url(#sk-flag-clip-ls)" fill="#0B4EA2"><circle cx="12.6" cy="29.6" r="3.6"/><circle cx="21.4" cy="29.6" r="3.6"/><circle cx="17" cy="27.4" r="3.8"/></g><g fill="#fff"><rect x="16" y="10.6" width="2" height="14.6"/><rect x="13.4" y="13" width="7.2" height="1.9"/><rect x="12" y="17.2" width="10" height="2.1"/></g><rect x="0.5" y="0.5" width="59" height="39" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1"/>
@@ -17729,6 +17750,35 @@ if(typeof applyLanguage === 'function'){
     return r;
   };
 }
+</script>
+
+<script id="c8gp-script">
+/* Google Play tlačidlo: skryť v appke z Google Play (TWA) a na iPhone/iPade, preložiť text */
+(function(){
+  try{
+    var ref = document.referrer || '';
+    if(ref.indexOf('android-app://eu.connect8.twa') === 0){ try{ sessionStorage.setItem('c8_twa','1'); }catch(e){} }
+    var inTwa = false; try{ inTwa = sessionStorage.getItem('c8_twa') === '1'; }catch(e){}
+    var standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+    var ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if(inTwa || standalone || ios) document.documentElement.classList.add('c8gp-hide');
+  }catch(e){}
+  var TXT = {
+    sk:['STIAHNI APLIKÁCIU Z','NOVÉ'], en:['GET IT ON','NEW'], cz:['STÁHNI APLIKACI Z','NOVÉ'],
+    pl:['POBIERZ Z','NOWOŚĆ'], hu:['TÖLTSD LE:','ÚJ'], de:['JETZT BEI','NEU'], at:['JETZT BEI','NEU'], it:['DISPONIBILE SU','NUOVO']
+  };
+  function upd(){
+    var l = 'sk'; try{ l = currentLang || 'sk'; }catch(e){}
+    var t = TXT[l] || TXT.en;
+    var a = document.getElementById('c8gp-small'), b = document.getElementById('c8gp-new');
+    if(a) a.textContent = t[0]; if(b) b.textContent = t[1];
+  }
+  upd();
+  if(typeof applyLanguage === 'function'){
+    var orig = applyLanguage;
+    applyLanguage = function(){ var r = orig.apply(this, arguments); try{ upd(); }catch(e){} return r; };
+  }
+})();
 </script>
 
 <script id="c8-legal-fix">
