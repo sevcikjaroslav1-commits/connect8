@@ -2380,8 +2380,8 @@
 .c8gp-new{position:absolute;top:-8px;right:-8px;background:#ff3d71;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;}
 .c8gp-hide .c8gp-wrap{display:none !important;}
 /* volanie offline používateľovi = žlté slúchadlo */
-.c8-offcall, button.c8-offcall, #app .c8-offcall{background:#f5b301 !important;border-color:#f5b301 !important;color:#fff !important;box-shadow:0 4px 12px rgba(245,179,1,.35) !important;}
-.c8-offcall svg{fill:#fff !important;color:#fff !important;}
+.c8-offcall, button.c8-offcall, #app .c8-offcall{background:#FFF4C2 !important;border-color:#F5DE7A !important;color:#B8860B !important;box-shadow:none !important;}
+.c8-offcall svg{fill:#B8860B !important;color:#B8860B !important;}
 </style>
 </head>
 <body>
@@ -6369,7 +6369,7 @@ function renderProfile(){
       callVideoBtn.style.display = 'flex';
       callAudioBtn.disabled = false;   // offline používateľ dostane push upozornenie
       callVideoBtn.disabled = false;
-      callAudioBtn.classList.toggle('c8-offcall', !online); callVideoBtn.classList.toggle('c8-offcall', !online);
+      { const g = profileUser.uid && getPresenceState(profileUser.uid) === 'online'; callAudioBtn.classList.toggle('c8-offcall', !g); callVideoBtn.classList.toggle('c8-offcall', !g); }
       callAudioBtn.title = t('Zavolať');
       callVideoBtn.title = t('Videohovor');
     }
@@ -6591,7 +6591,7 @@ function buildCallButtonRow(u){
   audioBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
   audioBtn.title = t('Zavolať');
   audioBtn.disabled = false;
-  audioBtn.classList.toggle('c8-offcall', !online);
+  audioBtn.classList.toggle('c8-offcall', getPresenceState(u.id) !== 'online');
   audioBtn.onclick = (e)=>{ e.stopPropagation(); startCall({ uid:u.id, name:u.name, photoURL:u.photo }, 'audio'); };
 
   const videoBtn = document.createElement('button');
@@ -6601,7 +6601,7 @@ function buildCallButtonRow(u){
   videoBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M4 5.5h10a2.5 2.5 0 0 1 2.5 2.5v8a2.5 2.5 0 0 1-2.5 2.5H4A2.5 2.5 0 0 1 1.5 16V8A2.5 2.5 0 0 1 4 5.5zm13.5 4.2 3.9-2.6a.7.7 0 0 1 1.1.6v8.6a.7.7 0 0 1-1.1.6l-3.9-2.6z"/></svg>';
   videoBtn.title = t('Videohovor');
   videoBtn.disabled = false;
-  videoBtn.classList.toggle('c8-offcall', !online);
+  videoBtn.classList.toggle('c8-offcall', getPresenceState(u.id) !== 'online');
   videoBtn.onclick = (e)=>{ e.stopPropagation(); startCall({ uid:u.id, name:u.name, photoURL:u.photo }, 'video'); };
 
   const msgBtn = document.createElement('button');
@@ -10251,7 +10251,7 @@ function updateStatusDots(){
     if(pa && pv && vpu && vpu.uid && pa.style.display !== 'none'){
       const on = isUserOnline(vpu.uid);
       pa.disabled = false; pv.disabled = false;
-      pa.classList.toggle('c8-offcall', !on); pv.classList.toggle('c8-offcall', !on);
+      { const g = getPresenceState(vpu.uid) === 'online'; pa.classList.toggle('c8-offcall', !g); pv.classList.toggle('c8-offcall', !g); }
       pa.title = t('Zavolať');
       pv.title = t('Videohovor');
       if(pn) pn.style.display = on ? 'none' : 'block';
@@ -10266,7 +10266,7 @@ function updateStatusDots(){
   document.querySelectorAll('[data-calluid]').forEach(btn=>{
     const online = isUserOnline(btn.dataset.calluid);
     btn.disabled = false;
-    btn.classList.toggle('c8-offcall', !online);
+    btn.classList.toggle('c8-offcall', getPresenceState(btn.dataset.calluid) !== 'online');
     btn.title = t(btn.dataset.calltype === 'video' ? 'Videohovor' : 'Zavolať');
   });
 }
