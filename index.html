@@ -17761,7 +17761,7 @@ if(typeof applyLanguage === 'function'){
     var inTwa = false; try{ inTwa = sessionStorage.getItem('c8_twa') === '1'; }catch(e){}
     var standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
     var ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    if(inTwa || standalone || ios) document.documentElement.classList.add('c8gp-hide');
+    if(ios) document.documentElement.classList.add('c8gp-hide');   // na iPhone Google Play nefunguje
   }catch(e){}
   var TXT = {
     sk:['STIAHNI APLIKÁCIU Z','NOVÉ'], en:['GET IT ON','NEW'], cz:['STÁHNI APLIKACI Z','NOVÉ'],
