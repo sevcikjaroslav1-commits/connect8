@@ -2664,6 +2664,7 @@
         <ul>
           <li><strong>Firebase (Google)</strong> — autentifikácia používateľov, ukladanie dát appky (príspevky, správy, profily) a push notifikácie. Viac: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></li>
           <li><strong>Cloudinary</strong> — ukladanie a spracovanie nahraných obrázkov a videí. Viac: <a href="https://cloudinary.com/privacy" target="_blank" rel="noopener">cloudinary.com/privacy</a></li>
+          <li><strong>Cloudflare (Workers AI)</strong> — automatická kontrola príspevkov, komentárov, inzerátov, správ a fotiek na nevhodný obsah (nadávky, nahota, násilie). Nevhodný obsah sa skryje a posúdi ho správca. Viac: <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">cloudflare.com/privacypolicy</a></li>
           <li><strong>YouTube / Google</strong> — prehrávanie vložených YouTube videí sa riadi zásadami YouTube/Google, nie Connect8</li>
           <li>OpenStreetMap — mapové podklady pri zdieľaní polohy. Pri zobrazení mapy sa tvoja IP adresa odošle serverom OpenStreetMap. Viac: osmfoundation.org/wiki/Privacy_Policy</li>
         </ul>
@@ -3154,6 +3155,7 @@
           </div>
           <button class="c8h-mi" onclick="c8CloseUserMenu();c8OpenStats()"><span class="c8h-mic"><svg viewBox="0 0 24 24" width="20" height="20" style="display:block"><rect x="3" y="12" width="4" height="9" rx="1.2" fill="#38BDF8"/><rect x="10" y="7" width="4" height="14" rx="1.2" fill="#3B82F6"/><rect x="17" y="3" width="4" height="18" rx="1.2" fill="#6366F1"/></svg></span><span>Štatistiky</span></button>
           <button class="c8h-mi" onclick="c8CloseUserMenu();c8OpenSettings()"><span class="c8h-mic">⚙️</span><span>Nastavenia</span></button>
+          <button class="c8h-mi" id="c8mod-menu-btn" style="display:none" onclick="c8CloseUserMenu();c8modOpenPanel()"><span class="c8h-mic">🛡️</span><span>Moderácia</span><span class="c8mod-mcount" id="c8mod-mcount"></span></button>
           <button class="c8h-mi" onclick="c8CloseUserMenu();c8OpenSettings(true)"><span class="c8h-mic">🌐</span><span>Jazyk</span><span class="c8h-mflag" id="c8h-menu-flag"></span></button>
           <div class="c8h-msep"></div>
           <button class="c8h-mi c8h-red" onclick="c8CloseUserMenu();doLogout()"><span class="c8h-mic">🚪</span><span>Odhlásiť sa</span></button>
@@ -4372,17 +4374,18 @@ function saveDoc(ref, data, what){
 // zápis zamietla.
 function updateDoc(ref, fields, what){
   if(storageMode !== "online"){ saveToLocalStorage(); return Promise.resolve(); }
-  return ref.update(fields).catch(e=>{ console.error(`Aktualizácia (${what}) zlyhala:`, e); throw e; });
+  const _m = (fields && fields.comments && ref.parent && ref.parent.id === 'posts' && typeof c8modDiffComments==='function') ? c8modDiffComments('post', ref.id, fields.comments) : null;
+  return ref.update(fields).then(r=>{ if(_m) c8modSend(_m); return r; }).catch(e=>{ console.error(`Aktualizácia (${what}) zlyhala:`, e); throw e; });
 }
 function deleteDoc(ref, what){
   if(storageMode !== "online"){ saveToLocalStorage(); return Promise.resolve(); }
   return ref.delete().catch(e=>console.error(`Zmazanie (${what}) zlyhalo:`, e));
 }
-function savePost(p){ return saveDoc(postDoc(p.id), p, 'príspevok'); }
+function savePost(p){ const _m = (typeof c8modDiff==='function') ? c8modDiff('post', p) : null; return saveDoc(postDoc(p.id), p, 'príspevok').then(r=>{ if(_m) c8modSend(_m); return r; }); }
 function removePostDoc(id){ deleteDoc(postDoc(id), 'príspevok'); }
-function saveProduct(pr){ return saveDoc(productDoc(pr.id), pr, 'produkt'); }
+function saveProduct(pr){ const _m = (typeof c8modDiff==='function') ? c8modDiff('product', pr) : null; return saveDoc(productDoc(pr.id), pr, 'produkt').then(r=>{ if(_m) c8modSend(_m); return r; }); }
 function removeProductDoc(id){ deleteDoc(productDoc(id), 'produkt'); }
-function saveVideo(v){ return saveDoc(videoDoc(v.id), v, 'video'); }
+function saveVideo(v){ const _m = (typeof c8modDiff==='function') ? c8modDiff('video', v) : null; return saveDoc(videoDoc(v.id), v, 'video').then(r=>{ if(_m) c8modSend(_m); return r; }); }
 function removeVideoDoc(id){ deleteDoc(videoDoc(id), 'video'); }
 function saveMovie(m){ return saveDoc(movieDoc(m.id), m, 'záznam'); }
 function removeMovieDoc(id){ deleteDoc(movieDoc(id), 'záznam'); }
@@ -4400,6 +4403,7 @@ const BANNED_WORDS = ['kurva','kokot','zmrd','piča','jebem','buzerant','posran'
 
 function containsBannedContent(text){
   if(!text) return false;
+  if(typeof c8modFindBad==='function') return c8modFindBad(text);
   const low = text.toLowerCase();
   return BANNED_WORDS.some(w=>low.includes(w));
 }
@@ -4514,6 +4518,7 @@ function loadState(){
 
       db.collection('posts').orderBy('createdAt','desc').limit(80).onSnapshot((snap)=>{
         posts = docsToArray(snap);
+        if(typeof c8modBaseline==='function') c8modBaseline('post', posts);
         posts.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); // najstaršie prvé (render ich obráti)
         if(!firstPosts && document.getElementById('app').style.display === 'block') renderPosts();
         if(firstPosts){ firstPosts = false; markLoaded(); }
@@ -4525,6 +4530,7 @@ function loadState(){
 
       db.collection('products').orderBy('createdAt','desc').limit(10).onSnapshot((snap)=>{
         products = docsToArray(snap);
+        if(typeof c8modBaseline==='function') c8modBaseline('product', products);
         products.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)); // najstaršie prvé (render ich obráti)
         if(!firstProducts && document.getElementById('app').style.display === 'block') renderProducts();
         if(firstProducts){ firstProducts = false; markLoaded(); }
@@ -4536,6 +4542,7 @@ function loadState(){
 
       db.collection('videos').orderBy('createdAt','desc').limit(80).onSnapshot((snap)=>{
         videos = docsToArray(snap);
+        if(typeof c8modBaseline==='function'){ c8modBaseline('video', videos); videos = videos.filter(c8modCanSee); }
         videos.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); // najnovšie prvé (render ich nechá tak)
         if(!firstVideos && document.getElementById('app').style.display === 'block') c8VideosRefresh();
         if(firstVideos){ firstVideos = false; markLoaded(); }
@@ -6960,6 +6967,7 @@ function enterApp(){
   warmProfilePhotosCache();
   handleSharedDeepLink();
   pcalSubscribe(); // zapisovací kalendár - kvôli pripomienke "dnes máš niečo urobiť"
+  try{ if(typeof c8modAfterLogin==='function') c8modAfterLogin(); }catch(e){ console.warn('c8mod', e); }
 }
 
 function handleSharedDeepLink(){
@@ -8581,6 +8589,7 @@ function subscribeToChatMessages(){
       snap.forEach(doc=>{
         const m = doc.data();
         const mine = m.senderId === currentUser.uid;
+        if(m.modHidden === true && !mine && !currentUserIsAdmin) return; // skryté AI dozorcom
         let bubble;
         if(m.type === 'voice' && m.audioUrl){
           bubble = buildVoiceBubble(m, mine);
@@ -8593,6 +8602,14 @@ function subscribeToChatMessages(){
           bubble.className = 'chat-bubble ' + (mine ? 'mine' : 'theirs');
           bubble.textContent = m.text || '';
         }
+        if(m.modHidden === true){
+          bubble.classList.add('c8mod-hid');
+          container.appendChild(bubble);
+          const nEl = document.createElement('div');
+          nEl.className = 'c8mod-chatnote ' + (mine ? 'mine' : 'theirs');
+          nEl.textContent = mine ? '⏳ ' + c8botTxt('pendingShort') : '🛡️ Skryté' + (m.modReason ? ' – ' + m.modReason : '');
+          container.appendChild(nEl);
+        } else
         container.appendChild(bubble);
         // Čas odoslania pod každou správou (dnes = len čas, inak aj dátum)
         const tEl = document.createElement('div');
@@ -8657,12 +8674,13 @@ async function sendImageMessage(file){
     // Rovnaká oprava ako pri textových/hlasových správach: najprv MUSÍ
     // existovať samotný chat dokument s poľom participants.
     await upsertChatDoc(chatRef, otherUid, currentChatUser.name, '📷 Obrázok');
-    await chatRef.collection('messages').add({
+    const c8modRef = await chatRef.collection('messages').add({
       senderId: currentUser.uid,
       type: 'image',
       imageUrl: url,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    if(typeof c8modMsg==='function') c8modMsg(chatRef.id, c8modRef.id);
     await chatRef.update({ ['unread.' + otherUid]: firebase.firestore.FieldValue.increment(1) });
   }catch(e){
     console.error('Chyba pri odosielaní obrázka:', e);
@@ -8716,7 +8734,8 @@ async function sendChatMessage(){
       text,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-  }).then(()=>{
+  }).then((c8modRef)=>{
+    if(c8modRef && typeof c8modMsg==='function') c8modMsg(chatRef.id, c8modRef.id);
     return chatRef.update({ ['unread.' + otherUid]: firebase.firestore.FieldValue.increment(1) });
   }).catch(e=>{
     console.error('Chyba pri odoslaní správy:', e);
@@ -10093,6 +10112,12 @@ if(FIREBASE_CONFIGURED){
         if(prof.exists && prof.data().avatarPhoto) photoURL = prof.data().avatarPhoto;
         if(prof.exists) showLastOnline = !!prof.data().showLastOnline;
         if(prof.exists) currentUserIsAdmin = prof.data().isAdmin === true;
+        if(prof.exists && prof.data().modBanned === true && prof.data().isAdmin !== true){
+          alert(typeof c8botTxt==='function' ? c8botTxt('banned') : 'Tvoj účet bol zablokovaný.');
+          await auth.signOut();
+          authReadyResolve();
+          return;
+        }
         // Staršie profily mali uložený e-mail viditeľný pre všetkých -> odstrániť
         if(prof.exists && 'email' in prof.data()){
           db.collection('profiles').doc(user.uid)
@@ -11294,7 +11319,8 @@ function buildPostCard(p, opts={}){
   const showComments = opts.showComments !== false;
   const isOwnPost = (p.authorId ? p.authorId===currentUser.uid : p.name===currentUser.name);
   const isEditing = editingPostId === p.id;
-  return `
+  if(p && p.modHidden === true && typeof c8modCanSee==='function' && !c8modCanSee(p)) return '';
+  return (p && p.modHidden === true && typeof c8modBannerHtml==='function' ? c8modBannerHtml(p) : '') + `
       <div class="post-head">
         <div class="post-head-author" ${p.authorId ? `onclick="openPostAuthorProfile(${p.id})"` : ''}>
           ${avatarHtml(p.name, getAuthorPhoto(p))}
@@ -11475,7 +11501,7 @@ const postCardHtmlCache = new WeakMap();
 function renderPosts(){
   const list = document.getElementById('posts-list');
   if(!list) return;
-  const visible = posts.slice().reverse().filter(p=> !(p.authorId && blockedSet.has(p.authorId)));
+  const visible = posts.slice().reverse().filter(p=> !(p.authorId && blockedSet.has(p.authorId)) && (typeof c8modCanSee!=='function' || c8modCanSee(p)));
   const wanted = new Set(visible.map(p=>'post-' + p.id));
   // odstráň príspevky, ktoré už nemajú byť zobrazené
   Array.from(list.children).forEach(el=>{ if(!wanted.has(el.id)) el.remove(); });
@@ -12386,6 +12412,7 @@ function buildCommentEditImgHtml(postId, ci){
 }
 
 function buildCommentHtml(p, c, ci){
+  if(typeof c8modCommentHidden==='function' && c8modCommentHidden(c)) return '';
   const isOwnComment = (c.authorId ? c.authorId===currentUser.uid : c.name===currentUser.name);
   if(editingCommentKey === `${p.id}:${ci}`){
     return `<div class="comment-edit-box">
@@ -12400,7 +12427,7 @@ function buildCommentHtml(p, c, ci){
       </div>
     </div>`;
   }
-  return `<div class="comment">
+  return (typeof c8modCommentBadge==='function' ? c8modCommentBadge(c) : '') + `<div class="comment">
     <div class="comment-body">
       <span class="comment-text"><b>${escapeHtml(c.name)}:</b> ${escapeHtml(c.text || '')}</span>
       ${c.img ? `<img class="comment-img" src="${c.img}" onclick="openLightbox('${c.img}')">` : ''}
@@ -12614,6 +12641,7 @@ function getFilteredProducts(){
   const source = filtering ? (allProductsCache || products) : products;
   const userCountry = marketCountryForLang(typeof currentLang !== 'undefined' ? currentLang : 'sk');
   return source.filter(pr=>{
+    if(typeof c8modCanSee==='function' && !c8modCanSee(pr)) return false;
     if((pr.country || 'sk') !== userCountry) return false;
     if(activeMarketCategory && (pr.category || 'Ostatné') !== activeMarketCategory) return false;
     if(q && !pr.title.toLowerCase().includes(q)) return false;
@@ -14210,6 +14238,7 @@ const LANG_STORAGE_KEY = 'c8_lang';
 let currentLang = localStorage.getItem(LANG_STORAGE_KEY) || 'sk';
 
 const LEGAL_DICT_EN = {
+  "Cloudflare (Workers AI) — automatická kontrola príspevkov, komentárov, inzerátov, správ a fotiek na nevhodný obsah (nadávky, nahota, násilie). Nevhodný obsah sa skryje a posúdi ho správca. Viac: cloudflare.com/privacypolicy": "Cloudflare (Workers AI) — automatic checking of posts, comments, listings, messages and photos for inappropriate content (profanity, nudity, violence). Inappropriate content is hidden and reviewed by the administrator. More: cloudflare.com/privacypolicy",
   "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Links to YouTube videos added to a post (playback runs directly via YouTube/Google servers)",
   "7. YouTube obsah": "7. YouTube content",
   "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Links to YouTube videos added to posts are played directly via YouTube. YouTube/Google and the video creators, not Connect8, are responsible for the content of these videos.",
@@ -14448,6 +14477,7 @@ const LEGAL_DICT_EN = {
 // pôvodným slovenským textom, aby oficiálne slovenské znenie zostalo
 // vždy zachované a viditeľné.
 const LEGAL_DICT_CZ = {
+  "Cloudflare (Workers AI) — automatická kontrola príspevkov, komentárov, inzerátov, správ a fotiek na nevhodný obsah (nadávky, nahota, násilie). Nevhodný obsah sa skryje a posúdi ho správca. Viac: cloudflare.com/privacypolicy": "Cloudflare (Workers AI) — automatická kontrola příspěvků, komentářů, inzerátů, zpráv a fotek na nevhodný obsah (vulgarity, nahota, násilí). Nevhodný obsah se skryje a posoudí ho správce. Více: cloudflare.com/privacypolicy",
   "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Odkazy na YouTube videa vložené k příspěvku (přehrávání probíhá přímo přes servery YouTube/Google)",
   "7. YouTube obsah": "7. Obsah z YouTube",
   "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Odkazy na YouTube videa vložené do příspěvků se přehrávají přímo přes YouTube. Za obsah těchto videí odpovídá YouTube/Google a jejich tvůrci, nikoli Connect8.",
@@ -14684,6 +14714,7 @@ const LEGAL_DICT_CZ = {
 // Rovnaký princíp ako LEGAL_DICT_EN/LEGAL_DICT_CZ vyššie (preklad textu
 // právnych dokumentov po odsekoch/nadpisoch), len pre poľštinu.
 const LEGAL_DICT_PL = {
+  "Cloudflare (Workers AI) — automatická kontrola príspevkov, komentárov, inzerátov, správ a fotiek na nevhodný obsah (nadávky, nahota, násilie). Nevhodný obsah sa skryje a posúdi ho správca. Viac: cloudflare.com/privacypolicy": "Cloudflare (Workers AI) — automatyczne sprawdzanie postów, komentarzy, ogłoszeń, wiadomości i zdjęć pod kątem nieodpowiednich treści (wulgaryzmy, nagość, przemoc). Nieodpowiednie treści są ukrywane i ocenia je administrator. Więcej: cloudflare.com/privacypolicy",
   "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Linki do filmów YouTube dodane do posta (odtwarzanie odbywa się bezpośrednio przez serwery YouTube/Google)",
   "7. YouTube obsah": "7. Treści z YouTube",
   "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Linki do filmów YouTube dodane do postów są odtwarzane bezpośrednio przez YouTube. Za treść tych filmów odpowiada YouTube/Google i ich twórcy, a nie Connect8.",
@@ -14919,6 +14950,7 @@ const LEGAL_DICT_PL = {
 
 // Rovnaký princíp ako LEGAL_DICT_EN/CZ/PL vyššie, len pre maďarčinu.
 const LEGAL_DICT_HU = {
+  "Cloudflare (Workers AI) — automatická kontrola príspevkov, komentárov, inzerátov, správ a fotiek na nevhodný obsah (nadávky, nahota, násilie). Nevhodný obsah sa skryje a posúdi ho správca. Viac: cloudflare.com/privacypolicy": "Cloudflare (Workers AI) — a bejegyzések, hozzászólások, hirdetések, üzenetek és fotók automatikus ellenőrzése nem megfelelő tartalom (trágárság, meztelenség, erőszak) szempontjából. A nem megfelelő tartalom elrejtésre kerül, és az adminisztrátor bírálja el. Bővebben: cloudflare.com/privacypolicy",
   "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "A bejegyzéshez csatolt YouTube-videók linkjei (a lejátszás közvetlenül a YouTube/Google szerverein keresztül történik)",
   "7. YouTube obsah": "7. YouTube-tartalom",
   "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "A bejegyzésekhez csatolt YouTube-videók közvetlenül a YouTube-on keresztül játszódnak le. Ezeknek a videóknak a tartalmáért a YouTube/Google és a készítőik felelnek, nem a Connect8.",
@@ -15154,6 +15186,7 @@ const LEGAL_DICT_HU = {
 
 // Rovnaký princíp ako LEGAL_DICT_EN/CZ/PL/HU vyššie, len pre nemčinu (AT).
 const LEGAL_DICT_AT = {
+  "Cloudflare (Workers AI) — automatická kontrola príspevkov, komentárov, inzerátov, správ a fotiek na nevhodný obsah (nadávky, nahota, násilie). Nevhodný obsah sa skryje a posúdi ho správca. Viac: cloudflare.com/privacypolicy": "Cloudflare (Workers AI) — automatische Prüfung von Beiträgen, Kommentaren, Inseraten, Nachrichten und Fotos auf unangemessene Inhalte (Beschimpfungen, Nacktheit, Gewalt). Unangemessene Inhalte werden ausgeblendet und vom Administrator geprüft. Mehr: cloudflare.com/privacypolicy",
   "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Links zu YouTube-Videos, die einem Beitrag hinzugefügt wurden (die Wiedergabe läuft direkt über die Server von YouTube/Google)",
   "7. YouTube obsah": "7. YouTube-Inhalte",
   "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Links zu YouTube-Videos in Beiträgen werden direkt über YouTube abgespielt. Für den Inhalt dieser Videos sind YouTube/Google und deren Ersteller verantwortlich, nicht Connect8.",
@@ -15390,6 +15423,7 @@ const LEGAL_DICT_AT = {
 // Rovnaké nemecké preklady ako LEGAL_DICT_AT vyššie (ide o ten istý jazyk),
 // len s vlastným názvom pre nemeckú vlajku (DE).
 const LEGAL_DICT_DE = {
+  "Cloudflare (Workers AI) — automatická kontrola príspevkov, komentárov, inzerátov, správ a fotiek na nevhodný obsah (nadávky, nahota, násilie). Nevhodný obsah sa skryje a posúdi ho správca. Viac: cloudflare.com/privacypolicy": "Cloudflare (Workers AI) — automatische Prüfung von Beiträgen, Kommentaren, Inseraten, Nachrichten und Fotos auf unangemessene Inhalte (Beschimpfungen, Nacktheit, Gewalt). Unangemessene Inhalte werden ausgeblendet und vom Administrator geprüft. Mehr: cloudflare.com/privacypolicy",
   "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Links zu YouTube-Videos, die einem Beitrag hinzugefügt wurden (die Wiedergabe läuft direkt über die Server von YouTube/Google)",
   "7. YouTube obsah": "7. YouTube-Inhalte",
   "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "Links zu YouTube-Videos in Beiträgen werden direkt über YouTube abgespielt. Für den Inhalt dieser Videos sind YouTube/Google und deren Ersteller verantwortlich, nicht Connect8.",
@@ -15625,6 +15659,7 @@ const LEGAL_DICT_DE = {
 
 // Rovnaký princíp ako LEGAL_DICT_EN/CZ/PL/HU/AT vyššie, len pre taliančinu.
 const LEGAL_DICT_IT = {
+  "Cloudflare (Workers AI) — automatická kontrola príspevkov, komentárov, inzerátov, správ a fotiek na nevhodný obsah (nadávky, nahota, násilie). Nevhodný obsah sa skryje a posúdi ho správca. Viac: cloudflare.com/privacypolicy": "Cloudflare (Workers AI) — controllo automatico di post, commenti, annunci, messaggi e foto per contenuti inappropriati (volgarità, nudità, violenza). I contenuti inappropriati vengono nascosti e valutati dall'amministratore. Maggiori informazioni: cloudflare.com/privacypolicy",
   "Odkazy na YouTube videá vložené k príspevku (prehrávanie beží priamo cez servery YouTube/Google)": "Link a video YouTube aggiunti a un post (la riproduzione avviene direttamente tramite i server di YouTube/Google)",
   "7. YouTube obsah": "7. Contenuti YouTube",
   "Odkazy na YouTube videá vložené do príspevkov sa prehrávajú priamo cez YouTube. Za obsah týchto videí zodpovedá YouTube/Google a ich tvorcovia, nie Connect8.": "I link a video YouTube aggiunti ai post vengono riprodotti direttamente tramite YouTube. Del contenuto di questi video sono responsabili YouTube/Google e i loro autori, non Connect8.",
@@ -21437,5 +21472,492 @@ c8ApplyFriendsView();
   void show;
 })();
 </script>
+
+<!-- ===================== C8 MODERÁCIA + AI DOZORCA ===================== -->
+<style>
+.c8mod-banner{margin:-2px 0 10px;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.4;font-weight:600}
+.c8mod-banner.mine{background:#FFF8E1;border:1px solid #F5DE7A;color:#8A6D00}
+.c8mod-banner.admin{background:#FFE3E8;border:1px solid #FFB3C1;color:#C2183F}
+.c8mod-cbadge{font-size:11.5px;font-weight:700;border-radius:8px;padding:3px 8px;margin:4px 0 2px;display:inline-block;background:#FFF8E1;color:#8A6D00}
+.c8mod-cbadge.admin{background:#FFE3E8;color:#C2183F}
+.c8mod-chatnote{font-size:11px;font-weight:700;color:#8A6D00;margin:2px 4px 0;align-self:flex-end;text-align:right}
+.c8mod-chatnote.theirs{color:#C2183F;align-self:flex-start;text-align:left}
+.chat-bubble.c8mod-hid{opacity:.55;outline:2px dashed #F5DE7A}
+.post:empty{display:none}
+.c8mod-mcount{margin-left:auto;background:#FF4D6D;color:#fff;border-radius:9px;padding:0 7px;font-size:11px;font-weight:800;line-height:18px}
+.c8mod-mcount:empty{display:none}
+
+/* ---- panel ---- */
+#c8m-panel{position:fixed;inset:0;z-index:99990;background:#F6F7FB;color:#1E1B2E;overflow-y:auto;display:none;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-overflow-scrolling:touch}
+#c8m-panel.open{display:block}
+#c8m-panel *{box-sizing:border-box}
+.c8m-wrap{max-width:1180px;margin:0 auto;padding:16px 14px 60px}
+.c8m-grid{display:grid;grid-template-columns:1fr 330px;gap:18px}
+@media(max-width:900px){.c8m-grid{grid-template-columns:1fr}}
+.c8m-card{background:#fff;border-radius:18px;box-shadow:0 4px 20px rgba(30,27,46,.06);padding:16px}
+.c8m-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.c8m-back{color:#5B4CFF;font-weight:700;font-size:14px;background:none;border:0;padding:0;cursor:pointer}
+.c8m-h1{font-size:22px;margin:6px 0 0;font-weight:800}
+.c8m-muted{color:#7a8194;font-size:13px}
+.c8m-bot{display:flex;align-items:center;gap:8px;background:#E9F8EF;color:#1E8E4E;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:700}
+.c8m-bot.off{background:#FFE3E8;color:#C2183F}
+.c8m-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.c8m-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:700px){.c8m-stats{grid-template-columns:repeat(2,1fr)}}
+.c8m-st{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:0 4px 20px rgba(30,27,46,.05)}
+.c8m-st b{display:block;font-size:22px}.c8m-st span{font-size:12px;color:#7a8194}
+.c8m-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.c8m-tab{padding:7px 13px;border-radius:999px;font-size:13px;font-weight:700;background:#EEF0F6;color:#5a5670;border:0;cursor:pointer}
+.c8m-tab.on{background:#5B4CFF;color:#fff}
+.c8m-tab em{font-style:normal;background:#FF4D6D;color:#fff;border-radius:9px;padding:0 6px;margin-left:5px;font-size:11px}
+.c8m-item{border:1px solid #ECEDF3;border-radius:14px;padding:12px;margin-bottom:10px;display:grid;grid-template-columns:44px 1fr;gap:12px}
+.c8m-av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#8E7BFF,#5B4CFF);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.c8m-top{display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:13px}.c8m-top b{font-size:14px}
+.c8m-type{background:#EEF0F6;border-radius:6px;padding:2px 7px;font-size:11.5px;font-weight:700;color:#5a5670}
+.c8m-why{border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:700}
+.c8m-w-word{background:#FFF4C2;color:#9A7400}.c8m-w-ai{background:#FFE3E8;color:#C2183F}.c8m-w-img{background:#F1E6FF;color:#7B2FD0}
+.c8m-content{margin:8px 0;background:#F6F7FB;border-radius:10px;padding:9px 11px;font-size:14px;word-break:break-word;white-space:pre-wrap}
+.c8m-blur{filter:blur(5px);user-select:none;cursor:pointer}
+.c8m-imgw{position:relative;width:150px;height:110px;overflow:hidden;border-radius:10px;margin:8px 0;cursor:pointer;background:#ddd}
+.c8m-imgw img{width:100%;height:100%;object-fit:cover;filter:blur(14px)}
+.c8m-imgw.shown img{filter:none}
+.c8m-imgw span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px;text-shadow:0 1px 4px #000a}
+.c8m-imgw.shown span{display:none}
+.c8m-conf{font-size:12px;color:#7a8194}
+.c8m-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.c8m-b{border:0;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer}
+.c8m-b:disabled{opacity:.5}
+.c8m-ok{background:#E9F8EF;color:#1E8E4E}.c8m-hide{background:#EEF0F6;color:#3a3650}.c8m-ban{background:#FFE3E8;color:#C2183F}.c8m-pri{background:#5B4CFF;color:#fff}
+.c8m-h2{font-size:15px;margin:0 0 10px;font-weight:800}
+.c8m-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F0F1F5;font-size:14px}
+.c8m-sw{width:42px;height:24px;border-radius:99px;background:#D4D7E2;position:relative;border:0;cursor:pointer;flex:none;transition:background .2s}
+.c8m-sw::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s}
+.c8m-sw.on{background:#5B4CFF}.c8m-sw.on::after{left:21px}
+.c8m-sens{display:flex;gap:6px;margin:8px 0 4px}
+.c8m-sens button{flex:1;padding:7px 0;border-radius:9px;background:#EEF0F6;font-size:12.5px;font-weight:700;color:#5a5670;border:0;cursor:pointer}
+.c8m-sens button.on{background:#5B4CFF;color:#fff}
+.c8m-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;max-height:190px;overflow-y:auto}
+.c8m-chip{background:#F6F7FB;border:1px solid #E4E6EE;border-radius:999px;padding:4px 10px;font-size:12.5px;cursor:pointer}
+.c8m-chip:hover{border-color:#FF4D6D}
+.c8m-add{display:flex;gap:6px}.c8m-add input{flex:1;min-width:0;border:1px solid #E4E6EE;border-radius:10px;padding:8px 10px;font:inherit;font-size:14px}
+.c8m-empty{text-align:center;color:#7a8194;font-size:14px;padding:30px 10px}
+.c8m-saved{font-size:12px;color:#1E8E4E;font-weight:700;min-height:16px;margin-top:6px}
+
+/* ---- robotík ---- */
+#c8bot{position:fixed;z-index:99980;display:flex;align-items:flex-end;gap:6px;transition:opacity .4s;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+#c8bot.right{flex-direction:row-reverse}
+#c8bot.hide{opacity:0;pointer-events:none}
+#c8bot svg{width:78px;height:92px;flex:none;animation:c8botPop .6s cubic-bezier(.3,1.6,.5,1) both,c8botFloat 2.6s ease-in-out .6s infinite}
+#c8bot .c8bot-bub{background:#fff;color:#1E1B2E;border-radius:16px;padding:11px 12px 10px;box-shadow:0 8px 26px rgba(30,27,46,.22);font-size:13px;line-height:1.4;width:205px;position:relative;animation:c8botPop .5s .25s cubic-bezier(.3,1.6,.5,1) both;border:2px solid #E4E0FF}
+#c8bot .c8bot-bub b{color:#5B4CFF}
+#c8bot .c8bot-x{position:absolute;top:3px;right:8px;color:#aaa;font-size:14px;cursor:pointer;background:none;border:0;padding:2px}
+#c8bot .c8bot-btns{display:flex;gap:6px;margin-top:8px}
+#c8bot .c8bot-btns button{border:0;border-radius:9px;padding:6px 9px;font-weight:700;font-size:12px;cursor:pointer}
+#c8bot .c8bot-ok{background:#5B4CFF;color:#fff}#c8bot .c8bot-more{background:#EEF0F6;color:#3a3650}
+#c8bot .c8bot-arm{transform-origin:62px 50px;animation:c8botWave .5s ease-in-out .8s 4 alternate}
+#c8bot .c8bot-eye{animation:c8botBlink 4s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes c8botPop{from{transform:scale(.2) translateY(30px);opacity:0}to{transform:none;opacity:1}}
+@keyframes c8botFloat{50%{transform:translateY(-6px)}}
+@keyframes c8botWave{from{transform:rotate(0)}to{transform:rotate(-35deg)}}
+@keyframes c8botBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+#c8bot-info{position:fixed;inset:0;z-index:99985;background:rgba(30,27,46,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+#c8bot-info .box{background:#fff;color:#1E1B2E;border-radius:18px;padding:18px;max-width:300px;font-size:14px;line-height:1.5;text-align:center;font-family:Inter,system-ui,sans-serif}
+#c8bot-info h3{margin:6px 0;font-size:17px}
+#c8bot-info button{margin-top:12px;border:0;border-radius:11px;padding:9px 16px;font-weight:800;background:#5B4CFF;color:#fff;cursor:pointer}
+</style>
+
+<div id="c8m-panel" aria-hidden="true"></div>
+
+<script>
+/* =====================================================================
+   C8 MODERÁCIA – AI dozorca
+   Appka po uložení obsahu pošle Workeru "c8-moderator", ČO je nové
+   (nie samotný obsah – ten si Worker prečíta z databázy sám). Worker
+   nevhodný obsah skryje (modHidden:true) a upozorní správcov.
+   Skrytý obsah vidí iba autor (so žltou hláškou) a správca.
+===================================================================== */
+const C8MOD_URL = 'https://c8-moderator.sevcikjaroslav1.workers.dev';
+let c8modConfig = { robot: true, words: null };
+const c8modBase = new Map();
+let c8modWordRes = null;
+
+function c8modIsMine(o){
+  return !!(o && typeof currentUser !== 'undefined' && currentUser &&
+    ((o.authorId && o.authorId === currentUser.uid) || (o.senderId && o.senderId === currentUser.uid)));
+}
+function c8modCanSee(o){
+  if(!o || o.modHidden !== true) return true;
+  return (typeof currentUserIsAdmin !== 'undefined' && currentUserIsAdmin) || c8modIsMine(o);
+}
+function c8modBannerHtml(o){
+  if(!o || o.modHidden !== true) return '';
+  if(typeof currentUserIsAdmin !== 'undefined' && currentUserIsAdmin && !c8modIsMine(o)){
+    return `<div class="c8mod-banner admin">🛡️ Skryté AI dozorcom${o.modReason ? ' – ' + escapeHtml(o.modReason) : ''}. Ostatní to nevidia.</div>`;
+  }
+  return `<div class="c8mod-banner mine">⏳ ${c8botTxt('pending')}</div>`;
+}
+function c8modCommentBadge(c){
+  if(!c || c.modHidden !== true) return '';
+  const adm = typeof currentUserIsAdmin !== 'undefined' && currentUserIsAdmin && !c8modIsMine(c);
+  return adm ? `<div class="c8mod-cbadge admin">🛡️ Skryté${c.modReason ? ' – ' + escapeHtml(c.modReason) : ''}</div>`
+             : `<div class="c8mod-cbadge">⏳ ${c8botTxt('pendingShort')}</div>`;
+}
+function c8modCommentHidden(c){
+  return !!(c && c.modHidden === true && !(typeof currentUserIsAdmin !== 'undefined' && currentUserIsAdmin) &&
+    !(c.authorId && typeof currentUser !== 'undefined' && currentUser && c.authorId === currentUser.uid));
+}
+
+/* ---------- čo je nové (aby sa zbytočne nekontrolovalo stále to isté) ---------- */
+function c8modSig(kind, o){
+  const isUrl = u => typeof u === 'string' && /^https:\/\//.test(u);
+  let t = '', ph = [];
+  if(kind === 'post'){ t = o.text || ''; ph = [...(Array.isArray(o.photos) ? o.photos : []), o.img].filter(isUrl); }
+  else if(kind === 'product'){ t = [o.title, o.desc].filter(Boolean).join('\n'); ph = (Array.isArray(o.photos) ? o.photos : []).filter(isUrl); }
+  else if(kind === 'video'){ t = o.caption || ''; }
+  const cm = (Array.isArray(o.comments) ? o.comments : []).map(c => ((c && c.text) || '') + '|' + ((c && typeof c.img === 'string') ? c.img : ''));
+  return { t, ph, cm };
+}
+function c8modBaseline(kind, arr){
+  try{ (arr || []).forEach(o => { if(o && o.id != null) c8modBase.set(kind + ':' + String(o.id), c8modSig(kind, o)); }); }catch(e){}
+}
+function c8modCmDiff(oldCm, newCm){
+  const out = [];
+  newCm.forEach((c, i) => { if(c !== '|' && (!oldCm || oldCm[i] !== c)) out.push(i); });
+  return out.slice(-10);
+}
+function c8modDiff(kind, o){
+  try{
+    if(!o || o.id == null) return null;
+    const key = kind + ':' + String(o.id);
+    const n = c8modSig(kind, o), old = c8modBase.get(key);
+    c8modBase.set(key, n);
+    const out = { kind, id: String(o.id) };
+    let any = false;
+    if((!old || old.t !== n.t) && n.t.trim()){ out.text = true; any = true; }
+    const ph = n.ph.filter(u => !old || !old.ph.includes(u));
+    if(ph.length){ out.photos = ph; any = true; }
+    const cms = c8modCmDiff(old && old.cm, n.cm);
+    if(cms.length){ out.comments = cms; any = true; }
+    return any ? out : null;
+  }catch(e){ return null; }
+}
+function c8modDiffComments(kind, id, comments){
+  try{
+    const key = kind + ':' + String(id);
+    const old = c8modBase.get(key) || { t: '', ph: [], cm: null };
+    const cm = (Array.isArray(comments) ? comments : []).map(c => ((c && c.text) || '') + '|' + ((c && typeof c.img === 'string') ? c.img : ''));
+    const cms = c8modCmDiff(old.cm, cm);
+    c8modBase.set(key, { ...old, cm });
+    return cms.length ? { kind, id: String(id), comments: cms } : null;
+  }catch(e){ return null; }
+}
+async function c8modSend(payload){
+  try{
+    if(!payload || typeof auth === 'undefined' || !auth || !auth.currentUser) return;
+    if(typeof storageMode !== 'undefined' && storageMode !== 'online') return;
+    const idToken = await auth.currentUser.getIdToken();
+    fetch(C8MOD_URL + '/moderate', {
+      method: 'POST', keepalive: true,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify(payload)
+    }).catch(()=>{});
+  }catch(e){}
+}
+function c8modMsg(chatId, msgId){ if(chatId && msgId) c8modSend({ kind: 'message', chatId, msgId }); }
+
+/* ---------- zakázané slová aj v appke (okamžite, ešte pred odoslaním) ---------- */
+function c8modNorm(s){
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/0/g,'o').replace(/[1!|]/g,'i').replace(/3/g,'e').replace(/[4@]/g,'a').replace(/[5$]/g,'s').replace(/7/g,'t');
+}
+function c8modBuildRes(words){
+  const res = [];
+  (words || []).forEach(w => {
+    const ww = c8modNorm(w).replace(/[^a-z]/g, '');
+    if(ww.length < 2) return;
+    try{ res.push(new RegExp('(?<![a-z])' + ww.split('').map(ch => '[' + ch + '*]').join('[^a-z*]{0,2}'))); }catch(e){}
+  });
+  return res;
+}
+function c8modFindBad(text){
+  if(!text) return false;
+  if(!c8modWordRes){
+    const base = (typeof BANNED_WORDS !== 'undefined' ? BANNED_WORDS : []);
+    c8modWordRes = c8modBuildRes([...base, ...((c8modConfig.words) || [])]);
+  }
+  const t = c8modNorm(text);
+  return c8modWordRes.some(re => re.test(t));
+}
+async function c8modLoadConfig(){
+  try{
+    const r = await fetch(C8MOD_URL + '/config', { cache: 'no-store' });
+    if(!r.ok) return;
+    const j = await r.json();
+    c8modConfig = { robot: j.robot !== false, words: Array.isArray(j.words) ? j.words : null };
+    c8modWordRes = null;
+  }catch(e){}
+}
+
+/* ---------- po prihlásení ---------- */
+let c8modAfterLoginUid = null;
+function c8modAfterLogin(){
+  if(typeof currentUser === 'undefined' || !currentUser || !currentUser.uid) return;
+  if(c8modAfterLoginUid === currentUser.uid) return;
+  c8modAfterLoginUid = currentUser.uid;
+  const btn = document.getElementById('c8mod-menu-btn');
+  if(btn) btn.style.display = currentUserIsAdmin ? '' : 'none';
+  c8modLoadConfig().then(()=>{
+    const params = new URLSearchParams(location.search);
+    if(params.get('robot') === '1') setTimeout(c8botShow, 2500);
+    else c8botMaybeShow();
+  });
+  if(currentUserIsAdmin){
+    c8modRefreshCount();
+    const params = new URLSearchParams(location.search);
+    if(params.get('mod') === '1') setTimeout(c8modOpenPanel, 600);
+  }
+}
+
+/* =====================================================================
+   PANEL MODERÁCIA (len správca)
+===================================================================== */
+const c8m = { tab: 'pending', items: [], counts: {}, stats: {}, settings: null, shown: new Set(), busy: false };
+async function c8modApi(path, body){
+  const idToken = await auth.currentUser.getIdToken();
+  const r = await fetch(C8MOD_URL + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+    body: JSON.stringify(body || {})
+  });
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+  return j;
+}
+async function c8modRefreshCount(){
+  try{
+    const j = await c8modApi('/admin/list', { status: 'pending' });
+    const n = (j.counts && j.counts.pending) || 0;
+    const el = document.getElementById('c8mod-mcount');
+    if(el) el.textContent = n ? String(n) : '';
+  }catch(e){}
+}
+function c8modOpenPanel(){
+  if(!currentUserIsAdmin) return;
+  const p = document.getElementById('c8m-panel');
+  p.classList.add('open'); p.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  c8modRender(true);
+  c8modLoad();
+}
+function c8modClosePanel(){
+  const p = document.getElementById('c8m-panel');
+  p.classList.remove('open'); p.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  if(location.search.includes('mod=1')){
+    try{ const u = new URL(location.href); u.searchParams.delete('mod'); history.replaceState(null, '', u.toString()); }catch(e){}
+  }
+}
+async function c8modLoad(){
+  try{
+    const j = await c8modApi('/admin/list', { status: c8m.tab });
+    c8m.items = j.items || []; c8m.counts = j.counts || {}; c8m.stats = j.stats || {}; c8m.settings = j.settings || c8m.settings;
+    c8m.error = null;
+    const el = document.getElementById('c8mod-mcount');
+    if(el) el.textContent = c8m.counts.pending ? String(c8m.counts.pending) : '';
+  }catch(e){ c8m.error = e.message || String(e); }
+  c8modRender(false);
+}
+function c8modSetTab(t){ c8m.tab = t; c8m.items = []; c8modRender(true); c8modLoad(); }
+function c8modAgo(ms){
+  if(!ms) return '';
+  const s = Math.max(0, (Date.now() - ms) / 1000);
+  if(s < 60) return 'práve teraz';
+  if(s < 3600) return 'pred ' + Math.floor(s / 60) + ' min';
+  if(s < 86400) return 'pred ' + Math.floor(s / 3600) + ' h';
+  return 'pred ' + Math.floor(s / 86400) + ' d';
+}
+const C8M_KIND = { post:'📝 Príspevok', comment:'💬 Komentár', videoComment:'💬 Komentár k videu', product:'🛒 Inzerát', video:'🎬 Video', message:'✉️ Súkromná správa' };
+function c8modInitials(n){ return String(n || '?').trim().split(/\s+/).map(x => x[0] || '').join('').slice(0, 2).toUpperCase() || '?'; }
+function c8modItemHtml(it){
+  const why = it.source === 'word' ? ['c8m-w-word', 'Nadávka · zoznam slov']
+    : (it.imageUrl && /fotke/.test(it.reason || '')) ? ['c8m-w-img', 'AI · ' + (it.reason || '').replace(' na fotke', '')]
+    : ['c8m-w-ai', 'AI · ' + (it.reason || 'nevhodný obsah')];
+  const shown = c8m.shown.has(it.id);
+  const text = it.text ? `<div class="c8m-content"><span class="${shown ? '' : 'c8m-blur'}" onclick="c8modReveal('${it.id}')">${escapeHtml(it.text)}</span>${shown ? '' : ' <b style="color:#5B4CFF;font-size:12px;cursor:pointer" onclick="c8modReveal(\'' + it.id + '\')">Zobraziť</b>'}</div>` : '';
+  const img = it.imageUrl ? `<div class="c8m-imgw ${shown ? 'shown' : ''}" onclick="c8modReveal('${it.id}')"><img src="${escapeHtml(it.imageUrl)}" alt=""><span>🔒 Rozmazané – ťukni</span></div>` : '';
+  let btns = '';
+  if(c8m.tab === 'pending') btns = `<button class="c8m-b c8m-ok" onclick="c8modAct('${it.id}','restore',this)">✓ Vrátiť (je OK)</button><button class="c8m-b c8m-hide" onclick="c8modAct('${it.id}','keep',this)">Nechať skryté</button>${it.authorId ? `<button class="c8m-b c8m-ban" onclick="c8modAct('${it.id}','ban',this)">⛔ Zablokovať autora</button>` : ''}`;
+  else if(c8m.tab === 'kept') btns = `<button class="c8m-b c8m-ok" onclick="c8modAct('${it.id}','restore',this)">✓ Vrátiť (je OK)</button>${it.authorId ? `<button class="c8m-b c8m-ban" onclick="c8modAct('${it.id}','ban',this)">⛔ Zablokovať autora</button>` : ''}`;
+  else if(c8m.tab === 'banned') btns = `<button class="c8m-b c8m-ok" onclick="c8modAct('${it.id}','unban',this)">Odblokovať autora</button>`;
+  return `<div class="c8m-item"><div class="c8m-av">${escapeHtml(c8modInitials(it.authorName))}</div><div>
+    <div class="c8m-top"><b>${escapeHtml(it.authorName || 'Neznámy')}</b><span class="c8m-type">${C8M_KIND[it.kind] || it.kind}</span><span class="c8m-why ${why[0]}">${escapeHtml(why[1])}</span><span class="c8m-muted">${c8modAgo(it.createdAt)}</span></div>
+    ${text}${img}
+    <div class="c8m-conf">Istota: <b>${escapeHtml(it.confidence || '–')}</b>${it.toName ? ' · Komu: ' + escapeHtml(it.toName) : ''}</div>
+    <div class="c8m-btns">${btns}</div></div></div>`;
+}
+function c8modReveal(id){ if(c8m.shown.has(id)) c8m.shown.delete(id); else c8m.shown.add(id); c8modRender(false); }
+async function c8modAct(id, action, btn){
+  if(action === 'ban' && !confirm('Naozaj zablokovať autora? Pri ďalšom otvorení appky sa odhlási a nebude sa môcť prihlásiť.')) return;
+  btn.closest('.c8m-btns').querySelectorAll('button').forEach(b => b.disabled = true);
+  try{ await c8modApi('/admin/action', { id, action }); }
+  catch(e){ alert('Nepodarilo sa: ' + (e.message || e)); }
+  c8modLoad();
+}
+function c8modRender(loading){
+  const p = document.getElementById('c8m-panel');
+  if(!p) return;
+  const s = c8m.settings || { checkPosts:true, checkPhotos:true, checkChats:true, robot:true, autoBan:false, sensitivity:'medium', words:[] };
+  const tabs = [['pending','Čaká na rozhodnutie'],['restored','Vrátené'],['kept','Ponechané skryté'],['banned','Zablokovaní']];
+  const list = loading ? '<div class="c8m-empty">Načítavam…</div>'
+    : c8m.error ? `<div class="c8m-empty">⚠️ Panel sa nepodarilo načítať.<br><small>${escapeHtml(c8m.error)}</small></div>`
+    : c8m.items.length ? c8m.items.map(c8modItemHtml).join('')
+    : `<div class="c8m-empty">${c8m.tab === 'pending' ? '🎉 Nič nečaká na rozhodnutie.' : 'Zatiaľ prázdne.'}</div>`;
+  const sw = (k, label) => `<div class="c8m-row">${label}<button class="c8m-sw ${s[k] ? 'on' : ''}" onclick="c8modToggle('${k}')" aria-label="${label}"></button></div>`;
+  const words = (s.words || []).slice().sort();
+  const botOn = s.checkPosts || s.checkChats;
+  p.innerHTML = `<div class="c8m-wrap"><div class="c8m-grid"><div>
+    <div class="c8m-card">
+      <div class="c8m-head"><div><button class="c8m-back" onclick="c8modClosePanel()">← Späť</button><div class="c8m-h1">🛡️ Moderácia</div><div class="c8m-muted">AI dozorca kontroluje príspevky, komentáre, inzeráty, správy a fotky</div></div>
+      <div class="c8m-bot ${botOn ? '' : 'off'}"><span class="c8m-dot"></span>${botOn ? 'Bot beží · zadarmo (Cloudflare AI)' : 'Bot je vypnutý'}</div></div>
+      <div class="c8m-stats">
+        <div class="c8m-st"><b>${c8m.stats.checked || 0}</b><span>Skontrolované dnes</span></div>
+        <div class="c8m-st"><b style="color:#C2183F">${c8m.stats.hidden || 0}</b><span>Skryté dnes</span></div>
+        <div class="c8m-st"><b style="color:#5B4CFF">${c8m.counts.pending || 0}</b><span>Čaká na teba</span></div>
+        <div class="c8m-st"><b>${words.length}</b><span>Zakázaných slov</span></div>
+      </div>
+      <div class="c8m-tabs">${tabs.map(([k, l]) => `<button class="c8m-tab ${c8m.tab === k ? 'on' : ''}" onclick="c8modSetTab('${k}')">${l}${k === 'pending' && c8m.counts.pending ? `<em>${c8m.counts.pending}</em>` : ''}</button>`).join('')}</div>
+      ${list}
+      <div class="c8m-muted" style="margin-top:4px">Nahlásenia od používateľov (🚩) nájdeš ako doteraz v 🔔 Upozorneniach.</div>
+    </div></div>
+    <div>
+      <div class="c8m-card" style="margin-bottom:18px">
+        <div class="c8m-h2">⚙️ Nastavenia bota</div>
+        ${sw('checkPosts', 'Kontrolovať príspevky, komentáre, inzeráty')}
+        ${sw('checkPhotos', 'Kontrolovať fotky')}
+        ${sw('checkChats', 'Kontrolovať súkromné správy')}
+        ${sw('autoBan', 'Automaticky blokovať po 3 skrytých')}
+        ${sw('robot', '🤖 Zobrazovať robotíka (každý 3. deň)')}
+        <div style="margin-top:10px;font-size:14px;font-weight:700">Citlivosť</div>
+        <div class="c8m-sens">${[['low','Mierna'],['medium','Stredná'],['high','Prísna']].map(([k, l]) => `<button class="${(s.sensitivity || 'medium') === k ? 'on' : ''}" onclick="c8modSens('${k}')">${l}</button>`).join('')}</div>
+        <div class="c8m-muted">Prísna skryje viac, ale častejšie sa pomýli.</div>
+        <div class="c8m-saved" id="c8m-saved"></div>
+      </div>
+      <div class="c8m-card">
+        <div class="c8m-h2">🚫 Zakázané slová</div>
+        <div class="c8m-muted">Obsah s týmito slovami sa skryje okamžite (aj s hviezdičkami, bodkami a bez diakritiky). Kliknutím slovo odstrániš.</div>
+        <div class="c8m-chips">${words.map(w => `<span class="c8m-chip" onclick="c8modDelWord('${escapeHtml(w).replace(/'/g, '&#39;')}')">${escapeHtml(w)} ✕</span>`).join('') || '<span class="c8m-muted">Zoznam je prázdny.</span>'}</div>
+        <div class="c8m-add"><input id="c8m-word" placeholder="Pridať slovo…" onkeydown="if(event.key==='Enter')c8modAddWord()"><button class="c8m-b c8m-pri" onclick="c8modAddWord()">Pridať</button></div>
+      </div>
+    </div></div></div>`;
+}
+async function c8modSaveSettings(patch){
+  c8m.settings = { ...(c8m.settings || {}), ...patch };
+  c8modRender(false);
+  try{
+    const j = await c8modApi('/admin/settings', { settings: patch });
+    if(j.settings) c8m.settings = { ...c8m.settings, ...j.settings };
+    if('words' in patch){ c8modConfig.words = c8m.settings.words; c8modWordRes = null; }
+    if('robot' in patch) c8modConfig.robot = !!c8m.settings.robot;
+    c8modRender(false);
+    const el = document.getElementById('c8m-saved'); if(el){ el.textContent = '✓ Uložené'; setTimeout(()=>{ if(el) el.textContent = ''; }, 1800); }
+  }catch(e){ alert('Nastavenia sa nepodarilo uložiť: ' + (e.message || e)); }
+}
+function c8modToggle(k){ const s = c8m.settings || {}; c8modSaveSettings({ [k]: !s[k] }); }
+function c8modSens(v){ c8modSaveSettings({ sensitivity: v }); }
+function c8modAddWord(){
+  const inp = document.getElementById('c8m-word');
+  const w = (inp && inp.value || '').trim();
+  if(!w) return;
+  const words = [...new Set([...(c8m.settings && c8m.settings.words || []), c8modNorm(w)])];
+  c8modSaveSettings({ words });
+}
+function c8modDelWord(w){
+  const words = (c8m.settings && c8m.settings.words || []).filter(x => x !== w);
+  c8modSaveSettings({ words });
+}
+
+/* =====================================================================
+   ROBOTÍK – AI dozorca sa ukáže každý 3. deň prihlásenia
+===================================================================== */
+const C8BOT_TXT = {
+  sk:{hello:'Ahoj! 👋 Som <b>AI dozorca</b> a dohliadam na bezpečnosť na Connect8. 🛡️',ok:'Super 👍',more:'Čo robím?',title:'AI dozorca Connect8',info:'Kontrolujem príspevky, komentáre, správy a fotky. Keď nájdem niečo nevhodné, skryjem to a dám vedieť správcovi. Ty môžeš kedykoľvek niečo nahlásiť cez 🚩.',got:'Rozumiem',pending:'Tento obsah čaká na kontrolu správcom. Ostatní ho zatiaľ nevidia.',pendingShort:'Čaká na kontrolu správcom',banned:'Tvoj účet bol zablokovaný pre porušenie pravidiel Connect8.'},
+  cz:{hello:'Ahoj! 👋 Jsem <b>AI dozorce</b> a dohlížím na bezpečnost na Connect8. 🛡️',ok:'Super 👍',more:'Co dělám?',title:'AI dozorce Connect8',info:'Kontroluji příspěvky, komentáře, zprávy a fotky. Když najdu něco nevhodného, skryji to a dám vědět správci. Ty můžeš kdykoli něco nahlásit přes 🚩.',got:'Rozumím',pending:'Tento obsah čeká na kontrolu správcem. Ostatní ho zatím nevidí.',pendingShort:'Čeká na kontrolu správcem',banned:'Tvůj účet byl zablokován za porušení pravidel Connect8.'},
+  en:{hello:'Hi! 👋 I\'m the <b>AI guardian</b> and I keep Connect8 safe. 🛡️',ok:'Great 👍',more:'What do I do?',title:'Connect8 AI guardian',info:'I check posts, comments, messages and photos. When I find something inappropriate, I hide it and let the admin know. You can report anything at any time with 🚩.',got:'Got it',pending:'This content is waiting for review by an admin. Others can\'t see it yet.',pendingShort:'Waiting for admin review',banned:'Your account has been blocked for breaking the Connect8 rules.'},
+  de:{hello:'Hallo! 👋 Ich bin der <b>KI-Wächter</b> und achte auf die Sicherheit bei Connect8. 🛡️',ok:'Super 👍',more:'Was mache ich?',title:'KI-Wächter von Connect8',info:'Ich prüfe Beiträge, Kommentare, Nachrichten und Fotos. Wenn ich etwas Unangemessenes finde, verberge ich es und informiere den Admin. Du kannst jederzeit etwas über 🚩 melden.',got:'Verstanden',pending:'Dieser Inhalt wartet auf die Prüfung durch einen Admin. Andere sehen ihn noch nicht.',pendingShort:'Wartet auf Prüfung',banned:'Dein Konto wurde wegen Verstoßes gegen die Regeln von Connect8 gesperrt.'},
+  pl:{hello:'Cześć! 👋 Jestem <b>strażnikiem AI</b> i dbam o bezpieczeństwo na Connect8. 🛡️',ok:'Super 👍',more:'Co robię?',title:'Strażnik AI Connect8',info:'Sprawdzam posty, komentarze, wiadomości i zdjęcia. Gdy znajdę coś nieodpowiedniego, ukrywam to i informuję administratora. Zawsze możesz coś zgłosić przez 🚩.',got:'Rozumiem',pending:'Ta treść czeka na sprawdzenie przez administratora. Inni jeszcze jej nie widzą.',pendingShort:'Czeka na sprawdzenie',banned:'Twoje konto zostało zablokowane za naruszenie zasad Connect8.'},
+  hu:{hello:'Szia! 👋 Én vagyok az <b>AI őr</b>, és vigyázok a Connect8 biztonságára. 🛡️',ok:'Szuper 👍',more:'Mit csinálok?',title:'Connect8 AI őr',info:'Ellenőrzöm a bejegyzéseket, hozzászólásokat, üzeneteket és fotókat. Ha valami nem odaillőt találok, elrejtem és szólok az adminnak. Bármikor jelenthetsz valamit a 🚩 gombbal.',got:'Értem',pending:'Ez a tartalom adminisztrátori ellenőrzésre vár. Mások még nem látják.',pendingShort:'Ellenőrzésre vár',banned:'A fiókodat a Connect8 szabályainak megsértése miatt letiltottuk.'},
+  it:{hello:'Ciao! 👋 Sono il <b>guardiano AI</b> e veglio sulla sicurezza di Connect8. 🛡️',ok:'Ottimo 👍',more:'Cosa faccio?',title:'Guardiano AI di Connect8',info:'Controllo post, commenti, messaggi e foto. Quando trovo qualcosa di inappropriato, lo nascondo e avviso l\'amministratore. Puoi segnalare qualcosa in qualsiasi momento con 🚩.',got:'Capito',pending:'Questo contenuto è in attesa di verifica da parte di un amministratore. Gli altri non lo vedono ancora.',pendingShort:'In attesa di verifica',banned:'Il tuo account è stato bloccato per violazione delle regole di Connect8.'},
+  fr:{hello:'Salut ! 👋 Je suis le <b>gardien IA</b> et je veille à la sécurité sur Connect8. 🛡️',ok:'Super 👍',more:'Que fais-je ?',title:'Gardien IA de Connect8',info:'Je vérifie les publications, commentaires, messages et photos. Si je trouve quelque chose d\'inapproprié, je le masque et je préviens l\'administrateur. Tu peux signaler quelque chose à tout moment avec 🚩.',got:'Compris',pending:'Ce contenu attend la vérification d\'un administrateur. Les autres ne le voient pas encore.',pendingShort:'En attente de vérification',banned:'Ton compte a été bloqué pour non-respect des règles de Connect8.'},
+  pt:{hello:'Olá! 👋 Sou o <b>guardião de IA</b> e cuido da segurança no Connect8. 🛡️',ok:'Ótimo 👍',more:'O que faço?',title:'Guardião de IA do Connect8',info:'Verifico publicações, comentários, mensagens e fotos. Quando encontro algo impróprio, oculto-o e aviso o administrador. Podes denunciar algo a qualquer momento com 🚩.',got:'Entendi',pending:'Este conteúdo aguarda revisão de um administrador. Os outros ainda não o veem.',pendingShort:'A aguardar revisão',banned:'A tua conta foi bloqueada por violar as regras do Connect8.'},
+  es:{hello:'¡Hola! 👋 Soy el <b>guardián de IA</b> y cuido la seguridad en Connect8. 🛡️',ok:'Genial 👍',more:'¿Qué hago?',title:'Guardián de IA de Connect8',info:'Reviso publicaciones, comentarios, mensajes y fotos. Si encuentro algo inapropiado, lo oculto y aviso al administrador. Puedes denunciar algo en cualquier momento con 🚩.',got:'Entendido',pending:'Este contenido espera la revisión de un administrador. Los demás aún no lo ven.',pendingShort:'Pendiente de revisión',banned:'Tu cuenta ha sido bloqueada por incumplir las normas de Connect8.'}
+};
+C8BOT_TXT.at = C8BOT_TXT.de;
+function c8botTxt(k){
+  const l = (typeof currentLang !== 'undefined' && C8BOT_TXT[currentLang]) ? currentLang : 'sk';
+  return (C8BOT_TXT[l] && C8BOT_TXT[l][k]) || C8BOT_TXT.sk[k];
+}
+function c8botLocalDay(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function c8botMaybeShow(){
+  if(!currentUser || c8modConfig.robot === false) return;
+  const key = 'c8bot_' + currentUser.uid;
+  let st = {};
+  try{ st = JSON.parse(localStorage.getItem(key) || '{}') || {}; }catch(e){}
+  const day = c8botLocalDay();
+  if(st.last === day) return;              // dnes už započítané
+  st.last = day;
+  st.n = (st.n || 0) + 1;                  // ďalší deň s prihlásením
+  const show = st.n >= 3;                  // 1. nie, 2. nie, 3. áno
+  if(show) st.n = 0;
+  try{ localStorage.setItem(key, JSON.stringify(st)); }catch(e){}
+  if(show) setTimeout(c8botShow, 4000);
+}
+let c8botTimer = null;
+function c8botShow(){
+  const old = document.getElementById('c8bot'); if(old) old.remove();
+  const spots = [{l:12,t:18,s:'left'},{r:12,t:30,s:'right'},{l:12,t:46,s:'left'},{r:12,t:58,s:'right'},{l:24,t:36,s:'left'}];
+  const p = spots[Math.floor(Math.random() * spots.length)];
+  const el = document.createElement('div');
+  el.id = 'c8bot'; el.className = p.s;
+  if(p.l != null) el.style.left = p.l + 'px'; else el.style.right = p.r + 'px';
+  el.style.top = p.t + 'vh';
+  el.innerHTML = `<svg viewBox="0 0 80 96" aria-hidden="true">
+    <line x1="40" y1="6" x2="40" y2="16" stroke="#5B4CFF" stroke-width="3" stroke-linecap="round"/><circle cx="40" cy="6" r="4.5" fill="#2ECC71"/>
+    <rect x="12" y="15" width="56" height="40" rx="16" fill="#fff" stroke="#5B4CFF" stroke-width="3"/><rect x="19" y="23" width="42" height="24" rx="11" fill="#1E1B2E"/>
+    <ellipse class="c8bot-eye" cx="31" cy="35" rx="5" ry="6" fill="#2ECC71"/><ellipse class="c8bot-eye" cx="49" cy="35" rx="5" ry="6" fill="#2ECC71"/>
+    <path d="M34 43 q6 4 12 0" stroke="#2ECC71" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <rect x="7" y="29" width="6" height="12" rx="3" fill="#8E7BFF"/><rect x="67" y="29" width="6" height="12" rx="3" fill="#8E7BFF"/>
+    <rect x="22" y="57" width="36" height="28" rx="11" fill="#5B4CFF"/>
+    <path d="M40 62 l8 3 v6 c0 5 -4 8 -8 9 c-4 -1 -8 -4 -8 -9 v-6z" fill="#fff"/>
+    <path d="M36.5 71 l2.5 2.5 l4.5 -5" stroke="#2ECC71" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="12" y="60" width="9" height="18" rx="4.5" fill="#8E7BFF"/>
+    <g class="c8bot-arm"><rect x="59" y="46" width="9" height="20" rx="4.5" fill="#8E7BFF" transform="rotate(-150 63 50)"/></g>
+    <rect x="28" y="86" width="9" height="8" rx="3" fill="#1E1B2E"/><rect x="43" y="86" width="9" height="8" rx="3" fill="#1E1B2E"/></svg>
+    <div class="c8bot-bub"><button class="c8bot-x" onclick="c8botHide()" aria-label="Zavrieť">✕</button>${c8botTxt('hello')}
+      <div class="c8bot-btns"><button class="c8bot-ok" onclick="c8botHide()">${c8botTxt('ok')}</button><button class="c8bot-more" onclick="c8botInfo()">${c8botTxt('more')}</button></div></div>`;
+  document.body.appendChild(el);
+  clearTimeout(c8botTimer);
+  c8botTimer = setTimeout(c8botHide, 10000);
+}
+function c8botHide(){
+  const el = document.getElementById('c8bot');
+  if(!el) return;
+  el.classList.add('hide');
+  setTimeout(()=>el.remove(), 450);
+}
+function c8botInfo(){
+  clearTimeout(c8botTimer);
+  c8botHide();
+  const m = document.createElement('div');
+  m.id = 'c8bot-info';
+  m.innerHTML = `<div class="box"><div style="font-size:34px">🤖🛡️</div><h3>${c8botTxt('title')}</h3>${c8botTxt('info')}<div><button>${c8botTxt('got')}</button></div></div>`;
+  m.addEventListener('click', e => { if(e.target === m || e.target.tagName === 'BUTTON') m.remove(); });
+  document.body.appendChild(m);
+}
+</script>
+<!-- =================== /C8 MODERÁCIA + AI DOZORCA =================== -->
+
 </body>
 </html>
