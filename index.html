@@ -21938,8 +21938,47 @@ function c8botShow(){
     <div class="c8bot-bub"><button class="c8bot-x" onclick="c8botHide()" aria-label="Zavrieť">✕</button>${c8botTxt('hello')}
       <div class="c8bot-btns"><button class="c8bot-ok" onclick="c8botHide()">${c8botTxt('ok')}</button><button class="c8bot-more" onclick="c8botInfo()">${c8botTxt('more')}</button></div></div>`;
   document.body.appendChild(el);
+  c8botBeep();
   clearTimeout(c8botTimer);
   c8botTimer = setTimeout(c8botHide, 10000);
+}
+/* Robotické pípnutie pri objavení (vyrobené priamo v prehliadači, bez zvukového súboru).
+   Ak prehliadač zvuk ešte nepovolí (nebolo žiadne ťuknutie), pípne pri prvom ťuknutí,
+   kým je robotík na obrazovke. */
+let c8botAudio = null;
+function c8botBeepNow(){
+  try{
+    const ctx = c8botAudio || (c8botAudio = new (window.AudioContext || window.webkitAudioContext)());
+    if(ctx.state === 'suspended') ctx.resume();
+    if(ctx.state !== 'running') return false;
+    const t0 = ctx.currentTime + 0.02;
+    // krátka veselá melódia: C5 – E5 – G5 – C6
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i)=>{
+      const st = t0 + i * 0.09;
+      [['sine', f, 0.09], ['triangle', 2 * f, 0.025]].forEach(([type, freq, vol])=>{
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(freq, st);
+        g.gain.setValueAtTime(0.0001, st);
+        g.gain.exponentialRampToValueAtTime(vol, st + 0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001, st + 0.45);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(st); o.stop(st + 0.47);
+      });
+    });
+    return true;
+  }catch(e){ return true; }
+}
+function c8botBeep(){
+  if(c8botBeepNow()) return;
+  setTimeout(()=>{
+    if(c8botAudio && c8botAudio.state === 'running'){ c8botBeepNow(); return; }
+    const once = ()=>{
+      ['pointerdown','touchstart','keydown'].forEach(ev=>document.removeEventListener(ev, once, true));
+      if(document.getElementById('c8bot')) c8botBeepNow();
+    };
+    ['pointerdown','touchstart','keydown'].forEach(ev=>document.addEventListener(ev, once, true));
+  }, 150);
 }
 function c8botHide(){
   const el = document.getElementById('c8bot');
