@@ -21493,6 +21493,10 @@ c8ApplyFriendsView();
 .post:empty{display:none}
 .c8mod-mcount{margin-left:auto;background:#FF4D6D;color:#fff;border-radius:9px;padding:0 7px;font-size:11px;font-weight:800;line-height:18px}
 .c8mod-mcount:empty{display:none}
+.c8m-card.c8m-blue{background:#EAF3FF;border:1px solid #CFE2FF}
+.c8m-blue .c8m-row{border-bottom-color:#D6E6FB}
+.c8m-blue .c8m-sens button:not(.on),.c8m-blue .c8m-tp,.c8m-blue .c8m-times input,.c8m-blue .c8m-sel,.c8m-blue .c8m-add input{background:#fff}
+.c8m-blue .c8m-last div{border-bottom-color:#D6E6FB}
 .c8bot-badge{display:inline-block;background:#5B4CFF;color:#fff;font-size:9.5px;font-weight:800;border-radius:5px;padding:1px 5px;letter-spacing:.04em;vertical-align:middle;line-height:1.4}
 .c8m-times{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:6px 0}
 .c8m-times input{width:100%;min-width:0;border:1px solid #E4E6EE;border-radius:9px;padding:6px 2px;font:inherit;font-size:12.5px;text-align:center}
@@ -21862,13 +21866,13 @@ function c8modRender(loading){
         <div class="c8m-muted">Prísna skryje viac, ale častejšie sa pomýli.</div>
         <div class="c8m-saved" id="c8m-saved"></div>
       </div>
-      ${c8botCardHtml()}
-      <div class="c8m-card">
+      <div class="c8m-card" style="margin-bottom:18px">
         <div class="c8m-h2">🚫 Zakázané slová</div>
         <div class="c8m-muted">Obsah s týmito slovami sa skryje okamžite (aj s hviezdičkami, bodkami a bez diakritiky). Kliknutím slovo odstrániš.</div>
         <div class="c8m-chips">${words.map(w => `<span class="c8m-chip" onclick="c8modDelWord('${escapeHtml(w).replace(/'/g, '&#39;')}')">${escapeHtml(w)} ✕</span>`).join('') || '<span class="c8m-muted">Zoznam je prázdny.</span>'}</div>
         <div class="c8m-add"><input id="c8m-word" placeholder="Pridať slovo…" onkeydown="if(event.key==='Enter')c8modAddWord()"><button class="c8m-b c8m-pri" onclick="c8modAddWord()">Pridať</button></div>
       </div>
+      ${c8botCardHtml()}
     </div></div></div>`;
 }
 async function c8modSaveSettings(patch){
@@ -21903,7 +21907,7 @@ function c8modDelWord(w){
 /* ---------- Connect8 Bot – nastavenia v paneli ---------- */
 function c8botCardHtml(){
   const b = c8m.bot;
-  if(!b) return '<div class="c8m-card" style="margin-bottom:18px"><div class="c8m-h2">🤖 Connect8 Bot</div><div class="c8m-muted">Načítavam…</div></div>';
+  if(!b) return '<div class="c8m-card c8m-blue" style="margin-bottom:18px"><div class="c8m-h2">🤖 Connect8 Bot</div><div class="c8m-muted">Načítavam…</div></div>';
   const s = b.settings || {};
   const sw = (k, label) => `<div class="c8m-row">${label}<button class="c8m-sw ${s[k] ? 'on' : ''}" onclick="c8botSet({${k}: ${!s[k]}})"></button></div>`;
   const fr = [['d3','1× za 3 dni'],['d2','1× za 2 dni'],['1','1× denne'],['2','2× denne'],['3','3× denne'],['4','4× denne'],['5','5× denne']];
@@ -21911,7 +21915,7 @@ function c8botCardHtml(){
   const tp = [['morning','☀️ Meniny + počasie'],['tip','💡 Tipy Connect8'],['question','💬 Otázka dňa'],['night','😄 Vtip / dobrú noc'],['fact','🌍 Zaujímavosť dňa'],['quote','✨ Citát dňa']];
   const topics = s.topics || {};
   const fmt = ts => { try{ const d = new Date(ts); return d.toLocaleDateString('sk-SK',{day:'numeric',month:'numeric'}) + ' ' + d.toLocaleTimeString('sk-SK',{hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } };
-  return `<div class="c8m-card" style="margin-bottom:18px">
+  return `<div class="c8m-card c8m-blue" style="margin-bottom:18px">
     <div class="c8m-head" style="margin-bottom:6px"><div class="c8m-h2" style="margin:0">🤖 Connect8 Bot</div>
       <div class="c8m-bot ${b.online ? '' : 'off'}" style="${b.online ? '' : 'background:#EEF0F6;color:#7a8194'}"><span class="c8m-dot"></span>${b.online ? 'Online' : 'Offline'}</div></div>
     ${sw('enabled', 'Bot je zapnutý')}
@@ -21938,7 +21942,7 @@ function c8botNewsHtml(s){
   const n = s.news || {};
   const sw = (k, label) => `<div class="c8m-row">${label}<button class="c8m-sw ${n[k] ? 'on' : ''}" onclick="c8botNewsSet({${k}: ${!n[k]}})"></button></div>`;
   const cols = ['#E6F0FF:#2659C7','#F1E6FF:#7B2FD0','#FFF0E0:#B85C00','#E3F7EE:#1E8E4E','#FFE3E8:#C2183F'];
-  return `<div style="margin-top:14px;padding-top:12px;border-top:2px solid #F0F1F5">
+  return `<div style="margin-top:14px;padding-top:12px;border-top:2px solid #D6E6FB">
     <div class="c8m-h2" style="margin-bottom:4px">📰 Novinky z tém</div>
     ${sw('enabled', 'Zdieľať novinky')}
     <div style="font-size:14px;font-weight:700;margin-top:10px">Moje témy</div>
