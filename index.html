@@ -11357,7 +11357,7 @@ function buildPostCard(p, opts={}){
           <button class="cancel-edit-btn" onclick="cancelEditPost(${p.id})">${t('Zrušiť')}</button>
         </div>
       </div>
-      ` : (p.isVizitka ? buildVizitkaTextBlock(p, p.id) : (p.text ? `<div class="post-text">${escapeHtml(p.text)}</div><div class="post-text-translation" id="post-tr-${p.id}"></div>` : ''))}
+      ` : (p.isVizitka ? buildVizitkaTextBlock(p, p.id) : (p.text ? `<div class="post-text"${p.authorId==='c8bot'?' style="white-space:pre-line"':''}>${escapeHtml(p.text)}</div><div class="post-text-translation" id="post-tr-${p.id}"></div>` : ''))}
       ${p.video ? `<div class="post-video-wrap">
         <video class="post-video" id="post-video-${p.id}" src="${escapeHtml(optimizeCloudinaryVideoUrl(p.video))}" ${isIOSDevice()?'muted':''} controls playsinline webkit-playsinline preload="metadata" onplay="registerFeedVideoView(${p.id});stopFeedAutoScroll()" onpause="resumeFeedAutoScrollIfNeeded()" onended="resumeFeedAutoScrollIfNeeded()" style="width:100%;border-radius:12px;max-height:480px;background:#000;display:block;"></video>
         <div class="post-video-views-badge" id="post-video-views-${p.id}">👁 ${formatViewCount(p.views||0)}</div>
@@ -21695,7 +21695,7 @@ function c8modBuildRes(words){
   (words || []).forEach(w => {
     const ww = c8modNorm(w).replace(/[^a-z]/g, '');
     if(ww.length < 2) return;
-    try{ res.push(new RegExp('(?<![a-z])' + ww.split('').map(ch => '[' + ch + '*]').join('[^a-z*]{0,2}'))); }catch(e){}
+    try{ res.push(new RegExp('(?<![a-z])' + ww.split('').map(ch => '[' + ch + '*]').join('[.\\-_]?'))); }catch(e){}
   });
   return res;
 }
@@ -21934,6 +21934,7 @@ function c8botCardHtml(){
     <div class="c8m-sens">${[['sk','🇸🇰 SK'],['cz','🇨🇿 CZ'],['en','🇬🇧 EN']].map(([k,l]) => `<button class="${s.lang === k ? 'on' : ''}" onclick="c8botSet({lang:'${k}'})">${l}</button>`).join('')}</div>
     ${c8botNewsHtml(s)}
     <button class="c8m-b c8m-pri" id="c8bot-now" style="width:100%;margin-top:12px;padding:11px" onclick="c8botNow(this)">▶ Pridať príspevok teraz</button>
+    ${b.aiErr ? `<div class="c8m-muted" style="color:#C2183F;margin-top:8px">⚠️ Posledná chyba AI: ${escapeHtml(b.aiErr)}</div>` : ''}
     <div class="c8m-saved" id="c8bot-saved"></div>
     ${(b.recent || []).length ? `<div class="c8m-last" style="margin-top:6px"><div style="font-weight:800;border:0;padding-bottom:2px">Posledné príspevky</div>${b.recent.map(r => `<div>${r.topic === 'news' ? '📰 ' : ''}${escapeHtml((r.text || '').replace(/\n/g, ' ').slice(0, 60))}…<span>${r.source ? escapeHtml(r.source) + ' · ' : ''}${fmt(r.at)}</span></div>`).join('')}</div>` : ''}
   </div>`;
