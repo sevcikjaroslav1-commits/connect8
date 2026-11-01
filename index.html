@@ -19548,6 +19548,11 @@ c8ApplyFriendsView();
     if(m){ const p = (typeof findPostById === 'function') ? findPostById(Number(m[1])) : null; return p ? { obj: p, open: true } : null; }
     m = /^toggleVideoLike\((\d+)\)/.exec(oc);
     if(m){ const v = (typeof videos !== 'undefined' && videos) ? videos.find(x => x.id === Number(m[1])) : null; return v ? { obj: v } : null; }
+    // like na komentár pod príspevkom / pod videom
+    m = /^toggleCommentLike\((\d+),\s*(\d+)\)/.exec(oc);
+    if(m){ const p = (typeof findPostById === 'function') ? findPostById(Number(m[1])) : null; const c = p && p.comments ? p.comments[Number(m[2])] : null; return c ? { obj: c } : null; }
+    m = /^toggleVideoCommentLike\((\d+),\s*(\d+)\)/.exec(oc);
+    if(m){ const v = (typeof videos !== 'undefined' && videos) ? videos.find(x => x.id === Number(m[1])) : null; const c = v && v.comments ? v.comments[Number(m[2])] : null; return c ? { obj: c } : null; }
     return null;
   }
   function place(btn){
@@ -19590,7 +19595,7 @@ c8ApplyFriendsView();
     });
     place(btn);
   }
-  const SEL = 'button[onclick^="toggleLike("], button[onclick^="toggleVideoLike("]';
+  const SEL = 'button[onclick^="toggleLike("], button[onclick^="toggleVideoLike("], button[onclick^="toggleCommentLike("], button[onclick^="toggleVideoCommentLike("]';
   document.addEventListener('mouseover', e=>{
     const btn = e.target.closest && e.target.closest(SEL);
     if(btn){ clearTimeout(hideT); if(btn !== curBtn) show(btn); }
