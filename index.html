@@ -6303,6 +6303,8 @@ async function loadFollowing(){
     followingSet = new Set(data.following || []);
     blockedSet = new Set(data.blocked || []);
   }catch(e){ console.error("Nepodarilo sa načítať sledovaných/zablokovaných:", e); }
+  // Videá sa vykreslia skôr, než sa načíta zoznam sledovaných – dorovnaj tlačidlá Sledovať
+  try{ if(typeof c8vSyncFollow === 'function') c8vSyncFollow(); }catch(e){}
 }
 
 function followBtnHtml(authorId){
@@ -18135,7 +18137,7 @@ function c8vT(x){ try{ return typeof t === 'function' ? t(x) : x; }catch(e){ ret
   const sync = ()=>{
     const on = view.classList.contains('active') && c8vIsMobile();
     document.body.classList.toggle('c8v-full', on);
-    if(on){ c8vSyncMe(); c8vSyncMsg(); c8vSyncTexts(); }
+    if(on){ c8vSyncMe(); c8vSyncMsg(); c8vSyncTexts(); c8vSyncFollow(); }
     else { c8vMenuClose(); c8vSearchClose(true); }
   };
   new MutationObserver(sync).observe(view, { attributes:true, attributeFilter:['class'] });
@@ -18386,9 +18388,9 @@ if(typeof renderVideos === 'function'){
     const all = videos, hidden = c8vHiddenSet(), q = c8vNorm(c8vFilter);
     if(hidden.size || q){
       videos = all.filter(v => !hidden.has(String(v.id)) && (!q || c8vMatches(v, q)));
-      try{ return _c8vPrevRender.apply(this, arguments); } finally { videos = all; }
+      try{ return _c8vPrevRender.apply(this, arguments); } finally { videos = all; c8vSyncFollow(); }
     }
-    return _c8vPrevRender.apply(this, arguments);
+    try{ return _c8vPrevRender.apply(this, arguments); } finally { c8vSyncFollow(); }
   };
 }
 // c8VideosRefresh porovnáva poradie videí s DOM – pri filtri nech porovnáva filtrovaný zoznam
