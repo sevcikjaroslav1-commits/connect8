@@ -22980,7 +22980,10 @@ function c8botInfo(){
     (vpravo hore, pri písaní príspevku na Ploche, na svojom profile, v Používateľoch,
     pri svojich príspevkoch). Obyčajný klik funguje ďalej ako doteraz.
   Dáta: Firestore kolekcia "stories"
-    { uid, name, photo, videoUrl, trimStart, duration, createdAt, expiresAt, viewers:[uid...] }
+    { uid, name, photo, type:'video'|'photo', videoUrl | photoUrl, trimStart, duration,
+      createdAt, expiresAt, viewers:[uid...] }
+  Fotka v príbehu: zmenší sa v telefóne na max 1080 px (JPEG 80 %, cca 150-300 kB)
+  a až potom sa nahrá na Cloudinary - šetrí kredity. Zobrazuje sa 7 sekúnd.
   Video sa nahráva cez existujúcu funkciu uploadVideoFileToCloudinary().
   Pozn.: na Spark pláne nie sú Cloud Functions, preto expirované príbehy maže
   sám autor pri ďalšom otvorení appky (ostatní ich aj tak už nevidia).
@@ -23034,7 +23037,7 @@ function c8botInfo(){
 /* prehrávač príbehu */
 #c8st-viewer{position:fixed;inset:0;z-index:10050;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-family:inherit;}
 #c8st-viewer .c8st-stage{position:relative;width:100%;height:100%;max-width:480px;background:#000;overflow:hidden;}
-#c8st-viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;}
+#c8st-viewer video,#c8st-viewer .c8st-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;}
 #c8st-viewer .c8st-shade-t{position:absolute;left:0;right:0;top:0;height:140px;background:linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,0));pointer-events:none;}
 #c8st-viewer .c8st-shade-b{position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.6));pointer-events:none;}
 #c8st-viewer .c8st-bars{position:absolute;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top));display:flex;gap:4px;z-index:3;}
@@ -23062,6 +23065,7 @@ function c8botInfo(){
   const DAY = 24*60*60*1000;
   const MAX_SEC = 60;
   const HOLD_MS = 3000;
+  const PHOTO_SEC = 7;        // ako dlho sa ukazuje fotka v príbehu
   const T = (s)=> (typeof t === 'function' ? t(s) : s);
 
   let stories = [];           // aktívne príbehy (všetci)
@@ -23079,7 +23083,7 @@ function c8botInfo(){
     const now = Date.now();
     byUid = {};
     stories.forEach(s=>{
-      if(!s || !s.uid || !s.videoUrl || !(s.expiresAt > now)) return;
+      if(!s || !s.uid || !(s.videoUrl || s.photoUrl) || !(s.expiresAt > now)) return;
       if(isBlocked(s.uid)) return;
       (byUid[s.uid] = byUid[s.uid] || []).push(s);
     });
@@ -23214,9 +23218,10 @@ function c8botInfo(){
     s.innerHTML = `<div class="c8st-box" role="dialog" aria-label="${escapeHtml(T('Príbeh'))}">
       <div class="c8st-grab"></div>
       <h3>${escapeHtml(T('Pridať príbeh'))}</h3>
-      <p>${escapeHtml(T('Video max 60 sekúnd. Po 24 hodinách automaticky zmizne.'))}</p>
+      <p>${escapeHtml(T('Fotka alebo video (max 60 s). Po 24 hodinách automaticky zmizne.'))}</p>
       <button class="c8st-opt" data-a="cam">🎥 ${escapeHtml(T('Natočiť video'))}</button>
-      <button class="c8st-opt" data-a="gal">🖼️ ${escapeHtml(T('Vybrať video z galérie'))}</button>
+      <button class="c8st-opt" data-a="shot">📷 ${escapeHtml(T('Odfotiť fotku'))}</button>
+      <button class="c8st-opt" data-a="gal">🖼️ ${escapeHtml(T('Vybrať z galérie (fotka alebo video)'))}</button>
       ${mine.length ? `<button class="c8st-opt" data-a="view">▶️ ${escapeHtml(T('Pozrieť môj príbeh'))}</button>` : ''}
       <button class="c8st-cancel" data-a="x">${escapeHtml(T('Zrušiť'))}</button>
     </div>`;
@@ -23226,17 +23231,23 @@ function c8botInfo(){
       const a = b.dataset.a;
       if(a === 'x'){ closeSheet(); return; }
       if(a === 'view'){ closeSheet(); openViewer(u.uid); return; }
-      pickVideo(a === 'cam');   // input musí vzniknúť priamo pri kliknutí (iOS)
+      pickMedia(a);   // input musí vzniknúť priamo pri kliknutí (iOS)
       closeSheet();
     });
     document.body.appendChild(s);
   }
-  function pickVideo(camera){
+  // kind: 'cam' = natočiť video, 'shot' = odfotiť, 'gal' = galéria (fotka aj video)
+  function pickMedia(kind){
     const inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = 'video/*';
-    if(camera) inp.setAttribute('capture', 'user');
+    inp.type = 'file';
+    inp.accept = kind === 'cam' ? 'video/*' : kind === 'shot' ? 'image/*' : 'image/*,video/*';
+    if(kind === 'cam' || kind === 'shot') inp.setAttribute('capture', '');
     inp.style.display = 'none';
-    inp.onchange = ()=>{ const f = inp.files && inp.files[0]; inp.remove(); if(f) openEditor(f); };
+    inp.onchange = ()=>{
+      const f = inp.files && inp.files[0]; inp.remove(); if(!f) return;
+      if(/^image\//.test(f.type) || (!f.type && /\.(jpe?g|png|webp|heic|heif|gif)$/i.test(f.name))) openPhotoEditor(f);
+      else openEditor(f);
+    };
     document.body.appendChild(inp);
     inp.click();
   }
@@ -23299,6 +23310,7 @@ function c8botInfo(){
           uid: u.uid,
           name: u.name || '',
           photo: u.photoURL || null,
+          type: 'video',
           videoUrl,
           trimStart: Math.round(start),
           duration: Math.round(len),
@@ -23316,7 +23328,62 @@ function c8botInfo(){
     };
   }
 
+  /* ---------- fotka do príbehu ---------- */
+  function openPhotoEditor(file){
+    if(typeof MAX_IMAGE_SIZE !== 'undefined' && typeof checkFileSizeOk === 'function' && !checkFileSizeOk(file, MAX_IMAGE_SIZE, 'Fotka')) return;
+    if(typeof CLOUDINARY === 'undefined' || !CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){ alert(T('Nahrávanie fotiek zatiaľ nie je nastavené.')); return; }
+    const url = URL.createObjectURL(file);
+    const w = document.createElement('div');
+    w.id = 'c8st-edit';
+    w.innerHTML = `<div class="c8st-ebox">
+      <b style="font-size:17px">${escapeHtml(T('Nový príbeh'))}</b>
+      <img alt="" style="width:100%;max-height:52vh;border-radius:14px;background:#000;object-fit:contain;">
+      <div class="c8st-row"><span>${escapeHtml(T('Zobrazí sa na'))}</span><span>${PHOTO_SEC} s</span></div>
+      <div class="c8st-note">⏱️ <span>${escapeHtml(T('Príbeh uvidia ostatní 24 hodín, potom automaticky zmizne.'))}</span></div>
+      <div class="c8st-prog"></div>
+      <div class="c8st-btns"><button class="c8st-back">${escapeHtml(T('Zrušiť'))}</button><button class="c8st-share">${escapeHtml(T('Zdieľať príbeh'))}</button></div>
+    </div>`;
+    document.body.appendChild(w);
+    w.querySelector('img').src = url;
+    const prog = w.querySelector('.c8st-prog'), share = w.querySelector('.c8st-share'), back = w.querySelector('.c8st-back');
+    let busy = false;
+    const close = ()=>{ if(busy) return; URL.revokeObjectURL(url); w.remove(); };
+    back.onclick = close;
+    w.addEventListener('click', (e)=>{ if(e.target === w) close(); });
+    share.onclick = async ()=>{
+      const u = me(); if(!u || !hasDb() || busy) return;
+      busy = true; share.disabled = true; back.disabled = true;
+      prog.textContent = T('Zmenšujem a nahrávam fotku...');
+      try{
+        // zmenšenie v telefóne: max 1080 px, JPEG 80 % (rovnaká funkcia ako pri fotkách v príspevkoch)
+        const photoUrl = await processImageFile(file, 1080, 0.8);
+        if(!/^https:\/\/res\.cloudinary\.com\//.test(photoUrl)) throw new Error(T('Fotku sa nepodarilo nahrať.'));
+        const now = Date.now();
+        await db.collection('stories').add({
+          uid: u.uid,
+          name: u.name || '',
+          photo: u.photoURL || null,
+          type: 'photo',
+          photoUrl,
+          trimStart: 0,
+          duration: PHOTO_SEC,
+          createdAt: now,
+          expiresAt: now + DAY,
+          viewers: []
+        });
+        busy = false; close();
+      }catch(err){
+        console.error('Príbeh (fotka): zdieľanie zlyhalo', err);
+        prog.textContent = T('Nepodarilo sa zdieľať príbeh.') + ' ' + (err && err.message ? err.message : '');
+        busy = false; share.disabled = false; back.disabled = false;
+      }
+    };
+  }
+
   /* ---------- prehrávač ---------- */
+  // fotka: Cloudinary pošle najúspornejší formát (WebP/AVIF) v automatickej kvalite
+  const photoUrlOpt = (u)=> (typeof u === 'string' && u.indexOf('res.cloudinary.com') >= 0 && u.indexOf('/image/upload/') >= 0 && !/\/image\/upload\/[^/]*(q_auto|f_auto)/.test(u))
+    ? u.replace('/image/upload/', '/image/upload/f_auto,q_auto/') : u;
   let V = null; // stav prehrávača
   const playUrl = (u)=> (typeof optimizeCloudinaryVideoUrl === 'function' ? optimizeCloudinaryVideoUrl(u) : u);
   function ago(ts){ return (typeof formatPostTime === 'function') ? formatPostTime(ts) : ''; }
@@ -23359,6 +23426,7 @@ function c8botInfo(){
     el.id = 'c8st-viewer';
     el.innerHTML = `<div class="c8st-stage">
       <video playsinline preload="auto"></video>
+      <img class="c8st-img" alt="" style="display:none">
       <div class="c8st-msg"></div>
       <div class="c8st-shade-t"></div><div class="c8st-shade-b"></div>
       <div class="c8st-bars">${list.map(()=>'<div class="c8st-bar"><i></i></div>').join('')}</div>
@@ -23373,6 +23441,7 @@ function c8botInfo(){
     </div>`;
     document.body.appendChild(el);
     const video = el.querySelector('video');
+    const img = el.querySelector('.c8st-img');
     const hav = el.querySelector('.c8st-hav');
     if(p.photo && /^https?:\/\//.test(p.photo)) hav.style.backgroundImage = `url("${String(p.photo).replace(/["\\]/g,'')}")`;
     else hav.textContent = (typeof initials === 'function') ? initials(p.name || '?') : '?';
@@ -23390,7 +23459,7 @@ function c8botInfo(){
     el.querySelectorAll('.c8st-tap').forEach(z=>{
       let ht = null;
       z.addEventListener('pointerdown', ()=>{ ht = setTimeout(()=>{ V && (V.paused = true); video.pause(); }, 220); });
-      const up = (e)=>{ clearTimeout(ht); if(V && V.paused){ V.paused = false; video.play().catch(()=>{}); e.stopPropagation(); suppressClickUntil = Date.now() + 300; } };
+      const up = (e)=>{ clearTimeout(ht); if(V && V.paused){ V.paused = false; if(video.style.display !== 'none') video.play().catch(()=>{}); e.stopPropagation(); suppressClickUntil = Date.now() + 300; } };
       z.addEventListener('pointerup', up); z.addEventListener('pointercancel', up);
     });
     if(own){
@@ -23401,7 +23470,7 @@ function c8botInfo(){
         vs.forEach(id=>{ const d = document.createElement('div'); d.textContent = (typeof profilesCache !== 'undefined' && profilesCache[id] && profilesCache[id].name) || T('Používateľ'); box.appendChild(d); });
         if(!vs.length){ const d = document.createElement('div'); d.textContent = T('Zatiaľ nikto.'); box.appendChild(d); }
         video.pause(); V.paused = true;
-        box.onclick = ()=>{ box.remove(); if(V){ V.paused = false; video.play().catch(()=>{}); } };
+        box.onclick = ()=>{ box.remove(); if(V){ V.paused = false; if(video.style.display !== 'none') video.play().catch(()=>{}); } };
         el.querySelector('.c8st-stage').appendChild(box);
       };
       el.querySelector('.c8st-del').onclick = ()=>{
@@ -23428,6 +23497,32 @@ function c8botInfo(){
       el.querySelector('.c8st-time').textContent = ago(s.createdAt) + ' · ' + leftTxt(s);
       if(own){ const vc = el.querySelector('.c8st-vc'); if(vc) vc.textContent = Array.isArray(s.viewers) ? s.viewers.length : 0; }
       const msg = el.querySelector('.c8st-msg'); msg.textContent = T('Načítavam...');
+      cancelAnimationFrame(V.raf);
+      markSeen(s);
+      // ---- FOTKA ----
+      if(s.type === 'photo' || (!s.videoUrl && s.photoUrl)){
+        try{ video.pause(); }catch(_){}
+        video.style.display = 'none'; muteBtn.style.visibility = 'hidden';
+        img.style.display = '';
+        let shown = 0, last = performance.now(), loaded = false;
+        img.onload = ()=>{ loaded = true; msg.textContent = ''; last = performance.now(); };
+        img.onerror = ()=>{ msg.textContent = T('Fotku sa nepodarilo načítať.'); loaded = true; };
+        img.src = photoUrlOpt(s.photoUrl);
+        const plen = Number(s.duration) || PHOTO_SEC;
+        const ptick = (now)=>{
+          if(!V || V.idx !== i) return;
+          if(loaded && !V.paused) shown += (now - last) / 1000;
+          last = now;
+          if(bars[i]) bars[i].style.width = Math.min(100, shown / plen * 100) + '%';
+          if(shown >= plen){ show(i + 1); return; }
+          V.raf = requestAnimationFrame(ptick);
+        };
+        V.raf = requestAnimationFrame(ptick);
+        return;
+      }
+      // ---- VIDEO ----
+      img.style.display = 'none'; img.removeAttribute('src');
+      video.style.display = ''; muteBtn.style.visibility = '';
       const startAt = Number(s.trimStart) || 0;
       const len = Math.min(MAX_SEC, Number(s.duration) || MAX_SEC);
       let triedRaw = false;
@@ -23438,8 +23533,6 @@ function c8botInfo(){
       video.src = playUrl(s.videoUrl);
       video.muted = muteBtn.textContent === '🔇';
       video.play().catch(()=>{ video.muted = true; muteBtn.textContent = '🔇'; video.play().catch(()=>{}); });
-      markSeen(s);
-      cancelAnimationFrame(V.raf);
       const tick = ()=>{
         if(!V || V.idx !== i) return;
         const pos = Math.max(0, video.currentTime - startAt);
