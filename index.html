@@ -21733,7 +21733,12 @@ function c8modAfterLogin(){
   if(btn) btn.style.display = currentUserIsAdmin ? '' : 'none';
   c8modLoadConfig().then(()=>{
     const params = new URLSearchParams(location.search);
-    if(params.get('robot') === '1') setTimeout(c8botShow, 2500);
+    if(params.get('robot') === '1'){
+      // testovací odkaz ?robot=1 – ukáže robotíka a hneď ho odstráni z adresy,
+      // aby sa pri ďalšom obnovení stránky už neukazoval znova
+      try{ const u = new URL(location.href); u.searchParams.delete('robot'); history.replaceState(null, '', u.toString()); }catch(e){}
+      setTimeout(c8botShow, 2500);
+    }
     else c8botMaybeShow();
   });
   if(currentUserIsAdmin){
