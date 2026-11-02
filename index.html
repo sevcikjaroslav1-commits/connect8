@@ -2412,6 +2412,100 @@
 #c8ios-bar .go{border:0;border-radius:10px;padding:7px 11px;background:#5B4CFF;color:#fff;font-weight:800;font-size:13px;cursor:pointer;}
 #c8ios-bar .x{border:0;background:none;color:#aaa;font-size:18px;cursor:pointer;padding:2px 4px;}
 </style>
+
+<style id="c8v-style">
+/* ===== Videá na celú obrazovku (štýl Reels) ===== */
+body.c8v-full #view-video{position:fixed;inset:0;z-index:65;margin:0;padding:0;background:#000;min-height:0;height:100vh;height:100dvh;}
+body.c8v-full #view-video .video-scroller{position:absolute;top:0;bottom:calc(56px + env(safe-area-inset-bottom));left:0;right:0;height:auto;margin:0 auto;max-width:min(100vw, calc((100dvh - 56px) * .62));background:#000;scrollbar-width:none;}
+body.c8v-full #view-video .video-scroller::-webkit-scrollbar{display:none;}
+body.c8v-full #view-video .video-card{height:calc(100vh - 56px - env(safe-area-inset-bottom));height:calc(100dvh - 56px - env(safe-area-inset-bottom));background:#000;cursor:pointer;}
+body.c8v-full #view-video .video-card video{object-fit:cover;}
+@media (min-width:700px){ body.c8v-full #view-video .video-card video{object-fit:contain;} }
+body.c8v-full #view-video .video-card::after{background:linear-gradient(to bottom, rgba(0,0,0,.45), transparent 16%, transparent 58%, rgba(0,0,0,.65));}
+body.c8v-full #view-video .video-nav-arrows{position:fixed;right:max(16px, calc(50vw - min(50vw, (100dvh - 56px) * .31) - 64px));}
+body.c8v-full #view-video .c8-myreels-chip{position:absolute;top:calc(54px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:6;}
+#view-video .c8v-top,#view-video .c8v-nav,#view-video .c8v-filter,#view-video .c8v-toast,#view-video .c8v-search{display:none;}
+body.c8v-full #view-video .c8v-top{display:flex;position:absolute;left:0;right:0;top:0;z-index:5;margin:0 auto;max-width:min(100vw, calc((100dvh - 56px) * .62));
+  align-items:center;justify-content:space-between;padding:calc(12px + env(safe-area-inset-top)) 16px 8px;color:#fff;pointer-events:none;}
+.c8v-top b{font-size:19px;font-weight:800;text-shadow:0 1px 6px rgba(0,0,0,.45);}
+.c8v-search-btn{pointer-events:auto;background:none;border:0;color:#fff;width:38px;height:38px;display:flex;align-items:center;justify-content:center;cursor:pointer;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));}
+.c8v-search-btn svg{width:24px;height:24px;}
+.c8v-mute{position:absolute;right:12px;top:calc(58px + env(safe-area-inset-top));z-index:3;width:36px;height:36px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+/* bočné tlačidlá */
+.c8v-side{right:6px !important;bottom:18px !important;gap:13px !important;}
+.c8v-act{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.c8v-side .c8v-btn{background:none !important;backdrop-filter:none !important;width:44px !important;height:40px !important;border-radius:0 !important;border:0;color:#fff;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;filter:drop-shadow(0 1px 3px rgba(0,0,0,.45));}
+.c8v-side .c8v-btn svg{width:30px;height:30px;}
+.c8v-side .c8v-like svg path{fill:none;stroke:currentColor;stroke-width:2;}
+.c8v-side .c8v-like.liked{color:#FF3D71;}
+.c8v-side .c8v-like.liked svg path{fill:currentColor;stroke:none;}
+.c8v-like.pop svg{animation:c8vPop .35s ease-out;}
+@keyframes c8vPop{40%{transform:scale(1.3)}}
+.c8v-side .c8v-eye{cursor:default;}
+.c8v-n{font-size:12.5px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);line-height:1.15;text-align:center;}
+.c8v-side .c8v-auto .c8v-autoic{width:32px;height:32px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba(0,0,0,.25);transition:.2s;}
+.c8v-side .c8v-auto.on .c8v-autoic{background:#5B4CFF;box-shadow:0 0 0 3px rgba(91,76,255,.35);}
+/* popis vľavo dole */
+.c8v-cap{position:absolute !important;left:0;right:64px;bottom:18px;padding:0 14px !important;color:#fff;}
+.c8v-who{display:flex;align-items:center;gap:9px;font-size:15px;flex-wrap:wrap;}
+.c8v-who b{cursor:pointer;text-shadow:0 1px 4px rgba(0,0,0,.5);}
+.c8v-av{cursor:pointer;display:inline-flex;}
+.c8v-av .avatar{width:36px !important;height:36px !important;font-size:13px !important;border:2px solid #fff;}
+.c8v-follow{border:1.5px solid rgba(255,255,255,.9);background:transparent;color:#fff;border-radius:9px;padding:4px 10px;font-size:12.5px;font-weight:800;cursor:pointer;}
+.c8v-follow.done{background:rgba(255,255,255,.22);border-color:transparent;}
+.c8v-text{font-size:14px;line-height:1.4;margin-top:8px;text-shadow:0 1px 4px rgba(0,0,0,.55);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;opacity:1 !important;}
+.c8v-text.open{-webkit-line-clamp:unset;display:block;max-height:40vh;overflow:auto;}
+.c8v-meta{display:flex;gap:10px;font-size:12px;opacity:.85;margin-top:6px;text-shadow:0 1px 4px rgba(0,0,0,.5);}
+.c8v-prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.22);z-index:3;}
+.c8v-prog i{display:block;height:100%;width:0;background:#fff;}
+.c8v-heart{position:absolute;left:50%;top:45%;z-index:4;width:110px;height:110px;margin:-55px 0 0 -55px;color:#FF3D71;opacity:0;pointer-events:none;}
+.c8v-heart svg{width:100%;height:100%;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35));}
+.c8v-heart.show{animation:c8vHeart .9s ease-out;}
+@keyframes c8vHeart{0%{opacity:0;transform:scale(.3)}25%{opacity:1;transform:scale(1.1)}45%{transform:scale(.95)}80%{opacity:1}100%{opacity:0;transform:scale(1.1) translateY(-20px)}}
+.c8v-pause{position:absolute;left:50%;top:45%;z-index:4;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;pointer-events:none;}
+/* dolná lišta */
+body.c8v-full #view-video .c8v-nav{display:flex;position:absolute;left:0;right:0;bottom:0;margin:0 auto;max-width:min(100vw, 520px);height:calc(56px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);z-index:6;background:#0b0b10;justify-content:space-around;align-items:center;}
+.c8v-nav button{background:none;border:0;color:#fff;opacity:.82;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;min-width:48px;height:100%;padding:0;}
+.c8v-nav button.on{opacity:1;}
+.c8v-nav svg{width:26px;height:26px;}
+.c8v-nav .c8v-add{opacity:1;gap:2px;}
+.c8v-nav .c8v-add span{width:44px;height:28px;border-radius:9px;background:linear-gradient(135deg,#7c3aed,#5b4cff);display:flex;align-items:center;justify-content:center;}
+.c8v-nav .c8v-add svg{width:19px;height:19px;}
+.c8v-nav .c8v-add em{font-style:normal;font-size:10px;font-weight:700;white-space:nowrap;}
+.c8v-nav .c8v-me{width:30px;height:30px;min-width:30px;border-radius:50%;border:2px solid #fff;background:#5B4CFF center/cover no-repeat;font-size:12px;font-weight:800;opacity:1;}
+.c8v-msg i{position:absolute;top:8px;right:6px;min-width:16px;height:16px;border-radius:9px;background:#FF3D71;color:#fff;font-size:10px;font-style:normal;font-weight:800;display:none;align-items:center;justify-content:center;padding:0 4px;}
+.c8v-msg i.show{display:flex;}
+/* toast, filter */
+body.c8v-full #view-video .c8v-toast{display:block;position:absolute;left:50%;top:calc(110px + env(safe-area-inset-top));transform:translateX(-50%);z-index:7;background:rgba(0,0,0,.7);color:#fff;border-radius:12px;padding:8px 14px;font-size:13px;font-weight:700;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .25s;}
+body.c8v-full #view-video .c8v-toast.show{opacity:1;}
+body.c8v-full #view-video .c8v-filter[style*="flex"]{display:flex !important;}
+.c8v-filter{position:absolute;left:50%;top:calc(56px + env(safe-area-inset-top));transform:translateX(-50%);z-index:6;align-items:center;gap:8px;background:rgba(91,76,255,.9);color:#fff;border-radius:999px;padding:5px 6px 5px 12px;font-size:13px;font-weight:700;white-space:nowrap;max-width:80vw;}
+.c8v-filter span{overflow:hidden;text-overflow:ellipsis;}
+.c8v-filter button{border:0;background:rgba(255,255,255,.25);color:#fff;border-radius:50%;width:24px;height:24px;cursor:pointer;flex:none;}
+/* menu ⋯ */
+.c8v-sheet-wrap{position:fixed;inset:0;z-index:215;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;}
+.c8v-sheet-wrap.open{display:flex;}
+.c8v-sheet{width:100%;max-width:520px;background:var(--surface,#fff);color:var(--text,#1E1B2E);border-radius:20px 20px 0 0;padding:10px 14px calc(16px + env(safe-area-inset-bottom));animation:c8vUp .25s ease-out;}
+@keyframes c8vUp{from{transform:translateY(100%)}to{transform:none}}
+.c8v-sheet .grab{width:40px;height:5px;border-radius:9px;background:#D6D8E2;margin:0 auto 8px;}
+.c8v-sheet .it{display:flex;align-items:center;gap:12px;width:100%;padding:13px 6px;border:0;border-bottom:1px solid var(--line,#F0F1F5);background:none;color:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer;}
+.c8v-sheet .it span{width:28px;text-align:center;font-size:18px;}
+.c8v-sheet .it.red{color:#E0245E;}
+.c8v-sheet .cancel{display:block;width:100%;margin-top:10px;border:0;border-radius:12px;padding:12px;background:var(--bg,#F1F2F7);color:inherit;font-weight:800;font-size:15px;cursor:pointer;}
+/* hľadanie */
+body.c8v-full #view-video .c8v-search.open{display:flex;}
+.c8v-search{position:absolute;inset:0;z-index:8;background:#0b0b10;color:#fff;flex-direction:column;}
+.c8v-search-bar{display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 10px 10px;}
+.c8v-search-bar button{background:none;border:0;color:#fff;font-size:20px;width:36px;height:36px;cursor:pointer;}
+.c8v-search-bar input{flex:1;min-width:0;border:0;border-radius:12px;padding:10px 12px;font-size:16px;background:#22222c;color:#fff;outline:none;}
+.c8v-search-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:0 3px 70px;align-content:start;}
+.c8v-tile{position:relative;aspect-ratio:9/14;background:#22222c center/cover no-repeat;border:0;padding:0;cursor:pointer;color:#fff;overflow:hidden;}
+.c8v-tile video{width:100%;height:100%;object-fit:cover;pointer-events:none;}
+.c8v-tile .lb{position:absolute;left:0;right:0;bottom:0;padding:16px 6px 5px;background:linear-gradient(transparent,rgba(0,0,0,.75));font-size:11px;font-weight:700;text-align:left;line-height:1.25;}
+.c8v-empty{grid-column:1/-1;text-align:center;color:#aaa;padding:40px 16px;font-size:14px;}
+/* komentáre ako spodný panel */
+body.c8v-full #view-video .video-comments-modal{position:fixed;}
+</style>
 </head>
 <body>
 
@@ -3596,6 +3690,23 @@
 
           <div class="c8-myreels-chip" id="c8-myreels-chip" style="display:none"><span>🎬 <span>Moje Reels</span></span><button onclick="c8ShowAllReels()" title="Zobraziť všetky">✕</button></div>
           <div class="video-scroller" id="video-scroller"></div>
+
+          <!-- Reels-štýl: horná lišta, dolná lišta, menu ⋯, hľadanie -->
+          <div class="c8v-top"><b><span id="c8v-title">Videá</span></b><button class="c8v-search-btn" onclick="c8vSearchOpen()" aria-label="Hľadať"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="m20 20-4-4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button></div>
+          <div class="c8v-filter" id="c8v-filter" style="display:none"><span id="c8v-filter-t"></span><button onclick="c8vClearFilter()" aria-label="Zrušiť">✕</button></div>
+          <div class="c8v-toast" id="c8v-toast"></div>
+          <nav class="c8v-nav">
+            <button onclick="switchMode('feed')" aria-label="Plocha"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
+            <button class="on" onclick="c8vToTop()" aria-label="Videá"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="currentColor"/><path d="M10 8.5v7l6-3.5z" fill="#0b0b10"/></svg></button>
+            <button class="c8v-add" onclick="openVideoModal()"><span><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></span><em id="c8v-add-t">Pridať video</em></button>
+            <button onclick="openConvModal()" aria-label="Správy" class="c8v-msg"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><i id="c8v-msg-badge"></i></button>
+            <button onclick="openProfile()" aria-label="Profil" class="c8v-me" id="c8v-me"></button>
+          </nav>
+          <div class="c8v-sheet-wrap" id="c8v-menu" onclick="if(event.target===this) c8vMenuClose()"><div class="c8v-sheet" id="c8v-menu-box"></div></div>
+          <div class="c8v-search" id="c8v-search">
+            <div class="c8v-search-bar"><button onclick="c8vSearchClose()" aria-label="Späť">←</button><input id="c8v-search-in" type="text" enterkeyhint="search" placeholder="Hľadať vo videách…" oninput="c8vSearchRun()" onkeydown="if(event.key==='Enter') this.blur()"><button onclick="document.getElementById('c8v-search-in').value='';c8vSearchRun()" aria-label="Vymazať">✕</button></div>
+            <div class="c8v-search-grid" id="c8v-search-grid"></div>
+          </div>
 
           <div class="video-nav-arrows">
             <button class="video-nav-arrow-btn" onclick="scrollToAdjacentVideo(-1)" title="Predchádzajúce video" aria-label="Predchádzajúce video">
@@ -7329,6 +7440,8 @@ function notifText(n){
     case 'report': {
       const what = n.targetType === 'post'
         ? `príspevok používateľa <b>${escapeHtml(n.targetName || '?')}</b>`
+        : n.targetType === 'video'
+        ? `video používateľa <b>${escapeHtml(n.targetName || '?')}</b>`
         : `používateľa <b>${escapeHtml(n.targetName || '?')}</b>`;
       const reason = REPORT_REASONS[n.reason] || n.reason || '';
       return `🚩 ${name} nahlásil(a) ${what}${reason ? ` – ${escapeHtml(reason)}` : ''}`
@@ -8368,6 +8481,9 @@ function openNotificationTarget(id){
     if(n.targetType === 'post' && n.postId !== undefined && n.postId !== null){
       switchMode('feed');
       showPostFromNotification(n.postId);
+    } else if(n.targetType === 'video' && n.videoId !== undefined && n.videoId !== null){
+      switchMode('video');
+      setTimeout(()=>{ const sc = document.getElementById('video-scroller'); const c = sc && sc.querySelector('.video-card[data-vid="' + n.videoId + '"]'); if(c) sc.scrollTop = c.offsetTop; }, 250);
     } else if(n.targetUid){
       openUserProfile({uid: n.targetUid, name: n.targetName, photoURL: n.targetPhoto || null});
     }
@@ -13107,26 +13223,36 @@ function renderVideos(){
         // Na iPhone (iOS) musí byť video stlmené už na úrovni HTML atribútu pre prvý
         // pokus o automatické spustenie; na Androide/desktope necháme pôvodné správanie.
         const mutedAttr = (isIOSDevice() || isMuted) ? 'muted' : '';
-        media = `<video id="media-${v.id}" data-src="${optimizeCloudinaryVideoUrl(v.url)}" ${mutedAttr} playsinline webkit-playsinline preload="none" controls></video>`;
+        media = `<video id="media-${v.id}" data-src="${optimizeCloudinaryVideoUrl(v.url)}" ${mutedAttr} playsinline webkit-playsinline preload="none"></video>`;
       }
     }
 
+    const c8vLiked = getLikedBy(v).includes(currentUser.uid);
+    const c8vOwn = (v.authorId ? v.authorId===currentUser.uid : v.name===currentUser.name);
     div.innerHTML = `
       ${media}
-      <div class="video-caption-wrap">
-        <div class="video-user">${avatarHtml(v.name, getAuthorPhoto(v))}${escapeHtml(v.name)}<span class="video-time" data-ts="${v.createdAt || v.id}" title="${formatFullDate(v.createdAt || v.id)}">${formatPostTime(v.createdAt || v.id)}</span><span class="video-views" id="views-${v.id}">👁 ${formatViewCount(v.views||0)}</span></div>
-        <div class="video-caption">${escapeHtml(v.caption)}</div>
+      <div class="c8v-heart" id="c8v-heart-${v.id}">${C8V_ICON.heart}</div>
+      <button class="c8v-mute" id="mute-btn-${v.id}" onclick="toggleMute(${v.id})" aria-label="Zvuk">${isMuted?'🔇':'🔊'}</button>
+      <div class="video-caption-wrap c8v-cap">
+        <div class="c8v-who">
+          <span class="c8v-av" onclick="c8vOpenAuthor(${v.id})">${avatarHtml(v.name, getAuthorPhoto(v))}</span>
+          <b onclick="c8vOpenAuthor(${v.id})">${escapeHtml(v.name)}</b>
+          ${c8vFollowBtn(v.authorId)}
+        </div>
+        ${v.caption ? `<div class="video-caption c8v-text" onclick="this.classList.toggle('open')">${escapeHtml(v.caption)}</div>` : ''}
+        <div class="c8v-meta"><span>🎵 ${t('Pôvodný zvuk')}</span><span class="video-time" data-ts="${v.createdAt || v.id}" title="${formatFullDate(v.createdAt || v.id)}">${formatPostTime(v.createdAt || v.id)}</span></div>
       </div>
-      <div class="video-side">
-        <div><button class="video-add-side-btn" onclick="openVideoModal()" title="Pridať video"><span class="plus">+</span>Pridať<br>video</button></div>
-        <div><button class="autoscroll-toggle-btn" onclick="toggleAutoScroll()" title="Auto scroll"><span class="as-dot"></span></button><div class="count">Auto<br>scroll</div></div>
-        <div><button id="mute-btn-${v.id}" onclick="toggleMute(${v.id})">${isMuted?'🔇':'🔊'}</button><div class="count">Zvuk</div></div>
-        <div><button class="${getLikedBy(v).includes(currentUser.uid)?'liked':''}" onclick="toggleVideoLike(${v.id})">❤️</button><div class="count">${v.likes}</div></div>
-        <div><button onclick="openVideoComments(${v.id})">💬</button><div class="count" id="chat-count-${v.id}">${(v.comments && v.comments.length) || 0}</div></div>
-        <div><button onclick="openVideoShareModal(${v.id})">↗</button><div class="count">Zdieľať</div></div>
-        ${((v.authorId ? v.authorId===currentUser.uid : v.name===currentUser.name) || currentUserIsAdmin) ? `<div><button onclick="deleteVideo(${v.id})">🗑️</button><div class="count">Zmazať</div></div>` : ''}
+      <div class="video-side c8v-side">
+        <div class="c8v-act"><button class="c8v-btn c8v-like ${c8vLiked?'liked':''}" onclick="toggleVideoLike(${v.id})" aria-label="${t('Páči sa')}">${C8V_ICON.heart}</button><div class="c8v-n">${v.likes||0}</div></div>
+        <div class="c8v-act"><button class="c8v-btn" onclick="openVideoComments(${v.id})" aria-label="${t('Komentáre')}">${C8V_ICON.cmt}</button><div class="c8v-n" id="chat-count-${v.id}">${(v.comments && v.comments.length) || 0}</div></div>
+        <div class="c8v-act"><button class="c8v-btn" onclick="openVideoShareModal(${v.id})" aria-label="${t('Zdieľať')}">${C8V_ICON.send}</button><div class="c8v-n">${t('Zdieľať')}</div></div>
+        <div class="c8v-act"><span class="c8v-btn c8v-eye">${C8V_ICON.eye}</span><div class="c8v-n" id="views-${v.id}">${formatViewCount(v.views||0)}</div></div>
+        <div class="c8v-act"><button class="c8v-btn autoscroll-toggle-btn c8v-auto" onclick="toggleAutoScroll();c8vAutoToast()" aria-label="Auto"><span class="c8v-autoic">⏬</span></button><div class="c8v-n">Auto</div></div>
+        <div class="c8v-act"><button class="c8v-btn" onclick="c8vMenu(${v.id})" aria-label="${t('Viac')}">${C8V_ICON.dots}</button></div>
       </div>
+      <div class="c8v-prog"><i id="c8v-prog-${v.id}"></i></div>
     `;
+    if(c8vOwn) div.dataset.own = '1';
     scroller.appendChild(div);
   });
   bindVideoEndedListener(scroller);
@@ -13295,7 +13421,7 @@ function registerVideoView(id){
   persistViewedVideoIds();
   v.views = (v.views||0) + 1;
   const el = document.getElementById('views-'+numId);
-  if(el) el.textContent = `👁 ${formatViewCount(v.views)}`;
+  if(el) el.textContent = el.classList.contains('c8v-n') ? formatViewCount(v.views) : `👁 ${formatViewCount(v.views)}`;
   updateDoc(videoDoc(v.id), {views: v.views}, 'video - zobrazenie');
 }
 
@@ -13601,7 +13727,7 @@ function c8GetIosShared(){
     v.setAttribute('playsinline', '');
     v.setAttribute('webkit-playsinline', '');
     v.playsInline = true;
-    v.controls = true;
+    v.controls = false;
     v.preload = 'auto';
     c8IosShared = v;
   }
@@ -13677,7 +13803,7 @@ function c8VideosRefresh(){
       if(domIds && domIds === ids){
         videos.forEach(v=>{
           const ve = document.getElementById('views-' + v.id);
-          if(ve) ve.textContent = '👁 ' + formatViewCount(v.views || 0);
+          if(ve) ve.textContent = (ve.classList.contains('c8v-n') ? '' : '👁 ') + formatViewCount(v.views || 0);
           const lb = sc.querySelector('.video-card[data-vid="' + v.id + '"] button[onclick="toggleVideoLike(' + v.id + ')"]');
           if(lb){
             lb.classList.toggle('liked', getLikedBy(v).includes(currentUser.uid));
@@ -13687,6 +13813,7 @@ function c8VideosRefresh(){
           const cc = document.getElementById('chat-count-' + v.id);
           if(cc) cc.textContent = (v.comments && v.comments.length) || 0;
         });
+        if(typeof c8vSyncFollow === 'function') c8vSyncFollow();
         return;
       }
     }
@@ -13733,7 +13860,7 @@ function toggleVideoLike(id){
   delete v.liked;
   updateDoc(videoDoc(v.id), {likes: v.likes, likedBy: v.likedBy}, 'video - lajk');
   if(!wasLiked && v.authorId) createNotification(v.authorId, 'like_video', {videoId: v.id});
-  renderVideos();
+  if(typeof c8VideosRefresh === 'function') c8VideosRefresh(); else renderVideos();
 }
 
 function deleteVideo(id){
@@ -17962,6 +18089,313 @@ if(typeof applyLanguage === 'function'){
 })();
 </script>
 
+
+<script id="c8v-script">
+/* ===== Videá na celú obrazovku (štýl Reels) ===== */
+var C8V_ICON = {
+  heart:'<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.5 2.9 4.5 6.8 4.5c2.2 0 3.6 1.2 5.2 3 1.6-1.8 3-3 5.2-3 3.9 0 5.9 4 4.4 7.3C19.5 16.4 12 21 12 21z" fill="currentColor"/></svg>',
+  cmt:'<svg viewBox="0 0 24 24"><path d="M20.5 11.5a8.5 8.5 0 0 1-12.4 7.6L3.5 20.5l1.4-4.4A8.5 8.5 0 1 1 20.5 11.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+  send:'<svg viewBox="0 0 24 24"><path d="M21.5 3 10 14.5M21.5 3l-7 18-4.5-6.5L3 10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+  eye:'<svg viewBox="0 0 24 24"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></svg>',
+  dots:'<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.9" fill="currentColor"/><circle cx="12" cy="12" r="1.9" fill="currentColor"/><circle cx="12" cy="19" r="1.9" fill="currentColor"/></svg>'
+};
+function c8vT(x){ try{ return typeof t === 'function' ? t(x) : x; }catch(e){ return x; } }
+
+/* celá obrazovka len keď je sekcia Videá aktívna */
+(function(){
+  const view = document.getElementById('view-video');
+  if(!view) return;
+  const sync = ()=>{
+    const on = view.classList.contains('active');
+    document.body.classList.toggle('c8v-full', on);
+    if(on){ c8vSyncMe(); c8vSyncMsg(); c8vSyncTexts(); }
+    else { c8vMenuClose(); c8vSearchClose(true); }
+  };
+  new MutationObserver(sync).observe(view, { attributes:true, attributeFilter:['class'] });
+  sync();
+})();
+function c8vSyncTexts(){
+  const a = document.getElementById('c8v-title'); if(a) a.textContent = c8vT('Videá');
+  const b = document.getElementById('c8v-add-t'); if(b) b.textContent = c8vT('Pridať video');
+  const i = document.getElementById('c8v-search-in'); if(i) i.placeholder = c8vT('Hľadať vo videách…');
+}
+function c8vSyncMe(){
+  const me = document.getElementById('c8v-me'); if(!me || typeof currentUser === 'undefined' || !currentUser) return;
+  if(currentUser.photoURL){ me.style.backgroundImage = 'url("' + currentUser.photoURL.replace(/"/g,'') + '")'; me.textContent = ''; }
+  else { me.style.backgroundImage = ''; me.textContent = (currentUser.name || '?').trim().charAt(0).toUpperCase(); }
+}
+function c8vSyncMsg(){
+  const src = document.getElementById('messenger-badge-dot'), dst = document.getElementById('c8v-msg-badge');
+  if(!src || !dst) return;
+  const n = parseInt(src.textContent, 10) || 0;
+  dst.textContent = n > 99 ? '99+' : String(n);
+  dst.classList.toggle('show', n > 0);
+}
+setInterval(()=>{ if(document.body.classList.contains('c8v-full')) c8vSyncMsg(); }, 3000);
+
+/* sledovanie priamo z videa */
+function c8vFollowBtn(uid){
+  if(!uid || typeof currentUser === 'undefined' || !currentUser || uid === currentUser.uid || uid === 'c8bot') return '';
+  const f = (typeof followingSet !== 'undefined') && followingSet.has(uid);
+  return '<button class="c8v-follow ' + (f ? 'done' : '') + '" data-uid="' + escapeHtml(uid) + '" onclick="event.stopPropagation();c8vFollow(this)">' + (f ? '✓ ' + c8vT('Sledujete') : c8vT('Sledovať')) + '</button>';
+}
+function c8vSyncFollow(){
+  document.querySelectorAll('.c8v-follow[data-uid]').forEach(b=>{
+    const f = (typeof followingSet !== 'undefined') && followingSet.has(b.dataset.uid);
+    b.classList.toggle('done', f);
+    b.textContent = f ? '✓ ' + c8vT('Sledujete') : c8vT('Sledovať');
+  });
+}
+function c8vFollow(btn){
+  const uid = btn.dataset.uid;
+  if(typeof toggleFollow !== 'function') return;
+  const p = toggleFollow(uid);
+  c8vSyncFollow();
+  if(p && p.then) p.then(c8vSyncFollow, c8vSyncFollow);
+}
+function c8vOpenAuthor(id){
+  const v = videos.find(x => String(x.id) === String(id)); if(!v) return;
+  if(v.authorId && currentUser && v.authorId === currentUser.uid){ openProfile(); return; }
+  if(!v.authorId) return;
+  openUserProfile({ uid: v.authorId, name: v.name, photoURL: (typeof getAuthorPhoto === 'function' ? getAuthorPhoto(v) : null) });
+}
+
+/* ťuknutie = pauza, dvojité ťuknutie = páči sa */
+(function(){
+  const sc = document.getElementById('video-scroller'); if(!sc) return;
+  let lastTap = 0, tapTimer = null, touchMuted = null, touchAt = 0;
+  sc.addEventListener('touchstart', e=>{
+    const card = e.target.closest && e.target.closest('.video-card'); if(!card) return;
+    const m = document.getElementById('media-' + card.dataset.vid);
+    touchMuted = (m && m.tagName === 'VIDEO') ? (m.muted && !m.paused) : null; touchAt = Date.now();
+  }, { passive:true, capture:true });
+  sc.addEventListener('click', e=>{
+    const card = e.target.closest('.video-card'); if(!card) return;
+    if(e.target.closest('button, a, .c8v-cap, .c8v-side, iframe, input, textarea')) return;
+    if(card.dataset.kind === 'youtube') return;
+    const id = card.dataset.vid, now = Date.now();
+    if(now - lastTap < 300){
+      clearTimeout(tapTimer); lastTap = 0;
+      const v = videos.find(x => String(x.id) === String(id));
+      if(v && !getLikedBy(v).includes(currentUser.uid)) toggleVideoLike(v.id);
+      const h = document.getElementById('c8v-heart-' + id);
+      if(h){ h.classList.remove('show'); void h.offsetWidth; h.classList.add('show'); }
+      const lb = card.querySelector('.c8v-like'); if(lb){ lb.classList.remove('pop'); void lb.offsetWidth; lb.classList.add('pop'); }
+      return;
+    }
+    lastTap = now;
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(()=>{
+      const m = document.getElementById('media-' + id);
+      if(!m || m.tagName !== 'VIDEO') return;
+      // ak hralo stlmene a človek chce zvuk, prvé ťuknutie len zapne zvuk
+      const wasMuted = (Date.now() - touchAt < 900 && touchMuted !== null) ? touchMuted : (m.muted && !m.paused);
+      if(wasMuted && videoMuteState[id] !== true){
+        touchMuted = null;
+        if(m.muted){
+          m.muted = false; m.dataset.c8u = '1';
+          const b = document.getElementById('mute-btn-' + id); if(b) b.textContent = '🔊';
+          m.play().catch(()=>{ m.muted = true; if(b) b.textContent = '🔇'; });
+        }
+        return;
+      }
+      let ic = card.querySelector('.c8v-pause');
+      if(m.paused){
+        m.dataset.userPaused = ''; m.play().catch(()=>{});
+        if(ic) ic.remove();
+      } else {
+        m.dataset.userPaused = '1'; m.pause();
+        if(!ic){ ic = document.createElement('div'); ic.className = 'c8v-pause'; ic.textContent = '▶'; card.appendChild(ic); }
+      }
+    }, 280);
+  });
+  // pri prechode na iné video zruš ikonku pauzy
+  sc.addEventListener('scroll', ()=>{ sc.querySelectorAll('.c8v-pause').forEach(x=>x.remove()); }, { passive:true });
+  // tenký pásik priebehu videa
+  sc.addEventListener('timeupdate', e=>{
+    const m = e.target; if(!m || m.tagName !== 'VIDEO' || !m.duration) return;
+    const card = m.closest('.video-card'); if(!card) return;
+    const bar = document.getElementById('c8v-prog-' + card.dataset.vid);
+    if(bar) bar.style.width = Math.min(100, m.currentTime / m.duration * 100) + '%';
+  }, true);
+})();
+
+/* Auto – krátka hláška */
+let c8vToastT = null;
+function c8vToast(msg){
+  const el = document.getElementById('c8v-toast'); if(!el) return;
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(c8vToastT); c8vToastT = setTimeout(()=>el.classList.remove('show'), 1500);
+}
+function c8vAutoToast(){
+  c8vToast(videoAutoScroll ? '⏬ ' + c8vT('Auto-posúvanie zapnuté') : c8vT('Auto-posúvanie vypnuté'));
+}
+function c8vToTop(){
+  c8vClearFilter(true);
+  const sc = document.getElementById('video-scroller'); if(sc) sc.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* menu ⋯ */
+function c8vMenu(id){
+  const v = videos.find(x => String(x.id) === String(id)); if(!v) return;
+  const own = (v.authorId ? v.authorId === currentUser.uid : v.name === currentUser.name);
+  const canDel = own || (typeof currentUserIsAdmin !== 'undefined' && currentUserIsAdmin);
+  const isFile = v.url && !getYouTubeId(v.url);
+  let h = '<div class="grab"></div>';
+  h += '<button class="it" onclick="c8vCopyLink(' + v.id + ')"><span>🔗</span>' + c8vT('Kopírovať odkaz na video') + '</button>';
+  if(isFile) h += '<button class="it" onclick="c8vDownload(' + v.id + ')"><span>⬇️</span>' + c8vT('Stiahnuť video') + '</button>';
+  if(!own && v.authorId) h += '<button class="it" onclick="c8vMenuClose();c8vOpenAuthor(' + v.id + ')"><span>👤</span>' + c8vT('Zobraziť profil autora') + '</button>';
+  if(!own) h += '<button class="it" onclick="c8vHide(' + v.id + ')"><span>🙈</span>' + c8vT('Nezaujíma ma') + '</button>';
+  if(own) h += '<button class="it" onclick="c8vEditCaption(' + v.id + ')"><span>✏️</span>' + c8vT('Upraviť popis') + '</button>';
+  if(canDel) h += '<button class="it red" onclick="c8vMenuClose();deleteVideo(' + v.id + ')"><span>🗑️</span>' + c8vT('Vymazať video') + '</button>';
+  if(!own) h += '<button class="it red" onclick="c8vReport(' + v.id + ')"><span>🚩</span>' + c8vT('Nahlásiť video') + '</button>';
+  h += '<button class="cancel" onclick="c8vMenuClose()">' + c8vT('Zrušiť') + '</button>';
+  document.getElementById('c8v-menu-box').innerHTML = h;
+  document.getElementById('c8v-menu').classList.add('open');
+}
+function c8vMenuClose(){ const m = document.getElementById('c8v-menu'); if(m) m.classList.remove('open'); }
+function c8vCopyLink(id){
+  const url = 'https://connect8.eu/?video=' + id;
+  c8vMenuClose();
+  const ok = ()=>c8vToast('🔗 ' + c8vT('Odkaz skopírovaný'));
+  try{ navigator.clipboard.writeText(url).then(ok, ()=>prompt('', url)); }catch(e){ prompt('', url); }
+}
+function c8vDownload(id){
+  const v = videos.find(x => String(x.id) === String(id)); c8vMenuClose(); if(!v) return;
+  let url = v.url;
+  if(/res\.cloudinary\.com/.test(url) && /\/video\/upload\//.test(url)) url = url.replace('/video/upload/', '/video/upload/fl_attachment/');
+  const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.download = 'connect8-video.mp4';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function c8vHiddenKey(){ return 'c8v_hidden_' + (currentUser ? currentUser.uid : 'anon'); }
+function c8vHiddenSet(){ try{ return new Set(JSON.parse(localStorage.getItem(c8vHiddenKey()) || '[]')); }catch(e){ return new Set(); } }
+function c8vHide(id){
+  c8vMenuClose();
+  const s = c8vHiddenSet(); s.add(String(id));
+  try{ localStorage.setItem(c8vHiddenKey(), JSON.stringify([...s].slice(-500))); }catch(e){}
+  const card = document.querySelector('.video-card[data-vid="' + id + '"]');
+  const sc = document.getElementById('video-scroller');
+  const next = card && (card.nextElementSibling || card.previousElementSibling);
+  renderVideos();
+  if(next && sc){ const n = sc.querySelector('.video-card[data-vid="' + next.dataset.vid + '"]'); if(n) sc.scrollTop = n.offsetTop; }
+  c8vToast('🙈 ' + c8vT('Toto video sa ti už nebude zobrazovať'));
+}
+function c8vEditCaption(id){
+  const v = videos.find(x => String(x.id) === String(id)); c8vMenuClose(); if(!v) return;
+  const nv = prompt(c8vT('Upraviť popis'), v.caption || '');
+  if(nv === null) return;
+  const txt = nv.trim().slice(0, 500);
+  const modErr = (typeof moderationError === 'function') ? moderationError(txt) : null;
+  if(modErr){ alert(modErr); return; }
+  v.caption = txt;
+  saveVideo(v);
+  const card = document.querySelector('.video-card[data-vid="' + id + '"]');
+  const cap = card && card.querySelector('.c8v-text');
+  if(cap) cap.textContent = txt; else renderVideos();
+}
+function c8vReport(id){
+  const v = videos.find(x => String(x.id) === String(id)); c8vMenuClose(); if(!v) return;
+  if(typeof openReportModal !== 'function') return;
+  openReportModal({
+    targetType: 'video', videoId: v.id, targetUid: v.authorId || null, targetName: v.name || '',
+    targetPhoto: (typeof getAuthorPhoto === 'function' ? getAuthorPhoto(v) : null) || null,
+    postText: (v.caption || '').slice(0, 140)
+  }, '🚩 ' + c8vT('Nahlásiť video'));
+}
+
+/* hľadanie */
+var c8vFilter = '';
+function c8vNorm(x){ return String(x || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+function c8vMatches(v, q){ return c8vNorm(v.caption).includes(q) || c8vNorm(v.name).includes(q); }
+function c8vSearchOpen(){
+  const s = document.getElementById('c8v-search'); s.classList.add('open');
+  try{ pauseAllVideoSectionMedia(); document.body.style.overflow = 'hidden'; }catch(e){}
+  const i = document.getElementById('c8v-search-in'); i.value = c8vFilter; c8vSearchRun();
+  setTimeout(()=>i.focus(), 60);
+}
+function c8vSearchClose(silent){
+  const s = document.getElementById('c8v-search'); if(!s || !s.classList.contains('open')) return;
+  s.classList.remove('open');
+  if(!silent){ const sc = document.getElementById('video-scroller'); if(sc && typeof updateActiveVideoCardManually === 'function'){ activeVideoCardId = null; updateActiveVideoCardManually(sc); } }
+}
+function c8vSearchRun(){
+  const q = c8vNorm(document.getElementById('c8v-search-in').value.trim());
+  const g = document.getElementById('c8v-search-grid');
+  const hidden = c8vHiddenSet();
+  const list = videos.filter(v => !hidden.has(String(v.id)) && (!q || c8vMatches(v, q)));
+  if(!list.length){ g.innerHTML = '<div class="c8v-empty">' + c8vT('Nič sa nenašlo') + ' 🔍</div>'; return; }
+  g.innerHTML = list.slice(0, 90).map(v=>{
+    const yt = v.url && getYouTubeId(v.url);
+    let bg = '';
+    if(yt) bg = 'style="background-image:url(https://img.youtube.com/vi/' + yt + '/hqdefault.jpg)"';
+    else if(v.url && /res\.cloudinary\.com/.test(v.url) && /\/video\/upload\//.test(v.url)) bg = 'style="background-image:url(' + v.url.replace('/video/upload/', '/video/upload/so_1,w_300,c_limit/').replace(/\.(mp4|mov|webm|m4v)(\?.*)?$/i, '.jpg') + ')"';
+    return '<button class="c8v-tile" ' + bg + ' onclick="c8vPick(' + v.id + ')"><div class="lb">' + escapeHtml(v.name || '') + (v.caption ? '<br><span style="font-weight:500;opacity:.85">' + escapeHtml(v.caption.slice(0, 40)) + '</span>' : '') + '</div></button>';
+  }).join('');
+}
+function c8vPick(id){
+  const q = document.getElementById('c8v-search-in').value.trim();
+  c8vFilter = q;
+  c8vSearchClose(true);
+  renderVideos();
+  const f = document.getElementById('c8v-filter');
+  if(c8vFilter){ document.getElementById('c8v-filter-t').textContent = '🔍 „' + c8vFilter + '“'; f.style.display = 'flex'; }
+  else f.style.display = 'none';
+  const sc = document.getElementById('video-scroller');
+  const card = sc && sc.querySelector('.video-card[data-vid="' + id + '"]');
+  if(sc){ sc.scrollTop = card ? card.offsetTop : 0; activeVideoCardId = null; setTimeout(()=>updateActiveVideoCardManually(sc), 60); }
+}
+function c8vClearFilter(noRender){
+  const had = !!c8vFilter;
+  c8vFilter = '';
+  const f = document.getElementById('c8v-filter'); if(f) f.style.display = 'none';
+  if(had && noRender !== true) renderVideos();
+  else if(had) renderVideos();
+}
+// filter (hľadanie + „Nezaujíma ma“) pri vykresľovaní zoznamu
+if(typeof renderVideos === 'function'){
+  const _c8vPrevRender = renderVideos;
+  renderVideos = function(){
+    const all = videos, hidden = c8vHiddenSet(), q = c8vNorm(c8vFilter);
+    if(hidden.size || q){
+      videos = all.filter(v => !hidden.has(String(v.id)) && (!q || c8vMatches(v, q)));
+      try{ return _c8vPrevRender.apply(this, arguments); } finally { videos = all; }
+    }
+    return _c8vPrevRender.apply(this, arguments);
+  };
+}
+// c8VideosRefresh porovnáva poradie videí s DOM – pri filtri nech porovnáva filtrovaný zoznam
+if(typeof c8VideosRefresh === 'function'){
+  const _c8vPrevRefresh = c8VideosRefresh;
+  c8VideosRefresh = function(){
+    const all = videos, hidden = c8vHiddenSet(), q = c8vNorm(c8vFilter);
+    if(hidden.size || q){
+      videos = all.filter(v => !hidden.has(String(v.id)) && (!q || c8vMatches(v, q)));
+      let rendered = false;
+      const _r = renderVideos;
+      try{
+        renderVideos = function(){ rendered = true; };
+        _c8vPrevRefresh.apply(this, arguments);
+      } finally { renderVideos = _r; videos = all; }
+      if(rendered) renderVideos();
+      return;
+    }
+    return _c8vPrevRefresh.apply(this, arguments);
+  };
+}
+// počet komentárov v hlavičke panela komentárov
+if(typeof renderVideoComments === 'function'){
+  const _c8vPrevRVC = renderVideoComments;
+  renderVideoComments = function(){
+    const r = _c8vPrevRVC.apply(this, arguments);
+    try{
+      const v = videos.find(x => x.id === currentCommentsVideoId);
+      const head = document.querySelector('#video-comments-modal .video-comments-header span');
+      if(head && v){ const n = (v.comments || []).filter(c => typeof c8modCommentHidden !== 'function' || !c8modCommentHidden(c)).length; head.textContent = n + ' ' + (n === 1 ? c8vT('komentár') : (n >= 2 && n <= 4 ? c8vT('komentáre') : c8vT('komentárov'))); }
+    }catch(e){}
+    return r;
+  };
+}
+</script>
 <script id="c8-legal-fix">
 /* Právne okná (Súkromie, Cookies, Podmienky, Zásady) sú v HTML vnútri
    prihlasovacej obrazovky - po prihlásení je skrytá, a tak by sa okná
