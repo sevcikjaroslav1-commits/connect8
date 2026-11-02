@@ -11505,10 +11505,12 @@ function getAuthorPhoto(p){
   return null;
 }
 
-function avatarHtml(name, photo){
+// uid (nepovinné) - podľa neho sa okolo guličky kreslí farebný krúžok PRÍBEHU (viď C8 PRÍBEHY)
+function avatarHtml(name, photo, uid){
+  const u = uid ? ` data-c8st-uid="${escapeHtml(uid)}"` : '';
   return photo
-    ? `<div class="avatar" style="background-image:url(${escapeHtml(photo)});background-size:cover;background-position:center;"></div>`
-    : `<div class="avatar">${escapeHtml(initials(name))}</div>`;
+    ? `<div class="avatar"${u} style="background-image:url(${escapeHtml(photo)});background-size:cover;background-position:center;"></div>`
+    : `<div class="avatar"${u}>${escapeHtml(initials(name))}</div>`;
 }
 
 /* ---------------- FEED ---------------- */
@@ -11555,7 +11557,7 @@ function buildPostCard(p, opts={}){
   return (p && p.modHidden === true && typeof c8modBannerHtml==='function' ? c8modBannerHtml(p) : '') + `
       <div class="post-head">
         <div class="post-head-author" ${p.authorId ? `onclick="openPostAuthorProfile(${p.id})"` : ''}>
-          ${avatarHtml(p.name, getAuthorPhoto(p))}
+          ${avatarHtml(p.name, getAuthorPhoto(p), p.authorId)}
           <div><div class="name">${escapeHtml(p.name)}${p.authorId==='c8bot'?' <span class="c8bot-badge">BOT</span>':''}</div><div class="time" data-ts="${p.createdAt || p.id}" title="${formatFullDate(p.createdAt || p.id)}">${formatPostTime(p.createdAt || p.id)}${p.editedAt ? ` · <span class="post-edited-tag">${t('upravené')}</span>` : ''}</div></div>
         </div>
         ${followBtnHtml(p.authorId)}
@@ -22964,5 +22966,497 @@ function c8botInfo(){
 </script>
 <!-- =================== /C8 MODERÁCIA + AI DOZORCA =================== -->
 
+
+<!-- =================== C8 PRÍBEHY (STORIES) =================== -->
+<!--
+  Príbehy ako na Instagrame:
+  - video max 60 s, platí 24 h, potom zmizne (nezobrazí sa a autorovi sa záznam zmaže)
+  - kto má aktívny príbeh, má okolo guličky (avatara) FAREBNÝ krúžok,
+    po pozretí sa krúžok zmení na SIVÝ
+  - krúžok sa ukazuje: Plocha (príspevky + gulička pri písaní príspevku + vpravo hore),
+    Môj profil / profil iného používateľa, Priatelia, Používatelia
+  - klik na cudziu guličku s krúžkom = prehrá jeho príbeh
+  - PRIDANIE: podržať VLASTNÚ guličku 3 sekundy -> ponuka "Pridať príbeh"
+    (vpravo hore, pri písaní príspevku na Ploche, na svojom profile, v Používateľoch,
+    pri svojich príspevkoch). Obyčajný klik funguje ďalej ako doteraz.
+  Dáta: Firestore kolekcia "stories"
+    { uid, name, photo, videoUrl, trimStart, duration, createdAt, expiresAt, viewers:[uid...] }
+  Video sa nahráva cez existujúcu funkciu uploadVideoFileToCloudinary().
+  Pozn.: na Spark pláne nie sú Cloud Functions, preto expirované príbehy maže
+  sám autor pri ďalšom otvorení appky (ostatní ich aj tak už nevidia).
+-->
+<style id="c8st-style">
+/* farebný krúžok okolo guličky */
+.avatar.c8st-ring{position:relative;overflow:visible;cursor:pointer;--c8st-gap:5px;--c8st-w:3px;}
+.avatar.c8st-ring::after{
+  content:"";position:absolute;inset:calc(var(--c8st-gap) * -1);border-radius:50%;pointer-events:none;
+  background:conic-gradient(from 210deg,#F59E0B,#EF4444,#EC4899,#8B5CF6,#F59E0B);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - var(--c8st-w)),#000 calc(100% - var(--c8st-w) + .5px));
+          mask:radial-gradient(farthest-side,transparent calc(100% - var(--c8st-w)),#000 calc(100% - var(--c8st-w) + .5px));
+}
+.avatar.c8st-ring.c8st-seen::after{background:#C3C6CF;}
+.profile-avatar.c8st-ring{--c8st-gap:6px;--c8st-w:4px;}
+.user-card .avatar.c8st-ring{--c8st-gap:6px;--c8st-w:3.5px;}
+#app .c8h #user-avatar.c8st-ring{box-shadow:none;}
+/* vlastná gulička - dá sa podržať (bez systémového menu pri dlhom dotyku) */
+.avatar[data-c8st-me]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
+
+/* priebeh podržania 3 s */
+#c8st-hold{position:fixed;z-index:10060;border-radius:50%;pointer-events:none;
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));
+          mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3.5px));}
+
+/* spodná ponuka "Pridať príbeh" */
+#c8st-sheet{position:fixed;inset:0;z-index:10055;background:rgba(10,10,16,.45);display:flex;align-items:flex-end;justify-content:center;}
+#c8st-sheet .c8st-box{width:100%;max-width:460px;background:var(--surface,#fff);color:var(--text,#111827);border-radius:20px 20px 0 0;padding:10px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.25);animation:c8stUp .2s ease-out;}
+@keyframes c8stUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+#c8st-sheet .c8st-grab{width:40px;height:4px;border-radius:2px;background:#D1D5DB;margin:0 auto 12px;}
+#c8st-sheet h3{margin:0 0 4px;font-size:18px;}
+#c8st-sheet p{margin:0 0 12px;font-size:13px;color:var(--text-dim,#4B5563);}
+#c8st-sheet .c8st-opt{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 14px;margin-bottom:8px;border-radius:14px;border:1px solid var(--line,#E5E7EB);background:var(--bg,#F3F4F6);color:inherit;font-weight:600;font-size:15px;font-family:inherit;cursor:pointer;text-align:left;}
+#c8st-sheet .c8st-opt.c8st-danger{color:#DC2626;}
+#c8st-sheet .c8st-cancel{width:100%;height:46px;border:none;background:transparent;color:var(--text-dim,#4B5563);font-weight:600;font-size:15px;font-family:inherit;cursor:pointer;}
+
+/* úprava pred zdieľaním */
+#c8st-edit{position:fixed;inset:0;z-index:10056;background:rgba(10,10,16,.6);display:flex;align-items:center;justify-content:center;padding:12px;}
+#c8st-edit .c8st-ebox{width:100%;max-width:420px;max-height:100%;overflow:auto;background:var(--surface,#fff);color:var(--text,#111827);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:12px;}
+#c8st-edit video{width:100%;max-height:52vh;border-radius:14px;background:#000;object-fit:contain;}
+#c8st-edit .c8st-row{display:flex;justify-content:space-between;font-size:13px;font-weight:600;}
+#c8st-edit input[type=range]{width:100%;accent-color:#4F46E5;}
+#c8st-edit .c8st-note{display:flex;gap:8px;align-items:center;padding:10px 12px;border-radius:12px;background:#FEF3C7;color:#78350F;font-size:13px;line-height:1.35;}
+#c8st-edit .c8st-btns{display:flex;gap:8px;}
+#c8st-edit .c8st-btns button{flex:1;height:48px;border-radius:14px;border:none;font-weight:700;font-size:15px;font-family:inherit;cursor:pointer;}
+#c8st-edit .c8st-share{background:#4F46E5;color:#fff;}
+#c8st-edit .c8st-share:disabled{opacity:.6;cursor:default;}
+#c8st-edit .c8st-back{background:var(--bg,#F3F4F6);color:inherit;}
+#c8st-edit .c8st-prog{font-size:13px;color:var(--text-dim,#4B5563);text-align:center;min-height:18px;}
+
+/* prehrávač príbehu */
+#c8st-viewer{position:fixed;inset:0;z-index:10050;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-family:inherit;}
+#c8st-viewer .c8st-stage{position:relative;width:100%;height:100%;max-width:480px;background:#000;overflow:hidden;}
+#c8st-viewer video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;}
+#c8st-viewer .c8st-shade-t{position:absolute;left:0;right:0;top:0;height:140px;background:linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,0));pointer-events:none;}
+#c8st-viewer .c8st-shade-b{position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.6));pointer-events:none;}
+#c8st-viewer .c8st-bars{position:absolute;left:10px;right:10px;top:calc(10px + env(safe-area-inset-top));display:flex;gap:4px;z-index:3;}
+#c8st-viewer .c8st-bar{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.35);overflow:hidden;}
+#c8st-viewer .c8st-bar i{display:block;height:100%;width:0;background:#fff;}
+#c8st-viewer .c8st-head{position:absolute;left:12px;right:6px;top:calc(22px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px;z-index:3;}
+#c8st-viewer .c8st-hav{width:38px;height:38px;border-radius:50%;background:#4F46E5 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:2px solid #fff;flex-shrink:0;cursor:pointer;}
+#c8st-viewer .c8st-who{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25;cursor:pointer;}
+#c8st-viewer .c8st-who b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#c8st-viewer .c8st-who span{font-size:12px;color:#E5E7EB;}
+#c8st-viewer .c8st-ib{width:44px;height:44px;border:none;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+#c8st-viewer .c8st-tap{position:absolute;top:80px;bottom:70px;z-index:2;}
+#c8st-viewer .c8st-tap.l{left:0;width:33%;}
+#c8st-viewer .c8st-tap.r{right:0;width:67%;}
+#c8st-viewer .c8st-foot{position:absolute;left:14px;right:14px;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;z-index:3;font-size:13px;}
+#c8st-viewer .c8st-foot .c8st-views{flex:1;display:flex;align-items:center;gap:6px;cursor:pointer;}
+#c8st-viewer .c8st-foot button{height:40px;padding:0 14px;border-radius:20px;border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.35);color:#fff;font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;}
+#c8st-viewer .c8st-vlist{position:absolute;left:0;right:0;bottom:0;max-height:55%;overflow:auto;background:var(--surface,#fff);color:var(--text,#111827);border-radius:18px 18px 0 0;padding:14px 16px calc(14px + env(safe-area-inset-bottom));z-index:5;}
+#c8st-viewer .c8st-vlist h4{margin:0 0 10px;font-size:15px;}
+#c8st-viewer .c8st-vlist div{padding:8px 0;border-bottom:1px solid var(--line,#E5E7EB);font-size:14px;}
+#c8st-viewer .c8st-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#D1D5DB;font-size:14px;pointer-events:none;}
+</style>
+<script id="c8st-script">
+(function(){
+  const DAY = 24*60*60*1000;
+  const MAX_SEC = 60;
+  const HOLD_MS = 3000;
+  const T = (s)=> (typeof t === 'function' ? t(s) : s);
+
+  let stories = [];           // aktívne príbehy (všetci)
+  let byUid = {};             // uid -> [príbehy zoradené od najstaršieho]
+  let unsub = null, subUid = null, cleanedFor = null;
+  let localSeen = {};
+  try{ localSeen = JSON.parse(localStorage.getItem('c8stSeen') || '{}') || {}; }catch(_){ localSeen = {}; }
+
+  const me = ()=> (typeof currentUser !== 'undefined' && currentUser && currentUser.uid) ? currentUser : null;
+  const hasDb = ()=> (typeof db !== 'undefined' && db);
+  const isBlocked = (uid)=>{ try{ return typeof blockedSet !== 'undefined' && blockedSet && blockedSet.has(uid); }catch(_){ return false; } };
+
+  /* ---------- načítanie príbehov z Firestore ---------- */
+  function rebuild(){
+    const now = Date.now();
+    byUid = {};
+    stories.forEach(s=>{
+      if(!s || !s.uid || !s.videoUrl || !(s.expiresAt > now)) return;
+      if(isBlocked(s.uid)) return;
+      (byUid[s.uid] = byUid[s.uid] || []).push(s);
+    });
+    Object.keys(byUid).forEach(u=> byUid[u].sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)));
+    scheduleDecorate();
+  }
+  function subscribe(){
+    const u = me();
+    if(!u || !hasDb()){ if(unsub){ unsub(); unsub = null; subUid = null; stories = []; rebuild(); } return; }
+    if(unsub && subUid === u.uid) return;
+    if(unsub){ unsub(); unsub = null; }
+    subUid = u.uid;
+    try{
+      unsub = db.collection('stories').where('expiresAt', '>', Date.now()).onSnapshot(snap=>{
+        stories = snap.docs.map(d=> Object.assign({ id: d.id }, d.data()));
+        rebuild();
+      }, err=> console.warn('Príbehy: načítanie zlyhalo', err));
+    }catch(e){ console.warn('Príbehy: subscribe zlyhal', e); }
+    cleanupOwn();
+  }
+  // autor si zmaže svoje vypršané príbehy (na Spark pláne nemáme server, ktorý by to robil)
+  function cleanupOwn(){
+    const u = me(); if(!u || !hasDb() || cleanedFor === u.uid) return;
+    cleanedFor = u.uid;
+    db.collection('stories').where('uid', '==', u.uid).get().then(snap=>{
+      const now = Date.now();
+      snap.docs.forEach(d=>{ const x = d.data(); if(!(x.expiresAt > now)) d.ref.delete().catch(()=>{}); });
+    }).catch(()=>{});
+  }
+  setInterval(subscribe, 1500);          // počká na prihlásenie / odhlásenie
+  setInterval(rebuild, 60*1000);          // každú minútu skryje vypršané
+  setInterval(()=>{ if(unsub){ unsub(); unsub = null; subscribe(); } }, 60*60*1000); // raz za hodinu čerstvý dotaz
+
+  function isSeen(uid){
+    const list = byUid[uid] || []; const u = me();
+    return list.length > 0 && list.every(s=> localSeen[s.id] || (u && Array.isArray(s.viewers) && s.viewers.indexOf(u.uid) >= 0));
+  }
+
+  /* ---------- krúžky okolo guličiek ---------- */
+  function uidOf(el){
+    if(el.dataset.c8stUid) return el.dataset.c8stUid;
+    const u = me(); if(!u) return null;
+    const id = el.id;
+    if(id === 'user-avatar' || id === 'composer-avatar' || id === 'sidebar-avatar') return u.uid;
+    if(id === 'profile-avatar'){
+      const v = (typeof viewedProfileUser !== 'undefined' && viewedProfileUser) ? viewedProfileUser : u;
+      return v.uid || null;
+    }
+    const card = el.closest('.user-card');
+    if(card){ const dot = card.querySelector('.status-dot[id^="status-dot-"]'); if(dot) return dot.id.slice(11); }
+    return null;
+  }
+  function decorate(){
+    const u = me();
+    const sel = '#user-avatar, #composer-avatar, #sidebar-avatar, #profile-avatar, .user-card .avatar, .avatar[data-c8st-uid]';
+    document.querySelectorAll(sel).forEach(el=>{
+      const uid = u ? uidOf(el) : null;
+      const has = !!(uid && byUid[uid] && byUid[uid].length);
+      el.classList.toggle('c8st-ring', has);
+      el.classList.toggle('c8st-seen', has && isSeen(uid));
+      if(uid && u && uid === u.uid) el.setAttribute('data-c8st-me', '1'); else el.removeAttribute('data-c8st-me');
+    });
+  }
+  let decT = null;
+  function scheduleDecorate(){ if(decT) return; decT = setTimeout(()=>{ decT = null; decorate(); }, 120); }
+  new MutationObserver(scheduleDecorate).observe(document.body, { childList: true, subtree: true });
+  // profil používa stále tú istú guličku - po prekreslení profilu krúžok aktualizujeme
+  if(typeof renderProfile === 'function'){
+    const _rp = renderProfile;
+    renderProfile = function(){ const r = _rp.apply(this, arguments); scheduleDecorate(); return r; };
+  }
+
+  /* ---------- klik na guličku s krúžkom = prehrať príbeh ---------- */
+  let suppressClickUntil = 0;
+  document.addEventListener('click', (e)=>{
+    if(Date.now() < suppressClickUntil){ e.preventDefault(); e.stopPropagation(); return; }
+    const av = e.target.closest && e.target.closest('.avatar.c8st-ring');
+    if(!av) return;
+    if(av.id === 'user-avatar') return;            // vpravo hore ostáva pôvodné menu
+    const uid = uidOf(av); if(!uid || !byUid[uid]) return;
+    e.preventDefault(); e.stopPropagation();
+    openViewer(uid);
+  }, true);
+
+  /* ---------- podržanie vlastnej guličky 3 s = Pridať príbeh ---------- */
+  let hold = null;
+  function cancelHold(){
+    if(!hold) return;
+    cancelAnimationFrame(hold.raf);
+    if(hold.ring) hold.ring.remove();
+    hold = null;
+  }
+  document.addEventListener('pointerdown', (e)=>{
+    if(e.button > 0) return;
+    const av = e.target.closest && e.target.closest('.avatar[data-c8st-me]');
+    if(!av) return;
+    cancelHold();
+    const r = av.getBoundingClientRect();
+    const ring = document.createElement('div');
+    ring.id = 'c8st-hold';
+    const pad = 7;
+    ring.style.cssText = `left:${r.left-pad}px;top:${r.top-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px;`;
+    document.body.appendChild(ring);
+    hold = { x: e.clientX, y: e.clientY, start: performance.now(), ring, raf: 0 };
+    const step = ()=>{
+      if(!hold) return;
+      const p = Math.min(1, (performance.now() - hold.start) / HOLD_MS);
+      ring.style.background = `conic-gradient(#EC4899 0deg, #8B5CF6 ${p*360}deg, rgba(0,0,0,0) ${p*360}deg)`;
+      if(p >= 1){
+        cancelHold();
+        suppressClickUntil = Date.now() + 900;
+        try{ if(navigator.vibrate) navigator.vibrate(40); }catch(_){}
+        openSheet();
+        return;
+      }
+      hold.raf = requestAnimationFrame(step);
+    };
+    hold.raf = requestAnimationFrame(step);
+  }, true);
+  document.addEventListener('pointermove', (e)=>{ if(hold && Math.hypot(e.clientX-hold.x, e.clientY-hold.y) > 12) cancelHold(); }, true);
+  ['pointerup','pointercancel','scroll','blur'].forEach(ev=> window.addEventListener(ev, cancelHold, true));
+  document.addEventListener('contextmenu', (e)=>{ if(e.target.closest && e.target.closest('.avatar[data-c8st-me]')) e.preventDefault(); }, true);
+
+  /* ---------- spodná ponuka ---------- */
+  function closeSheet(){ const s = document.getElementById('c8st-sheet'); if(s) s.remove(); }
+  function openSheet(){
+    closeSheet();
+    const u = me(); if(!u) return;
+    const mine = byUid[u.uid] || [];
+    const s = document.createElement('div');
+    s.id = 'c8st-sheet';
+    s.innerHTML = `<div class="c8st-box" role="dialog" aria-label="${escapeHtml(T('Príbeh'))}">
+      <div class="c8st-grab"></div>
+      <h3>${escapeHtml(T('Pridať príbeh'))}</h3>
+      <p>${escapeHtml(T('Video max 60 sekúnd. Po 24 hodinách automaticky zmizne.'))}</p>
+      <button class="c8st-opt" data-a="cam">🎥 ${escapeHtml(T('Natočiť video'))}</button>
+      <button class="c8st-opt" data-a="gal">🖼️ ${escapeHtml(T('Vybrať video z galérie'))}</button>
+      ${mine.length ? `<button class="c8st-opt" data-a="view">▶️ ${escapeHtml(T('Pozrieť môj príbeh'))}</button>` : ''}
+      <button class="c8st-cancel" data-a="x">${escapeHtml(T('Zrušiť'))}</button>
+    </div>`;
+    s.addEventListener('click', (e)=>{
+      if(e.target === s){ closeSheet(); return; }
+      const b = e.target.closest('[data-a]'); if(!b) return;
+      const a = b.dataset.a;
+      if(a === 'x'){ closeSheet(); return; }
+      if(a === 'view'){ closeSheet(); openViewer(u.uid); return; }
+      pickVideo(a === 'cam');   // input musí vzniknúť priamo pri kliknutí (iOS)
+      closeSheet();
+    });
+    document.body.appendChild(s);
+  }
+  function pickVideo(camera){
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'video/*';
+    if(camera) inp.setAttribute('capture', 'user');
+    inp.style.display = 'none';
+    inp.onchange = ()=>{ const f = inp.files && inp.files[0]; inp.remove(); if(f) openEditor(f); };
+    document.body.appendChild(inp);
+    inp.click();
+  }
+
+  /* ---------- úprava a zdieľanie ---------- */
+  const fmt = (sec)=>{ sec = Math.max(0, Math.round(sec)); return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0'); };
+  function openEditor(file){
+    if(typeof MAX_VIDEO_SIZE !== 'undefined' && typeof checkFileSizeOk === 'function' && !checkFileSizeOk(file, MAX_VIDEO_SIZE, 'Video')) return;
+    if(typeof CLOUDINARY === 'undefined' || !CLOUDINARY.cloudName || !CLOUDINARY.uploadPreset){ alert(T('Nahrávanie videí zatiaľ nie je nastavené.')); return; }
+    const url = URL.createObjectURL(file);
+    const w = document.createElement('div');
+    w.id = 'c8st-edit';
+    w.innerHTML = `<div class="c8st-ebox">
+      <b style="font-size:17px">${escapeHtml(T('Nový príbeh'))}</b>
+      <video playsinline muted autoplay loop></video>
+      <div class="c8st-trim" style="display:none">
+        <div class="c8st-row"><span>${escapeHtml(T('Vyber úsek (max 60 s)'))}</span><span class="c8st-rng" style="color:#4F46E5"></span></div>
+        <input type="range" min="0" value="0" step="1" aria-label="${escapeHtml(T('Začiatok úseku'))}">
+      </div>
+      <div class="c8st-row"><span>${escapeHtml(T('Dĺžka príbehu'))}</span><span class="c8st-len">…</span></div>
+      <div class="c8st-note">⏱️ <span>${escapeHtml(T('Príbeh uvidia ostatní 24 hodín, potom automaticky zmizne.'))}</span></div>
+      <div class="c8st-prog"></div>
+      <div class="c8st-btns"><button class="c8st-back">${escapeHtml(T('Zrušiť'))}</button><button class="c8st-share" disabled>${escapeHtml(T('Zdieľať príbeh'))}</button></div>
+    </div>`;
+    document.body.appendChild(w);
+    const v = w.querySelector('video'), trim = w.querySelector('.c8st-trim'), rng = w.querySelector('input[type=range]');
+    const rngTxt = w.querySelector('.c8st-rng'), lenTxt = w.querySelector('.c8st-len'), prog = w.querySelector('.c8st-prog');
+    const share = w.querySelector('.c8st-share'), back = w.querySelector('.c8st-back');
+    let total = 0, start = 0, busy = false;
+    const close = ()=>{ if(busy) return; try{ v.pause(); }catch(_){} URL.revokeObjectURL(url); w.remove(); };
+    const upd = ()=>{
+      const len = Math.min(MAX_SEC, total || MAX_SEC);
+      rngTxt.textContent = fmt(start) + ' – ' + fmt(start + len);
+      lenTxt.textContent = fmt(len) + (total > MAX_SEC ? ' (' + T('orezané z') + ' ' + fmt(total) + ')' : '');
+    };
+    v.onloadedmetadata = ()=>{
+      total = isFinite(v.duration) ? v.duration : 0;
+      if(total > MAX_SEC){
+        trim.style.display = '';
+        rng.max = String(Math.floor(total - MAX_SEC));
+      }
+      upd(); share.disabled = false;
+    };
+    // náhľad hrá len vybraný úsek
+    v.ontimeupdate = ()=>{ if(total > MAX_SEC && (v.currentTime < start - .3 || v.currentTime > start + MAX_SEC)) v.currentTime = start; };
+    v.onerror = ()=>{ lenTxt.textContent = '?'; share.disabled = false; };
+    rng.oninput = ()=>{ start = Number(rng.value) || 0; upd(); try{ v.currentTime = start; }catch(_){} };
+    v.src = url;
+    back.onclick = close;
+    w.addEventListener('click', (e)=>{ if(e.target === w) close(); });
+    share.onclick = async ()=>{
+      const u = me(); if(!u || !hasDb() || busy) return;
+      busy = true; share.disabled = true; back.disabled = true;
+      prog.textContent = T('Nahrávam video...') + ' 0 %';
+      try{
+        const videoUrl = await uploadVideoFileToCloudinary(file, (pct, msg)=>{ prog.textContent = msg || (pct + ' %'); });
+        const now = Date.now();
+        const len = Math.min(MAX_SEC, total || MAX_SEC);
+        await db.collection('stories').add({
+          uid: u.uid,
+          name: u.name || '',
+          photo: u.photoURL || null,
+          videoUrl,
+          trimStart: Math.round(start),
+          duration: Math.round(len),
+          createdAt: now,
+          expiresAt: now + DAY,
+          viewers: []
+        });
+        busy = false; close();
+        if(typeof showToast === 'function') showToast(T('Príbeh je zdieľaný ✓'));
+      }catch(err){
+        console.error('Príbeh: zdieľanie zlyhalo', err);
+        prog.textContent = T('Nepodarilo sa zdieľať príbeh.') + ' ' + (err && err.message ? err.message : '');
+        busy = false; share.disabled = false; back.disabled = false;
+      }
+    };
+  }
+
+  /* ---------- prehrávač ---------- */
+  let V = null; // stav prehrávača
+  const playUrl = (u)=> (typeof optimizeCloudinaryVideoUrl === 'function' ? optimizeCloudinaryVideoUrl(u) : u);
+  function ago(ts){ return (typeof formatPostTime === 'function') ? formatPostTime(ts) : ''; }
+  function leftTxt(s){ const h = Math.max(0, Math.ceil((s.expiresAt - Date.now()) / 3600000)); return T('zmizne o') + ' ' + h + ' h'; }
+  function profOf(uid, s){
+    const u = me();
+    if(u && uid === u.uid) return { name: u.name || s.name || '', photo: u.photoURL || s.photo || null };
+    const c = (typeof profilesCache !== 'undefined' && profilesCache[uid]) || {};
+    return { name: c.name || s.name || T('Používateľ'), photo: c.photo || s.photo || null };
+  }
+  function closeViewer(){
+    if(!V) return;
+    cancelAnimationFrame(V.raf);
+    try{ V.video.pause(); V.video.removeAttribute('src'); V.video.load(); }catch(_){}
+    V.el.remove();
+    document.removeEventListener('keydown', V.onKey, true);
+    V = null;
+    scheduleDecorate();
+  }
+  function markSeen(s){
+    const u = me(); if(!u || s.uid === u.uid) return;
+    if(!localSeen[s.id]){
+      localSeen[s.id] = s.expiresAt || (Date.now() + DAY);
+      const now = Date.now(); Object.keys(localSeen).forEach(k=>{ if(localSeen[k] < now) delete localSeen[k]; });
+      try{ localStorage.setItem('c8stSeen', JSON.stringify(localSeen)); }catch(_){}
+    }
+    if(Array.isArray(s.viewers) && s.viewers.indexOf(u.uid) >= 0) return;
+    db.collection('stories').doc(s.id).update({ viewers: firebase.firestore.FieldValue.arrayUnion(u.uid) }).catch(()=>{});
+  }
+  function openViewer(uid){
+    const list = (byUid[uid] || []).slice();
+    if(!list.length) return;
+    closeViewer();
+    const u = me();
+    const own = !!(u && uid === u.uid);
+    let idx = own ? 0 : list.findIndex(s=> !(localSeen[s.id] || (u && Array.isArray(s.viewers) && s.viewers.indexOf(u.uid) >= 0)));
+    if(idx < 0) idx = 0;
+    const p = profOf(uid, list[0]);
+    const el = document.createElement('div');
+    el.id = 'c8st-viewer';
+    el.innerHTML = `<div class="c8st-stage">
+      <video playsinline preload="auto"></video>
+      <div class="c8st-msg"></div>
+      <div class="c8st-shade-t"></div><div class="c8st-shade-b"></div>
+      <div class="c8st-bars">${list.map(()=>'<div class="c8st-bar"><i></i></div>').join('')}</div>
+      <div class="c8st-head">
+        <div class="c8st-hav"></div>
+        <div class="c8st-who"><b></b><span class="c8st-time"></span></div>
+        <button class="c8st-ib c8st-mute" aria-label="${escapeHtml(T('Zvuk'))}">🔊</button>
+        <button class="c8st-ib c8st-x" aria-label="${escapeHtml(T('Zavrieť'))}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
+      </div>
+      <div class="c8st-tap l"></div><div class="c8st-tap r"></div>
+      ${own ? `<div class="c8st-foot"><span class="c8st-views">👁 <span class="c8st-vc">0</span> ${escapeHtml(T('zhliadnutí'))}</span><button class="c8st-del">🗑️ ${escapeHtml(T('Zmazať'))}</button></div>` : ''}
+    </div>`;
+    document.body.appendChild(el);
+    const video = el.querySelector('video');
+    const hav = el.querySelector('.c8st-hav');
+    if(p.photo && /^https?:\/\//.test(p.photo)) hav.style.backgroundImage = `url("${String(p.photo).replace(/["\\]/g,'')}")`;
+    else hav.textContent = (typeof initials === 'function') ? initials(p.name || '?') : '?';
+    el.querySelector('.c8st-who b').textContent = p.name;
+    V = { el, video, list, idx, uid, own, raf: 0, paused: false, onKey: null };
+
+    const goProfile = ()=>{ const pu = { uid, name: p.name, photoURL: p.photo }; closeViewer(); if(own){ if(typeof openProfile === 'function') openProfile(); } else if(typeof openUserProfile === 'function') openUserProfile(pu); };
+    hav.onclick = goProfile; el.querySelector('.c8st-who').onclick = goProfile;
+    el.querySelector('.c8st-x').onclick = closeViewer;
+    const muteBtn = el.querySelector('.c8st-mute');
+    muteBtn.onclick = ()=>{ video.muted = !video.muted; muteBtn.textContent = video.muted ? '🔇' : '🔊'; };
+    el.querySelector('.c8st-tap.l').onclick = ()=> show(V.idx - 1);
+    el.querySelector('.c8st-tap.r').onclick = ()=> show(V.idx + 1);
+    // podržanie prsta = pauza
+    el.querySelectorAll('.c8st-tap').forEach(z=>{
+      let ht = null;
+      z.addEventListener('pointerdown', ()=>{ ht = setTimeout(()=>{ V && (V.paused = true); video.pause(); }, 220); });
+      const up = (e)=>{ clearTimeout(ht); if(V && V.paused){ V.paused = false; video.play().catch(()=>{}); e.stopPropagation(); suppressClickUntil = Date.now() + 300; } };
+      z.addEventListener('pointerup', up); z.addEventListener('pointercancel', up);
+    });
+    if(own){
+      el.querySelector('.c8st-views').onclick = ()=>{
+        const s = V.list[V.idx]; const vs = Array.isArray(s.viewers) ? s.viewers : [];
+        const box = document.createElement('div'); box.className = 'c8st-vlist';
+        const h = document.createElement('h4'); h.textContent = T('Videli') + ' (' + vs.length + ')'; box.appendChild(h);
+        vs.forEach(id=>{ const d = document.createElement('div'); d.textContent = (typeof profilesCache !== 'undefined' && profilesCache[id] && profilesCache[id].name) || T('Používateľ'); box.appendChild(d); });
+        if(!vs.length){ const d = document.createElement('div'); d.textContent = T('Zatiaľ nikto.'); box.appendChild(d); }
+        video.pause(); V.paused = true;
+        box.onclick = ()=>{ box.remove(); if(V){ V.paused = false; video.play().catch(()=>{}); } };
+        el.querySelector('.c8st-stage').appendChild(box);
+      };
+      el.querySelector('.c8st-del').onclick = ()=>{
+        const s = V.list[V.idx];
+        if(!confirm(T('Zmazať tento príbeh?'))) return;
+        db.collection('stories').doc(s.id).delete().catch(err=> alert(T('Nepodarilo sa zmazať príbeh.')));
+        V.list.splice(V.idx, 1);
+        el.querySelectorAll('.c8st-bar')[V.idx] && el.querySelectorAll('.c8st-bar')[V.idx].remove();
+        if(!V.list.length){ closeViewer(); return; }
+        show(Math.min(V.idx, V.list.length - 1));
+      };
+    }
+    V.onKey = (e)=>{ if(e.key === 'Escape') closeViewer(); else if(e.key === 'ArrowRight') show(V.idx + 1); else if(e.key === 'ArrowLeft') show(V.idx - 1); };
+    document.addEventListener('keydown', V.onKey, true);
+
+    function show(i){
+      if(!V) return;
+      if(i < 0) i = 0;
+      if(i >= V.list.length){ closeViewer(); return; }
+      V.idx = i;
+      const s = V.list[i];
+      const bars = el.querySelectorAll('.c8st-bar i');
+      bars.forEach((b, k)=> b.style.width = (k < i ? '100%' : '0'));
+      el.querySelector('.c8st-time').textContent = ago(s.createdAt) + ' · ' + leftTxt(s);
+      if(own){ const vc = el.querySelector('.c8st-vc'); if(vc) vc.textContent = Array.isArray(s.viewers) ? s.viewers.length : 0; }
+      const msg = el.querySelector('.c8st-msg'); msg.textContent = T('Načítavam...');
+      const startAt = Number(s.trimStart) || 0;
+      const len = Math.min(MAX_SEC, Number(s.duration) || MAX_SEC);
+      let triedRaw = false;
+      video.onerror = ()=>{ if(!triedRaw){ triedRaw = true; video.src = s.videoUrl; video.play().catch(()=>{}); } else msg.textContent = T('Video sa nepodarilo prehrať.'); };
+      video.onloadedmetadata = ()=>{ try{ if(startAt) video.currentTime = startAt; }catch(_){} };
+      video.onplaying = ()=>{ msg.textContent = ''; };
+      video.onended = ()=> show(V.idx + 1);
+      video.src = playUrl(s.videoUrl);
+      video.muted = muteBtn.textContent === '🔇';
+      video.play().catch(()=>{ video.muted = true; muteBtn.textContent = '🔇'; video.play().catch(()=>{}); });
+      markSeen(s);
+      cancelAnimationFrame(V.raf);
+      const tick = ()=>{
+        if(!V || V.idx !== i) return;
+        const pos = Math.max(0, video.currentTime - startAt);
+        if(bars[i]) bars[i].style.width = Math.min(100, pos / len * 100) + '%';
+        if(pos >= len && !V.paused){ show(i + 1); return; }   // max 60 s
+        V.raf = requestAnimationFrame(tick);
+      };
+      V.raf = requestAnimationFrame(tick);
+    }
+    show(idx);
+  }
+
+  // pre prípadné použitie z iných častí appky
+  window.c8stOpen = openViewer;
+  window.c8stAdd = openSheet;
+})();
+</script>
+<!-- =================== /C8 PRÍBEHY =================== -->
 </body>
 </html>
