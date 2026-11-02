@@ -7275,6 +7275,10 @@ function notifText(n){
     case 'like_video': return `${name} sa páči tvoje video`;
     case 'comment_post': return `${name} okomentoval(a) tvoj príspevok`;
     case 'comment_video': return `${name} okomentoval(a) tvoje video`;
+    case 'like_comment': return `${name} sa páči tvoj komentár${n.commentText ? `: „${escapeHtml(n.commentText)}"` : ''}`;
+    case 'reply_comment': return n.direct
+      ? `${name} odpovedal(a) na tvoj komentár${n.commentText ? `: „${escapeHtml(n.commentText)}"` : ''}`
+      : `${name} tiež komentoval(a) ${n.videoId ? 'video' : 'príspevok'}, ktorý si komentoval(a)${n.commentText ? `: „${escapeHtml(n.commentText)}"` : ''}`;
     case 'follow': return `${name} ťa začal(a) sledovať`;
     case 'content_removed': {
       const what = REMOVAL_KIND_LABEL[n.kind] || 'obsah';
@@ -8330,6 +8334,11 @@ function openNotificationTarget(id){
     }
   } else if(n.type === 'follow'){
     openUserProfile({uid: n.fromUid, name: n.fromName, photoURL: n.fromPhoto});
+  } else if((n.type === 'like_comment' || n.type === 'reply_comment') && n.videoId !== undefined && n.videoId !== null){
+    switchMode('video');
+  } else if((n.type === 'like_comment' || n.type === 'reply_comment') && n.postId !== undefined && n.postId !== null){
+    switchMode('feed');
+    showPostFromNotification(n.postId);
   } else if(n.type === 'like_video' || n.type === 'comment_video'){
     switchMode('video');
   } else if((n.type === 'like_post' || n.type === 'comment_post') && n.postId !== undefined && n.postId !== null){
@@ -12350,7 +12359,9 @@ function toggleCommentLike(postId, commentIndex){
   c.likedBy = likedBy;
   c.likes = likedBy.length;
   delete c.liked;
-  updateDoc(postDoc(p.id), {comments: p.comments}, 'príspevok - lajk komentára');
+  updateDoc(postDoc(p.id), {comments: p.comments}, 'príspevok - lajk komentára')
+    .then(()=>{ if(idx < 0 && typeof c8notify === 'function') c8notify({ type: 'like_comment', kind: 'post', id: p.id, idx: commentIndex }); })
+    .catch(()=>{});
   renderPosts();
 }
 
@@ -12370,7 +12381,8 @@ function addComment(id){
   renderPosts();
   updateDoc(postDoc(p.id), {comments: p.comments}, 'príspevok - komentár')
     .then(()=>bumpRateLimit('lastCommentAt'))
-    .then(()=>{ if(p.authorId) createNotification(p.authorId, 'comment_post', {postId: p.id}); })
+    .then(()=>{ if(p.authorId) createNotification(p.authorId, 'comment_post', {postId: p.id});
+      if(typeof c8notify === 'function') c8notify({ type: 'reply_comment', kind: 'post', id: p.id, idx: p.comments.indexOf(newComment) }); })
     .catch(err=>{
       const idx = p.comments.indexOf(newComment);
       if(idx>=0) p.comments.splice(idx,1);
@@ -13733,7 +13745,9 @@ function toggleVideoCommentLike(videoId, commentIndex){
   c.likedBy = likedBy;
   c.likes = likedBy.length;
   delete c.liked;
-  updateDoc(videoDoc(v.id), {comments: v.comments}, 'video - lajk komentára');
+  updateDoc(videoDoc(v.id), {comments: v.comments}, 'video - lajk komentára')
+    .then(()=>{ if(idx < 0 && typeof c8notify === 'function') c8notify({ type: 'like_comment', kind: 'video', id: v.id, idx: commentIndex }); })
+    .catch(()=>{});
   renderVideoComments();
 }
 
@@ -13746,7 +13760,7 @@ function submitVideoComment(){
   const v = videos.find(v=>v.id===currentCommentsVideoId);
   if(!v) return;
   if(!v.comments) v.comments = [];
-  const newComment = {name: currentUser.name, text};
+  const newComment = {name: currentUser.name, authorId: currentUser.uid, text};
   v.comments.push(newComment);
   input.value = '';
   renderVideoComments();
@@ -13754,7 +13768,8 @@ function submitVideoComment(){
   if(countEl) countEl.textContent = v.comments.length;
   saveVideo(v)
     .then(()=>bumpRateLimit('lastCommentAt'))
-    .then(()=>{ if(v.authorId) createNotification(v.authorId, 'comment_video', {videoId: v.id}); })
+    .then(()=>{ if(v.authorId) createNotification(v.authorId, 'comment_video', {videoId: v.id});
+      if(typeof c8notify === 'function') c8notify({ type: 'reply_comment', kind: 'video', id: v.id, idx: v.comments.indexOf(newComment) }); })
     .catch(err=>{
       const idx = v.comments.indexOf(newComment);
       if(idx>=0) v.comments.splice(idx,1);
@@ -21689,6 +21704,19 @@ async function c8modSend(payload){
   }catch(e){}
 }
 function c8modMsg(chatId, msgId){ if(chatId && msgId) c8modSend({ kind: 'message', chatId, msgId }); }
+// Upozornenia na lajk komentára / odpoveď v komentároch – zapisuje ich Worker
+// (overí, že lajk/komentár naozaj existuje), takže netreba meniť pravidlá databázy.
+async function c8notify(payload){
+  try{
+    if(!payload || payload.idx < 0 || typeof auth === 'undefined' || !auth || !auth.currentUser) return;
+    const idToken = await auth.currentUser.getIdToken();
+    fetch(C8MOD_URL + '/notify', {
+      method: 'POST', keepalive: true,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify(payload)
+    }).catch(()=>{});
+  }catch(e){}
+}
 
 /* ---------- zakázané slová aj v appke (okamžite, ešte pred odoslaním) ---------- */
 function c8modNorm(s){
