@@ -13223,10 +13223,11 @@ function renderVideos(){
         // Na iPhone (iOS) musí byť video stlmené už na úrovni HTML atribútu pre prvý
         // pokus o automatické spustenie; na Androide/desktope necháme pôvodné správanie.
         const mutedAttr = (isIOSDevice() || isMuted) ? 'muted' : '';
-        media = `<video id="media-${v.id}" data-src="${optimizeCloudinaryVideoUrl(v.url)}" ${mutedAttr} playsinline webkit-playsinline preload="none"></video>`;
+        media = `<video id="media-${v.id}" data-src="${optimizeCloudinaryVideoUrl(v.url)}" ${mutedAttr} playsinline webkit-playsinline preload="none" ${c8vIsMobile() ? '' : 'controls'}></video>`;
       }
     }
 
+    if(c8vIsMobile()){
     const c8vLiked = getLikedBy(v).includes(currentUser.uid);
     const c8vOwn = (v.authorId ? v.authorId===currentUser.uid : v.name===currentUser.name);
     div.innerHTML = `
@@ -13253,6 +13254,24 @@ function renderVideos(){
       <div class="c8v-prog"><i id="c8v-prog-${v.id}"></i></div>
     `;
     if(c8vOwn) div.dataset.own = '1';
+    } else {
+    div.innerHTML = `
+      ${media}
+      <div class="video-caption-wrap">
+        <div class="video-user">${avatarHtml(v.name, getAuthorPhoto(v))}${escapeHtml(v.name)}<span class="video-time" data-ts="${v.createdAt || v.id}" title="${formatFullDate(v.createdAt || v.id)}">${formatPostTime(v.createdAt || v.id)}</span><span class="video-views" id="views-${v.id}">👁 ${formatViewCount(v.views||0)}</span></div>
+        <div class="video-caption">${escapeHtml(v.caption)}</div>
+      </div>
+      <div class="video-side">
+        <div><button class="video-add-side-btn" onclick="openVideoModal()" title="Pridať video"><span class="plus">+</span>Pridať<br>video</button></div>
+        <div><button class="autoscroll-toggle-btn" onclick="toggleAutoScroll()" title="Auto scroll"><span class="as-dot"></span></button><div class="count">Auto<br>scroll</div></div>
+        <div><button id="mute-btn-${v.id}" onclick="toggleMute(${v.id})">${isMuted?'🔇':'🔊'}</button><div class="count">Zvuk</div></div>
+        <div><button class="${getLikedBy(v).includes(currentUser.uid)?'liked':''}" onclick="toggleVideoLike(${v.id})">❤️</button><div class="count">${v.likes}</div></div>
+        <div><button onclick="openVideoComments(${v.id})">💬</button><div class="count" id="chat-count-${v.id}">${(v.comments && v.comments.length) || 0}</div></div>
+        <div><button onclick="openVideoShareModal(${v.id})">↗</button><div class="count">Zdieľať</div></div>
+        ${((v.authorId ? v.authorId===currentUser.uid : v.name===currentUser.name) || currentUserIsAdmin) ? `<div><button onclick="deleteVideo(${v.id})">🗑️</button><div class="count">Zmazať</div></div>` : ''}
+      </div>
+    `;
+    }
     scroller.appendChild(div);
   });
   bindVideoEndedListener(scroller);
@@ -13727,7 +13746,7 @@ function c8GetIosShared(){
     v.setAttribute('playsinline', '');
     v.setAttribute('webkit-playsinline', '');
     v.playsInline = true;
-    v.controls = false;
+    v.controls = !c8vIsMobile();
     v.preload = 'auto';
     c8IosShared = v;
   }
@@ -18092,6 +18111,14 @@ if(typeof applyLanguage === 'function'){
 
 <script id="c8v-script">
 /* ===== Videá na celú obrazovku (štýl Reels) ===== */
+/* nový vzhľad len na telefónoch (dotyková obrazovka); na PC ostáva pôvodný */
+function c8vIsMobile(){
+  try{
+    const coarse = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+    const fine = window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches;
+    return coarse && !fine && Math.min(screen.width, screen.height) <= 900;
+  }catch(e){ return false; }
+}
 var C8V_ICON = {
   heart:'<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.5 2.9 4.5 6.8 4.5c2.2 0 3.6 1.2 5.2 3 1.6-1.8 3-3 5.2-3 3.9 0 5.9 4 4.4 7.3C19.5 16.4 12 21 12 21z" fill="currentColor"/></svg>',
   cmt:'<svg viewBox="0 0 24 24"><path d="M20.5 11.5a8.5 8.5 0 0 1-12.4 7.6L3.5 20.5l1.4-4.4A8.5 8.5 0 1 1 20.5 11.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
@@ -18106,7 +18133,7 @@ function c8vT(x){ try{ return typeof t === 'function' ? t(x) : x; }catch(e){ ret
   const view = document.getElementById('view-video');
   if(!view) return;
   const sync = ()=>{
-    const on = view.classList.contains('active');
+    const on = view.classList.contains('active') && c8vIsMobile();
     document.body.classList.toggle('c8v-full', on);
     if(on){ c8vSyncMe(); c8vSyncMsg(); c8vSyncTexts(); }
     else { c8vMenuClose(); c8vSearchClose(true); }
@@ -18170,6 +18197,7 @@ function c8vOpenAuthor(id){
     touchMuted = (m && m.tagName === 'VIDEO') ? (m.muted && !m.paused) : null; touchAt = Date.now();
   }, { passive:true, capture:true });
   sc.addEventListener('click', e=>{
+    if(!c8vIsMobile()) return;
     const card = e.target.closest('.video-card'); if(!card) return;
     if(e.target.closest('button, a, .c8v-cap, .c8v-side, iframe, input, textarea')) return;
     if(card.dataset.kind === 'youtube') return;
