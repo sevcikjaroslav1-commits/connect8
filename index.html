@@ -2379,6 +2379,36 @@
 .c8gp-t b{display:block;font-size:17px;font-weight:800;line-height:1.15;}
 .c8gp-new{position:absolute;top:-8px;right:-8px;background:#ff3d71;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;}
 .c8gp-hide .c8gp-wrap{display:none !important;}
+/* iPhone: návod „Pridať na plochu“ namiesto Google Play */
+.c8ios-wrap{display:none;justify-content:center;margin:6px 0 18px;max-width:392px;width:100%;}
+.c8ios-show .c8ios-wrap{display:flex;}
+.c8ios-btn{position:relative;display:inline-flex;align-items:center;gap:12px;padding:10px 20px 10px 14px;border-radius:16px;border:0;cursor:pointer;
+  background:linear-gradient(135deg,#1E1B2E,#3a3360);color:#fff;box-shadow:0 8px 22px rgba(30,27,46,.3);font:inherit;text-align:left;}
+.c8ios-btn .c8gp-ic{font-size:20px;}
+#c8ios-sheet{position:fixed;inset:0;z-index:100000;display:none;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+#c8ios-sheet.open{display:block;}
+#c8ios-sheet .dim{position:absolute;inset:0;background:rgba(20,18,35,.5);}
+#c8ios-sheet .box{position:absolute;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:#fff;color:#1E1B2E;border-radius:24px 24px 0 0;
+  padding:12px 18px calc(22px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.2);animation:c8iosUp .3s ease-out;}
+#c8ios-sheet.arrow .box{padding-bottom:calc(58px + env(safe-area-inset-bottom));}
+@keyframes c8iosUp{from{transform:translateY(100%)}to{transform:none}}
+#c8ios-sheet .grab{width:40px;height:5px;border-radius:9px;background:#D6D8E2;margin:0 auto 12px;}
+#c8ios-sheet h3{margin:0 0 4px;font-size:18px;}
+#c8ios-sheet p{margin:0 0 12px;color:#6b7080;font-size:13.5px;line-height:1.45;}
+#c8ios-sheet .step{display:flex;align-items:center;gap:12px;background:#F6F7FB;border-radius:14px;padding:11px 12px;margin-bottom:8px;font-size:14px;line-height:1.35;}
+#c8ios-sheet .num{width:26px;height:26px;border-radius:50%;background:#5B4CFF;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none;font-size:13px;}
+#c8ios-sheet .pill{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid #E4E6EE;border-radius:8px;padding:1px 7px;font-weight:700;font-size:13px;white-space:nowrap;}
+#c8ios-sheet .pill svg{width:15px;height:15px;color:#2F7BF6;}
+#c8ios-sheet .ok{display:block;width:100%;border:0;border-radius:14px;padding:13px;background:#5B4CFF;color:#fff;font-weight:800;font-size:15px;margin-top:8px;cursor:pointer;}
+#c8ios-sheet .copy{display:block;width:100%;border:1px solid #D6D8E2;border-radius:14px;padding:12px;background:#fff;color:#1E1B2E;font-weight:800;font-size:15px;margin-top:8px;cursor:pointer;}
+#c8ios-arrow{position:fixed;left:50%;bottom:calc(8px + env(safe-area-inset-bottom));transform:translateX(-50%);font-size:32px;z-index:100001;display:none;animation:c8iosBob 1.1s infinite;pointer-events:none;}
+@keyframes c8iosBob{50%{transform:translate(-50%,-8px)}}
+#c8ios-bar{position:fixed;left:10px;right:10px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:99970;display:none;align-items:center;gap:10px;
+  background:#1E1B2E;color:#fff;border-radius:16px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-family:Inter,system-ui,-apple-system,sans-serif;font-size:13.5px;max-width:480px;margin:0 auto;}
+#c8ios-bar.show{display:flex;}
+#c8ios-bar b{flex:1;font-weight:700;}
+#c8ios-bar .go{border:0;border-radius:10px;padding:7px 11px;background:#5B4CFF;color:#fff;font-weight:800;font-size:13px;cursor:pointer;}
+#c8ios-bar .x{border:0;background:none;color:#aaa;font-size:18px;cursor:pointer;padding:2px 4px;}
 </style>
 </head>
 <body>
@@ -2408,6 +2438,13 @@
           <span class="c8gp-t"><small id="c8gp-small">STIAHNI APLIKÁCIU Z</small><b>Google Play</b></span>
           <span class="c8gp-new" id="c8gp-new">NOVÉ</span>
         </a>
+      </div>
+      <div class="c8ios-wrap" id="c8ios-wrap">
+        <button type="button" class="c8ios-btn" onclick="c8iosOpen()">
+          <span class="c8gp-ic">📲</span>
+          <span class="c8gp-t"><small id="c8ios-small">PRE IPHONE</small><b id="c8ios-big">Pridaj si Connect8 na plochu</b></span>
+          <span class="c8gp-new" id="c8ios-new">NOVÉ</span>
+        </button>
       </div>
       <div class="lang-switch">
         <span class="lang-flag active" id="lang-flag-sk" onclick="setAppLanguage('sk')" title="Slovenčina (aktuálny jazyk)"><svg width="20" height="14" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg" style="border-radius:2px">
@@ -17819,6 +17856,8 @@ if(typeof applyLanguage === 'function'){
     var standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
     var ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if(ios) document.documentElement.classList.add('c8gp-hide');   // na iPhone Google Play nefunguje
+    var iosHome = ios && (standalone || window.navigator.standalone === true);
+    if(ios && !iosHome) document.documentElement.classList.add('c8ios-show'); // na iPhone návod „Pridať na plochu“
   }catch(e){}
   var TXT = {
     sk:['STIAHNI APLIKÁCIU Z','NOVÉ'], en:['GET IT ON','NEW'], cz:['STÁHNI APLIKACI Z','NOVÉ'],
@@ -17834,6 +17873,87 @@ if(typeof applyLanguage === 'function'){
   if(typeof applyLanguage === 'function'){
     var orig = applyLanguage;
     applyLanguage = function(){ var r = orig.apply(this, arguments); try{ upd(); }catch(e){} return r; };
+  }
+})();
+</script>
+
+<div id="c8ios-sheet" role="dialog" aria-modal="true"><div class="dim" onclick="c8iosClose()"></div><div class="box" id="c8ios-box"></div></div>
+<div id="c8ios-arrow">👇</div>
+<div id="c8ios-bar"><span style="font-size:20px">📲</span><b id="c8ios-bar-t">Pridaj si Connect8 na plochu</b><button class="go" onclick="c8iosOpen()" id="c8ios-bar-go">Ako?</button><button class="x" onclick="c8iosBarClose()" aria-label="Zavrieť">✕</button></div>
+<script id="c8ios-script">
+/* iPhone/iPad: návod, ako si pridať Connect8 na plochu (namiesto Google Play) */
+(function(){
+  var SH = '<svg viewBox="0 0 24 24"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  var T = {
+    sk:{small:'PRE IPHONE',big:'Pridaj si Connect8 na plochu',isnew:'NOVÉ',title:'📲 Connect8 na plochu',sub:'Bude to vyzerať a fungovať ako appka – bez App Store, zadarmo.',s1:'Ťukni na',share:'Zdieľať',s1b:'(štvorček so šípkou – na iPhone dole, na iPade hore)',s2:'Posuň nižšie a vyber',add:'Pridať na plochu',s3:'Vpravo hore ťukni',addb:'Pridať',ok:'Rozumiem 👍',safT:'🧭 Otvor Connect8 v Safari',safS:'Na plochu sa dá pridať len zo Safari. Skopíruj odkaz, otvor Safari a vlož ho do adresy.',copy:'📋 Kopírovať odkaz',copied:'✓ Skopírované – vlož ho v Safari',bar:'Pridaj si Connect8 na plochu',how:'Ako?'},
+    cz:{small:'PRO IPHONE',big:'Přidej si Connect8 na plochu',isnew:'NOVÉ',title:'📲 Connect8 na plochu',sub:'Bude to vypadat a fungovat jako aplikace – bez App Store, zdarma.',s1:'Ťukni na',share:'Sdílet',s1b:'(čtvereček se šipkou – na iPhonu dole, na iPadu nahoře)',s2:'Posuň níž a vyber',add:'Přidat na plochu',s3:'Vpravo nahoře ťukni',addb:'Přidat',ok:'Rozumím 👍',safT:'🧭 Otevři Connect8 v Safari',safS:'Na plochu se dá přidat jen ze Safari. Zkopíruj odkaz, otevři Safari a vlož ho do adresy.',copy:'📋 Kopírovat odkaz',copied:'✓ Zkopírováno – vlož ho v Safari',bar:'Přidej si Connect8 na plochu',how:'Jak?'},
+    en:{small:'FOR IPHONE',big:'Add Connect8 to your Home Screen',isnew:'NEW',title:'📲 Connect8 on your Home Screen',sub:'It will look and work like an app – no App Store, free.',s1:'Tap',share:'Share',s1b:'(the square with an arrow – at the bottom on iPhone, at the top on iPad)',s2:'Scroll down and choose',add:'Add to Home Screen',s3:'Tap at the top right',addb:'Add',ok:'Got it 👍',safT:'🧭 Open Connect8 in Safari',safS:'You can only add it to the Home Screen from Safari. Copy the link, open Safari and paste it into the address bar.',copy:'📋 Copy link',copied:'✓ Copied – paste it in Safari',bar:'Add Connect8 to your Home Screen',how:'How?'},
+    de:{small:'FÜR IPHONE',big:'Connect8 zum Home-Bildschirm',isnew:'NEU',title:'📲 Connect8 auf dem Home-Bildschirm',sub:'Sieht aus und funktioniert wie eine App – ohne App Store, kostenlos.',s1:'Tippe auf',share:'Teilen',s1b:'(Quadrat mit Pfeil – beim iPhone unten, beim iPad oben)',s2:'Scrolle nach unten und wähle',add:'Zum Home-Bildschirm',s3:'Tippe oben rechts auf',addb:'Hinzufügen',ok:'Verstanden 👍',safT:'🧭 Öffne Connect8 in Safari',safS:'Zum Home-Bildschirm geht es nur in Safari. Kopiere den Link, öffne Safari und füge ihn in die Adresszeile ein.',copy:'📋 Link kopieren',copied:'✓ Kopiert – in Safari einfügen',bar:'Connect8 zum Home-Bildschirm',how:'Wie?'},
+    pl:{small:'NA IPHONE',big:'Dodaj Connect8 do ekranu głównego',isnew:'NOWOŚĆ',title:'📲 Connect8 na ekranie głównym',sub:'Będzie wyglądać i działać jak aplikacja – bez App Store, za darmo.',s1:'Stuknij',share:'Udostępnij',s1b:'(kwadrat ze strzałką – na iPhonie na dole, na iPadzie u góry)',s2:'Przewiń w dół i wybierz',add:'Do ekranu początkowego',s3:'Stuknij w prawym górnym rogu',addb:'Dodaj',ok:'Rozumiem 👍',safT:'🧭 Otwórz Connect8 w Safari',safS:'Dodać do ekranu można tylko z Safari. Skopiuj link, otwórz Safari i wklej go w pasek adresu.',copy:'📋 Kopiuj link',copied:'✓ Skopiowano – wklej w Safari',bar:'Dodaj Connect8 do ekranu głównego',how:'Jak?'},
+    hu:{small:'IPHONE-RA',big:'Tedd a Connect8-at a kezdőképernyőre',isnew:'ÚJ',title:'📲 Connect8 a kezdőképernyőn',sub:'Úgy néz ki és működik, mint egy app – App Store nélkül, ingyen.',s1:'Koppints a',share:'Megosztás',s1b:'(négyzet nyíllal – iPhone-on lent, iPaden fent)',s2:'Görgess lejjebb és válaszd:',add:'Főképernyőhöz adás',s3:'Jobbra fent koppints:',addb:'Hozzáadás',ok:'Értem 👍',safT:'🧭 Nyisd meg a Connect8-at Safariban',safS:'Csak Safariból lehet a kezdőképernyőhöz adni. Másold ki a linket, nyisd meg a Safarit, és illeszd be a címsorba.',copy:'📋 Link másolása',copied:'✓ Másolva – illeszd be Safariban',bar:'Tedd a Connect8-at a kezdőképernyőre',how:'Hogyan?'},
+    it:{small:'PER IPHONE',big:'Aggiungi Connect8 alla Home',isnew:'NUOVO',title:'📲 Connect8 nella schermata Home',sub:'Avrà l’aspetto e il funzionamento di un’app – senza App Store, gratis.',s1:'Tocca',share:'Condividi',s1b:'(il quadrato con la freccia – in basso su iPhone, in alto su iPad)',s2:'Scorri in basso e scegli',add:'Aggiungi alla schermata Home',s3:'Tocca in alto a destra',addb:'Aggiungi',ok:'Capito 👍',safT:'🧭 Apri Connect8 in Safari',safS:'Puoi aggiungerla alla Home solo da Safari. Copia il link, apri Safari e incollalo nella barra degli indirizzi.',copy:'📋 Copia link',copied:'✓ Copiato – incollalo in Safari',bar:'Aggiungi Connect8 alla Home',how:'Come?'}
+  };
+  T.at = T.de;
+  var ua = navigator.userAgent || '';
+  var ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var ipad = /iPad/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  var notSafari = /CriOS|FxiOS|EdgiOS|OPiOS|GSA\/|FBAN|FBAV|FB_IAB|Instagram|Messenger|LinkedInApp|Twitter|Snapchat|TikTok|Line\//.test(ua);
+  function tx(){ var l = 'sk'; try{ l = currentLang || 'sk'; }catch(e){} return T[l] || T.en; }
+  function upd(){
+    var t = tx();
+    var a = document.getElementById('c8ios-small'), b = document.getElementById('c8ios-big'), n = document.getElementById('c8ios-new');
+    if(a) a.textContent = t.small; if(b) b.textContent = t.big; if(n) n.textContent = t.isnew;
+    var bt = document.getElementById('c8ios-bar-t'), bg = document.getElementById('c8ios-bar-go');
+    if(bt) bt.textContent = t.bar; if(bg) bg.textContent = t.how;
+  }
+  window.c8iosOpen = function(){
+    var t = tx(), box = document.getElementById('c8ios-box');
+    if(notSafari){
+      box.innerHTML = '<div class="grab"></div><h3>' + t.safT + '</h3><p>' + t.safS + '</p>'
+        + '<button class="copy" id="c8ios-copy">' + t.copy + '</button><button class="ok" onclick="c8iosClose()">' + t.ok + '</button>';
+      document.getElementById('c8ios-copy').onclick = function(){
+        var url = 'https://connect8.eu/', btn = this;
+        var done = function(){ btn.textContent = t.copied; };
+        try{ navigator.clipboard.writeText(url).then(done, function(){ prompt('', url); }); }catch(e){ prompt('', url); }
+      };
+    } else {
+      box.innerHTML = '<div class="grab"></div><h3>' + t.title + '</h3><p>' + t.sub + '</p>'
+        + '<div class="step"><span class="num">1</span><span>' + t.s1 + ' <span class="pill">' + SH + ' ' + t.share + '</span> <small style="color:#7a8194">' + t.s1b + '</small></span></div>'
+        + '<div class="step"><span class="num">2</span><span>' + t.s2 + ' <span class="pill">⊞ ' + t.add + '</span></span></div>'
+        + '<div class="step"><span class="num">3</span><span>' + t.s3 + ' <span class="pill" style="color:#2F7BF6">' + t.addb + '</span></span></div>'
+        + '<button class="ok" onclick="c8iosClose()">' + t.ok + '</button>';
+      if(!ipad){ document.getElementById('c8ios-arrow').style.display = 'block'; document.getElementById('c8ios-sheet').classList.add('arrow'); }
+    }
+    document.getElementById('c8ios-sheet').classList.add('open');
+    document.getElementById('c8ios-bar').classList.remove('show');
+  };
+  window.c8iosClose = function(){
+    document.getElementById('c8ios-sheet').classList.remove('open');
+    document.getElementById('c8ios-arrow').style.display = 'none';
+  };
+  window.c8iosBarClose = function(){
+    document.getElementById('c8ios-bar').classList.remove('show');
+    try{ localStorage.setItem('c8ios_bar_closed', String(Date.now())); }catch(e){}
+  };
+  upd();
+  if(typeof applyLanguage === 'function'){
+    var orig = applyLanguage;
+    applyLanguage = function(){ var r = orig.apply(this, arguments); try{ upd(); }catch(e){} return r; };
+  }
+  // v appke (po prihlásení): raz za 7 dní jemná lišta „Pridaj si Connect8 na plochu“
+  if(ios && !standalone){
+    var tries = 0;
+    var tm = setInterval(function(){
+      tries++;
+      var app = document.getElementById('app');
+      if(app && app.style.display === 'block'){
+        clearInterval(tm);
+        var last = 0; try{ last = +localStorage.getItem('c8ios_bar_closed') || 0; }catch(e){}
+        if(Date.now() - last > 7 * 86400000) setTimeout(function(){ document.getElementById('c8ios-bar').classList.add('show'); }, 6000);
+      }
+      if(tries > 120) clearInterval(tm);
+    }, 1000);
   }
 })();
 </script>
