@@ -23338,7 +23338,7 @@ function c8botInfo(){
     const rgs = [...ps.querySelectorAll('.rg')]; if(!rgs.length) return;
     const cnt = el.querySelector('b[data-all], .add');
     const cw = cnt && cnt.tagName === 'B' ? cnt.getBoundingClientRect().width + 8 : (cnt ? 70 : 0);
-    const W = el.clientWidth, GAP = 4, MIN = 30, MAX = 40;
+    const W = el.clientWidth, GAP = 4, MIN = 40, MAX = 40;
     let k = rgs.length, size = MAX;
     for(; k > 1; k--){ size = (W - cw - GAP * (k - 1)) / k; if(size >= MIN) break; }
     size = Math.max(MIN, Math.min(MAX, k === 1 ? W - cw : size));
