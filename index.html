@@ -3324,6 +3324,7 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
         <div class="header-clock-date" id="header-clock-date">--.--.----</div>
         <div class="header-clock-name" id="header-clock-name">—</div>
       </div>
+        <button type="button" class="c8sp" id="c8sp" aria-label="Príbehy"></button>
       </div>
       <button class="c8h-tr" onclick="openTranslatorModal()" title="Tlmočník"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h9M9.5 5v3M13 8c-1 3-3 5.5-6 7"/><path d="M6 15c2.5 0 4.5-1 6-3"/><path d="m15 21 4-9 4 9M16.5 18h5"/></svg></button>
       <div class="c8h-icons">
@@ -3611,6 +3612,7 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
       <main>
         <!-- FEED -->
         <section class="view active" id="view-feed">
+          <div class="c8sr" id="c8sr" aria-label="Príbehy"><button class="c8sr-arr l" type="button" aria-label="Späť">‹</button><div class="c8sr-row"></div><button class="c8sr-arr r" type="button" aria-label="Ďalej">›</button></div>
           <div class="composer">
             <div class="composer-top">
               <div class="composer-left-col">
@@ -23115,6 +23117,56 @@ function c8botInfo(){
 #c8st-viewer .c8st-vr .c8st-vi{font-size:16px;}
 #c8st-viewer .c8st-vlist .c8st-vempty{padding:14px 0;color:var(--text-dim,#6B7280);font-size:14px;border:0;}
 #c8st-viewer .c8st-vgrab{width:40px;height:4px;border-radius:2px;background:#D1D5DB;margin:0 auto 10px;}
+/* riadok príbehov nad „Čo sa deje?“ (zatiaľ len PC) */
+.c8sr{position:relative;margin:0 0 12px;display:none;}
+.c8sr.has{display:block;}
+.c8sr-row{display:flex;gap:14px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;padding:4px 4px 2px;}
+.c8sr-row::-webkit-scrollbar{display:none;}
+.c8sr-it{flex:none;width:76px;display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;cursor:pointer;padding:0;font-family:inherit;color:var(--text,#111827);}
+.c8sr-av{position:relative;width:66px;height:66px;border-radius:50%;padding:3px;background:conic-gradient(from 210deg,#F59E0B,#EF4444,#EC4899,#8B5CF6,#F59E0B);}
+.c8sr-it.seen .c8sr-av{background:#C3C6CF;}
+.c8sr-it.me .c8sr-av{background:transparent;}
+.c8sr-it.me.on .c8sr-av{background:conic-gradient(from 210deg,#F59E0B,#EF4444,#EC4899,#8B5CF6,#F59E0B);}
+.c8sr-av i{display:flex;width:100%;height:100%;border-radius:50%;border:3px solid var(--surface,#fff);background:#5B4CFF center/cover no-repeat;color:#fff;font-style:normal;font-weight:800;font-size:18px;align-items:center;justify-content:center;}
+.c8sr-it.me:not(.on) .c8sr-av i{border-color:#E5E7EB;}
+.c8sr-plus{position:absolute;right:0;bottom:0;width:22px;height:22px;border-radius:50%;background:#5B4CFF;color:#fff;border:2.5px solid var(--surface,#fff);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;line-height:1;}
+.c8sr-n{max-width:76px;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c8sr-it.seen .c8sr-n,.c8sr-it.me .c8sr-n{color:var(--text-dim,#6B7280);}
+.c8sr-arr{position:absolute;top:24px;z-index:2;width:30px;height:30px;border-radius:50%;border:1px solid var(--line,#E5E7EB);background:var(--surface,#fff);color:var(--text,#111827);font-size:20px;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);display:none;}
+.c8sr-arr.l{left:-6px;} .c8sr-arr.r{right:-6px;}
+.c8sr.ovl .c8sr-arr.l,.c8sr.ovr .c8sr-arr.r{display:block;}
+@media (max-width:900px){ .c8sr{display:none !important;} }
+/* telefón: príbehy v hlavičke (kôpka) + čas / dátum / meniny pod sebou */
+.c8sp{display:none;}
+@media (max-width:900px){
+  #app .c8h .header-clock{flex-direction:column;align-items:flex-start;gap:0;line-height:1.15;flex:none;}
+  #app .c8h .header-clock-time{font-size:15px;}
+  #app .c8h .header-clock-date,#app .c8h .header-clock-name{font-size:10.5px;}
+  #app .c8h .header-clock-date::before,#app .c8h .header-clock-name::before{content:none;display:none;}
+  #app .c8h .c8h-date{gap:6px;}
+  #app .c8h .c8h-icons{gap:10px;margin-right:2px;}
+  .c8sp{display:flex;align-items:center;justify-content:space-between;gap:6px;flex:1 1 0;min-width:0;height:38px;margin-left:4px;padding:3px 10px 3px 4px;border-radius:22px;background:#F3F0FF;border:1.5px solid #D9D1FF;cursor:pointer;font-family:inherit;color:#5B4CFF;}
+  .c8sp .ps{display:flex;min-width:0;overflow:hidden;}
+  .c8sp .rg{flex:none;width:30px;height:30px;border-radius:50%;padding:2px;background:conic-gradient(from 210deg,#F59E0B,#EF4444,#EC4899,#8B5CF6,#F59E0B);margin-left:-8px;}
+  .c8sp .rg:first-child{margin-left:0;}
+  .c8sp .rg.s{background:#C3C6CF;}
+  .c8sp .rg i{display:flex;width:100%;height:100%;border-radius:50%;border:2px solid #fff;background:#5B4CFF center/cover no-repeat;color:#fff;font-style:normal;font-weight:800;font-size:10px;align-items:center;justify-content:center;}
+  .c8sp b{font-size:13px;font-weight:800;flex:none;}
+  .c8sp .add{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:left;}
+}
+/* spodný panel so všetkými príbehmi */
+#c8sp-sheet{position:fixed;inset:0;z-index:10054;background:rgba(10,10,20,.45);display:flex;align-items:flex-end;justify-content:center;}
+#c8sp-sheet .bx{width:100%;max-width:520px;max-height:78vh;overflow-y:auto;background:var(--surface,#fff);color:var(--text,#111827);border-radius:22px 22px 0 0;padding:10px 14px calc(20px + env(safe-area-inset-bottom));animation:c8stUp .2s ease-out;}
+#c8sp-sheet .gr{width:40px;height:4px;border-radius:3px;background:#D1D5DB;margin:0 auto 10px;}
+#c8sp-sheet .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+#c8sp-sheet .hd b{font-size:17px;}
+#c8sp-sheet .hd button{border:0;background:none;font-size:22px;color:#9CA3AF;cursor:pointer;padding:2px 6px;}
+#c8sp-sheet .sg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 6px;}
+#c8sp-sheet .sec{grid-column:1/-1;font-size:11px;font-weight:800;color:#9CA3AF;letter-spacing:.06em;text-transform:uppercase;margin-top:2px;}
+#c8sp-sheet .it{display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;cursor:pointer;font-family:inherit;color:inherit;padding:0;min-width:0;}
+#c8sp-sheet .it .c8sr-av{width:64px;height:64px;}
+#c8sp-sheet .it .nm{font-size:11.5px;font-weight:600;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#c8sp-sheet .it.seen .nm{color:#9CA3AF;}
 /* odpoveď na príbeh v chate */
 .c8st-cr{display:flex;flex-direction:column;max-width:78%;gap:4px;}
 .c8st-cr.mine{align-self:flex-end;align-items:flex-end;}
@@ -23210,8 +23262,134 @@ function c8botInfo(){
       if(uid && u && uid === u.uid) el.setAttribute('data-c8st-me', '1'); else el.removeAttribute('data-c8st-me');
     });
   }
+  /* ---------- riadok príbehov na Ploche ---------- */
+  let srSig = '';
+  function renderRow(){
+    const box = document.getElementById('c8sr'); if(!box) return;
+    const row = box.querySelector('.c8sr-row');
+    const u = me();
+    if(!u){ box.classList.remove('has'); row.innerHTML = ''; srSig = ''; return; }
+    const latest = (uid)=> Math.max(...byUid[uid].map(s=> s.createdAt || 0));
+    const others = Object.keys(byUid).filter(x=> x !== u.uid && byUid[x].length)
+      .sort((a, b)=> (isSeen(a) - isSeen(b)) || (latest(b) - latest(a)));
+    const mineOn = !!(byUid[u.uid] && byUid[u.uid].length);
+    const sig = JSON.stringify([u.uid, u.photoURL || '', mineOn, others.map(x=> x + (isSeen(x) ? 's' : '') + (profOf(x, byUid[x][0]).photo || ''))]);
+    box.classList.add('has');
+    if(sig === srSig) return;
+    srSig = sig;
+    const av = (p)=> (p.photo && /^https?:\/\//.test(p.photo)) ? ` style="background-image:url('${String(p.photo).replace(/['"\\()]/g, '')}')"` : '';
+    const ini = (p)=> (p.photo && /^https?:\/\//.test(p.photo)) ? '' : escapeHtml((typeof initials === 'function') ? initials(p.name || '?') : '?');
+    const mp = profOf(u.uid, (byUid[u.uid] || [{}])[0]);
+    let h = `<button type="button" class="c8sr-it me${mineOn ? ' on' : ''}" data-u="${escapeHtml(u.uid)}" title="${escapeHtml(T(mineOn ? 'Tvoj príbeh' : 'Pridať príbeh'))}"><span class="c8sr-av"><i${av(mp)}>${ini(mp)}</i><span class="c8sr-plus" data-add="1">+</span></span><span class="c8sr-n">${escapeHtml(T('Tvoj príbeh'))}</span></button>`;
+    others.forEach(x=>{
+      const p = profOf(x, byUid[x][0]);
+      h += `<button type="button" class="c8sr-it${isSeen(x) ? ' seen' : ''}" data-u="${escapeHtml(x)}" title="${escapeHtml(p.name)}"><span class="c8sr-av"><i${av(p)}>${ini(p)}</i></span><span class="c8sr-n">${escapeHtml(p.name)}</span></button>`;
+    });
+    row.innerHTML = h;
+    arrows();
+  }
+  // poradie: najprv nepozreté, potom podľa najnovšieho príbehu
+  function orderOthers(){
+    const u = me(); if(!u) return [];
+    const latest = (uid)=> Math.max(...byUid[uid].map(s=> s.createdAt || 0));
+    return Object.keys(byUid).filter(x=> x !== u.uid && byUid[x].length).sort((a, b)=> (isSeen(a) - isSeen(b)) || (latest(b) - latest(a)));
+  }
+  function avStyle(p){ return (p.photo && /^https?:\/\//.test(p.photo)) ? ` style="background-image:url('${String(p.photo).replace(/['"\\()]/g, '')}')"` : ''; }
+  function avIni(p){ return (p.photo && /^https?:\/\//.test(p.photo)) ? '' : escapeHtml((typeof initials === 'function') ? initials(p.name || '?') : '?'); }
+  let spSig = '';
+  function renderPill(){
+    const el = document.getElementById('c8sp'); if(!el) return;
+    const u = me(); if(!u){ el.innerHTML = ''; spSig = ''; return; }
+    const others = orderOthers();
+    const mineOn = !!(byUid[u.uid] && byUid[u.uid].length);
+    let show = others.slice(0, 5);
+    if(!show.length && mineOn) show = [u.uid];
+    const sig = JSON.stringify([show.map(x=> x + (x !== u.uid && isSeen(x) ? 's' : '') + (profOf(x, (byUid[x] || [{}])[0]).photo || '')), others.length, mineOn]);
+    if(sig === spSig) return; spSig = sig;
+    if(!show.length){ el.innerHTML = `<span class="ps"><span class="rg s"><i>+</i></span></span><span class="add">${escapeHtml(T('Pridať príbeh'))}</span>`; el.title = T('Pridať príbeh'); return; }
+    el.innerHTML = `<span class="ps">${show.map(x=>{ const p = profOf(x, byUid[x][0]); return `<span class="rg${x !== u.uid && isSeen(x) ? ' s' : ''}"><i${avStyle(p)}>${avIni(p)}</i></span>`; }).join('')}</span>`
+      + (others.length ? `<b>${others.length}</b>` : `<span class="add">${escapeHtml(T('Tvoj príbeh'))}</span>`);
+    el.title = T('Príbehy');
+  }
+  function closeAll(){ const x = document.getElementById('c8sp-sheet'); if(x) x.remove(); }
+  function openAll(){
+    closeAll();
+    const u = me(); if(!u) return;
+    const others = orderOthers(), fresh = others.filter(x=> !isSeen(x)), seen = others.filter(x=> isSeen(x));
+    const mineOn = !!(byUid[u.uid] && byUid[u.uid].length);
+    const mp = profOf(u.uid, (byUid[u.uid] || [{}])[0]);
+    const item = (x, cls)=>{ const p = profOf(x, byUid[x][0]); return `<button type="button" class="it ${cls}" data-u="${escapeHtml(x)}"><span class="c8sr-av"><i${avStyle(p)}>${avIni(p)}</i></span><span class="nm">${escapeHtml(p.name)}</span></button>`; };
+    const w = document.createElement('div'); w.id = 'c8sp-sheet';
+    w.innerHTML = `<div class="bx" role="dialog" aria-label="${escapeHtml(T('Príbehy'))}"><div class="gr"></div><div class="hd"><b>⭕ ${escapeHtml(T('Príbehy'))}</b><button type="button" data-x="1" aria-label="${escapeHtml(T('Zavrieť'))}">✕</button></div><div class="sg">
+      <button type="button" class="it c8sr-it me${mineOn ? ' on' : ''}" data-u="${escapeHtml(u.uid)}"><span class="c8sr-av"><i${avStyle(mp)}>${avIni(mp)}</i><span class="c8sr-plus" data-add="1">+</span></span><span class="nm">${escapeHtml(T('Tvoj príbeh'))}</span></button>
+      ${fresh.map(x=> item(x, '')).join('')}
+      ${seen.length ? `<div class="sec">${escapeHtml(T('Pozreté'))}</div>` + seen.map(x=> item(x, 'seen c8sr-it')).join('') : ''}
+      ${!others.length ? `<div class="sec" style="text-transform:none;font-weight:600;letter-spacing:0">${escapeHtml(T('Zatiaľ nikto nepridal príbeh.'))}</div>` : ''}
+    </div></div>`;
+    // sivý krúžok pre pozreté – rovnaký štýl ako riadok na PC
+    w.querySelectorAll('.it:not(.me):not(.seen) .c8sr-av').forEach(()=>{});
+    let y0 = null;
+    const bx = w.querySelector('.bx');
+    bx.addEventListener('touchstart', (e)=>{ if(bx.scrollTop <= 0) y0 = e.touches[0].clientY; }, { passive: true });
+    bx.addEventListener('touchmove', (e)=>{ if(y0 !== null && e.touches[0].clientY - y0 > 70){ y0 = null; closeAll(); } }, { passive: true });
+    bx.addEventListener('touchend', ()=>{ y0 = null; });
+    w.addEventListener('click', (e)=>{
+      if(e.target === w || e.target.closest('[data-x]')){ closeAll(); return; }
+      const it = e.target.closest('.it'); if(!it) return;
+      const uid = it.dataset.u;
+      closeAll();
+      if(uid === u.uid){
+        if(e.target.closest('[data-add]') || !mineOn) openSheet(); else openViewer(u.uid);
+        return;
+      }
+      const order = fresh.concat(seen), k = order.indexOf(uid);
+      openViewer(uid, order.slice(k + 1));
+    });
+    document.body.appendChild(w);
+  }
+  (function initPill(){
+    const el = document.getElementById('c8sp'); if(!el) return;
+    el.addEventListener('click', (e)=>{
+      e.preventDefault(); e.stopPropagation();
+      const u = me(); if(!u) return;
+      const any = orderOthers().length || (byUid[u.uid] && byUid[u.uid].length);
+      if(!any){ openSheet(); return; }
+      openAll();
+    });
+  })();
+  window.c8stAllOpen = openAll;
+
+  function arrows(){
+    const box = document.getElementById('c8sr'); if(!box) return;
+    const row = box.querySelector('.c8sr-row');
+    box.classList.toggle('ovl', row.scrollLeft > 4);
+    box.classList.toggle('ovr', row.scrollLeft + row.clientWidth < row.scrollWidth - 4);
+  }
+  (function initRow(){
+    const box = document.getElementById('c8sr'); if(!box) return;
+    const row = box.querySelector('.c8sr-row');
+    row.addEventListener('scroll', arrows, { passive: true });
+    window.addEventListener('resize', arrows);
+    box.querySelector('.c8sr-arr.l').onclick = ()=> row.scrollBy({ left: -row.clientWidth * .8 });
+    box.querySelector('.c8sr-arr.r').onclick = ()=> row.scrollBy({ left: row.clientWidth * .8 });
+    // koliesko myši posúva riadok do strany
+    row.addEventListener('wheel', (e)=>{ if(row.scrollWidth > row.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)){ row.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
+    row.addEventListener('click', (e)=>{
+      const it = e.target.closest('.c8sr-it'); if(!it) return;
+      const u = me(); if(!u) return;
+      const uid = it.dataset.u;
+      if(uid === u.uid){
+        if(e.target.closest('[data-add]') || !(byUid[u.uid] && byUid[u.uid].length)) openSheet();
+        else openViewer(u.uid);
+        return;
+      }
+      const order = orderOthers(), k = order.indexOf(uid);
+      openViewer(uid, order.slice(k + 1));
+    });
+  })();
+
   let decT = null;
-  function scheduleDecorate(){ if(decT) return; decT = setTimeout(()=>{ decT = null; decorate(); }, 120); }
+  function scheduleDecorate(){ if(decT) return; decT = setTimeout(()=>{ decT = null; decorate(); try{ renderRow(); }catch(e){ console.warn('Príbehy riadok', e); } try{ renderPill(); }catch(e){ console.warn('Príbehy kôpka', e); } }, 120); }
   new MutationObserver(scheduleDecorate).observe(document.body, { childList: true, subtree: true });
   // profil používa stále tú istú guličku - po prekreslení profilu krúžok aktualizujeme
   if(typeof renderProfile === 'function'){
@@ -23523,7 +23701,7 @@ function c8botInfo(){
     return true;
   }
 
-  function openViewer(uid){
+  function openViewer(uid, queue){
     const list = (byUid[uid] || []).slice();
     if(!list.length) return;
     closeViewer();
@@ -23561,7 +23739,7 @@ function c8botInfo(){
     if(p.photo && /^https?:\/\//.test(p.photo)) hav.style.backgroundImage = `url("${String(p.photo).replace(/["\\]/g,'')}")`;
     else hav.textContent = (typeof initials === 'function') ? initials(p.name || '?') : '?';
     el.querySelector('.c8st-who b').textContent = p.name;
-    V = { el, video, list, idx, uid, own, raf: 0, paused: false, onKey: null };
+    V = { el, video, list, idx, uid, own, raf: 0, paused: false, onKey: null, queue: Array.isArray(queue) ? queue.filter(x=> byUid[x] && byUid[x].length) : null };
 
     const goProfile = ()=>{ const pu = { uid, name: p.name, photoURL: p.photo }; closeViewer(); if(own){ if(typeof openProfile === 'function') openProfile(); } else if(typeof openUserProfile === 'function') openUserProfile(pu); };
     hav.onclick = goProfile; el.querySelector('.c8st-who').onclick = goProfile;
@@ -23701,7 +23879,7 @@ function c8botInfo(){
     function show(i){
       if(!V) return;
       if(i < 0) i = 0;
-      if(i >= V.list.length){ closeViewer(); return; }
+      if(i >= V.list.length){ const q = V.queue; closeViewer(); if(q && q.length) openViewer(q[0], q.slice(1)); return; }
       V.idx = i;
       const s = V.list[i];
       const bars = el.querySelectorAll('.c8st-bar i');
