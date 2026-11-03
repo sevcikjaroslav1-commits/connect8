@@ -23473,6 +23473,7 @@ function c8botInfo(){
       const now = Date.now(); Object.keys(localSeen).forEach(k=>{ if(localSeen[k] < now) delete localSeen[k]; });
       try{ localStorage.setItem('c8stSeen', JSON.stringify(localSeen)); }catch(_){}
     }
+    try{ if(typeof window.c8sTrack === 'function') window.c8sTrack('story', s.id, s.uid); }catch(_){}
     if(Array.isArray(s.viewers) && s.viewers.indexOf(u.uid) >= 0) return;
     db.collection('stories').doc(s.id).update({ viewers: firebase.firestore.FieldValue.arrayUnion(u.uid) }).catch(()=>{});
   }
@@ -23763,9 +23764,352 @@ function c8botInfo(){
 
   // pre prípadné použitie z iných častí appky
   window.c8stOpen = openViewer;
+  window.c8stAll = ()=> stories.slice();
   window.c8stAdd = openSheet;
 })();
 </script>
 <!-- =================== /C8 PRÍBEHY =================== -->
+<!-- =================== C8 ŠTATISTIKY 2 (Prehľad · Obsah · Publikum) =================== -->
+<style id="c8s2-style">
+#c8s2{position:fixed;inset:0;z-index:95;background:#F1F2F6;color:#1E1B2E;display:none;overflow-y:auto;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+#c8s2.open{display:block;}
+#c8s2 .w{max-width:620px;margin:0 auto;padding:calc(8px + env(safe-area-inset-top)) 12px 40px;}
+#c8s2 .hd{display:flex;align-items:center;gap:8px;padding:6px 2px;}
+#c8s2 .hd button{border:0;background:none;font-size:22px;cursor:pointer;color:#1E1B2E;padding:4px 8px;}
+#c8s2 .hd b{font-size:19px;flex:1;}
+#c8s2 .tb{display:flex;border-bottom:1px solid #E1E3EA;position:sticky;top:0;background:#F1F2F6;z-index:2;}
+#c8s2 .tb button{flex:1;border:0;background:none;padding:10px 0;font-size:14.5px;font-weight:700;color:#8a90a0;cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;}
+#c8s2 .tb button.on{color:#1E1B2E;border-bottom-color:#5B4CFF;}
+#c8s2 .pr{display:flex;justify-content:space-between;align-items:center;padding:12px 4px 8px;}
+#c8s2 .pr b{font-size:17px;}
+#c8s2 .pr select{border:0;font:inherit;font-size:13px;font-weight:700;color:#5B4CFF;background:#EAE7FF;padding:6px 10px;border-radius:10px;cursor:pointer;}
+#c8s2 .kp{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+#c8s2 .kp::-webkit-scrollbar{display:none;}
+#c8s2 .k{flex:none;min-width:140px;background:#fff;border-radius:14px;padding:10px 12px;border:2px solid transparent;cursor:pointer;text-align:left;font:inherit;color:inherit;}
+#c8s2 .k.on{border-color:#5B4CFF;}
+#c8s2 .k span{font-size:11.5px;color:#7a8194;font-weight:700;display:block;}
+#c8s2 .k b{display:block;font-size:22px;margin-top:2px;}
+#c8s2 em{font-style:normal;font-size:11.5px;font-weight:800;}
+#c8s2 .up{color:#1E8E4E;} #c8s2 .dn{color:#C2183F;} #c8s2 .eq{color:#9aa;}
+#c8s2 .sp{font-size:12.5px;margin:10px 4px 2px;line-height:1.6;}
+#c8s2 .sp i,#c8s2 .lg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;}
+#c8s2 .f{background:#5B4CFF;} #c8s2 .n{background:#B9AEFF;}
+#c8s2 .cd{background:#fff;border-radius:14px;padding:12px;margin-top:8px;}
+#c8s2 .cd h4{margin:0 0 8px;font-size:14px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+#c8s2 .cd h4 small{font-weight:600;color:#7a8194;font-size:12px;}
+#c8s2 svg.ch{width:100%;height:90px;display:block;}
+#c8s2 .ax{display:flex;justify-content:space-between;font-size:10.5px;color:#9aa;margin-top:2px;}
+#c8s2 .lg{display:flex;gap:12px;font-size:11px;color:#7a8194;margin-bottom:2px;}
+#c8s2 .br{margin:9px 0;} #c8s2 .br .t{display:flex;justify-content:space-between;font-size:13px;font-weight:700;}
+#c8s2 .br .b{height:9px;border-radius:9px;background:#EEF0F6;margin-top:4px;overflow:hidden;display:flex;}
+#c8s2 .br .b i{display:block;height:100%;}
+#c8s2 .pv{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#F3F0FF,#E9E4FF);border:1.5px solid #CFC5FF;border-radius:14px;padding:10px 12px;margin-top:8px;cursor:pointer;width:100%;font:inherit;color:inherit;text-align:left;}
+#c8s2 .pv .ic{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#5b4cff);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;}
+#c8s2 .pv b{font-size:14px;display:block;} #c8s2 .pv small{font-size:11.5px;color:#6b6290;font-weight:600;}
+#c8s2 .pv .ar{margin-left:auto;color:#5B4CFF;font-weight:800;font-size:22px;}
+#c8s2 .tops{display:flex;gap:6px;}
+#c8s2 .tp{flex:1;aspect-ratio:3/4.3;border-radius:12px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:30px;background:linear-gradient(135deg,#C9BEFB,#5B4CFF) center/cover no-repeat;cursor:pointer;max-width:33%;}
+#c8s2 .tp small{position:absolute;left:6px;bottom:5px;color:#fff;font-size:12px;font-weight:800;text-shadow:0 1px 3px #000a;}
+#c8s2 .tp .ty{position:absolute;right:5px;top:5px;font-size:10px;background:rgba(0,0,0,.5);color:#fff;border-radius:6px;padding:1px 6px;font-weight:700;}
+#c8s2 .ia{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;}
+#c8s2 .ia div{background:#F6F7FB;border-radius:10px;padding:8px 2px;}
+#c8s2 .ia b{display:block;font-size:18px;} #c8s2 .ia span{display:block;font-size:10.5px;color:#7a8194;font-weight:700;white-space:nowrap;} #c8s2 .ia em{display:block;margin-top:2px;}
+#c8s2 .chs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:6px;}
+#c8s2 .chs button{flex:none;border:0;font:inherit;font-size:12.5px;font-weight:700;padding:6px 11px;border-radius:14px;background:#EEF0F6;color:#5a5670;cursor:pointer;}
+#c8s2 .chs button.on{background:#1E1B2E;color:#fff;}
+#c8s2 .cd h4 select{border:0;font:inherit;font-size:12px;font-weight:700;color:#5B4CFF;background:none;cursor:pointer;}
+#c8s2 .rw{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F0F1F5;cursor:pointer;}
+#c8s2 .rw:last-child{border-bottom:0;}
+#c8s2 .rw .th{width:40px;height:54px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;font-size:19px;background:linear-gradient(135deg,#dfe4ff,#9db6e8) center/cover no-repeat;}
+#c8s2 .rw .tx{flex:1;min-width:0;} #c8s2 .rw .tx b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#c8s2 .rw .tx span{color:#7a8194;font-size:11.5px;}
+#c8s2 .rw .st{display:flex;gap:9px;font-size:12px;font-weight:700;color:#4a4560;flex:none;}
+#c8s2 .bg{display:flex;align-items:flex-end;gap:10px;} #c8s2 .bg b{font-size:34px;line-height:1;}
+#c8s2 .dn2{display:flex;align-items:center;gap:16px;}
+#c8s2 .dn2 .d{width:90px;height:90px;border-radius:50%;position:relative;flex:none;}
+#c8s2 .dn2 .d::after{content:"";position:absolute;inset:17px;border-radius:50%;background:#fff;}
+#c8s2 .dn2 ul{list-style:none;margin:0;padding:0;font-size:13px;line-height:1.9;}
+#c8s2 .dn2 li i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;}
+#c8s2 .dy{display:flex;gap:5px;align-items:flex-end;height:70px;}
+#c8s2 .dy i{flex:1;background:#C9BEFB;border-radius:5px 5px 2px 2px;min-height:3px;} #c8s2 .dy i.mx{background:#5B4CFF;}
+#c8s2 .dl{display:flex;gap:5px;font-size:10.5px;color:#9aa;margin-top:3px;} #c8s2 .dl span{flex:1;text-align:center;} #c8s2 .dl b{color:#5B4CFF;}
+#c8s2 .hr{display:flex;gap:2px;align-items:flex-end;height:58px;}
+#c8s2 .hr i{flex:1;background:#FFD3A8;border-radius:3px 3px 1px 1px;min-height:2px;} #c8s2 .hr i.mx{background:#F59E0B;}
+#c8s2 .tip{font-size:12px;color:#7a8194;margin-top:7px;} #c8s2 .tip b{color:#C46A00;}
+#c8s2 .em{color:#7a8194;font-size:13px;text-align:center;padding:18px 6px;}
+#c8s2 .ld{color:#7a8194;font-size:14px;text-align:center;padding:50px 0;}
+#c8s2 .nt{font-size:11.5px;color:#7a8194;text-align:center;margin:14px 6px 0;line-height:1.5;}
+</style>
+<div id="c8s2" role="dialog" aria-modal="true"><div class="w">
+  <div class="hd"><button onclick="c8s2Close()" aria-label="Späť">←</button><b id="c8s2-title">📊 Štatistiky</b></div>
+  <div class="tb" id="c8s2-tabs"><button data-t="o" class="on">Prehľad</button><button data-t="c">Obsah</button><button data-t="a">Publikum</button></div>
+  <div id="c8s2-body"><div class="ld">Načítavam…</div></div>
+</div></div>
+<script id="c8s2-script">
+/* ===== Štatistiky: Prehľad · Obsah · Publikum (vidí len majiteľ) ===== */
+(function(){
+  const T = (x)=>{ try{ return typeof t === 'function' ? t(x) : x; }catch(e){ return x; } };
+  const E = (x)=> (typeof escapeHtml === 'function' ? escapeHtml(String(x == null ? '' : x)) : String(x == null ? '' : x));
+  const URL0 = (typeof C8MOD_URL !== 'undefined' ? C8MOD_URL : 'https://c8-moderator.sevcikjaroslav1.workers.dev');
+  const DAY = 86400000;
+  const fmt = (n)=> (Number(n) || 0).toLocaleString('sk-SK');
+  const me = ()=>{ try{ return (currentUser && currentUser.uid) ? currentUser : null; }catch(e){ return null; } };
+  async function api(path, body){
+    const tok = await auth.currentUser.getIdToken();
+    const r = await fetch(URL0 + path, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + tok }, body: JSON.stringify(body || {}) });
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+    return j;
+  }
+
+  /* ---------- 1) zaznamenávanie pozretí (1 človek = max 1× za deň) ---------- */
+  function dayKey(){ const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  window.c8sTrack = function(kind, id, owner){
+    try{
+      const u = me();
+      if(!u || !owner || !id || owner === u.uid || owner === 'c8bot' || !auth || !auth.currentUser) return;
+      id = String(id); if(!/^[A-Za-z0-9_-]{1,64}$/.test(id)) return;
+      const k = 'c8s_seen_' + u.uid; let m = {};
+      try{ m = JSON.parse(localStorage.getItem(k) || '{}') || {}; }catch(e){}
+      const key = kind + ':' + id, day = dayKey();
+      if(m[key] === day) return;
+      m[key] = day;
+      const ks = Object.keys(m); if(ks.length > 800) ks.slice(0, ks.length - 800).forEach(x=> delete m[x]);
+      try{ localStorage.setItem(k, JSON.stringify(m)); }catch(e){}
+      api('/seen', { kind, id, owner }).catch(()=>{});
+    }catch(e){}
+  };
+  // Reels / videá
+  if(typeof registerVideoView === 'function'){
+    const _rv = registerVideoView;
+    registerVideoView = function(id){
+      try{
+        const vv = document.getElementById('view-video');
+        if(vv && vv.classList.contains('active')){ const v = (videos || []).find(x=> String(x.id) === String(id)); if(v) c8sTrack('video', v.id, v.authorId); }
+      }catch(e){}
+      return _rv.apply(this, arguments);
+    };
+  }
+  // príspevky na Ploche – pozretie = aspoň 1 sekundu z väčšej časti na obrazovke
+  try{
+    const timers = new Map();
+    const io = new IntersectionObserver((ents)=>{
+      ents.forEach(en=>{
+        const el = en.target;
+        if(en.isIntersecting && en.intersectionRatio >= 0.5){
+          if(timers.has(el)) return;
+          timers.set(el, setTimeout(()=>{
+            timers.delete(el);
+            const id = (el.id || '').replace(/^post-/, '');
+            const p = (typeof findPostById === 'function') ? findPostById(Number(id)) || findPostById(id) : null;
+            if(p && p.authorId) c8sTrack('post', p.id, p.authorId);
+          }, 1000));
+        } else if(timers.has(el)){ clearTimeout(timers.get(el)); timers.delete(el); }
+      });
+    }, { threshold: [0, 0.5] });
+    const watch = ()=>{ document.querySelectorAll('#posts-list > .post[id^="post-"]').forEach(el=>{ if(!el.__c8s){ el.__c8s = 1; io.observe(el); } }); };
+    let wt = null;
+    new MutationObserver(()=>{ if(wt) return; wt = setTimeout(()=>{ wt = null; watch(); }, 300); }).observe(document.body, { childList:true, subtree:true });
+    watch();
+  }catch(e){}
+  // bazár – otvorenie inzerátu
+  if(typeof openProductDetail === 'function'){
+    const _op = openProductDetail;
+    openProductDetail = function(id){
+      try{ const pr = (products || []).find(x=> String(x.id) === String(id)); if(pr && pr.authorId) c8sTrack('product', pr.id, pr.authorId); }catch(e){}
+      return _op.apply(this, arguments);
+    };
+  }
+
+  /* ---------- 2) stránka štatistík ---------- */
+  let tab = 'o', period = 30, metric = 'views', cache = {}, chip = 'all', sortBy = 'views';
+  async function load(force){
+    const c = cache[period];
+    if(!force && c && Date.now() - c.at < 120000) return c.data;
+    if(c && c.p) return c.p;
+    const p = api('/stats/get', { period }).then(data=>{ cache[period] = { at: Date.now(), data }; return data; })
+      .catch(e=>{ delete cache[period]; throw e; });
+    cache[period] = Object.assign({}, c || {}, { p });
+    return p;
+  }
+  const sum = (a, f, to)=>{ let s = 0; for(let i = f; i < to && i < a.length; i++) s += (a[i] || 0); return s; };
+  function delta(a, b, unit){
+    if(!a && !b) return '<em class="eq">&nbsp;</em>';
+    const d = a - b;
+    return d > 0 ? `<em class="up">▲ +${fmt(d)}${unit || ''}</em>` : d < 0 ? `<em class="dn">▼ ${fmt(d)}${unit || ''}</em>` : '<em class="eq">= 0</em>';
+  }
+  function line(arr, color, h){
+    const n = arr.length, w = 300; h = h || 90;
+    if(!n) return '';
+    const mx = Math.max(1, ...arr), mn = Math.min(...arr);
+    const lo = color === '#1E8E4E' ? mn : 0;
+    const y = v => h - 4 - (v - lo) / Math.max(1, mx - lo) * (h - 10);
+    const pts = arr.map((v, i) => [ (n === 1 ? w : i / (n - 1) * w), y(v) ]);
+    const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    const gid = 'c8s2g' + Math.random().toString(36).slice(2, 7);
+    return `<svg class="ch" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${color}" stop-opacity=".28"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+      <line x1="0" y1="${h - 2}" x2="${w}" y2="${h - 2}" stroke="#EEF0F6"/><line x1="0" y1="${h / 2}" x2="${w}" y2="${h / 2}" stroke="#F3F4F8"/>
+      <path d="${d} L${w} ${h} L0 ${h}Z" fill="url(#${gid})"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  }
+  const dfmt = (ms)=>{ const x = new Date(ms); return x.getDate() + '. ' + (x.getMonth() + 1) + '.'; };
+  function axis(P){ const now = Date.now(); return `<div class="ax"><span>${dfmt(now - (P - 1) * DAY)}</span><span>${dfmt(now - Math.floor(P / 2) * DAY)}</span><span>${dfmt(now)}</span></div>`; }
+  function sinceNote(d){ return `<div class="nt">🔒 ${E(T('Vidíš len ty. Ukazujú sa len počty, nie mená. Tvoje vlastné pozretia sa nerátajú; 1 človek = max 1 pozretie za deň.'))}${d.since ? '<br>' + E(T('Pozretia sa počítajú od')) + ' ' + new Date(d.since).toLocaleDateString('sk-SK') + '.' : '<br>' + E(T('Pozretia sa začali počítať práve teraz – grafy sa naplnia postupne.'))}</div>`; }
+
+  // môj obsah (z už načítaných dát appky)
+  const TYPE = { video:['🎬', 'Reel'], post:['📝', 'Príspevok'], product:['🛒', 'Bazár'], story:['⭕', 'Príbeh'] };
+  function likesOf(o){ try{ return typeof c8Likes === 'function' ? c8Likes(o) : (Number(o.likes) || 0); }catch(e){ return Number(o.likes) || 0; } }
+  function tsOf(o){ let v = o.createdAt; if(v && typeof v === 'object'){ if(typeof v.toMillis === 'function') v = v.toMillis(); else if(v.seconds) v = v.seconds * 1000; } v = Number(v); if(!(v > 1e12)){ const id = Number(o.id); v = id > 1e12 ? id : 0; } return v; }
+  function myContent(d){
+    const u = me(); if(!u) return [];
+    const own = (o, nk)=> o && (o.authorId ? o.authorId === u.uid : o[nk || 'name'] === u.name);
+    const pv = {}; (d.items || []).forEach(x=> pv[x.kind + ':' + x.id] = x.views);
+    const out = [];
+    (videos || []).filter(v=> own(v)).forEach(v=> out.push({ kind:'video', id:String(v.id), title: v.caption || T('Video'), ts: tsOf(v),
+      thumb: (typeof c8ReelPoster === 'function' ? c8ReelPoster(v.url || v.videoUrl || '') : ''), all: Number(v.views) || 0, likes: likesOf(v), com: (v.comments || []).length }));
+    (posts || []).filter(p=> own(p)).forEach(p=>{
+      const ph = (typeof getPostPhotos === 'function' ? getPostPhotos(p) : (p.photos || []))[0] || '';
+      out.push({ kind:'post', id:String(p.id), title: (p.text || '').trim() || '📷 ' + T('Fotka'), ts: tsOf(p), thumb: typeof ph === 'string' ? ph : '', all: Number(p.views) || 0, likes: likesOf(p), com: (p.comments || []).length });
+    });
+    (products || []).filter(p=> own(p, 'seller')).forEach(p=> out.push({ kind:'product', id:String(p.id), title: p.title || T('Inzerát'), ts: tsOf(p),
+      thumb: (p.photos && p.photos[0]) || '', emoji: p.emoji, all: 0, likes: 0, com: 0 }));
+    const st = (typeof window.c8stAll === 'function' ? window.c8stAll() : []).filter(s=> s.uid === u.uid);
+    st.forEach(s=> out.push({ kind:'story', id:String(s.id), title: T('Príbeh'), ts: s.createdAt || 0, thumb: s.photoUrl || (typeof c8ReelPoster === 'function' ? c8ReelPoster(s.videoUrl || '') : ''),
+      all: (s.viewers || []).length, likes: (s.likes || []).length, com: (s.repliedBy || []).length }));
+    // príbehy, ktoré už zmizli, ale v štatistike majú pozretia
+    (d.items || []).filter(x=> x.kind === 'story' && !st.some(s=> String(s.id) === x.id)).forEach(x=> out.push({ kind:'story', id:x.id, title: T('Príbeh'), gone: true, ts: 0, thumb: '', all: 0, likes: 0, com: 0 }));
+    out.forEach(o=> o.pv = pv[o.kind + ':' + o.id] || 0);
+    return out;
+  }
+  function thumbStyle(o){ return o.thumb && /^https?:\/\//.test(o.thumb) ? ` style="background-image:url('${String(o.thumb).replace(/['"\\()]/g, '')}')"` : ''; }
+  function openItem(kind, id){
+    const u = me();
+    window.c8s2Close();
+    try{
+      if(kind === 'video' && typeof c8OpenReel === 'function') c8OpenReel(id);
+      else if(kind === 'post'){ switchMode('feed'); showPostFromNotification(Number(id) || id); }
+      else if(kind === 'product') openProductDetail(Number(id) || id);
+      else if(kind === 'story' && u && typeof c8stOpen === 'function') c8stOpen(u.uid);
+    }catch(e){ console.warn(e); }
+  }
+  window.c8s2Item = openItem;
+
+  function rOverview(d){
+    const P = d.period, v = d.views || [], fo = d.follows || [], it = d.inter || [];
+    const vC = sum(v, 0, P), vP = sum(v, P, 2 * P), fC = sum(fo, 0, P), fP = sum(fo, P, 2 * P), iC = sum(it, 0, P), iP = sum(it, P, 2 * P);
+    const sp = d.split || { f:0, n:0 }, spT = sp.f + sp.n;
+    const ser = (metric === 'follows' ? fo : metric === 'inter' ? it : v).slice(0, P).reverse();
+    const col = metric === 'follows' ? '#1E8E4E' : metric === 'inter' ? '#DB2777' : '#5B4CFF';
+    const ttl = metric === 'follows' ? T('Noví sledovatelia po dňoch') : metric === 'inter' ? T('Interakcie po dňoch') : T('Pozretia po dňoch');
+    const types = d.types || {}, order = [['video','🎬 Reels'],['story','⭕ Príbehy'],['post','📝 Príspevky'],['product','🛒 Bazár']];
+    const tot = (k)=> ((types[k] || {}).f || 0) + ((types[k] || {}).n || 0);
+    const mx = Math.max(1, ...order.map(o=> tot(o[0])));
+    let h = `<div class="pr"><b>${E(T('Všetok obsah'))}</b>${perSel()}</div>
+      <div class="kp">
+        <button class="k ${metric === 'views' ? 'on' : ''}" data-m="views"><span>👁 ${E(T('Pozretia'))}</span><b>${fmt(vC)}</b>${delta(vC, vP)}</button>
+        <button class="k ${metric === 'follows' ? 'on' : ''}" data-m="follows"><span>➕ ${E(T('Noví sledovatelia'))}</span><b>${fC ? '+' + fmt(fC) : '0'}</b>${delta(fC, fP)}</button>
+        <button class="k ${metric === 'inter' ? 'on' : ''}" data-m="inter"><span>❤️ ${E(T('Interakcie'))}</span><b>${fmt(iC)}</b>${delta(iC, iP)}</button>
+      </div>`;
+    if(spT) h += `<div class="sp"><i class="f"></i><b>${(sp.f / spT * 100).toFixed(1).replace('.', ',')} %</b> ${E(T('sledovatelia'))} &nbsp; <i class="n"></i><b>${(sp.n / spT * 100).toFixed(1).replace('.', ',')} %</b> ${E(T('ľudia, ktorí ťa nesledujú'))}</div>`;
+    h += `<div class="cd"><h4>${E(ttl)}</h4>${ser.some(x=> x) ? line(ser, col) : `<div class="em">${E(T('Zatiaľ žiadne údaje za toto obdobie.'))}</div>`}${axis(P)}</div>`;
+    h += `<div class="cd"><h4>${E(T('Pozretia podľa typu obsahu'))}</h4><div class="lg"><span><i class="f"></i>${E(T('Sledovatelia'))}</span><span><i class="n"></i>${E(T('Nesledujú ťa'))}</span></div>`
+      + order.map(([k, l])=>{ const x = types[k] || { f:0, n:0 }; return `<div class="br"><div class="t"><span>${E(T(l))}</span><span>${fmt(x.f + x.n)}</span></div><div class="b"><i class="f" style="width:${x.f / mx * 100}%"></i><i class="n" style="width:${x.n / mx * 100}%"></i></div></div>`; }).join('') + `</div>`;
+    h += `<button class="pv" onclick="if(typeof c8pvOpen==='function') c8pvOpen()"><span class="ic">👤</span><div><b id="c8s2-pvn">${E(T('Návštevy profilu'))}</b><small id="c8s2-pvs">${E(T('posledných 30 dní'))}</small></div><span class="ar">›</span></button>`;
+    h += sinceNote(d);
+    return h;
+  }
+  function rContent(d){
+    const P = d.period;
+    const all = myContent(d);
+    const ic = d.iCur || {}, ip = d.iPrev || {}, fo = d.follows || [];
+    const tracked = all.some(o=> o.pv);
+    const top = all.slice().sort((a, b)=> tracked ? (b.pv - a.pv) : (b.all - a.all || b.likes - a.likes)).filter(o=> tracked ? o.pv : (o.all || o.likes)).slice(0, 3);
+    let h = `<div class="pr"><b>${E(T('Najúspešnejší obsah'))}</b>${perSel()}</div>`;
+    h += top.length ? `<div class="tops">${top.map(o=> `<div class="tp" onclick="c8s2Item('${o.kind}','${E(o.id)}')"${thumbStyle(o)}>${o.thumb ? '' : (o.emoji || TYPE[o.kind][0])}<span class="ty">${E(T(TYPE[o.kind][1]))}</span><small>👁 ${fmt(tracked ? o.pv : o.all)}</small></div>`).join('')}</div>`
+      : `<div class="cd"><div class="em">${E(T('Zatiaľ žiadne pozretia tvojho obsahu.'))}</div></div>`;
+    const n = (x)=> x || 0;
+    h += `<div class="cd"><h4>${E(T('Interakcie podľa typu'))} <small>${fmt(n(ic.likes) + n(ic.comments) + n(ic.replies))} ${E(T('spolu'))}</small></h4><div class="ia">
+      <div><b>${fmt(ic.likes)}</b><span>❤️ ${E(T('Páči sa'))}</span>${delta(n(ic.likes), n(ip.likes))}</div>
+      <div><b>${fmt(ic.comments)}</b><span>💬 ${E(T('Komentáre'))}</span>${delta(n(ic.comments), n(ip.comments))}</div>
+      <div><b>${fmt(ic.replies)}</b><span>↩️ ${E(T('Odpovede'))}</span>${delta(n(ic.replies), n(ip.replies))}</div>
+      <div><b>${fmt(sum(fo, 0, P))}</b><span>➕ ${E(T('Sledovania'))}</span>${delta(sum(fo, 0, P), sum(fo, P, 2 * P))}</div></div></div>`;
+    let list = all.filter(o=> chip === 'all' || o.kind === chip);
+    list.sort((a, b)=> sortBy === 'likes' ? (b.likes - a.likes || b.pv - a.pv) : sortBy === 'new' ? (b.ts - a.ts) : (b.pv - a.pv || b.all - a.all || b.ts - a.ts));
+    const chips = [['all','Všetko'],['video','Reels'],['story','Príbehy'],['post','Príspevky'],['product','Bazár']];
+    h += `<div class="cd"><h4>${E(T('Všetok obsah'))} <select id="c8s2-sort"><option value="views"${sortBy === 'views' ? ' selected' : ''}>${E(T('zoradiť: pozretia'))}</option><option value="likes"${sortBy === 'likes' ? ' selected' : ''}>${E(T('zoradiť: páči sa'))}</option><option value="new"${sortBy === 'new' ? ' selected' : ''}>${E(T('zoradiť: najnovšie'))}</option></select></h4>
+      <div class="chs">${chips.map(([k, l])=> `<button data-c="${k}" class="${chip === k ? 'on' : ''}">${E(T(l))}</button>`).join('')}</div>`;
+    h += list.length ? list.slice(0, 60).map(o=> `<div class="rw" onclick="c8s2Item('${o.kind}','${E(o.id)}')"><div class="th"${thumbStyle(o)}>${o.thumb ? '' : (o.emoji || TYPE[o.kind][0])}</div>
+        <div class="tx"><b>${E(String(o.title).slice(0, 80))}</b><span>${E(T(TYPE[o.kind][1]))}${o.ts ? ' · ' + dfmt(o.ts) : ''}${o.gone ? ' · ' + E(T('zmizol')) : ''}</span></div>
+        <div class="st"><span title="${E(T('pozretia za obdobie'))}">👁 ${fmt(o.pv)}</span>${o.kind !== 'product' ? `<span>❤️ ${fmt(o.likes)}</span>` : ''}${o.com ? `<span>💬 ${fmt(o.com)}</span>` : ''}</div></div>`).join('')
+      : `<div class="em">${E(T('Zatiaľ tu nič nie je.'))}</div>`;
+    h += `<div class="nt" style="margin-top:8px">👁 = ${E(T('pozretia za'))} ${P} ${E(T('dní'))} · ❤️ 💬 = ${E(T('celkovo'))}</div></div>`;
+    return h + sinceNote(d);
+  }
+  function rAudience(d){
+    const P = d.period, fo = d.follows || [], cnt = d.followers || 0;
+    const newC = sum(fo, 0, P);
+    // počet sledovateľov po dňoch (spätne z nových sledovaní)
+    const grow = []; let c = cnt; for(let i = 0; i < P; i++){ grow.push(c); c -= (fo[i] || 0); } grow.reverse();
+    let h = `<div class="pr"><b>${E(T('Tvoje publikum'))}</b>${perSel()}</div>`;
+    h += `<div class="cd"><h4>${E(T('Sledovatelia'))}</h4><div class="bg"><b>${fmt(cnt)}</b>${newC ? `<em class="up" style="margin-bottom:4px">▲ +${fmt(newC)} ${E(T('noví'))}</em>` : ''}</div>${newC ? line(grow, '#1E8E4E', 60) : ''}</div>`;
+    const a = d.aud || {}, at = (a.follower || 0) + (a.friend || 0) + (a.other || 0);
+    if(at){
+      const pf = a.follower / at * 100, pr = a.friend / at * 100;
+      h += `<div class="cd"><h4>${E(T('Kto ťa pozerá'))} <small>${fmt(d.people)} ${E(T('ľudí'))}</small></h4><div class="dn2"><div class="d" style="background:conic-gradient(#5B4CFF 0 ${pf}%,#F59E0B ${pf}% ${pf + pr}%,#B9AEFF ${pf + pr}% 100%)"></div><ul>
+        <li><i style="background:#5B4CFF"></i>${E(T('Sledovatelia'))} · <b>${Math.round(pf)} %</b></li>
+        <li><i style="background:#F59E0B"></i>${E(T('Priatelia'))} · <b>${Math.round(pr)} %</b></li>
+        <li><i style="background:#B9AEFF"></i>${E(T('Cudzí'))} · <b>${Math.round(100 - pf - pr)} %</b></li></ul></div>
+        <div class="nt" style="margin-top:8px;text-align:left">${E(T('Priatelia = sledujete sa navzájom.'))}</div></div>`;
+    } else h += `<div class="cd"><h4>${E(T('Kto ťa pozerá'))}</h4><div class="em">${E(T('Zatiaľ žiadne údaje za toto obdobie.'))}</div></div>`;
+    const v = d.views || [], wd = [0,0,0,0,0,0,0];
+    const todayN = Math.round((d.today || Date.now()) / DAY);
+    for(let i = 0; i < P; i++){ const w = ((todayN - i + 4) % 7 + 7) % 7; wd[(w + 6) % 7] += (v[i] || 0); }
+    const wmx = Math.max(...wd), WD = ['Po','Ut','St','Št','Pi','So','Ne'], WDF = ['Pondelok','Utorok','Streda','Štvrtok','Piatok','Sobota','Nedeľa'];
+    h += `<div class="cd"><h4>${E(T('Najaktívnejšie dni'))}</h4><div class="dy">${wd.map(x=> `<i class="${wmx && x === wmx ? 'mx' : ''}" style="height:${wmx ? Math.max(4, Math.round(x / wmx * 100)) : 4}%" title="${x}"></i>`).join('')}</div>
+      <div class="dl">${WD.map((x, i)=> `<span>${wmx && wd[i] === wmx ? '<b>' + E(T(x)) + '</b>' : E(T(x))}</span>`).join('')}</div></div>`;
+    const hr = d.hours || [], hmx = Math.max(0, ...hr);
+    h += `<div class="cd"><h4>${E(T('Najaktívnejšie hodiny'))}</h4>${hmx ? `<div class="hr">${hr.map((x, i)=> `<i class="${x === hmx ? 'mx' : ''}" style="height:${Math.max(3, Math.round(x / hmx * 100))}%" title="${i}:00 · ${x}"></i>`).join('')}</div>
+      <div class="ax"><span>0</span><span>6</span><span>12</span><span>18</span><span>23</span></div>
+      <div class="tip">💡 ${E(T('Najlepší čas na pridanie obsahu'))}: <b>${E(T(WDF[wd.indexOf(wmx)]))} ${E(T('okolo'))} ${hr.indexOf(hmx)}:00</b></div>` : `<div class="em">${E(T('Zatiaľ žiadne údaje za toto obdobie.'))}</div>`}</div>`;
+    return h + sinceNote(d);
+  }
+  function perSel(){ return `<select id="c8s2-per">${[7, 30, 90].map(p=> `<option value="${p}"${p === period ? ' selected' : ''}>${p} ${E(T('dní'))}</option>`).join('')}</select>`; }
+  async function render(force){
+    const body = document.getElementById('c8s2-body');
+    document.querySelectorAll('#c8s2-tabs button').forEach(b=>{ b.classList.toggle('on', b.dataset.t === tab); b.textContent = T({ o:'Prehľad', c:'Obsah', a:'Publikum' }[b.dataset.t]); });
+    if(force || !cache[period] || !cache[period].data) body.innerHTML = `<div class="ld">${E(T('Načítavam…'))}</div>`;
+    let d;
+    try{ d = await load(force); }catch(e){ console.warn('Štatistiky', e); body.innerHTML = `<div class="ld">⚠️ ${E(T('Štatistiku sa nepodarilo načítať.'))}<br><br><button onclick="c8s2Open()" style="border:0;background:#5B4CFF;color:#fff;font-weight:700;padding:9px 16px;border-radius:12px;cursor:pointer">${E(T('Skúsiť znova'))}</button></div>`; return; }
+    body.innerHTML = tab === 'c' ? rContent(d) : tab === 'a' ? rAudience(d) : rOverview(d);
+    const ps = document.getElementById('c8s2-per'); if(ps) ps.onchange = ()=>{ period = Number(ps.value) || 30; render(false); };
+    body.querySelectorAll('.k[data-m]').forEach(b=> b.onclick = ()=>{ metric = b.dataset.m; render(false); });
+    body.querySelectorAll('.chs button').forEach(b=> b.onclick = ()=>{ chip = b.dataset.c; render(false); });
+    const so = document.getElementById('c8s2-sort'); if(so) so.onchange = ()=>{ sortBy = so.value; render(false); };
+    if(tab === 'o' && typeof c8pvLoad === 'function'){
+      c8pvLoad().then(x=>{ const n = (x.daily || []).slice(0, 30).reduce((a, b)=> a + b, 0), pr = (x.daily || []).slice(30, 60).reduce((a, b)=> a + b, 0);
+        const a = document.getElementById('c8s2-pvn'), b = document.getElementById('c8s2-pvs');
+        if(a) a.textContent = n + ' ' + (typeof c8pvWord === 'function' ? c8pvWord(n) : T('návštev')) + ' ' + T('profilu');
+        if(b) b.innerHTML = E(T('posledných 30 dní')) + (n - pr ? ' · ' + (n - pr > 0 ? `<span class="up">▲ +${n - pr}</span>` : `<span class="dn">▼ ${n - pr}</span>`) : '');
+      }).catch(()=>{});
+    }
+  }
+  document.getElementById('c8s2-tabs').addEventListener('click', (e)=>{ const b = e.target.closest('button[data-t]'); if(!b) return; tab = b.dataset.t; render(false); document.getElementById('c8s2').scrollTop = 0; });
+  window.c8s2Open = function(){
+    if(!me()) return;
+    document.getElementById('c8s2-title').textContent = '📊 ' + T('Štatistiky');
+    document.getElementById('c8s2').classList.add('open');
+    try{ if(typeof c8SetLeftActive === 'function') c8SetLeftActive('c8l-stats'); }catch(e){}
+    render(true);
+  };
+  window.c8s2Close = function(){
+    document.getElementById('c8s2').classList.remove('open');
+    try{ if(typeof c8SetLeftActive === 'function') c8SetLeftActive(typeof c8MyReelsOnly !== 'undefined' && c8MyReelsOnly ? 'c8l-reels' : ''); }catch(e){}
+  };
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && document.getElementById('c8s2').classList.contains('open') && !document.querySelector('#c8pv-modal.open')) window.c8s2Close(); });
+  // pôvodné tlačidlo „Štatistiky“ (menu pod fotkou aj ľavé menu) otvorí nové štatistiky
+  window.c8OpenStats = c8OpenStats = function(){ window.c8s2Open(); };
+})();
+</script>
+<!-- =================== /C8 ŠTATISTIKY 2 =================== -->
+
 </body>
 </html>
