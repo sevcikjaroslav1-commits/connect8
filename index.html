@@ -7491,6 +7491,8 @@ function notifText(n){
       ? `${name} odpovedal(a) na tvoj komentár${n.commentText ? `: „${escapeHtml(n.commentText)}"` : ''}`
       : `${name} tiež komentoval(a) ${n.videoId ? 'video' : 'príspevok'}, ktorý si komentoval(a)${n.commentText ? `: „${escapeHtml(n.commentText)}"` : ''}`;
     case 'follow': return `${name} ťa začal(a) sledovať`;
+    case 'story_like': return `${name} dal(a) ❤️ tvojmu príbehu`;
+    case 'story_reply': return `${name} odpovedal(a) na tvoj príbeh${n.commentText ? `: „${escapeHtml(n.commentText)}"` : ''}`;
     case 'content_removed': {
       const what = REMOVAL_KIND_LABEL[n.kind] || 'obsah';
       const reason = REPORT_REASONS[n.reason] || n.reason || '';
@@ -8550,6 +8552,10 @@ function openNotificationTarget(id){
     }
   } else if(n.type === 'follow'){
     openUserProfile({uid: n.fromUid, name: n.fromName, photoURL: n.fromPhoto});
+  } else if(n.type === 'story_reply'){
+    openChatWithUser({uid: n.fromUid, name: n.fromName, photoURL: n.fromPhoto});
+  } else if(n.type === 'story_like'){
+    if(typeof c8stOpen === 'function' && currentUser) c8stOpen(currentUser.uid);
   } else if((n.type === 'like_comment' || n.type === 'reply_comment') && n.videoId !== undefined && n.videoId !== null){
     switchMode('video');
   } else if((n.type === 'like_comment' || n.type === 'reply_comment') && n.postId !== undefined && n.postId !== null){
@@ -8833,6 +8839,22 @@ function subscribeToChatMessages(){
           bubble = document.createElement('div');
           bubble.className = 'chat-bubble ' + (mine ? 'mine' : 'theirs');
           bubble.textContent = m.text || '';
+          if(m.story && typeof m.story === 'object'){
+            const wrap = document.createElement('div');
+            wrap.className = 'c8st-cr ' + (mine ? 'mine' : 'theirs');
+            const lab = document.createElement('div'); lab.className = 'c8st-crl';
+            lab.textContent = mine ? t('Odpovedal(a) si na príbeh') : t('Odpovedal(a) na tvoj príbeh');
+            wrap.appendChild(lab);
+            if(m.story.thumb && /^https:\/\/res\.cloudinary\.com\//.test(m.story.thumb)){
+              const im = document.createElement('img'); im.loading = 'lazy'; im.alt = ''; im.src = m.story.thumb;
+              im.onerror = ()=> im.remove();
+              im.style.cursor = 'pointer';
+              im.onclick = ()=>{ if(typeof c8stOpen === 'function' && m.story.owner){ closeChatModal(); c8stOpen(m.story.owner); } };
+              wrap.appendChild(im);
+            }
+            wrap.appendChild(bubble);
+            bubble = wrap;
+          }
         }
         if(m.modHidden === true){
           bubble.classList.add('c8mod-hid');
@@ -23059,6 +23081,47 @@ function c8botInfo(){
 #c8st-viewer .c8st-vlist h4{margin:0 0 10px;font-size:15px;}
 #c8st-viewer .c8st-vlist div{padding:8px 0;border-bottom:1px solid var(--line,#E5E7EB);font-size:14px;}
 #c8st-viewer .c8st-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#D1D5DB;font-size:14px;pointer-events:none;}
+/* like + odpoveď na cudzí príbeh */
+#c8st-viewer .c8st-rfoot{position:absolute;left:12px;right:8px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:8px;z-index:4;}
+#c8st-viewer .c8st-rin{flex:1;min-width:0;height:44px;border-radius:22px;border:1.5px solid rgba(255,255,255,.8);background:rgba(0,0,0,.25);color:#fff;padding:0 16px;font-size:15px;font-family:inherit;outline:none;}
+#c8st-viewer .c8st-rin::placeholder{color:rgba(255,255,255,.85);}
+#c8st-viewer .c8st-rin:focus{border-color:#fff;background:rgba(0,0,0,.55);}
+#c8st-viewer .c8st-heart,#c8st-viewer .c8st-send{width:44px;height:44px;border:none;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0;}
+#c8st-viewer .c8st-heart.on svg{fill:#FF3D71;stroke:#FF3D71;}
+#c8st-viewer .c8st-heart.pop svg{animation:c8stPop .35s ease-out;}
+@keyframes c8stPop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+#c8st-viewer .c8st-send{display:none;width:auto;padding:0 14px;height:38px;border-radius:19px;background:#5B4CFF;font-weight:700;font-size:14px;font-family:inherit;}
+#c8st-viewer.c8st-typing .c8st-send{display:flex;}
+#c8st-viewer.c8st-typing .c8st-heart{display:none;}
+#c8st-viewer .c8st-dim{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:3;display:none;}
+#c8st-viewer.c8st-typing .c8st-dim{display:block;}
+#c8st-viewer .c8st-react{position:absolute;left:0;right:0;bottom:calc(90px + env(safe-area-inset-bottom));z-index:4;text-align:center;display:none;}
+#c8st-viewer.c8st-typing .c8st-react{display:block;}
+#c8st-viewer .c8st-react small{display:block;font-size:12px;color:#E5E7EB;margin-bottom:10px;}
+#c8st-viewer .c8st-emos{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 0;padding:0 28px;}
+#c8st-viewer .c8st-emos button{border:none;background:transparent;font-size:34px;line-height:1;cursor:pointer;padding:4px;}
+#c8st-viewer .c8st-big{position:absolute;left:50%;top:45%;z-index:4;font-size:110px;pointer-events:none;transform:translate(-50%,-50%) scale(0);opacity:0;filter:drop-shadow(0 6px 20px rgba(255,61,113,.6));}
+#c8st-viewer .c8st-big.go{animation:c8stBig .9s ease-out;}
+@keyframes c8stBig{0%{transform:translate(-50%,-50%) scale(0);opacity:0}25%{transform:translate(-50%,-50%) scale(1.15);opacity:1}45%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
+#c8st-viewer .c8st-toast{position:absolute;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:6;background:rgba(255,255,255,.95);color:#111827;font-weight:700;font-size:13px;padding:9px 16px;border-radius:20px;white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none;}
+#c8st-viewer .c8st-toast.show{opacity:1;}
+/* tvoj príbeh – kto videl / páči sa / odpovede */
+#c8st-viewer .c8st-vtabs{display:flex;gap:18px;border-bottom:1px solid var(--line,#E5E7EB);margin:0 0 4px;}
+#c8st-viewer .c8st-vtabs button{border:none;background:none;color:var(--text-dim,#6B7280);font-weight:800;font-size:14px;font-family:inherit;padding:4px 0 8px;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1px;}
+#c8st-viewer .c8st-vtabs button.on{color:#5B4CFF;border-bottom-color:#5B4CFF;}
+#c8st-viewer .c8st-vlist .c8st-vr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line,#E5E7EB);font-size:14px;font-weight:600;cursor:pointer;}
+#c8st-viewer .c8st-vr .c8st-va{width:36px;height:36px;border-radius:50%;background:#5B4CFF center/cover no-repeat;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;}
+#c8st-viewer .c8st-vr .c8st-vn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#c8st-viewer .c8st-vr .c8st-vi{font-size:16px;}
+#c8st-viewer .c8st-vlist .c8st-vempty{padding:14px 0;color:var(--text-dim,#6B7280);font-size:14px;border:0;}
+#c8st-viewer .c8st-vgrab{width:40px;height:4px;border-radius:2px;background:#D1D5DB;margin:0 auto 10px;}
+/* odpoveď na príbeh v chate */
+.c8st-cr{display:flex;flex-direction:column;max-width:78%;gap:4px;}
+.c8st-cr.mine{align-self:flex-end;align-items:flex-end;}
+.c8st-cr.theirs{align-self:flex-start;align-items:flex-start;}
+.c8st-cr .c8st-crl{font-size:11.5px;color:var(--text-dim,#6B7280);padding:0 4px;}
+.c8st-cr img{width:92px;height:150px;object-fit:cover;border-radius:12px;border:3px solid var(--surface,#fff);box-shadow:0 2px 8px rgba(0,0,0,.12);background:#222;}
+.c8st-cr .chat-bubble{max-width:100%;}
 </style>
 <script id="c8st-script">
 (function(){
@@ -23413,6 +23476,52 @@ function c8botInfo(){
     if(Array.isArray(s.viewers) && s.viewers.indexOf(u.uid) >= 0) return;
     db.collection('stories').doc(s.id).update({ viewers: firebase.firestore.FieldValue.arrayUnion(u.uid) }).catch(()=>{});
   }
+  /* ---------- like / odpoveď na príbeh ---------- */
+  const fresh = (s)=> stories.find(x=> x.id === s.id) || s;
+  const likedLocal = {}, likeNotified = {};
+  function isLiked(s){
+    if(s.id in likedLocal) return likedLocal[s.id];
+    const u = me(), f = fresh(s);
+    return !!(u && Array.isArray(f.likes) && f.likes.indexOf(u.uid) >= 0);
+  }
+  async function react(s, action){
+    const tok = await auth.currentUser.getIdToken();
+    const base = (typeof C8MOD_URL !== 'undefined') ? C8MOD_URL : 'https://c8-moderator.sevcikjaroslav1.workers.dev';
+    const r = await fetch(base + '/story/react', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + tok }, body: JSON.stringify({ id: s.id, action }) });
+    const j = await r.json().catch(()=>({}));
+    if(!r.ok || !j.ok) throw new Error(j.error || ('HTTP ' + r.status));
+  }
+  // malý náhľad príbehu do chatu (Cloudinary vie urobiť obrázok aj z videa)
+  function thumbOf(s){
+    const cl = (u)=> typeof u === 'string' && u.indexOf('res.cloudinary.com') >= 0;
+    if((s.type === 'photo' || !s.videoUrl) && s.photoUrl){
+      return cl(s.photoUrl) && s.photoUrl.indexOf('/image/upload/') >= 0 ? s.photoUrl.replace('/image/upload/', '/image/upload/w_300,c_limit,f_auto,q_auto/') : s.photoUrl;
+    }
+    if(cl(s.videoUrl) && s.videoUrl.indexOf('/video/upload/') >= 0){
+      return s.videoUrl.replace('/video/upload/', '/video/upload/so_' + (Math.round(Number(s.trimStart) || 0) + 1) + ',w_300,c_limit,q_auto/').replace(/\.[a-z0-9]{2,5}(\?.*)?$/i, '.jpg');
+    }
+    return null;
+  }
+  async function sendReply(s, text){
+    const u = me(); text = String(text || '').trim();
+    if(!u || !hasDb() || !text) return false;
+    const owner = s.uid;
+    if(isBlocked(owner) || (typeof isBlockedByOtherUser === 'function' && await isBlockedByOtherUser(owner))) throw new Error('blocked');
+    const p = profOf(owner, s);
+    if(typeof cacheProfile === 'function') cacheProfile(owner, p.name, p.photo);
+    const chatRef = db.collection('chats').doc(getChatId(u.uid, owner));
+    await upsertChatDoc(chatRef, owner, p.name, '↩️ ' + text);
+    const base = { senderId: u.uid, text, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+    let ref;
+    try{ ref = await chatRef.collection('messages').add(Object.assign({ story: { id: s.id, owner, thumb: thumbOf(s) || '' } }, base)); }
+    catch(e){ ref = await chatRef.collection('messages').add(base); }   // keby pravidlá nepustili pole "story"
+    if(ref && typeof c8modMsg === 'function') c8modMsg(chatRef.id, ref.id);
+    chatRef.update({ ['unread.' + owner]: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
+    if(typeof createNotification === 'function') createNotification(owner, 'story_reply', { storyId: s.id, commentText: text.slice(0, 80) });
+    react(s, 'reply').catch(()=>{});
+    return true;
+  }
+
   function openViewer(uid){
     const list = (byUid[uid] || []).slice();
     if(!list.length) return;
@@ -23437,7 +23546,12 @@ function c8botInfo(){
         <button class="c8st-ib c8st-x" aria-label="${escapeHtml(T('Zavrieť'))}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
       </div>
       <div class="c8st-tap l"></div><div class="c8st-tap r"></div>
-      ${own ? `<div class="c8st-foot"><span class="c8st-views">👁 <span class="c8st-vc">0</span> ${escapeHtml(T('zhliadnutí'))}</span><button class="c8st-del">🗑️ ${escapeHtml(T('Zmazať'))}</button></div>` : ''}
+      ${own ? `<div class="c8st-foot"><span class="c8st-views">👁 <span class="c8st-vc">0</span> · ❤️ <span class="c8st-lc">0</span> · 💬 <span class="c8st-rc">0</span></span><button class="c8st-del">🗑️ ${escapeHtml(T('Zmazať'))}</button></div>`
+        : `<div class="c8st-dim"></div><div class="c8st-big">❤️</div><div class="c8st-toast"></div>
+      <div class="c8st-react"><small>${escapeHtml(T('Rýchla reakcia'))}</small><div class="c8st-emos">${['😂','😮','😍','😢','👏','🔥','🎉','💯'].map(x=>`<button type="button" data-e="${x}">${x}</button>`).join('')}</div></div>
+      <div class="c8st-rfoot"><input class="c8st-rin" type="text" maxlength="500" enterkeyhint="send" autocomplete="off" placeholder="${escapeHtml(T('Poslať správu…'))}">
+        <button type="button" class="c8st-heart" aria-label="${escapeHtml(T('Páči sa mi'))}"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><path d="M12 20.5s-7.5-4.6-9.3-9.2C1.4 7.9 3.6 4.5 7 4.5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.4 0 5.6 3.4 4.3 6.8-1.8 4.6-9.3 9.2-9.3 9.2z"/></svg></button>
+        <button type="button" class="c8st-send">${escapeHtml(T('Poslať'))}</button></div>`}
     </div>`;
     document.body.appendChild(el);
     const video = el.querySelector('video');
@@ -23453,8 +23567,64 @@ function c8botInfo(){
     el.querySelector('.c8st-x').onclick = closeViewer;
     const muteBtn = el.querySelector('.c8st-mute');
     muteBtn.onclick = ()=>{ video.muted = !video.muted; muteBtn.textContent = video.muted ? '🔇' : '🔊'; };
-    el.querySelector('.c8st-tap.l').onclick = ()=> show(V.idx - 1);
-    el.querySelector('.c8st-tap.r').onclick = ()=> show(V.idx + 1);
+    let lastTap = 0, tapT = null;
+    const tapNav = (dir)=>{
+      if(own){ show(V.idx + dir); return; }
+      const now = Date.now();
+      if(now - lastTap < 300){ clearTimeout(tapT); lastTap = 0; likeIt(true); return; }   // dvojklik = páči sa
+      lastTap = now;
+      tapT = setTimeout(()=>{ lastTap = 0; if(V) show(V.idx + dir); }, 260);
+    };
+    el.querySelector('.c8st-tap.l').onclick = ()=> tapNav(-1);
+    el.querySelector('.c8st-tap.r').onclick = ()=> tapNav(1);
+    const pauseV = ()=>{ if(!V) return; V.paused = true; try{ video.pause(); }catch(_){} };
+    const resumeV = ()=>{ if(!V) return; V.paused = false; if(video.style.display !== 'none') video.play().catch(()=>{}); };
+    let likeIt = ()=>{};
+    if(!own){
+      const heart = el.querySelector('.c8st-heart'), rin = el.querySelector('.c8st-rin'), send = el.querySelector('.c8st-send');
+      const big = el.querySelector('.c8st-big'), toast = el.querySelector('.c8st-toast');
+      let toastT = null, typing = false, sending = false;
+      const say = (txt)=>{ toast.textContent = txt; toast.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(()=> toast.classList.remove('show'), 1800); };
+      V.updHeart = ()=>{ const s = V.list[V.idx]; heart.classList.toggle('on', !!(s && isLiked(s))); };
+      likeIt = (fromDbl)=>{
+        const s = V.list[V.idx]; if(!s) return;
+        const was = isLiked(s);
+        if(fromDbl === true && was){ big.classList.remove('go'); void big.offsetWidth; big.classList.add('go'); return; }
+        const on = !was;
+        likedLocal[s.id] = on; V.updHeart();
+        heart.classList.remove('pop'); void heart.offsetWidth; heart.classList.add('pop');
+        if(on){ big.classList.remove('go'); void big.offsetWidth; big.classList.add('go'); try{ if(navigator.vibrate) navigator.vibrate(25); }catch(_){} }
+        react(s, on ? 'like' : 'unlike').then(()=>{
+          if(on && !likeNotified[s.id] && typeof createNotification === 'function'){ likeNotified[s.id] = 1; createNotification(s.uid, 'story_like', { storyId: s.id }); }
+        }).catch(()=>{ likedLocal[s.id] = was; if(V) V.updHeart(); say(T('Nepodarilo sa – skús znova.')); });
+      };
+      heart.onclick = (e)=>{ e.stopPropagation(); likeIt(false); };
+      const startTyping = ()=>{ if(typing) return; typing = true; el.classList.add('c8st-typing'); pauseV(); };
+      const stopTyping = ()=>{ if(!typing) return; typing = false; el.classList.remove('c8st-typing'); resumeV(); };
+      const doSend = async (txt)=>{
+        const s = V && V.list[V.idx]; txt = String(txt || '').trim();
+        if(!s || !txt || sending) return;
+        sending = true; send.disabled = true;
+        try{
+          await sendReply(s, txt);
+          rin.value = ''; rin.blur(); stopTyping(); say('✓ ' + T('Správa odoslaná'));
+        }catch(err){
+          console.error('Odpoveď na príbeh zlyhala', err);
+          say(T('Správu sa nepodarilo odoslať.'));
+        }
+        sending = false; send.disabled = false;
+      };
+      rin.addEventListener('focus', startTyping);
+      rin.addEventListener('blur', ()=> setTimeout(()=>{ if(document.activeElement !== rin && !rin.value.trim()) stopTyping(); }, 150));
+      rin.addEventListener('keydown', (e)=>{ e.stopPropagation(); if(e.key === 'Enter'){ e.preventDefault(); doSend(rin.value); } else if(e.key === 'Escape'){ rin.value = ''; rin.blur(); stopTyping(); } });
+      send.addEventListener('pointerdown', (e)=> e.preventDefault());
+      send.onclick = ()=> doSend(rin.value);
+      el.querySelector('.c8st-dim').onclick = ()=>{ rin.blur(); if(!rin.value.trim()) stopTyping(); };
+      el.querySelectorAll('.c8st-emos button').forEach(b=>{
+        b.addEventListener('pointerdown', (e)=> e.preventDefault());
+        b.onclick = ()=> doSend(b.dataset.e);
+      });
+    }
     // podržanie prsta = pauza
     el.querySelectorAll('.c8st-tap').forEach(z=>{
       let ht = null;
@@ -23464,13 +23634,54 @@ function c8botInfo(){
     });
     if(own){
       el.querySelector('.c8st-views').onclick = ()=>{
-        const s = V.list[V.idx]; const vs = Array.isArray(s.viewers) ? s.viewers : [];
+        const s = fresh(V.list[V.idx]);
+        const arr = (x)=> Array.isArray(x) ? x : [];
+        const vs = arr(s.viewers), ls = arr(s.likes), rs = arr(s.repliedBy);
+        const all = vs.slice(); ls.concat(rs).forEach(x=>{ if(all.indexOf(x) < 0) all.push(x); });
         const box = document.createElement('div'); box.className = 'c8st-vlist';
-        const h = document.createElement('h4'); h.textContent = T('Videli') + ' (' + vs.length + ')'; box.appendChild(h);
-        vs.forEach(id=>{ const d = document.createElement('div'); d.textContent = (typeof profilesCache !== 'undefined' && profilesCache[id] && profilesCache[id].name) || T('Používateľ'); box.appendChild(d); });
-        if(!vs.length){ const d = document.createElement('div'); d.textContent = T('Zatiaľ nikto.'); box.appendChild(d); }
+        box.innerHTML = `<div class="c8st-vgrab"></div><div class="c8st-vtabs">
+          <button data-t="v" class="on">👁 ${escapeHtml(T('Videli'))} ${all.length}</button><button data-t="l">❤️ ${ls.length}</button><button data-t="r">💬 ${rs.length}</button></div><div class="c8st-vrows"></div>`;
+        const rows = box.querySelector('.c8st-vrows');
+        const pc = (id)=> (typeof profilesCache !== 'undefined' && profilesCache[id]) || null;
+        const fill = (tab)=>{
+          const ids = tab === 'l' ? ls : tab === 'r' ? rs : all;
+          rows.innerHTML = '';
+          if(!ids.length){ const d = document.createElement('div'); d.className = 'c8st-vempty'; d.textContent = tab === 'l' ? T('Zatiaľ nikto nedal ❤️.') : tab === 'r' ? T('Zatiaľ žiadne odpovede.') : T('Zatiaľ nikto.'); rows.appendChild(d); return; }
+          ids.slice().reverse().forEach(id=>{
+            const c = pc(id) || {};
+            const r = document.createElement('div'); r.className = 'c8st-vr';
+            const a = document.createElement('span'); a.className = 'c8st-va';
+            const n = document.createElement('span'); n.className = 'c8st-vn';
+            const setP = (name, photo)=>{
+              n.textContent = name || T('Používateľ');
+              if(photo && /^https?:\/\//.test(photo)){ a.style.backgroundImage = `url("${String(photo).replace(/["\\]/g,'')}")`; a.textContent = ''; }
+              else a.textContent = (typeof initials === 'function') ? initials(name || '?') : '?';
+            };
+            setP(c.name, c.photo);
+            if(!c.name && hasDb()){
+              db.collection('profiles').doc(id).get().then(d=>{ const x = d.exists ? d.data() : null; if(x){ if(typeof cacheProfile === 'function') cacheProfile(id, x.name, x.avatarPhoto || null); setP(x.name, x.avatarPhoto || null); } }).catch(()=>{});
+            }
+            const ic = document.createElement('span'); ic.className = 'c8st-vi';
+            ic.textContent = (ls.indexOf(id) >= 0 ? '❤️' : '') + (rs.indexOf(id) >= 0 ? ' 💬' : '');
+            r.appendChild(a); r.appendChild(n); r.appendChild(ic);
+            r.onclick = (e)=>{
+              e.stopPropagation();
+              const cc = pc(id) || {}; const user = { uid: id, name: cc.name || n.textContent, photoURL: cc.photo || null };
+              closeViewer();
+              if(rs.indexOf(id) >= 0 && typeof openChatWithUser === 'function') openChatWithUser(user);
+              else if(typeof openUserProfile === 'function') openUserProfile(user);
+            };
+            rows.appendChild(r);
+          });
+        };
+        box.querySelectorAll('.c8st-vtabs button').forEach(b=> b.onclick = (e)=>{
+          e.stopPropagation();
+          box.querySelectorAll('.c8st-vtabs button').forEach(x=> x.classList.toggle('on', x === b));
+          fill(b.dataset.t);
+        });
+        fill('v');
         video.pause(); V.paused = true;
-        box.onclick = ()=>{ box.remove(); if(V){ V.paused = false; if(video.style.display !== 'none') video.play().catch(()=>{}); } };
+        box.onclick = (e)=>{ if(e.target.closest('.c8st-vr, .c8st-vtabs')) return; box.remove(); if(V){ V.paused = false; if(video.style.display !== 'none') video.play().catch(()=>{}); } };
         el.querySelector('.c8st-stage').appendChild(box);
       };
       el.querySelector('.c8st-del').onclick = ()=>{
@@ -23483,7 +23694,7 @@ function c8botInfo(){
         show(Math.min(V.idx, V.list.length - 1));
       };
     }
-    V.onKey = (e)=>{ if(e.key === 'Escape') closeViewer(); else if(e.key === 'ArrowRight') show(V.idx + 1); else if(e.key === 'ArrowLeft') show(V.idx - 1); };
+    V.onKey = (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('c8st-rin')) return; if(e.key === 'Escape') closeViewer(); else if(e.key === 'ArrowRight') show(V.idx + 1); else if(e.key === 'ArrowLeft') show(V.idx - 1); };
     document.addEventListener('keydown', V.onKey, true);
 
     function show(i){
@@ -23495,7 +23706,12 @@ function c8botInfo(){
       const bars = el.querySelectorAll('.c8st-bar i');
       bars.forEach((b, k)=> b.style.width = (k < i ? '100%' : '0'));
       el.querySelector('.c8st-time').textContent = ago(s.createdAt) + ' · ' + leftTxt(s);
-      if(own){ const vc = el.querySelector('.c8st-vc'); if(vc) vc.textContent = Array.isArray(s.viewers) ? s.viewers.length : 0; }
+      if(own){
+        const f = fresh(s), n = (x)=> Array.isArray(x) ? x.length : 0;
+        const vc = el.querySelector('.c8st-vc'); if(vc) vc.textContent = n(f.viewers);
+        const lc = el.querySelector('.c8st-lc'); if(lc) lc.textContent = n(f.likes);
+        const rc = el.querySelector('.c8st-rc'); if(rc) rc.textContent = n(f.repliedBy);
+      } else if(V.updHeart) V.updHeart();
       const msg = el.querySelector('.c8st-msg'); msg.textContent = T('Načítavam...');
       cancelAnimationFrame(V.raf);
       markSeen(s);
