@@ -18612,7 +18612,7 @@ function c8pvSpark(arr, w, h){
     + '<path d="' + line + ' L' + w + ' ' + h + ' L0 ' + h + 'Z" fill="url(#c8pvg' + w + ')"/><path d="' + line + '" fill="none" stroke="#5B4CFF" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></svg>';
 }
 async function c8pvLoad(force){
-  if(!force && c8pvCache && Date.now() - c8pvCache.at < 60000) return c8pvCache.data;
+  if(c8pvCache && Date.now() - c8pvCache.at < 900000) return c8pvCache.data;   // 15 min – šetrí čítania
   if(c8pvLoad._p) return c8pvLoad._p;
   c8pvLoad._p = c8pvApi('/visits/get', {}).then(data => { c8pvCache = { at: Date.now(), data }; return data; }).finally(() => { c8pvLoad._p = null; });
   return c8pvLoad._p;
@@ -24347,7 +24347,7 @@ function c8botInfo(){
   let tab = 'o', period = 30, metric = 'views', cache = {}, chip = 'all', sortBy = 'views';
   async function load(force){
     const c = cache[period];
-    if(!force && c && Date.now() - c.at < 120000) return c.data;
+    if(c && c.data && Date.now() - c.at < 900000) return c.data;   // 15 min – šetrí čítania vo Firebase
     if(c && c.p) return c.p;
     const p = api('/stats/get', { period }).then(data=>{ cache[period] = { at: Date.now(), data }; return data; })
       .catch(e=>{ delete cache[period]; throw e; });
@@ -24621,7 +24621,7 @@ function c8botInfo(){
     };
   }
   // ako dlho: najväčší čas prehrávania každého videa, odošle sa pri pauze / konci / odchode
-  const maxT = new Map(), sentT = new Map();
+  const maxT = new Map(), sentT = new Map(), durT = new Map(), lastFlush = new Map();
   function keyOf(vEl){
     if(vEl.dataset && vEl.dataset.c8m) return vEl.dataset.c8m;
     const card = vEl.closest && vEl.closest('.video-card[data-vid]'); if(card) return 'video:' + card.dataset.vid;
@@ -24634,11 +24634,20 @@ function c8botInfo(){
     if(mx < 0.5 || mx - prev < 0.5) return;
     const [kind, id] = [k.slice(0, k.indexOf(':')), k.slice(k.indexOf(':') + 1)];
     const u = me(), owner = ownerOf(kind, id); if(!u || !owner || owner === u.uid) return;
-    sentT.set(k, mx);
-    mreact(kind, id, 'watch', { sec: Math.round(mx * 10) / 10, len: isFinite(vEl.duration) ? Math.round(vEl.duration * 10) / 10 : 0 });
+    sentT.set(k, mx); lastFlush.set(k, Date.now());
+    const dur = (isFinite(vEl.duration) && vEl.duration > 0) ? vEl.duration : (durT.get(k) || 0);
+    mreact(kind, id, 'watch', { sec: Math.round(mx * 10) / 10, len: Math.round(dur * 10) / 10 });
   }
-  document.addEventListener('timeupdate', (e)=>{ const v = e.target; if(!v || v.tagName !== 'VIDEO') return; const k = keyOf(v); if(!k) return; maxT.set(k, Math.max(maxT.get(k) || 0, v.currentTime || 0)); }, true);
-  ['pause','ended'].forEach(ev=> document.addEventListener(ev, (e)=>{ if(e.target && e.target.tagName === 'VIDEO') flush(e.target); }, true));
+  // Reels pri odscrollovaní video hneď „vyprázdnia“ (load), vtedy sa udalosť pause nestihne –
+  // preto si dĺžku pamätáme vopred a priebežne posielame aj počas prehrávania (max. raz za 5 s)
+  document.addEventListener('timeupdate', (e)=>{
+    const v = e.target; if(!v || v.tagName !== 'VIDEO') return; const k = keyOf(v); if(!k) return;
+    if(isFinite(v.duration) && v.duration > 0) durT.set(k, v.duration);
+    if(v.currentTime > 0) maxT.set(k, Math.max(maxT.get(k) || 0, v.currentTime));
+    if(Date.now() - (lastFlush.get(k) || 0) > 5000 && (maxT.get(k) || 0) - (sentT.get(k) || 0) >= 2) flush(v);
+  }, true);
+  document.addEventListener('ended', (e)=>{ const v = e.target; if(!v || v.tagName !== 'VIDEO') return; const k = keyOf(v); if(k && isFinite(v.duration)) maxT.set(k, Math.max(maxT.get(k) || 0, v.duration)); }, true);
+  ['pause','ended','emptied'].forEach(ev=> document.addEventListener(ev, (e)=>{ if(e.target && e.target.tagName === 'VIDEO') flush(e.target); }, true));
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden') document.querySelectorAll('video').forEach(flush); });
   // sledovanie hneď po pozretí videa (do 3 minút) sa ráta tomuto videu
   if(typeof toggleFollow === 'function'){
@@ -24676,7 +24685,7 @@ function c8botInfo(){
   }
 
   /* ---------- 3) stránka štatistík ---------- */
-  let cur = null, chip = 'all';
+  let cur = null, chip = 'all'; const msCache = {};
   function svg(series, yLabels, h){
     h = h || 130; const W = 320, L = 34, B = h - 16, Tp = 8;
     const X = (x)=> L + x * (W - L - 4), Y = (y)=> B - Math.max(0, Math.min(1, y)) * (B - Tp);
@@ -24769,7 +24778,9 @@ function c8botInfo(){
     const body = document.getElementById('c8ms-body');
     body.innerHTML = `<div class="ld">${E(T('Načítavam…'))}</div>`;
     document.getElementById('c8ms').classList.add('open');
-    try{ const d = await api('/media/stats', cur); if(cur && cur.id === String(id)) render(d); }
+    const ck = cur.kind + ':' + cur.id, cc = msCache[ck];
+    if(cc && Date.now() - cc.at < 900000){ render(cc.d); return; }   // 15 min – šetrí čítania
+    try{ const d = await api('/media/stats', cur); msCache[ck] = { at: Date.now(), d }; if(cur && cur.id === String(id)) render(d); }
     catch(e){ body.innerHTML = `<div class="ld">⚠️ ${E(T('Štatistiku sa nepodarilo načítať.'))}</div>`; }
   };
   window.c8msClose = function(){ document.getElementById('c8ms').classList.remove('open'); };
