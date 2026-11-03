@@ -24621,7 +24621,7 @@ function c8botInfo(){
     };
   }
   // ako dlho: najväčší čas prehrávania každého videa, odošle sa pri pauze / konci / odchode
-  const maxT = new Map(), sentT = new Map(), durT = new Map(), lastFlush = new Map();
+  const maxT = new Map(), sentT = new Map();
   function keyOf(vEl){
     if(vEl.dataset && vEl.dataset.c8m) return vEl.dataset.c8m;
     const card = vEl.closest && vEl.closest('.video-card[data-vid]'); if(card) return 'video:' + card.dataset.vid;
@@ -24634,20 +24634,11 @@ function c8botInfo(){
     if(mx < 0.5 || mx - prev < 0.5) return;
     const [kind, id] = [k.slice(0, k.indexOf(':')), k.slice(k.indexOf(':') + 1)];
     const u = me(), owner = ownerOf(kind, id); if(!u || !owner || owner === u.uid) return;
-    sentT.set(k, mx); lastFlush.set(k, Date.now());
-    const dur = (isFinite(vEl.duration) && vEl.duration > 0) ? vEl.duration : (durT.get(k) || 0);
-    mreact(kind, id, 'watch', { sec: Math.round(mx * 10) / 10, len: Math.round(dur * 10) / 10 });
+    sentT.set(k, mx);
+    mreact(kind, id, 'watch', { sec: Math.round(mx * 10) / 10, len: isFinite(vEl.duration) ? Math.round(vEl.duration * 10) / 10 : 0 });
   }
-  // Reels pri odscrollovaní video hneď „vyprázdnia“ (load), vtedy sa udalosť pause nestihne –
-  // preto si dĺžku pamätáme vopred a priebežne posielame aj počas prehrávania (max. raz za 5 s)
-  document.addEventListener('timeupdate', (e)=>{
-    const v = e.target; if(!v || v.tagName !== 'VIDEO') return; const k = keyOf(v); if(!k) return;
-    if(isFinite(v.duration) && v.duration > 0) durT.set(k, v.duration);
-    if(v.currentTime > 0) maxT.set(k, Math.max(maxT.get(k) || 0, v.currentTime));
-    if(Date.now() - (lastFlush.get(k) || 0) > 5000 && (maxT.get(k) || 0) - (sentT.get(k) || 0) >= 2) flush(v);
-  }, true);
-  document.addEventListener('ended', (e)=>{ const v = e.target; if(!v || v.tagName !== 'VIDEO') return; const k = keyOf(v); if(k && isFinite(v.duration)) maxT.set(k, Math.max(maxT.get(k) || 0, v.duration)); }, true);
-  ['pause','ended','emptied'].forEach(ev=> document.addEventListener(ev, (e)=>{ if(e.target && e.target.tagName === 'VIDEO') flush(e.target); }, true));
+  document.addEventListener('timeupdate', (e)=>{ const v = e.target; if(!v || v.tagName !== 'VIDEO') return; const k = keyOf(v); if(!k) return; maxT.set(k, Math.max(maxT.get(k) || 0, v.currentTime || 0)); }, true);
+  ['pause','ended'].forEach(ev=> document.addEventListener(ev, (e)=>{ if(e.target && e.target.tagName === 'VIDEO') flush(e.target); }, true));
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden') document.querySelectorAll('video').forEach(flush); });
   // sledovanie hneď po pozretí videa (do 3 minút) sa ráta tomuto videu
   if(typeof toggleFollow === 'function'){
