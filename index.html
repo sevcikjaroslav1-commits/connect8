@@ -23136,6 +23136,16 @@ function c8botInfo(){
 .c8sr-arr.l{left:-6px;} .c8sr-arr.r{right:-6px;}
 .c8sr.ovl .c8sr-arr.l,.c8sr.ovr .c8sr-arr.r{display:block;}
 @media (max-width:900px){ .c8sr{display:none !important;} }
+@media (min-width:901px){
+  #view-feed .c8sr{margin:-16px 0 8px;}
+  .c8sr-row{gap:6px;padding:2px 2px 0;}
+  .c8sr-it{width:64px;gap:3px;}
+  .c8sr-av{width:48px;height:48px;padding:2.5px;}
+  .c8sr-av i{border-width:2.5px;font-size:15px;}
+  .c8sr-plus{width:18px;height:18px;font-size:12px;border-width:2px;}
+  .c8sr-n{font-size:11px;max-width:64px;}
+  .c8sr-arr{top:12px;width:26px;height:26px;font-size:17px;}
+}
 /* telefón: príbehy v hlavičke (kôpka) + čas / dátum / meniny pod sebou */
 .c8sp{display:none;}
 @media (max-width:900px){
@@ -23145,14 +23155,13 @@ function c8botInfo(){
   #app .c8h .header-clock-date::before,#app .c8h .header-clock-name::before{content:none;display:none;}
   #app .c8h .c8h-date{gap:6px;}
   #app .c8h .c8h-icons{gap:10px;margin-right:2px;}
-  .c8sp{display:flex;align-items:center;justify-content:space-between;gap:6px;flex:1 1 0;min-width:0;height:38px;margin-left:4px;padding:3px 10px 3px 4px;border-radius:22px;background:#F3F0FF;border:1.5px solid #D9D1FF;cursor:pointer;font-family:inherit;color:#5B4CFF;}
-  .c8sp .ps{display:flex;min-width:0;overflow:hidden;}
-  .c8sp .rg{flex:none;width:30px;height:30px;border-radius:50%;padding:2px;background:conic-gradient(from 210deg,#F59E0B,#EF4444,#EC4899,#8B5CF6,#F59E0B);margin-left:-8px;}
-  .c8sp .rg:first-child{margin-left:0;}
+  .c8sp{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex:1 1 0;min-width:0;height:44px;margin-left:4px;padding:0;border:0;background:none;cursor:pointer;font-family:inherit;color:#5B4CFF;}
+  .c8sp .ps{display:flex;gap:4px;min-width:0;overflow:hidden;flex:0 1 auto;}
+  .c8sp .rg{flex:none;width:40px;height:40px;border-radius:50%;padding:2.5px;background:conic-gradient(from 210deg,#F59E0B,#EF4444,#EC4899,#8B5CF6,#F59E0B);}
   .c8sp .rg.s{background:#C3C6CF;}
-  .c8sp .rg i{display:flex;width:100%;height:100%;border-radius:50%;border:2px solid #fff;background:#5B4CFF center/cover no-repeat;color:#fff;font-style:normal;font-weight:800;font-size:10px;align-items:center;justify-content:center;}
-  .c8sp b{font-size:13px;font-weight:800;flex:none;}
-  .c8sp .add{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:left;}
+  .c8sp .rg i{display:flex;width:100%;height:100%;border-radius:50%;border:2.5px solid #fff;background:#5B4CFF center/cover no-repeat;color:#fff;font-style:normal;font-weight:800;font-size:13px;align-items:center;justify-content:center;pointer-events:none;}
+  .c8sp b{font-size:15px;font-weight:800;flex:none;padding:8px 6px 8px 2px;}
+  .c8sp .add{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:left;}
 }
 /* spodný panel so všetkými príbehmi */
 #c8sp-sheet{position:fixed;inset:0;z-index:10054;background:rgba(10,10,20,.45);display:flex;align-items:flex-end;justify-content:center;}
@@ -23305,12 +23314,22 @@ function c8botInfo(){
     let show = others.slice(0, 5);
     if(!show.length && mineOn) show = [u.uid];
     const sig = JSON.stringify([show.map(x=> x + (x !== u.uid && isSeen(x) ? 's' : '') + (profOf(x, (byUid[x] || [{}])[0]).photo || '')), others.length, mineOn]);
-    if(sig === spSig) return; spSig = sig;
+    if(sig === spSig){ fitPill(); return; } spSig = sig;
     if(!show.length){ el.innerHTML = `<span class="ps"><span class="rg s"><i>+</i></span></span><span class="add">${escapeHtml(T('Pridať príbeh'))}</span>`; el.title = T('Pridať príbeh'); return; }
-    el.innerHTML = `<span class="ps">${show.map(x=>{ const p = profOf(x, byUid[x][0]); return `<span class="rg${x !== u.uid && isSeen(x) ? ' s' : ''}"><i${avStyle(p)}>${avIni(p)}</i></span>`; }).join('')}</span>`
-      + (others.length ? `<b>${others.length}</b>` : `<span class="add">${escapeHtml(T('Tvoj príbeh'))}</span>`);
+    el.innerHTML = `<span class="ps">${show.map(x=>{ const p = profOf(x, byUid[x][0]); return `<span class="rg${x !== u.uid && isSeen(x) ? ' s' : ''}" data-u="${escapeHtml(x)}" title="${escapeHtml(p.name)}"><i${avStyle(p)}>${avIni(p)}</i></span>`; }).join('')}</span>`
+      + (others.length ? `<b data-all="1" title="${escapeHtml(T('Všetky príbehy'))}">${others.length}</b>` : `<span class="add">${escapeHtml(T('Tvoj príbeh'))}</span>`);
     el.title = T('Príbehy');
+    fitPill();
   }
+  // ukáž len toľko guličiek, koľko sa zmestí celých
+  function fitPill(){
+    const el = document.getElementById('c8sp'); if(!el || !el.offsetParent) return;
+    const ps = el.querySelector('.ps'); if(!ps) return;
+    ps.querySelectorAll('.rg').forEach(r=> r.style.display = '');
+    const R = ps.getBoundingClientRect().right;
+    ps.querySelectorAll('.rg').forEach((r, i)=>{ if(i > 0 && r.getBoundingClientRect().right > R + 0.5) r.style.display = 'none'; });
+  }
+  window.addEventListener('resize', ()=>{ clearTimeout(fitPill._t); fitPill._t = setTimeout(fitPill, 150); });
   function closeAll(){ const x = document.getElementById('c8sp-sheet'); if(x) x.remove(); }
   function openAll(){
     closeAll();
@@ -23352,8 +23371,19 @@ function c8botInfo(){
     el.addEventListener('click', (e)=>{
       e.preventDefault(); e.stopPropagation();
       const u = me(); if(!u) return;
-      const any = orderOthers().length || (byUid[u.uid] && byUid[u.uid].length);
+      const others = orderOthers();
+      const any = others.length || (byUid[u.uid] && byUid[u.uid].length);
       if(!any){ openSheet(); return; }
+      // ťuknutie na guličku = hneď prehrá príbeh toho človeka (potom ďalší)
+      const rg = e.target.closest('.rg[data-u]');
+      if(rg && byUid[rg.dataset.u]){
+        const uid = rg.dataset.u;
+        if(uid === u.uid){ openViewer(u.uid); return; }
+        const k = others.indexOf(uid);
+        openViewer(uid, others.slice(k + 1));
+        return;
+      }
+      // číslo (alebo miesto vedľa) = panel so všetkými príbehmi
       openAll();
     });
   })();
