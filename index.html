@@ -23185,6 +23185,43 @@ function c8botInfo(){
 #c8sp-sheet .it .c8sr-av{width:64px;height:64px;}
 #c8sp-sheet .it .nm{font-size:11.5px;font-weight:600;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #c8sp-sheet .it.seen .nm{color:#9CA3AF;}
+/* štatistika tvojho príbehu */
+#c8st-viewer .c8sx{position:absolute;inset:0;z-index:6;background:#2B2D33;display:flex;flex-direction:column;}
+#c8st-viewer .c8sx-x{position:absolute;right:8px;top:calc(8px + env(safe-area-inset-top));width:44px;height:44px;border:0;background:none;color:#fff;font-size:24px;cursor:pointer;z-index:2;}
+#c8st-viewer .c8sx-strip{display:flex;gap:10px;align-items:flex-end;overflow-x:auto;scrollbar-width:none;padding:calc(56px + env(safe-area-inset-top)) 16px 14px;flex:none;}
+#c8st-viewer .c8sx-strip::before,#c8st-viewer .c8sx-strip::after{content:"";flex:0 0 calc(50% - 58px);}
+#c8st-viewer .c8sx-strip::-webkit-scrollbar{display:none;}
+#c8st-viewer .c8sx-th{flex:none;width:62px;height:106px;border-radius:12px;border:2px solid transparent;background:linear-gradient(180deg,#6b7280,#1f2937) center/cover no-repeat;position:relative;opacity:.6;cursor:pointer;padding:0;}
+#c8st-viewer .c8sx-th.on{width:84px;height:146px;opacity:1;border-color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.4);}
+#c8st-viewer .c8sx-th small{position:absolute;left:6px;bottom:5px;color:#fff;font-size:11px;font-weight:800;text-shadow:0 1px 3px #000;}
+#c8st-viewer .c8sx-th.add{background:#111;color:#fff;font-size:26px;opacity:1;}
+#c8st-viewer .c8sx-sh{flex:1;min-height:0;background:var(--surface,#fff);color:var(--text,#111827);border-radius:20px 20px 0 0;display:flex;flex-direction:column;}
+#c8st-viewer .c8sx-tabs{display:flex;align-items:center;border-bottom:1px solid var(--line,#EEF0F4);padding:0 10px;flex:none;}
+#c8st-viewer .c8sx-tabs button{border:0;background:none;font:inherit;font-weight:800;font-size:14px;color:#7a8194;padding:13px 10px 10px;border-bottom:3px solid transparent;cursor:pointer;}
+#c8st-viewer .c8sx-tabs button.on{color:#5B4CFF;border-bottom-color:#5B4CFF;}
+#c8st-viewer .c8sx-tabs .c8sx-del{margin-left:auto;font-size:18px;}
+#c8st-viewer .c8sx-body{flex:1;overflow-y:auto;padding:12px 16px calc(20px + env(safe-area-inset-bottom));}
+#c8st-viewer .c8sx-q{width:100%;border:0;border-radius:12px;background:var(--bg,#F1F2F6);padding:10px 12px;font:inherit;font-size:14px;color:inherit;outline:none;margin-bottom:4px;}
+#c8st-viewer .c8sx-r{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--line,#F0F1F5);cursor:pointer;}
+#c8st-viewer .c8sx-av{width:42px;height:42px;border-radius:50%;flex:none;background:#5B4CFF center/cover no-repeat;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;}
+#c8st-viewer .c8sx-tx{flex:1;min-width:0;}
+#c8st-viewer .c8sx-tx b{display:block;font-size:14.5px;}
+#c8st-viewer .c8sx-tx small{display:block;font-size:12px;color:#8a90a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#c8st-viewer .c8sx-h{font-size:17px;}
+#c8st-viewer .c8sx-msg{border:1.5px solid var(--line,#E1E3EA);background:none;color:inherit;border-radius:10px;padding:6px 10px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;flex:none;}
+#c8st-viewer .c8sx-em{padding:18px 0;color:#8a90a0;font-size:14px;text-align:center;}
+#c8st-viewer .c8sx-nt{font-size:11.5px;color:#9aa;text-align:center;margin-top:14px;}
+#c8st-viewer .c8sx-body h4{margin:4px 0 6px;font-size:16px;}
+#c8st-viewer .c8sx-kv{display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:14px;border-bottom:1px solid var(--line,#F3F4F7);}
+#c8st-viewer .c8sx-kv span small{display:block;font-size:11px;color:#9aa;}
+#c8st-viewer .c8sx-sep{height:8px;background:var(--bg,#F1F2F6);margin:8px -16px 10px;}
+#c8st-viewer .c8sx-dn{position:relative;width:170px;height:170px;margin:6px auto 10px;border-radius:50%;}
+#c8st-viewer .c8sx-dn::after{content:"";position:absolute;inset:14px;border-radius:50%;background:var(--surface,#fff);}
+#c8st-viewer .c8sx-dn div{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+#c8st-viewer .c8sx-dn span{font-size:12px;color:#7a8194;}
+#c8st-viewer .c8sx-dn b{font-size:34px;}
+#c8st-viewer .c8sx-lg{display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0;}
+#c8st-viewer .c8sx-lg i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;}
 /* odpoveď na príbeh v chate */
 .c8st-cr{display:flex;flex-direction:column;max-width:78%;gap:4px;}
 .c8st-cr.mine{align-self:flex-end;align-items:flex-end;}
@@ -23688,6 +23725,7 @@ function c8botInfo(){
   }
   function closeViewer(){
     if(!V) return;
+    try{ if(V.leave) V.leave(); }catch(_){}
     cancelAnimationFrame(V.raf);
     try{ V.video.pause(); V.video.removeAttribute('src'); V.video.load(); }catch(_){}
     V.el.remove();
@@ -23703,21 +23741,37 @@ function c8botInfo(){
       try{ localStorage.setItem('c8stSeen', JSON.stringify(localSeen)); }catch(_){}
     }
     try{ if(typeof window.c8sTrack === 'function') window.c8sTrack('story', s.id, s.uid); }catch(_){}
+    if(!viewSent[s.id] && !(s.seenAt && s.seenAt[u.uid])){ viewSent[s.id] = 1; react(s, 'view').catch(()=>{}); }
     if(Array.isArray(s.viewers) && s.viewers.indexOf(u.uid) >= 0) return;
     db.collection('stories').doc(s.id).update({ viewers: firebase.firestore.FieldValue.arrayUnion(u.uid) }).catch(()=>{});
   }
   /* ---------- like / odpoveď na príbeh ---------- */
   const fresh = (s)=> stories.find(x=> x.id === s.id) || s;
+  const viewSent = {}, actSent = {};
+  function reactOnce(s, action){ const k = action + ':' + s.id; if(actSent[k]) return; actSent[k] = 1; react(s, action).catch(()=>{ delete actSent[k]; }); }
+  // kto ma sleduje (na „sleduje ťa“ a graf sledovatelia / nesledujú)
+  let folCache = null;
+  async function myFollowers(){
+    const u = me(); if(!u || !hasDb()) return new Set();
+    if(folCache && folCache.uid === u.uid && Date.now() - folCache.at < 300000) return folCache.set;
+    try{
+      const snap = await db.collection('profiles').where('following', 'array-contains', u.uid).get();
+      const set = new Set(); snap.forEach(d=> set.add(d.id));
+      folCache = { uid: u.uid, at: Date.now(), set };
+      snap.forEach(d=>{ const x = d.data() || {}; if(typeof cacheProfile === 'function' && x.name) cacheProfile(d.id, x.name, x.avatarPhoto || null); });
+      return set;
+    }catch(e){ return null; }
+  }
   const likedLocal = {}, likeNotified = {};
   function isLiked(s){
     if(s.id in likedLocal) return likedLocal[s.id];
     const u = me(), f = fresh(s);
     return !!(u && Array.isArray(f.likes) && f.likes.indexOf(u.uid) >= 0);
   }
-  async function react(s, action){
+  async function react(s, action, extra){
     const tok = await auth.currentUser.getIdToken();
     const base = (typeof C8MOD_URL !== 'undefined') ? C8MOD_URL : 'https://c8-moderator.sevcikjaroslav1.workers.dev';
-    const r = await fetch(base + '/story/react', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + tok }, body: JSON.stringify({ id: s.id, action }) });
+    const r = await fetch(base + '/story/react', { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + tok }, body: JSON.stringify(Object.assign({ id: s.id, action }, extra || {})) });
     const j = await r.json().catch(()=>({}));
     if(!r.ok || !j.ok) throw new Error(j.error || ('HTTP ' + r.status));
   }
@@ -23748,7 +23802,7 @@ function c8botInfo(){
     if(ref && typeof c8modMsg === 'function') c8modMsg(chatRef.id, ref.id);
     chatRef.update({ ['unread.' + owner]: firebase.firestore.FieldValue.increment(1) }).catch(()=>{});
     if(typeof createNotification === 'function') createNotification(owner, 'story_reply', { storyId: s.id, commentText: text.slice(0, 80) });
-    react(s, 'reply').catch(()=>{});
+    react(s, 'reply', { text: text.slice(0, 120) }).catch(()=>{});
     return true;
   }
 
@@ -23792,7 +23846,7 @@ function c8botInfo(){
     el.querySelector('.c8st-who b').textContent = p.name;
     V = { el, video, list, idx, uid, own, raf: 0, paused: false, onKey: null, queue: Array.isArray(queue) ? queue.filter(x=> byUid[x] && byUid[x].length) : null };
 
-    const goProfile = ()=>{ const pu = { uid, name: p.name, photoURL: p.photo }; closeViewer(); if(own){ if(typeof openProfile === 'function') openProfile(); } else if(typeof openUserProfile === 'function') openUserProfile(pu); };
+    const goProfile = ()=>{ if(!own && V && V.list[V.idx]) reactOnce(V.list[V.idx], 'profile'); const pu = { uid, name: p.name, photoURL: p.photo }; closeViewer(); if(own){ if(typeof openProfile === 'function') openProfile(); } else if(typeof openUserProfile === 'function') openUserProfile(pu); };
     hav.onclick = goProfile; el.querySelector('.c8st-who').onclick = goProfile;
     el.querySelector('.c8st-x').onclick = closeViewer;
     const muteBtn = el.querySelector('.c8st-mute');
@@ -23863,57 +23917,96 @@ function c8botInfo(){
       z.addEventListener('pointerup', up); z.addEventListener('pointercancel', up);
     });
     if(own){
-      el.querySelector('.c8st-views').onclick = ()=>{
-        const s = fresh(V.list[V.idx]);
-        const arr = (x)=> Array.isArray(x) ? x : [];
-        const vs = arr(s.viewers), ls = arr(s.likes), rs = arr(s.repliedBy);
-        const all = vs.slice(); ls.concat(rs).forEach(x=>{ if(all.indexOf(x) < 0) all.push(x); });
-        const box = document.createElement('div'); box.className = 'c8st-vlist';
-        box.innerHTML = `<div class="c8st-vgrab"></div><div class="c8st-vtabs">
-          <button data-t="v" class="on">👁 ${escapeHtml(T('Videli'))} ${all.length}</button><button data-t="l">❤️ ${ls.length}</button><button data-t="r">💬 ${rs.length}</button></div><div class="c8st-vrows"></div>`;
-        const rows = box.querySelector('.c8st-vrows');
-        const pc = (id)=> (typeof profilesCache !== 'undefined' && profilesCache[id]) || null;
-        const fill = (tab)=>{
-          const ids = tab === 'l' ? ls : tab === 'r' ? rs : all;
-          rows.innerHTML = '';
-          if(!ids.length){ const d = document.createElement('div'); d.className = 'c8st-vempty'; d.textContent = tab === 'l' ? T('Zatiaľ nikto nedal ❤️.') : tab === 'r' ? T('Zatiaľ žiadne odpovede.') : T('Zatiaľ nikto.'); rows.appendChild(d); return; }
-          ids.slice().reverse().forEach(id=>{
-            const c = pc(id) || {};
-            const r = document.createElement('div'); r.className = 'c8st-vr';
-            const a = document.createElement('span'); a.className = 'c8st-va';
-            const n = document.createElement('span'); n.className = 'c8st-vn';
-            const setP = (name, photo)=>{
-              n.textContent = name || T('Používateľ');
-              if(photo && /^https?:\/\//.test(photo)){ a.style.backgroundImage = `url("${String(photo).replace(/["\\]/g,'')}")`; a.textContent = ''; }
-              else a.textContent = (typeof initials === 'function') ? initials(name || '?') : '?';
-            };
-            setP(c.name, c.photo);
-            if(!c.name && hasDb()){
-              db.collection('profiles').doc(id).get().then(d=>{ const x = d.exists ? d.data() : null; if(x){ if(typeof cacheProfile === 'function') cacheProfile(id, x.name, x.avatarPhoto || null); setP(x.name, x.avatarPhoto || null); } }).catch(()=>{});
-            }
-            const ic = document.createElement('span'); ic.className = 'c8st-vi';
-            ic.textContent = (ls.indexOf(id) >= 0 ? '❤️' : '') + (rs.indexOf(id) >= 0 ? ' 💬' : '');
-            r.appendChild(a); r.appendChild(n); r.appendChild(ic);
-            r.onclick = (e)=>{
-              e.stopPropagation();
-              const cc = pc(id) || {}; const user = { uid: id, name: cc.name || n.textContent, photoURL: cc.photo || null };
-              closeViewer();
-              if(rs.indexOf(id) >= 0 && typeof openChatWithUser === 'function') openChatWithUser(user);
-              else if(typeof openUserProfile === 'function') openUserProfile(user);
-            };
-            rows.appendChild(r);
-          });
-        };
-        box.querySelectorAll('.c8st-vtabs button').forEach(b=> b.onclick = (e)=>{
-          e.stopPropagation();
-          box.querySelectorAll('.c8st-vtabs button').forEach(x=> x.classList.toggle('on', x === b));
-          fill(b.dataset.t);
-        });
-        fill('v');
+      el.querySelector('.c8st-views').onclick = ()=> openReport();
+      // ===== štatistika tvojho príbehu: vľavo 👁 Videli, vpravo 📊 Štatistika =====
+      function openReport(){
+        const old = el.querySelector('.c8sx'); if(old) old.remove();
         video.pause(); V.paused = true;
-        box.onclick = (e)=>{ if(e.target.closest('.c8st-vr, .c8st-vtabs')) return; box.remove(); if(V){ V.paused = false; if(video.style.display !== 'none') video.play().catch(()=>{}); } };
+        let tab = 'v', q = '', fol = null;
+        const box = document.createElement('div'); box.className = 'c8sx';
+        box.innerHTML = `<button class="c8sx-x" aria-label="${escapeHtml(T('Zavrieť'))}">✕</button><div class="c8sx-strip"></div><div class="c8sx-sh"><div class="c8sx-tabs"><button data-t="v"></button><button data-t="s"></button><button class="c8sx-del" title="${escapeHtml(T('Zmazať'))}">🗑️</button></div><div class="c8sx-body"></div></div>`;
         el.querySelector('.c8st-stage').appendChild(box);
-      };
+        const strip = box.querySelector('.c8sx-strip'), body = box.querySelector('.c8sx-body');
+        const close = ()=>{ box.remove(); if(V){ V.paused = false; if(video.style.display !== 'none') video.play().catch(()=>{}); } };
+        box.querySelector('.c8sx-x').onclick = close;
+        box.querySelector('.c8sx-del').onclick = ()=>{ el.querySelector('.c8st-del').click(); if(V && V.list.length && box.isConnected){ video.pause(); V.paused = true; draw(); } };
+        box.querySelectorAll('.c8sx-tabs button[data-t]').forEach(b=> b.onclick = ()=>{ tab = b.dataset.t; draw(); });
+        // potiahnutie prstom doľava / doprava prepína záložky
+        let sx = null;
+        body.addEventListener('touchstart', (e)=>{ sx = e.touches[0].clientX; }, { passive: true });
+        body.addEventListener('touchend', (e)=>{ if(sx === null) return; const dx = e.changedTouches[0].clientX - sx; sx = null; if(Math.abs(dx) > 60){ const nt = dx < 0 ? 's' : 'v'; if(nt !== tab){ tab = nt; draw(); } } });
+        myFollowers().then(f=>{ fol = f; if(box.isConnected) draw(); });
+        const arr = (x)=> Array.isArray(x) ? x : [];
+        const pc = (id)=> (typeof profilesCache !== 'undefined' && profilesCache[id]) || null;
+        const ago2 = (ts)=> ts ? ((typeof formatPostTime === 'function') ? formatPostTime(ts) : '') : '';
+        const bg = (u)=> u && /^https?:\/\//.test(u) ? ` style="background-image:url('${String(u).replace(/['"\\()]/g, '')}')"` : '';
+        function draw(){
+          if(!V || !V.list.length){ close(); return; }
+          const s = fresh(V.list[V.idx]);
+          const vs = arr(s.viewers), ls = arr(s.likes), rs = arr(s.repliedBy);
+          const all = vs.slice(); ls.concat(rs).forEach(x=>{ if(all.indexOf(x) < 0) all.push(x); });
+          const seenAt = (s.seenAt && typeof s.seenAt === 'object') ? s.seenAt : {};
+          const replies = (s.replies && typeof s.replies === 'object') ? s.replies : {};
+          strip.innerHTML = V.list.map((st, i)=> `<button class="c8sx-th${i === V.idx ? ' on' : ''}" data-i="${i}"${bg(thumbOf(st))}><small>👁 ${arr(fresh(st).viewers).length}</small></button>`).join('') + `<button class="c8sx-th add" data-add="1">＋</button>`;
+          const on = strip.querySelector('.on'); if(on) strip.scrollLeft = on.offsetLeft - (strip.clientWidth - on.offsetWidth) / 2;
+          strip.querySelectorAll('.c8sx-th').forEach(b=> b.onclick = ()=>{
+            if(b.dataset.add){ closeViewer(); openSheet(); return; }
+            const i = +b.dataset.i; if(i === V.idx) return;
+            show(i); video.pause(); V.paused = true; draw();
+          });
+          const tb = box.querySelectorAll('.c8sx-tabs button[data-t]');
+          tb[0].textContent = '👁 ' + T('Videli') + ' ' + all.length; tb[1].textContent = '📊 ' + T('Štatistika');
+          tb.forEach(b=> b.classList.toggle('on', b.dataset.t === tab));
+          if(tab === 'v'){
+            const ord = all.slice().sort((a, b)=> (seenAt[b] || 0) - (seenAt[a] || 0));
+            body.innerHTML = `<input class="c8sx-q" type="search" placeholder="🔍 ${escapeHtml(T('Hľadať'))}" value="${escapeHtml(q)}"><div class="c8sx-rows"></div>`;
+            const rows = body.querySelector('.c8sx-rows'), qi = body.querySelector('.c8sx-q');
+            const fill = ()=>{
+              const qq = q.trim().toLowerCase();
+              rows.innerHTML = '';
+              const list = ord.filter(id=> !qq || String((pc(id) || {}).name || '').toLowerCase().indexOf(qq) >= 0);
+              if(!list.length){ rows.innerHTML = `<div class="c8sx-em">${escapeHtml(all.length ? T('Nikto sa nenašiel.') : T('Zatiaľ nikto nevidel tvoj príbeh.'))}</div>`; return; }
+              list.forEach(id=>{
+                const c = pc(id) || {};
+                const name = c.name || T('Používateľ');
+                const r = document.createElement('div'); r.className = 'c8sx-r';
+                const sub = [ago2(seenAt[id]), replies[id] ? '💬 „' + replies[id] + '“' : (rs.indexOf(id) >= 0 ? '💬 ' + T('odpísal(a)') : ''), fol && fol.has(id) ? T('sleduje ťa') : ''].filter(Boolean).join(' · ');
+                r.innerHTML = `<span class="c8sx-av"${bg(c.photo)}>${c.photo && /^https?:/.test(c.photo) ? '' : escapeHtml((typeof initials === 'function') ? initials(name) : '?')}</span><div class="c8sx-tx"><b>${escapeHtml(name)}</b>${sub ? `<small>${escapeHtml(sub)}</small>` : ''}</div>${ls.indexOf(id) >= 0 ? '<span class="c8sx-h">❤️</span>' : ''}<button class="c8sx-msg">${escapeHtml(T('Napísať'))}</button>`;
+                const user = ()=> ({ uid: id, name, photoURL: c.photo || null });
+                r.querySelector('.c8sx-msg').onclick = (e)=>{ e.stopPropagation(); closeViewer(); if(typeof openChatWithUser === 'function') openChatWithUser(user()); };
+                r.onclick = ()=>{ closeViewer(); if(typeof openUserProfile === 'function') openUserProfile(user()); };
+                if(!c.name && hasDb()) db.collection('profiles').doc(id).get().then(d=>{ const x = d.exists ? d.data() : null; if(x && typeof cacheProfile === 'function'){ cacheProfile(id, x.name, x.avatarPhoto || null); if(box.isConnected && tab === 'v') fill(); } }).catch(()=>{});
+                rows.appendChild(r);
+              });
+            };
+            qi.oninput = ()=>{ q = qi.value; fill(); };
+            fill();
+            if(all.length) body.insertAdjacentHTML('beforeend', `<div class="c8sx-nt">${escapeHtml(T('Ťuknutím na meno otvoríš profil'))}</div>`);
+          } else {
+            const pt = arr(s.profileTaps).length, sk = arr(s.skips).length;
+            const tot = vs.length, nF = fol ? vs.filter(x=> fol.has(x)).length : null;
+            const pf = tot && nF !== null ? Math.round(nF / tot * 1000) / 10 : 0;
+            const hrs = new Array(24).fill(0); Object.keys(seenAt).forEach(k=>{ const v = Number(seenAt[k]); if(v) hrs[new Date(v).getHours()]++; });
+            const hm = Math.max(...hrs), hb = hm ? hrs.indexOf(hm) : -1;
+            const pct = (x)=> String(x).replace('.', ',') + ' %';
+            body.innerHTML = `<h4>${escapeHtml(T('Prehľad'))}</h4>
+              <div class="c8sx-kv"><span>👁 ${escapeHtml(T('Pozretia'))}</span><b>${tot}</b></div>
+              <div class="c8sx-kv"><span>❤️ ${escapeHtml(T('Interakcie'))}<small>${escapeHtml(T('páči sa + odpovede'))}</small></span><b>${ls.length + rs.length}</b></div>
+              <div class="c8sx-kv"><span>👤 ${escapeHtml(T('Aktivita v profile'))}<small>${escapeHtml(T('ťukli na tvoje meno v príbehu'))}</small></span><b>${pt}</b></div>
+              <div class="c8sx-kv" style="border:0"><span>⏩ ${escapeHtml(T('Preskočili'))}<small>${escapeHtml(T('odišli skôr, než príbeh skončil'))}</small></span><b>${sk}</b></div>
+              <div class="c8sx-sep"></div><h4>${escapeHtml(T('Pozretia'))}</h4>
+              <div class="c8sx-dn" style="background:${tot && nF !== null ? `conic-gradient(#EC4899 0 ${pf}%,#7C3AED ${pf}% 100%)` : '#E5E7EB'}"><div><span>${escapeHtml(T('Pozretia'))}</span><b>${tot}</b></div></div>
+              ${nF !== null ? `<div class="c8sx-lg"><span><i style="background:#EC4899"></i>${escapeHtml(T('Sledovatelia'))}</span><b>${tot ? pct(pf) : '–'}</b></div>
+              <div class="c8sx-lg"><span><i style="background:#7C3AED"></i>${escapeHtml(T('Ľudia, ktorí ťa nesledujú'))}</span><b>${tot ? pct(Math.round((100 - pf) * 10) / 10) : '–'}</b></div>` : ''}
+              <div class="c8sx-sep"></div><h4>${escapeHtml(T('Interakcie'))}</h4>
+              <div class="c8sx-kv"><span>❤️ ${escapeHtml(T('Páči sa'))}</span><b>${ls.length}</b></div>
+              <div class="c8sx-kv"><span>💬 ${escapeHtml(T('Odpovede'))}</span><b>${rs.length}</b></div>
+              <div class="c8sx-kv" style="border:0"><span>🕐 ${escapeHtml(T('Najviac pozretí'))}</span><b>${hb >= 0 ? hb + ':00 – ' + (hb + 1) + ':00' : '–'}</b></div>
+              <div class="c8sx-nt">${escapeHtml(T('Aktivita v profile, Preskočili a čas pozretí sa počítajú od 3. 11. 2026.'))}</div>`;
+          }
+        }
+        draw();
+      }
       el.querySelector('.c8st-del').onclick = ()=>{
         const s = V.list[V.idx];
         if(!confirm(T('Zmazať tento príbeh?'))) return;
@@ -23927,12 +24020,20 @@ function c8botInfo(){
     V.onKey = (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('c8st-rin')) return; if(e.key === 'Escape') closeViewer(); else if(e.key === 'ArrowRight') show(V.idx + 1); else if(e.key === 'ArrowLeft') show(V.idx - 1); };
     document.addEventListener('keydown', V.onKey, true);
 
+    // preskočil = odišiel skôr, než príbeh skončil (rátame len cudzie príbehy)
+    V.leave = ()=>{
+      const c = V && V.cur; if(!c || own) return; V.cur = null;
+      const sec = (Date.now() - c.at) / 1000;
+      if(sec < c.len * 0.85) reactOnce(c.s, 'skip');
+    };
     function show(i){
       if(!V) return;
       if(i < 0) i = 0;
+      if(V.leave) V.leave();
       if(i >= V.list.length){ const q = V.queue; closeViewer(); if(q && q.length) openViewer(q[0], q.slice(1)); return; }
       V.idx = i;
       const s = V.list[i];
+      V.cur = { s, at: Date.now(), len: Math.min(MAX_SEC, Number(s.duration) || (s.type === 'photo' ? PHOTO_SEC : MAX_SEC)) };
       const bars = el.querySelectorAll('.c8st-bar i');
       bars.forEach((b, k)=> b.style.width = (k < i ? '100%' : '0'));
       el.querySelector('.c8st-time').textContent = ago(s.createdAt) + ' · ' + leftTxt(s);
