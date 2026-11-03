@@ -23154,13 +23154,22 @@ function c8botInfo(){
   #app .c8h .header-clock-date,#app .c8h .header-clock-name{font-size:10.5px;}
   #app .c8h .header-clock-date::before,#app .c8h .header-clock-name::before{content:none;display:none;}
   #app .c8h .c8h-date{gap:6px;}
-  #app .c8h .c8h-icons{gap:10px;margin-right:2px;}
+  #app .c8h .c8h-icons{gap:8px;margin-right:0;}
+}
+@media (max-width:380px){
+  #app .c8h .c8h-date{gap:4px;}
+  #app .c8h .c8h-icons{gap:6px;}
+  #app .c8h .messenger-btn,#app .c8h .notif-btn{width:38px!important;height:38px!important;min-width:38px!important;}
+  #app .c8h .messenger-btn svg,#app .c8h .notif-btn svg{width:20px!important;height:20px!important;}
+  .c8sp{margin-left:2px;gap:6px;}
+}
+@media (max-width:900px){
   .c8sp{display:flex;align-items:center;justify-content:flex-start;gap:8px;flex:1 1 0;min-width:0;height:44px;margin-left:4px;padding:0;border:0;background:none;cursor:pointer;font-family:inherit;color:#5B4CFF;}
-  .c8sp .ps{display:flex;gap:4px;min-width:0;overflow:hidden;flex:0 1 auto;}
+  .c8sp .ps{display:flex;gap:4px;min-width:0;overflow:hidden;flex:0 0 auto;}
   .c8sp .rg{flex:none;width:40px;height:40px;border-radius:50%;padding:2.5px;background:conic-gradient(from 210deg,#F59E0B,#EF4444,#EC4899,#8B5CF6,#F59E0B);}
   .c8sp .rg.s{background:#C3C6CF;}
   .c8sp .rg i{display:flex;width:100%;height:100%;border-radius:50%;border:2.5px solid #fff;background:#5B4CFF center/cover no-repeat;color:#fff;font-style:normal;font-weight:800;font-size:13px;align-items:center;justify-content:center;pointer-events:none;}
-  .c8sp b{font-size:15px;font-weight:800;flex:none;padding:8px 6px 8px 2px;}
+  .c8sp b{font-size:15px;font-weight:800;flex:none;padding:8px 4px 8px 0;}
   .c8sp .add{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;text-align:left;}
 }
 /* spodný panel so všetkými príbehmi */
@@ -23311,7 +23320,7 @@ function c8botInfo(){
     const u = me(); if(!u){ el.innerHTML = ''; spSig = ''; return; }
     const others = orderOthers();
     const mineOn = !!(byUid[u.uid] && byUid[u.uid].length);
-    let show = others.slice(0, 5);
+    let show = others.slice(0, 6);
     if(!show.length && mineOn) show = [u.uid];
     const sig = JSON.stringify([show.map(x=> x + (x !== u.uid && isSeen(x) ? 's' : '') + (profOf(x, (byUid[x] || [{}])[0]).photo || '')), others.length, mineOn]);
     if(sig === spSig){ fitPill(); return; } spSig = sig;
@@ -23322,14 +23331,26 @@ function c8botInfo(){
     fitPill();
   }
   // ukáž len toľko guličiek, koľko sa zmestí celých
+  // veľkosť guličiek sa prispôsobí miestu (30–40 px), aby sa zmestilo čo najviac celých
   function fitPill(){
     const el = document.getElementById('c8sp'); if(!el || !el.offsetParent) return;
     const ps = el.querySelector('.ps'); if(!ps) return;
-    ps.querySelectorAll('.rg').forEach(r=> r.style.display = '');
-    const R = ps.getBoundingClientRect().right;
-    ps.querySelectorAll('.rg').forEach((r, i)=>{ if(i > 0 && r.getBoundingClientRect().right > R + 0.5) r.style.display = 'none'; });
+    const rgs = [...ps.querySelectorAll('.rg')]; if(!rgs.length) return;
+    const cnt = el.querySelector('b[data-all], .add');
+    const cw = cnt && cnt.tagName === 'B' ? cnt.getBoundingClientRect().width + 8 : (cnt ? 70 : 0);
+    const W = el.clientWidth, GAP = 4, MIN = 30, MAX = 40;
+    let k = rgs.length, size = MAX;
+    for(; k > 1; k--){ size = (W - cw - GAP * (k - 1)) / k; if(size >= MIN) break; }
+    size = Math.max(MIN, Math.min(MAX, k === 1 ? W - cw : size));
+    rgs.forEach((r, i)=>{
+      r.style.display = i < k ? '' : 'none';
+      r.style.width = r.style.height = Math.floor(size) + 'px';
+      const ii = r.querySelector('i'); if(ii) ii.style.fontSize = Math.round(size * 0.33) + 'px';
+    });
   }
   window.addEventListener('resize', ()=>{ clearTimeout(fitPill._t); fitPill._t = setTimeout(fitPill, 150); });
+  window.addEventListener('load', ()=>{ setTimeout(fitPill, 300); setTimeout(fitPill, 1500); });
+  try{ const pe = document.getElementById('c8sp'); if(pe && window.ResizeObserver) new ResizeObserver(()=> fitPill()).observe(pe); }catch(_){}
   function closeAll(){ const x = document.getElementById('c8sp-sheet'); if(x) x.remove(); }
   function openAll(){
     closeAll();
