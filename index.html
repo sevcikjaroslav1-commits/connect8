@@ -17719,6 +17719,17 @@ const UI_DICT_IT = {
   add(UI_DICT_AT, {"Nové": "Neu", "Ulož si príbehy natrvalo na profil": "Speichere Storys dauerhaft im Profil", "Zatiaľ nemáš žiadne príbehy.": "Du hast noch keine Storys.", "Vyber príbehy (aj staršie z archívu):": "Wähle Storys (auch ältere aus dem Archiv):", "Názov zvýraznenia": "Name des Highlights", "napr. Auto 🚗": "z. B. Auto 🚗", "Uložiť": "Speichern", "Uložené na profil": "Im Profil gespeichert", "Nové zvýraznenie": "Neues Highlight", "Ďalej": "Weiter", "Nepodarilo sa uložiť.": "Speichern fehlgeschlagen.", "Upraviť zvýraznenie": "Highlight bearbeiten", "Uložiť názov": "Namen speichern", "Pridať / odobrať príbehy": "Storys hinzufügen / entfernen", "Vymazať zvýraznenie": "Highlight löschen", "Zvýraznenie": "Highlight", "Vymazať toto zvýraznenie z profilu?": "Dieses Highlight aus dem Profil löschen?", "Nepodarilo sa načítať.": "Laden fehlgeschlagen.", "Pridať do zvýraznených": "Zu Highlights hinzufügen", "Nové zvýraznenie…": "Neues Highlight…", "Hotovo": "Fertig", "Uložiť natrvalo na profil": "Dauerhaft im Profil speichern", "Na profil": "Ins Profil", "Na profile": "Im Profil", "Upraviť": "Bearbeiten", "Odobrať": "Entfernen", "Odobrať tento príbeh zo zvýraznenia?": "Diese Story aus dem Highlight entfernen?"});
   add(UI_DICT_IT, {"Nové": "Nuovo", "Ulož si príbehy natrvalo na profil": "Salva le storie per sempre sul profilo", "Zatiaľ nemáš žiadne príbehy.": "Non hai ancora storie.", "Vyber príbehy (aj staršie z archívu):": "Scegli le storie (anche più vecchie dall'archivio):", "Názov zvýraznenia": "Nome della storia in evidenza", "napr. Auto 🚗": "es. Auto 🚗", "Uložiť": "Salva", "Uložené na profil": "Salvato sul profilo", "Nové zvýraznenie": "Nuova storia in evidenza", "Ďalej": "Avanti", "Nepodarilo sa uložiť.": "Impossibile salvare.", "Upraviť zvýraznenie": "Modifica storia in evidenza", "Uložiť názov": "Salva nome", "Pridať / odobrať príbehy": "Aggiungi / rimuovi storie", "Vymazať zvýraznenie": "Elimina storia in evidenza", "Zvýraznenie": "In evidenza", "Vymazať toto zvýraznenie z profilu?": "Eliminare questa storia in evidenza dal profilo?", "Nepodarilo sa načítať.": "Impossibile caricare.", "Pridať do zvýraznených": "Aggiungi in evidenza", "Nové zvýraznenie…": "Nuova storia in evidenza…", "Hotovo": "Fatto", "Uložiť natrvalo na profil": "Salva per sempre sul profilo", "Na profil": "Sul profilo", "Na profile": "Sul profilo", "Upraviť": "Modifica", "Odobrať": "Rimuovi", "Odobrať tento príbeh zo zvýraznenia?": "Rimuovere questa storia dalla raccolta?"});
 })();
+/* ---- preklady: Uložiť na profil / Odobrať príbehy ---- */
+(function(){
+  const add = (dict, map) => { Object.keys(map).forEach(k => { if(!Object.prototype.hasOwnProperty.call(dict, k)) dict[k] = map[k]; }); };
+  add(UI_DICT_EN, {"Odznač príbehy, ktoré chceš odobrať:": "Untick the stories you want to remove:", "Uložiť na profil": "Save to profile", "Odobrať príbehy": "Remove stories"});
+  add(UI_DICT_CZ, {"Odznač príbehy, ktoré chceš odobrať:": "Odznač příběhy, které chceš odebrat:", "Uložiť na profil": "Uložit na profil", "Odobrať príbehy": "Odebrat příběhy"});
+  add(UI_DICT_PL, {"Odznač príbehy, ktoré chceš odobrať:": "Odznacz relacje, które chcesz usunąć:", "Uložiť na profil": "Zapisz w profilu", "Odobrať príbehy": "Usuń relacje"});
+  add(UI_DICT_HU, {"Odznač príbehy, ktoré chceš odobrať:": "Vedd ki a jelölést az eltávolítandó történetekről:", "Uložiť na profil": "Mentés a profilra", "Odobrať príbehy": "Történetek eltávolítása"});
+  add(UI_DICT_DE, {"Odznač príbehy, ktoré chceš odobrať:": "Entferne den Haken bei Storys, die du entfernen willst:", "Uložiť na profil": "Im Profil speichern", "Odobrať príbehy": "Storys entfernen"});
+  add(UI_DICT_AT, {"Odznač príbehy, ktoré chceš odobrať:": "Entferne den Haken bei Storys, die du entfernen willst:", "Uložiť na profil": "Im Profil speichern", "Odobrať príbehy": "Storys entfernen"});
+  add(UI_DICT_IT, {"Odznač príbehy, ktoré chceš odobrať:": "Deseleziona le storie da rimuovere:", "Uložiť na profil": "Salva sul profilo", "Odobrať príbehy": "Rimuovi storie"});
+})();
 /* ---- preklady: limit zvýraznených ---- */
 (function(){
   const add = (dict, map) => { Object.keys(map).forEach(k => { if(!Object.prototype.hasOwnProperty.call(dict, k)) dict[k] = map[k]; }); };
@@ -23898,7 +23909,7 @@ function c8botInfo(){
       <div class="c8st-head">
         <div class="c8st-hav"></div>
         <div class="c8st-who"><b></b><span class="c8st-time"></span></div>
-        ${own ? `<button class="c8st-ib c8st-pin" title="${escapeHtml(T('Uložiť natrvalo na profil'))}">⭐ ${escapeHtml(T('Na profil'))}</button>` : ''}
+        ${own ? `<button class="c8st-ib c8st-pin" title="${escapeHtml(T('Uložiť natrvalo na profil'))}">⭐ ${escapeHtml(T('Uložiť na profil'))}</button>` : ''}
         <button class="c8st-ib c8st-mute" aria-label="${escapeHtml(T('Zvuk'))}">🔊</button>
         <button class="c8st-ib c8st-x" aria-label="${escapeHtml(T('Zavrieť'))}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
       </div>
@@ -23958,7 +23969,7 @@ function c8botInfo(){
         V.paused = true; try{ video.pause(); }catch(_){}
         if(typeof window.c8hlPin === 'function') window.c8hlPin(V.list[V.idx], ()=>{ if(!V) return; V.paused = false; if(video.style.display !== 'none') video.play().catch(()=>{}); if(V.updPin) V.updPin(); });
       };
-      V.updPin = ()=>{ if(!pin || !V) return; const on = typeof window.c8hlIsPinned === 'function' && window.c8hlIsPinned(V.list[V.idx].id); pin.textContent = (on ? '⭐ ' + T('Na profile') : '⭐ ' + T('Na profil')); pin.style.background = on ? '#FDE68A' : '#fff'; };
+      V.updPin = ()=>{ if(!pin || !V) return; const on = typeof window.c8hlIsPinned === 'function' && window.c8hlIsPinned(V.list[V.idx].id); pin.textContent = (on ? '⭐ ' + T('Na profile') : '⭐ ' + T('Uložiť na profil')); pin.style.background = on ? '#FDE68A' : '#fff'; };
     }
     if(!own && !hl){
       const heart = el.querySelector('.c8st-heart'), rin = el.querySelector('.c8st-rin'), send = el.querySelector('.c8st-send');
@@ -24305,6 +24316,8 @@ function c8botInfo(){
 .c8hl-em{text-align:center;color:#6B7280;font-size:14px;padding:18px 0;}
 /* tlačidlo ⭐ Na profil v príbehu */
 #c8st-viewer .c8st-pin{width:auto;padding:0 12px;height:34px;border-radius:17px;background:#fff;color:#111827;font-weight:700;font-size:13px;font-family:inherit;white-space:nowrap;margin-right:2px;}
+/* „Uložiť na profil“ v 2 riadkoch, aby čas ostal čitateľný */
+#c8st-viewer .c8st-pin{white-space:normal;max-width:98px;height:auto;min-height:36px;padding:3px 11px;line-height:1.12;font-size:12.5px;text-align:center;flex:none;}
 #c8st-viewer .c8st-foot .c8hl-t{flex:1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 </style>
 <script id="c8hl-script">
@@ -24399,7 +24412,7 @@ function c8botInfo(){
       list.addEventListener('click', (e)=>{
         if(longed){ longed = false; return; }
         const it = e.target.closest('.c8hl-it'); if(!it) return;
-        if(it.classList.contains('add')){ newSheet(); return; }
+        if(it.classList.contains('add')){ if(typeof c8stAdd === 'function') c8stAdd(); return; }   // + = nový 24 h príbeh (na profil len cez ⭐ Uložiť na profil)
         play(it.dataset.h);
       });
     }
@@ -24452,8 +24465,8 @@ function c8botInfo(){
   }
   const dfmt = (ms)=>{ const d = new Date(ms); return d.getDate() + '. ' + (d.getMonth() + 1) + '.'; };
   // výber príbehov (pre nové zvýraznenie alebo pridanie do existujúceho)
-  async function pick(title, btnText, preSel, done, maxSel){
-    const items = await myItems();
+  async function pick(title, btnText, preSel, done, maxSel, only){
+    const items = only || await myItems();
     const sel = new Set(preSel || []);
     if(maxSel == null) maxSel = PROFILE_MAX;
     const w = sheet(`<h3>${E(title)}<button data-x="1">✕</button></h3><div class="c8hl-pick"></div>`);
@@ -24463,9 +24476,9 @@ function c8botInfo(){
       box.querySelector('[data-add]').onclick = ()=>{ w.remove(); if(typeof c8stAdd === 'function') c8stAdd(); };
       return;
     }
-    box.innerHTML = `<p>${E(T('Vyber príbehy (aj staršie z archívu):'))} <b>${E(T('Na profile môžu byť najviac 4.'))}</b></p><div class="c8hl-grid">${items.map(s=> `<button type="button" class="c8hl-g${sel.has(s.id) ? ' on' : ''}" data-id="${E(s.id)}"${bg(thumb(s))}><span class="ck"></span>${s.type === 'video' ? '<span class="pl">▶</span>' : ''}<small>${dfmt(s.createdAt)}</small></button>`).join('')}</div><button class="c8hl-btn" data-ok="1"></button>`;
+    box.innerHTML = `<p>${only ? E(T('Odznač príbehy, ktoré chceš odobrať:')) : E(T('Vyber príbehy (aj staršie z archívu):')) + ' <b>' + E(T('Na profile môžu byť najviac 4.')) + '</b>'}</p><div class="c8hl-grid">${items.map(s=> `<button type="button" class="c8hl-g${sel.has(s.id) ? ' on' : ''}" data-id="${E(s.id)}"${bg(thumb(s))}><span class="ck"></span>${s.type === 'video' ? '<span class="pl">▶</span>' : ''}<small>${dfmt(s.createdAt)}</small></button>`).join('')}</div><button class="c8hl-btn" data-ok="1"></button>`;
     const ok = box.querySelector('[data-ok]');
-    const upd = ()=>{ ok.disabled = !sel.size; ok.textContent = btnText + (sel.size ? ' (' + sel.size + ')' : ''); };
+    const upd = ()=>{ ok.disabled = !sel.size && !only; ok.textContent = btnText + (sel.size ? ' (' + sel.size + ')' : ''); };
     box.querySelectorAll('.c8hl-g').forEach(b=> b.onclick = ()=>{ const id = b.dataset.id; if(sel.has(id)) sel.delete(id); else { if(sel.size >= maxSel){ limitMsg(); return; } sel.add(id); } b.classList.toggle('on', sel.has(id)); upd(); });
     ok.onclick = ()=>{ const chosen = items.filter(s=> sel.has(s.id)); w.remove(); done(chosen); };
     upd();
@@ -24503,7 +24516,7 @@ function c8botInfo(){
     const w = sheet(`<h3>✏️ ${E(T('Upraviť zvýraznenie'))}<button data-x="1">✕</button></h3>
       <input class="c8hl-in" maxlength="20" value="${E(h.title || '')}">
       <button class="c8hl-btn" data-save="1">${E(T('Uložiť názov'))}</button>
-      <button class="c8hl-btn sec" data-add="1">➕ ${E(T('Pridať / odobrať príbehy'))}</button>
+      <button class="c8hl-btn sec" data-add="1">➖ ${E(T('Odobrať príbehy'))}</button>
       <button class="c8hl-btn red" data-del="1">🗑️ ${E(T('Vymazať zvýraznenie'))}</button>`);
     const inp = w.querySelector('input');
     w.querySelector('[data-save]').onclick = async ()=>{
@@ -24515,11 +24528,12 @@ function c8botInfo(){
     w.querySelector('[data-add]').onclick = ()=>{
       w.remove();
       pick(h.title || T('Zvýraznenie'), T('Uložiť'), (h.items || []).map(x=> x.id), async (items)=>{
+        if(!items.length){ const r0 = await load(u.uid); await save({ highlights: r0.hl.filter(x=> x.id !== hid) }).catch(()=> alert(T('Nepodarilo sa uložiť.'))); window.c8hlRender(); return; }
         const r = await load(u.uid);
         // ponecháme pôvodné položky, ktoré už nie sú v archíve, ak ich používateľ neodznačil (nevidel ich)
         await save({ highlights: r.hl.map(x=> x.id === hid ? Object.assign({}, x, { items: items.slice(0, ITEMS_MAX), cover: thumb(items[0]) || x.cover }) : x) }).catch(()=> alert(T('Nepodarilo sa uložiť.')));
         window.c8hlRender();
-      }, PROFILE_MAX - (totalItems(c.hl) - (h.items || []).length));
+      }, ITEMS_MAX, (h.items || []).slice());
     };
     w.querySelector('[data-del]').onclick = async ()=>{
       if(!confirm(T('Vymazať toto zvýraznenie z profilu?'))) return;
@@ -24535,11 +24549,10 @@ function c8botInfo(){
     const item = compact(s);
     let c; try{ c = await load(u.uid); }catch(e){ alert(T('Nepodarilo sa načítať.')); if(onClose) onClose(); return; }
     const sel = new Set(c.hl.filter(h=> (h.items || []).some(x=> x.id === item.id)).map(h=> h.id));
-    const defTitle = dfmt(item.createdAt || Date.now());
     // ešte nemáš žiadne zvýraznenie => rovno názov a uložiť (bez prázdneho okna s „Hotovo“)
     if(!c.hl.length){
       if(totalItems(c.hl) >= PROFILE_MAX){ limitMsg(); if(onClose) onClose(); return; }
-      askTitle(defTitle, async (title)=>{ try{ await create([item], title); }catch(e){ alert(T('Nepodarilo sa uložiť.')); } if(onClose) onClose(); }, onClose);
+      askTitle('', async (title)=>{ try{ await create([item], title); }catch(e){ alert(T('Nepodarilo sa uložiť.')); } if(onClose) onClose(); }, onClose);
       return;
     }
     const w = sheet(`<h3>⭐ ${E(T('Pridať do zvýraznených'))}<button data-x="1">✕</button></h3>
@@ -24554,14 +24567,15 @@ function c8botInfo(){
     w.querySelector('[data-new]').onclick = ()=>{
       if(full){ limitMsg(); return; }
       w.remove();
-      askTitle(defTitle, async (title)=>{ try{ await create([item], title); }catch(e){ alert(T('Nepodarilo sa uložiť.')); } if(onClose) onClose(); });
+      askTitle('', async (title)=>{ try{ await create([item], title); }catch(e){ alert(T('Nepodarilo sa uložiť.')); } if(onClose) onClose(); });
     };
     w.querySelector('[data-ok]').onclick = async ()=>{
       // nič nevybraté a príbeh ešte nie je na profile => uloží sa ako nové zvýraznenie
       if(!sel.size && !already){
         if(full){ limitMsg(); return; }
-        try{ await create([item], defTitle); }catch(e){ alert(T('Nepodarilo sa uložiť.')); }
-        closeW(); return;
+        w.remove();
+        askTitle('', async (title)=>{ try{ await create([item], title); }catch(e){ alert(T('Nepodarilo sa uložiť.')); } if(onClose) onClose(); }, onClose);
+        return;
       }
       try{
         const r = await load(u.uid);
@@ -25323,8 +25337,12 @@ body.c8m-on #app main,body.c8m-on #app .main,body.c8m-on #app .layout{padding-bo
   #app .c8h .messenger-btn,#app .c8h .notif-btn{width:36px !important;height:36px !important;min-width:36px !important;}
   #app .c8h .messenger-btn svg,#app .c8h .notif-btn svg{width:19px !important;height:19px !important;}
   #app .c8h .notif-btn{background:#fff;border:1px solid rgba(91,76,255,.14);}
+  /* červené čísla (správy, upozornenia) nesmú presahovať nad hlavičku */
+  #app .c8h .messenger-btn .badge-count,#app .c8h .notif-btn .badge-count{top:-3px;right:-6px;min-width:19px;height:19px;padding:0 4px;border-radius:10px;font-size:11.5px;line-height:15px;}
   #app .c8h .c8h-user{order:5;}
   #app .c8h #user-avatar{width:36px !important;height:36px !important;font-size:15px !important;}
+  /* s príbehom: farebný krúžok sa zmestí do horného riadku (nepresahuje hore) */
+  #app .c8h #user-avatar.c8st-ring{width:32px !important;height:32px !important;margin:0 2px;--c8st-gap:2px;--c8st-w:2.5px;}
   #app .c8h .c8h-br{display:none !important;}
   #app .c8h .c8h-date{order:6;flex:0 0 calc(100% + 20px);margin:3px -10px 0;padding:1px 10px;height:auto;min-height:43px;gap:7px;background:linear-gradient(135deg,#F7F5FF,#EFEBFF);border-top:1px solid rgba(91,76,255,.12);border-bottom:1px solid rgba(91,76,255,.10);box-sizing:border-box;}
   /* sekcie: ikony rovnako veľké, len menej voľného miesta (hlavička 145 px) */
@@ -25381,5 +25399,30 @@ body.c8m-on #app main,body.c8m-on #app .main,body.c8m-on #app .layout{padding-bo
   window.addEventListener('resize', () => { if(!mob() && isOpen()) close(); });
 })();
 </script>
+<style id="c8hl2-style">
+/* profil: rámik len okolo návštev, malé ＋ (nový 24 h príbeh), väčšie guličky s farebným krúžkom a názvom */
+#c8pv-row.c8hl-row{background:none!important;border:0!important;padding:0!important;height:auto!important;min-height:0!important;gap:10px!important;border-radius:0!important}
+#c8pv-row .c8hl-vis{width:54px!important;height:62px;align-self:center!important;border:1.5px solid #CFC5FF!important;border-radius:14px!important;background:linear-gradient(135deg,#F3F0FF,#E9E4FF)!important;padding:0!important}
+#c8pv-row .c8hl-list{gap:8px!important}
+#c8pv-row .c8hl-it{width:58px!important;gap:2px!important}
+#c8pv-row .c8hl-c{width:50px!important;height:50px!important;padding:2.5px!important}
+#c8pv-row .c8hl-c i{border-color:#fff!important}
+#c8pv-row .c8hl-n{font-size:11px!important;max-width:58px!important}
+#c8pv-row .c8hl-it.add .c8hl-c i{font-size:24px!important}
+#c8pv-row .c8hl-list{gap:10px!important;overflow-x:auto!important}
+#c8pv-row .c8hl-it.add{width:28px!important;align-self:flex-start;margin-top:12px;margin-right:2px}
+#c8pv-row .c8hl-it.add .c8hl-c{width:28px!important;height:28px!important}
+#c8pv-row .c8hl-it.add .c8hl-c i{font-size:18px!important}
+#c8pv-row .c8hl-it.add .c8hl-n{display:none}
+#c8pv-row .c8hl-it:not(.add) .c8hl-c{background:conic-gradient(from 210deg,#F59E0B,#EF4444,#EC4899,#8B5CF6,#F59E0B)!important}
+#c8pv-row .c8hl-list{padding:2px 0;}
+@media(max-width:390px){
+#c8pv-row .c8hl-list{gap:6px!important}
+#c8pv-row .c8hl-it{width:50px!important}
+#c8pv-row .c8hl-c{width:44px!important;height:44px!important}
+#c8pv-row .c8hl-n{max-width:50px!important}
+#c8pv-row .c8hl-it.add{width:28px!important;margin-top:10px}
+}
+</style>
 </body>
 </html>
