@@ -25311,7 +25311,7 @@ body.c8m-on #app main,body.c8m-on #app .main,body.c8m-on #app .layout{padding-bo
    2. riadok levanduľový (čas/dátum/meniny + príbehy), 3. riadok sekcie biele ===== */
 @media(max-width:900px){
   #app .topbar.c8h{background:#fff;}
-  #app .c8h .c8h-top{position:relative;background:linear-gradient(135deg,#EAF4FF,#DCEBFF);padding:4px 10px 0;column-gap:7px;}
+  #app .c8h .c8h-top{position:relative;background:linear-gradient(135deg,#EAF4FF,#DCEBFF);padding:3px 10px 0;column-gap:7px;}
   #app .c8h .brand{order:1;margin-right:0;min-width:0;}
   #app .c8h .search-box{order:2;flex:0 0 36px;width:36px;height:36px;margin:0 auto 0 6px;padding:0;border-radius:50%;justify-content:center;background:#fff;border:1px solid rgba(91,76,255,.14);color:#4B5563;cursor:pointer;min-width:0;}
   #app .c8h .search-box .c8h-sicon{width:17px;height:17px;}
@@ -25326,9 +25326,13 @@ body.c8m-on #app main,body.c8m-on #app .main,body.c8m-on #app .layout{padding-bo
   #app .c8h .c8h-user{order:5;}
   #app .c8h #user-avatar{width:36px !important;height:36px !important;font-size:15px !important;}
   #app .c8h .c8h-br{display:none !important;}
-  #app .c8h .c8h-date{order:6;flex:0 0 calc(100% + 20px);margin:4px -10px 0;padding:2px 10px;height:auto;min-height:46px;gap:7px;background:linear-gradient(135deg,#F7F5FF,#EFEBFF);border-top:1px solid rgba(91,76,255,.12);border-bottom:1px solid rgba(91,76,255,.10);box-sizing:border-box;}
+  #app .c8h .c8h-date{order:6;flex:0 0 calc(100% + 20px);margin:3px -10px 0;padding:1px 10px;height:auto;min-height:43px;gap:7px;background:linear-gradient(135deg,#F7F5FF,#EFEBFF);border-top:1px solid rgba(91,76,255,.12);border-bottom:1px solid rgba(91,76,255,.10);box-sizing:border-box;}
+  /* sekcie: ikony rovnako veľké, len menej voľného miesta (hlavička 145 px) */
+  #app .c8h .mode-dock{padding:1px 3px 1px;}
+  #app .c8h .mode-dock button{padding:2px 2px 2px;gap:2px;}
+  #app .c8h .mode-dock button .ml{line-height:1.1;}
   /* rozbalené vyhľadávanie cez celý horný riadok */
-  #app .c8h .c8h-top.c8h-sopen .search-box{position:absolute;left:10px;right:10px;top:3px;width:auto;height:38px;z-index:6;border-radius:19px;padding:0 4px 0 13px;justify-content:flex-start;gap:8px;cursor:text;box-shadow:0 4px 14px rgba(30,27,46,.12);}
+  #app .c8h .c8h-top.c8h-sopen .search-box{position:absolute;left:10px;right:10px;top:2px;width:auto;height:38px;z-index:6;border-radius:19px;padding:0 4px 0 13px;justify-content:flex-start;gap:8px;cursor:text;box-shadow:0 4px 14px rgba(30,27,46,.12);}
   #app .c8h .c8h-top.c8h-sopen .search-box input{display:block;flex:1;font-size:15px;}
   #app .c8h .c8h-top.c8h-sopen .search-box .c8h-sx{display:flex;align-items:center;justify-content:center;flex:none;width:30px;height:30px;border-radius:50%;border:0;background:#F1F2F6;color:#4B5563;font-size:14px;cursor:pointer;padding:0;}
   #app .c8h .c8h-top.c8h-sopen .search-results{top:calc(100% + 6px);left:0;width:100%;max-width:none;}
