@@ -8557,7 +8557,9 @@ function openNotificationTarget(id){
   } else if(n.type === 'story_reply'){
     openChatWithUser({uid: n.fromUid, name: n.fromName, photoURL: n.fromPhoto});
   } else if(n.type === 'story_like'){
-    if(typeof c8stOpen === 'function' && currentUser) c8stOpen(currentUser.uid);
+    const hasLive = currentUser && typeof window.c8stAll === 'function' && window.c8stAll().some(x=> x && x.uid === currentUser.uid && x.id === n.storyId);
+    if(hasLive && typeof c8stOpen === 'function') c8stOpen(currentUser.uid);
+    else if(typeof openProfile === 'function') openProfile();
   } else if((n.type === 'like_comment' || n.type === 'reply_comment') && n.videoId !== undefined && n.videoId !== null){
     switchMode('video');
   } else if((n.type === 'like_comment' || n.type === 'reply_comment') && n.postId !== undefined && n.postId !== null){
@@ -23844,8 +23846,12 @@ function c8botInfo(){
     }catch(e){ return null; }
   }
   const likedLocal = {}, likeNotified = {};
+  // srdiečka na uložených príbehoch (príbeh na 24 h už nie je) – pamätá si ich zariadenie
+  let hlLikes = {}; try{ hlLikes = JSON.parse(localStorage.getItem('c8hlLikes') || '{}') || {}; }catch(_){ hlLikes = {}; }
+  function hlLikeSet(id, on){ if(on) hlLikes[id] = 1; else delete hlLikes[id]; try{ localStorage.setItem('c8hlLikes', JSON.stringify(hlLikes)); }catch(_){} }
   function isLiked(s){
     if(s.id in likedLocal) return likedLocal[s.id];
+    if(hlLikes[s.id]) return true;
     const u = me(), f = fresh(s);
     return !!(u && Array.isArray(f.likes) && f.likes.indexOf(u.uid) >= 0);
   }
@@ -23889,7 +23895,7 @@ function c8botInfo(){
 
   function openViewer(uid, queue, opt){
     const hl = (opt && opt.hl) ? opt.hl : null;
-    const list = (opt && Array.isArray(opt.list)) ? opt.list.slice() : (byUid[uid] || []).slice();
+    const list = (opt && Array.isArray(opt.list)) ? opt.list.map(x=> x && !x.uid ? Object.assign({ uid }, x) : x) : (byUid[uid] || []).slice();
     if(!list.length) return;
     closeViewer();
     const u = me();
@@ -23914,7 +23920,7 @@ function c8botInfo(){
         <button class="c8st-ib c8st-x" aria-label="${escapeHtml(T('Zavrieť'))}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
       </div>
       <div class="c8st-tap l"></div><div class="c8st-tap r"></div>
-      ${hl ? (mine ? `<div class="c8st-foot"><span class="c8hl-t">⭐ ${escapeHtml(hl.title || '')}</span><button class="c8st-hled">✏️ ${escapeHtml(T('Upraviť'))}</button><button class="c8st-hlrm">🗑️ ${escapeHtml(T('Odobrať'))}</button></div>` : '')
+      ${hl && mine ? `<div class="c8st-foot"><span class="c8hl-t">⭐ ${escapeHtml(hl.title || '')}</span><button class="c8st-hled">✏️ ${escapeHtml(T('Upraviť'))}</button><button class="c8st-hlrm">🗑️ ${escapeHtml(T('Odobrať'))}</button></div>`
         : own ? `<div class="c8st-foot"><span class="c8st-views">👁 <span class="c8st-vc">0</span> · ❤️ <span class="c8st-lc">0</span> · 💬 <span class="c8st-rc">0</span></span><button class="c8st-del">🗑️ ${escapeHtml(T('Zmazať'))}</button></div>`
         : `<div class="c8st-dim"></div><div class="c8st-big">❤️</div><div class="c8st-toast"></div>
       <div class="c8st-react"><small>${escapeHtml(T('Rýchla reakcia'))}</small><div class="c8st-emos">${['😂','😮','😍','😢','👏','🔥','🎉','💯'].map(x=>`<button type="button" data-e="${x}">${x}</button>`).join('')}</div></div>
@@ -23938,7 +23944,7 @@ function c8botInfo(){
     muteBtn.onclick = ()=>{ video.muted = !video.muted; muteBtn.textContent = video.muted ? '🔇' : '🔊'; };
     let lastTap = 0, tapT = null;
     const tapNav = (dir)=>{
-      if(own || hl){ show(V.idx + dir); return; }
+      if(own || (hl && mine)){ show(V.idx + dir); return; }
       const now = Date.now();
       if(now - lastTap < 300){ clearTimeout(tapT); lastTap = 0; likeIt(true); return; }   // dvojklik = páči sa
       lastTap = now;
@@ -23971,7 +23977,7 @@ function c8botInfo(){
       };
       V.updPin = ()=>{ if(!pin || !V) return; const on = typeof window.c8hlIsPinned === 'function' && window.c8hlIsPinned(V.list[V.idx].id); pin.textContent = (on ? '⭐ ' + T('Na profile') : '⭐ ' + T('Uložiť na profil')); pin.style.background = on ? '#FDE68A' : '#fff'; };
     }
-    if(!own && !hl){
+    if(!mine){
       const heart = el.querySelector('.c8st-heart'), rin = el.querySelector('.c8st-rin'), send = el.querySelector('.c8st-send');
       const big = el.querySelector('.c8st-big'), toast = el.querySelector('.c8st-toast');
       let toastT = null, typing = false, sending = false;
@@ -23985,6 +23991,11 @@ function c8botInfo(){
         likedLocal[s.id] = on; V.updHeart();
         heart.classList.remove('pop'); void heart.offsetWidth; heart.classList.add('pop');
         if(on){ big.classList.remove('go'); void big.offsetWidth; big.classList.add('go'); try{ if(navigator.vibrate) navigator.vibrate(25); }catch(_){} }
+        if(!stories.some(x=> x.id === s.id)){
+          hlLikeSet(s.id, on);
+          if(on && !likeNotified[s.id] && typeof createNotification === 'function'){ likeNotified[s.id] = 1; createNotification(s.uid, 'story_like', { storyId: s.id }); }
+          return;
+        }
         react(s, on ? 'like' : 'unlike').then(()=>{
           if(on && !likeNotified[s.id] && typeof createNotification === 'function'){ likeNotified[s.id] = 1; createNotification(s.uid, 'story_like', { storyId: s.id }); }
         }).catch(()=>{ likedLocal[s.id] = was; if(V) V.updHeart(); say(T('Nepodarilo sa – skús znova.')); });
