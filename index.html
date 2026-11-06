@@ -25461,6 +25461,10 @@ body.c8m-on #app main,body.c8m-on #app .main,body.c8m-on #app .layout{padding-bo
   #app .c8h .c8h-icons{gap:4px!important}
 }
 @media(max-width:900px){
+  /* menej voľného miesta pod ikonkami horného riadku (hlavička 152 px) */
+  html #app .c8h .c8h-top{padding-top:5px!important;}
+  html #app .c8h .c8h-top .c8h-date{margin-top:2px!important;}
+  #app .c8h .c8h-top.c8h-sopen .search-box{top:5px!important;}
   /* rozbalené vyhľadávanie pri väčšom riadku */
   #app .c8h .c8h-top.c8h-sopen .search-box{width:auto!important;height:42px!important;min-width:0!important;flex-basis:auto!important;margin:0!important;top:6px;border-radius:21px;}
 }
