@@ -3593,6 +3593,9 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
       <div class="c8l-item" id="c8l-reels" onclick="c8OpenMyReels()">
         <span class="c8l-ic"><svg viewBox="0 0 24 24"><defs><linearGradient id="c8rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F59E0B"/><stop offset="1" stop-color="#EF4444"/></linearGradient></defs><rect x="2" y="3" width="20" height="18" rx="3" fill="url(#c8rg)"/><g fill="#fff" opacity=".9"><rect x="3.6" y="5" width="2" height="2" rx=".5"/><rect x="3.6" y="9" width="2" height="2" rx=".5"/><rect x="3.6" y="13" width="2" height="2" rx=".5"/><rect x="3.6" y="17" width="2" height="2" rx=".5"/><rect x="18.4" y="5" width="2" height="2" rx=".5"/><rect x="18.4" y="9" width="2" height="2" rx=".5"/><rect x="18.4" y="13" width="2" height="2" rx=".5"/><rect x="18.4" y="17" width="2" height="2" rx=".5"/></g><path d="M10 8.5v7l5.5-3.5z" fill="#fff"/></svg></span><span class="label">Reels</span>
       </div>
+      <div class="c8l-item" id="c8l-followers" onclick="c8flOpen()">
+        <span class="c8l-ic"><svg viewBox="0 0 24 24"><defs><linearGradient id="c8flg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EC4899"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs><circle cx="9" cy="8" r="4" fill="url(#c8flg)"/><path d="M1.5 20c.6-4 3.6-6.5 7.5-6.5s6.9 2.5 7.5 6.5z" fill="url(#c8flg)"/><path d="M19 9.2c-.9-1.4-3-1.2-3 .6 0 1.5 1.9 2.6 3 3.6 1.1-1 3-2.1 3-3.6 0-1.8-2.1-2-3-.6z" fill="#EC4899"/></svg></span><span class="label">Sledovatelia</span><span class="c8fl-cnt" id="c8fl-cnt-pc"></span>
+      </div>
     <div class="c8g-card" id="c8g-pc" data-c8globe>
         <canvas class="c8g-canvas" role="img" aria-label="Zemeguľa s krajinami používateľov connect8"></canvas>
         <div class="c8g-cap">Connect8</div>
@@ -4125,7 +4128,7 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
 
         <!-- PRIATELIA (SLEDOVANÍ POUŽÍVATELIA) -->
         <section class="view" id="view-friends">
-          <button class="profile-back-btn" onclick="switchMode('feed')">← Späť do Feedu</button>
+          <div class="c8fl-top"><button class="profile-back-btn" onclick="switchMode('feed')">← Späť do Feedu</button><button type="button" class="c8fl-btn" onclick="c8flOpen()"><svg viewBox="0 0 24 24"><defs><linearGradient id="c8flg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EC4899"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs><circle cx="9" cy="8" r="4" fill="url(#c8flg2)"/><path d="M1.5 20c.6-4 3.6-6.5 7.5-6.5s6.9 2.5 7.5 6.5z" fill="url(#c8flg2)"/><path d="M19 9.2c-.9-1.4-3-1.2-3 .6 0 1.5 1.9 2.6 3 3.6 1.1-1 3-2.1 3-3.6 0-1.8-2.1-2-3-.6z" fill="#EC4899"/></svg><span class="label">Sledovatelia</span><span class="c8fl-cnt" id="c8fl-cnt-tel"></span></button></div>
           <div class="c8fv-bar"><div class="profile-section-title" style="margin:0">👥 Priatelia</div><div class="c8fv-seg"><button type="button" id="c8fv-grid" onclick="c8SetFriendsView('grid')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor"/></svg><span>Ikonky</span></button><button type="button" id="c8fv-list" onclick="c8SetFriendsView('list')"><svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2" fill="currentColor"/><rect x="9" y="5" width="12" height="2.4" rx="1.2" fill="currentColor"/><circle cx="5" cy="12" r="2" fill="currentColor"/><rect x="9" y="11" width="12" height="2.4" rx="1.2" fill="currentColor"/><circle cx="5" cy="18" r="2" fill="currentColor"/><rect x="9" y="17" width="12" height="2.4" rx="1.2" fill="currentColor"/></svg><span>Zoznam</span></button></div></div>
           <div class="users-grid" id="friends-grid"></div>
         </section>
@@ -25490,5 +25493,206 @@ html body #c8pv-row .c8hl-it.add{margin-top:13px!important}
   html #app .c8h .c8h-tr svg,html #app .c8h .messenger-btn svg,html #app .c8h .notif-btn svg{width:5vw!important;height:5vw!important;}
 }
 </style>
+<style id="c8fx-style">
+/* efekt krúžku: bodky uzavrú krúžok dokola, potom sa zlejú do farebného krúžku (raz za spustenie appky) */
+.c8fx{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:3;}
+.c8fx c8-d{position:absolute;left:0;top:0;width:var(--d);height:var(--d);margin:calc(var(--d) / -2) 0 0 calc(var(--d) / -2);border-radius:50%;background:var(--c);opacity:0;
+  transform:rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(0);animation:c8fxDot 1.9s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--k) * var(--st));}
+@keyframes c8fxDot{0%{opacity:0;transform:rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(0)}6%{opacity:1;transform:rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(1.35)}12%{transform:rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(1)}55%{opacity:1}75%,100%{opacity:0;transform:rotate(var(--a)) translateY(calc(var(--r) * -1)) scale(1.4)}}
+.c8fx c8-r{position:absolute;left:0;top:0;width:calc(var(--r) * 2);height:calc(var(--r) * 2);margin:calc(var(--r) * -1) 0 0 calc(var(--r) * -1);border-radius:50%;border:2.5px solid rgba(236,72,153,.55);opacity:0;animation:c8fxRip 1s ease-out 1.25s;}
+@keyframes c8fxRip{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.32)}}
+.c8sp .rg{position:relative;}
+.c8sp .rg.c8fx-h,.c8sr-av.c8fx-h{background:transparent !important;}
+.avatar.c8st-ring::after{transition:opacity .35s;}
+.avatar.c8st-ring.c8fx-h::after{opacity:0;}
+</style>
+<script id="c8fx-script">
+/* raz za spustenie appky: guličky nepozretého príbehu hore (telefón aj PC) a krúžok na profile */
+(function(){
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const done = new Set();
+  const COLS = [[245,158,11],[239,68,68],[236,72,153],[139,92,246],[245,158,11]];
+  const col = (t)=>{ t = ((t % 1) + 1) % 1; const x = t * 4, i = Math.floor(x), f = x - i, a = COLS[i], b = COLS[i + 1]; return 'rgb(' + a.map((v, k)=> Math.round(v + (b[k] - v) * f)).join(',') + ')'; };
+  const vis = (el)=>{ if(!el || !el.offsetParent || document.hidden) return false; const r = el.getBoundingClientRect(); return r.width > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth; };
+  function play(el, kind, ripple){
+    if(el.dataset.c8fx) return; el.dataset.c8fx = '1';
+    const w = el.getBoundingClientRect().width;
+    let r;
+    if(kind === 'after'){ const cs = getComputedStyle(el); const g = parseFloat(cs.getPropertyValue('--c8st-gap')) || 5, th = parseFloat(cs.getPropertyValue('--c8st-w')) || 3; r = w / 2 + g - th / 2; }
+    else { const pad = parseFloat(getComputedStyle(el).paddingTop) || 2.5; r = w / 2 - pad / 2; }
+    const d = r >= 30 ? 3.2 : 2.5;
+    const n = Math.max(16, Math.round(2 * Math.PI * r / (d * 2.1)));
+    const box = document.createElement('span'); box.className = 'c8fx';
+    let h = '';
+    for(let k = 0; k < n; k++){ const a = k * 360 / n; h += `<c8-d style="--a:${a}deg;--r:${r.toFixed(1)}px;--d:${d}px;--k:${k};--st:${(1150 / n).toFixed(1)}ms;--c:${col((a - 210) / 360)}"></c8-d>`; }
+    if(ripple) h += `<c8-r style="--r:${(r + 1).toFixed(1)}px"></c8-r>`;
+    box.innerHTML = h;
+    el.appendChild(box);
+    el.classList.add('c8fx-h');
+    setTimeout(()=> el.classList.remove('c8fx-h'), 1200);
+    setTimeout(()=>{ box.remove(); delete el.dataset.c8fx; }, 2400);
+  }
+  function scan(){
+    try{
+      // telefón: guličky v hlavičke
+      document.querySelectorAll('#c8sp .rg[data-u]:not(.s)').forEach(el=>{
+        if(el.style.display === 'none') return;
+        const k = 'top:' + el.dataset.u; if(done.has(k) || !vis(el)) return;
+        done.add(k); play(el, 'bg', false);
+      });
+      // PC: riadok príbehov na Ploche
+      document.querySelectorAll('#c8sr .c8sr-it[data-u]:not(.seen):not(.me) .c8sr-av').forEach(el=>{
+        const k = 'top:' + el.parentElement.dataset.u; if(done.has(k) || !vis(el)) return;
+        done.add(k); play(el, 'bg', true);
+      });
+      // profil (cudzí aj vlastný), keď má nepozretý príbeh
+      const pa = document.getElementById('profile-avatar');
+      if(pa && pa.classList.contains('c8st-ring') && !pa.classList.contains('c8st-seen') && vis(pa)){
+        let uid = null;
+        try{ uid = (typeof viewedProfileUser !== 'undefined' && viewedProfileUser) ? viewedProfileUser.uid : (currentUser && currentUser.uid); }catch(_){}
+        const k = 'prof:' + (uid || '?');
+        if(uid && !done.has(k)){ done.add(k); play(pa, 'after', true); }
+      }
+    }catch(e){}
+  }
+  setInterval(scan, 500);
+})();
+</script>
+<style id="c8fl-style">
+/* ===== Sledovatelia (kto sleduje mňa) ===== */
+.c8fl-cnt{margin-left:auto;background:#EC4899;color:#fff;font-size:12px;font-weight:800;border-radius:10px;padding:1px 8px;line-height:1.5;}
+.c8fl-cnt:empty{display:none;}
+.c8fl-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;}
+.c8fl-top .profile-back-btn{margin-bottom:0;}
+.c8fl-btn{display:none;align-items:center;gap:6px;background:#fff;border:1.5px solid #F9A8D4;color:#BE185D;font-weight:800;font-size:14px;font-family:inherit;border-radius:12px;padding:6px 10px 6px 8px;cursor:pointer;box-shadow:0 2px 8px rgba(236,72,153,.15);}
+.c8fl-btn svg{width:21px;height:21px;flex:none;}
+.c8fl-btn .c8fl-cnt{margin-left:2px;font-size:11.5px;}
+@media(max-width:900px){ .c8fl-btn{display:flex;} }
+#c8fl-modal{position:fixed;inset:0;z-index:10060;background:rgba(10,10,20,.45);display:flex;align-items:center;justify-content:center;padding:16px;}
+#c8fl-modal .bx{width:100%;max-width:560px;max-height:86vh;display:flex;flex-direction:column;background:var(--surface,#fff);color:var(--text,#111827);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;}
+#c8fl-modal .gr{display:none;width:40px;height:4px;border-radius:3px;background:#D1D5DB;margin:8px auto 2px;}
+#c8fl-modal .hd{display:flex;align-items:center;gap:8px;padding:14px 16px 8px;}
+#c8fl-modal .hd h3{margin:0;font-size:18px;}
+#c8fl-modal .hd button{margin-left:auto;width:34px;height:34px;border-radius:50%;border:0;background:var(--bg,#F1F2F6);font-size:15px;cursor:pointer;color:inherit;}
+#c8fl-modal .tb{display:flex;gap:6px;padding:0 16px 8px;flex-wrap:wrap;}
+#c8fl-modal .tb button{border:0;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;background:var(--bg,#F1F2F6);color:#555;cursor:pointer;font-family:inherit;}
+#c8fl-modal .tb button.on{background:#FCE7F3;color:#BE185D;}
+#c8fl-modal .sr{margin:0 16px 8px;}
+#c8fl-modal .sr input{width:100%;border:0;background:var(--bg,#F1F2F6);border-radius:12px;padding:10px 12px;font-size:14px;font-family:inherit;color:inherit;outline:none;}
+#c8fl-modal .ls{overflow-y:auto;flex:1;min-height:120px;padding-bottom:calc(10px + env(safe-area-inset-bottom));}
+#c8fl-modal .rw{display:flex;align-items:center;gap:12px;padding:10px 16px;border-top:1px solid var(--line,#F0F1F5);}
+#c8fl-modal .rw .avatar{width:44px;height:44px;font-size:15px;flex:none;cursor:pointer;}
+#c8fl-modal .rw .nm{min-width:0;cursor:pointer;}
+#c8fl-modal .rw .nm b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#c8fl-modal .rw .nm small{color:#6b7280;font-size:12px;}
+#c8fl-modal .rw .bt{margin-left:auto;display:flex;gap:6px;flex:none;}
+#c8fl-modal .rw .bt button{border:0;border-radius:10px;padding:7px 11px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;}
+#c8fl-modal .rw .f1{background:#5B4CFF;color:#fff;}
+#c8fl-modal .rw .f2{background:var(--bg,#F1F2F6);color:#374151;font-weight:700;}
+#c8fl-modal .rw .ms{background:#E4F8EC;color:#1FAE5C;font-size:15px;padding:5px 9px;}
+#c8fl-modal .em{padding:28px 16px;text-align:center;color:#6b7280;font-size:14px;}
+@media(max-width:900px){
+  #c8fl-modal{align-items:flex-end;padding:0;}
+  #c8fl-modal .bx{max-width:none;border-radius:22px 22px 0 0;max-height:82vh;animation:c8flUp .2s ease-out;}
+  #c8fl-modal .gr{display:block;}
+  #c8fl-modal .rw .bt button{padding:6px 9px;font-size:12px;}
+}
+@keyframes c8flUp{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+</style>
+<script id="c8fl-script">
+/* Sledovatelia = ľudia, ktorí majú v profiles/{uid}.following moje uid. Načíta sa raz pri otvorení appky a pamätá sa 15 min. */
+(function(){
+  const T = (x)=>{ try{ return typeof t === 'function' ? t(x) : x; }catch(e){ return x; } };
+  const E = (x)=> escapeHtml(x == null ? '' : x);
+  let cache = null, flight = null, tab = 'all', q = '';
+  const me = ()=>{ try{ return currentUser && currentUser.uid ? currentUser : null; }catch(e){ return null; } };
+  async function load(force){
+    const u = me(); if(!u || typeof db === 'undefined' || !db) return [];
+    if(!force && cache && cache.uid === u.uid && Date.now() - cache.at < 900000) return cache.list;
+    if(flight) return flight;
+    flight = db.collection('profiles').where('following', 'array-contains', u.uid).get().then(snap=>{
+      const list = [];
+      snap.forEach(d=>{ if(d.id === u.uid) return; const x = d.data() || {}; list.push({ uid: d.id, name: x.name || T('Používateľ'), photo: x.avatarPhoto || x.photoURL || null });
+        try{ if(typeof cacheProfile === 'function' && x.name) cacheProfile(d.id, x.name, x.avatarPhoto || null); }catch(_){} });
+      list.sort((a, b)=> String(a.name).localeCompare(String(b.name), 'sk'));
+      cache = { uid: u.uid, at: Date.now(), list }; flight = null; setCnt(); return list;
+    }, e=>{ flight = null; throw e; });
+    return flight;
+  }
+  function setCnt(){
+    const n = cache ? cache.list.filter(x=> !isBlk(x.uid)).length : 0;
+    ['c8fl-cnt-pc', 'c8fl-cnt-tel'].forEach(id=>{ const el = document.getElementById(id); if(el) el.textContent = cache && n ? String(n) : ''; });
+  }
+  const fol = (uid)=>{ try{ return followingSet && followingSet.has(uid); }catch(e){ return false; } };
+  const isBlk = (uid)=>{ try{ return typeof blockedSet !== 'undefined' && blockedSet.has(uid); }catch(e){ return false; } };
+  function close(){ const m = document.getElementById('c8fl-modal'); if(m) m.remove(); document.removeEventListener('keydown', onKey); }
+  const onKey = (e)=>{ if(e.key === 'Escape') close(); };
+  function draw(){
+    const m = document.getElementById('c8fl-modal'); if(!m) return;
+    const all = (cache ? cache.list : []).filter(x=> !isBlk(x.uid));
+    const not = all.filter(x=> !fol(x.uid)), fr = all.filter(x=> fol(x.uid));
+    m.querySelector('h3').textContent = '👥 ' + T('Sledovatelia') + ' · ' + all.length;
+    const tabs = [['all', T('Všetci'), all.length], ['not', T('Nesleduješ ich'), not.length], ['fr', T('Priatelia'), fr.length]];
+    m.querySelector('.tb').innerHTML = tabs.map(([k, l, n])=> `<button type="button" data-t="${k}" class="${tab === k ? 'on' : ''}">${E(l)} ${n}</button>`).join('');
+    let list = tab === 'not' ? not : tab === 'fr' ? fr : all;
+    const qq = q.trim().toLowerCase(); if(qq) list = list.filter(x=> String(x.name).toLowerCase().indexOf(qq) >= 0);
+    const ls = m.querySelector('.ls');
+    if(!all.length){ ls.innerHTML = `<div class="em">${E(T('Zatiaľ ťa nikto nesleduje.'))}</div>`; return; }
+    if(!list.length){ ls.innerHTML = `<div class="em">${E(T('Nikto sa nenašiel.'))}</div>`; return; }
+    ls.innerHTML = list.map(x=>{
+      const f = fol(x.uid);
+      return `<div class="rw" data-u="${E(x.uid)}"><div class="avatar" data-act="p"></div><div class="nm" data-act="p"><b>${E(x.name)}</b><small>${E(f ? T('Priateľ – sledujete sa navzájom') : T('Sleduje ťa'))}</small></div>
+        <div class="bt">${f ? `<button type="button" class="f2" data-act="f">✓ ${E(T('Sledované'))}</button>` : `<button type="button" class="f1" data-act="f">+ ${E(T('Sledovať späť'))}</button>`}<button type="button" class="ms" data-act="m" aria-label="${E(T('Správa'))}">💬</button></div></div>`;
+    }).join('');
+    ls.querySelectorAll('.rw').forEach(r=>{ const x = list.find(y=> y.uid === r.dataset.u); const av = r.querySelector('.avatar');
+      if(x && x.photo){ av.style.backgroundImage = `url("${String(x.photo).replace(/["\\]/g, '')}")`; av.style.backgroundSize = 'cover'; av.style.backgroundPosition = 'center'; }
+      else av.textContent = initials(String((x && x.name) || '?')); });
+  }
+  window.c8flOpen = async function(){
+    if(!me()) return;
+    close();
+    const m = document.createElement('div'); m.id = 'c8fl-modal';
+    m.innerHTML = `<div class="bx" role="dialog"><div class="gr"></div><div class="hd"><h3>👥 ${E(T('Sledovatelia'))}</h3><button type="button" data-x="1" aria-label="${E(T('Zavrieť'))}">✕</button></div>
+      <div class="tb"></div><div class="sr"><input type="search" placeholder="🔍 ${E(T('Hľadať medzi sledovateľmi…'))}" autocomplete="off"></div><div class="ls"><div class="em">${E(T('Načítavam…'))}</div></div></div>`;
+    document.body.appendChild(m);
+    document.addEventListener('keydown', onKey);
+    m.addEventListener('click', (e)=>{
+      if(e.target === m || e.target.closest('[data-x]')){ close(); return; }
+      const tb = e.target.closest('.tb button'); if(tb){ tab = tb.dataset.t; draw(); return; }
+      const a = e.target.closest('[data-act]'); if(!a) return;
+      const r = a.closest('.rw'); const x = cache && cache.list.find(y=> y.uid === r.dataset.u); if(!x) return;
+      const pu = { uid: x.uid, name: x.name, photoURL: x.photo };
+      if(a.dataset.act === 'p'){ close(); if(typeof openUserProfile === 'function') openUserProfile(pu); }
+      else if(a.dataset.act === 'm'){ close(); if(typeof openChatWithUser === 'function') openChatWithUser(pu); }
+      else if(a.dataset.act === 'f'){ if(typeof toggleFollow === 'function'){ Promise.resolve(toggleFollow(x.uid)).finally(()=> setTimeout(draw, 50)); setTimeout(draw, 0); } }
+    });
+    m.querySelector('input').addEventListener('input', (e)=>{ q = e.target.value; draw(); });
+    tab = 'all'; q = '';
+    try{ await load(); draw(); }
+    catch(e){ const ls = m.querySelector('.ls'); if(ls) ls.innerHTML = `<div class="em">${E(T('Nepodarilo sa načítať.'))}</div>`; }
+  };
+  // počet pri tlačidle: raz po prihlásení (a pri ďalšom otvorení okna najviac raz za 15 min)
+  let started = null;
+  setInterval(()=>{ const u = me(); if(u && started !== u.uid && typeof db !== 'undefined' && db){ started = u.uid; setTimeout(()=> load().catch(()=>{}), 4000); } }, 2000);
+})();
+</script>
+<script id="c8fl-i18n">
+(function(){
+  const add = (dict, map) => { if(typeof dict === 'undefined' || !dict) return; Object.keys(map).forEach(k => { if(!Object.prototype.hasOwnProperty.call(dict, k)) dict[k] = map[k]; }); };
+  const K = ['Sledovatelia','Všetci','Nesleduješ ich','Priatelia','Hľadať medzi sledovateľmi…','Sledovať späť','Sledované','Sleduje ťa','Priateľ – sledujete sa navzájom','Zatiaľ ťa nikto nesleduje.','Nikto sa nenašiel.','Načítavam…','Nepodarilo sa načítať.','Správa','Používateľ'];
+  const V = {
+    EN: ['Followers','All',"You don't follow","Friends",'Search followers…','Follow back','Following','Follows you','Friend – you follow each other','Nobody follows you yet.','Nobody found.','Loading…','Could not load.','Message','User'],
+    CZ: ['Sledující','Všichni','Nesleduješ je','Přátelé','Hledat mezi sledujícími…','Sledovat zpět','Sledováno','Sleduje tě','Přítel – sledujete se navzájem','Zatím tě nikdo nesleduje.','Nikdo nenalezen.','Načítám…','Nepodařilo se načíst.','Zpráva','Uživatel'],
+    PL: ['Obserwujący','Wszyscy','Nie obserwujesz','Znajomi','Szukaj wśród obserwujących…','Obserwuj również','Obserwujesz','Obserwuje cię','Znajomy – obserwujecie się nawzajem','Nikt cię jeszcze nie obserwuje.','Nikogo nie znaleziono.','Ładowanie…','Nie udało się wczytać.','Wiadomość','Użytkownik'],
+    HU: ['Követők','Mind','Nem követed','Barátok','Keresés a követők között…','Visszakövetés','Követed','Követ téged','Barát – követitek egymást','Még senki sem követ.','Nincs találat.','Betöltés…','Nem sikerült betölteni.','Üzenet','Felhasználó'],
+    DE: ['Follower','Alle','Folgst du nicht','Freunde','Follower suchen…','Zurückfolgen','Gefolgt','Folgt dir','Freund – ihr folgt euch','Dir folgt noch niemand.','Niemand gefunden.','Wird geladen…','Laden fehlgeschlagen.','Nachricht','Benutzer'],
+    IT: ['Follower','Tutti','Non segui','Amici','Cerca tra i follower…','Segui anche tu','Seguito','Ti segue','Amico – vi seguite a vicenda','Nessuno ti segue ancora.','Nessuno trovato.','Caricamento…','Impossibile caricare.','Messaggio','Utente']
+  };
+  V.AT = V.DE;
+  const D = { EN: typeof UI_DICT_EN !== 'undefined' ? UI_DICT_EN : null, CZ: typeof UI_DICT_CZ !== 'undefined' ? UI_DICT_CZ : null, PL: typeof UI_DICT_PL !== 'undefined' ? UI_DICT_PL : null,
+    HU: typeof UI_DICT_HU !== 'undefined' ? UI_DICT_HU : null, DE: typeof UI_DICT_DE !== 'undefined' ? UI_DICT_DE : null, AT: typeof UI_DICT_AT !== 'undefined' ? UI_DICT_AT : null, IT: typeof UI_DICT_IT !== 'undefined' ? UI_DICT_IT : null };
+  Object.keys(D).forEach(L=>{ const m = {}; K.forEach((k, i)=> m[k] = V[L][i]); add(D[L], m); });
+})();
+</script>
 </body>
 </html>
