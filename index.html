@@ -25435,5 +25435,35 @@ body.c8m-on #app main,body.c8m-on #app .main,body.c8m-on #app .layout{padding-bo
 #c8pv-row .c8hl-it.add{width:28px!important;margin-top:10px}
 }
 </style>
+<style id="c8h3-style">
+/* telefón: väčší horný riadok (guličky 42 px), celá hlavička 156 px */
+@media(max-width:900px){
+  #app .c8h .c8h-top{padding-top:6px!important;column-gap:8px!important}
+  #app .c8h .brand{font-size:19.5px!important;gap:7px!important}
+  #app .c8h .brand .dot{width:31px!important;height:31px!important}
+  #app .c8h .search-box{flex:0 0 42px!important;width:42px!important;height:42px!important;margin-left:8px!important}
+  #app .c8h .search-box .c8h-sicon{width:20px;height:20px}
+  #app .c8h .c8h-tr,#app .c8h .messenger-btn,#app .c8h .notif-btn{width:42px!important;height:42px!important;min-width:42px!important}
+  #app .c8h .c8h-tr svg{width:21px!important;height:21px!important}
+  #app .c8h .messenger-btn svg,#app .c8h .notif-btn svg{width:22px!important;height:22px!important}
+  #app .c8h .c8h-icons{gap:8px!important}
+  #app .c8h #user-avatar{width:42px!important;height:42px!important;font-size:17px!important}
+  #app .c8h #user-avatar.c8st-ring{width:37px!important;height:37px!important;margin:0 2px!important}
+  #app .c8h .c8h-date{margin-top:5px!important}
+}
+@media(max-width:370px){
+  #app .c8h .brand{font-size:16.5px!important;gap:5px!important}
+  #app .c8h .brand .dot{width:28px!important;height:28px!important}
+  #app .c8h .c8h-top{column-gap:4px!important}
+  #app .c8h .search-box{margin-left:5px!important}
+  #app .c8h .search-box,#app .c8h .c8h-tr,#app .c8h .messenger-btn,#app .c8h .notif-btn,#app .c8h #user-avatar{width:37px!important;height:37px!important;min-width:37px!important;flex-basis:37px!important}
+  #app .c8h #user-avatar.c8st-ring{width:33px!important;height:33px!important}
+  #app .c8h .c8h-icons{gap:4px!important}
+}
+@media(max-width:900px){
+  /* rozbalené vyhľadávanie pri väčšom riadku */
+  #app .c8h .c8h-top.c8h-sopen .search-box{width:auto!important;height:42px!important;min-width:0!important;flex-basis:auto!important;margin:0!important;top:6px;border-radius:21px;}
+}
+</style>
 </body>
 </html>
