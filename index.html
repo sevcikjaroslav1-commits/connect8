@@ -6359,7 +6359,7 @@ async function loadFollowing(){
   blockedSet = new Set();
   if(!FIREBASE_CONFIGURED || !db || !currentUser) return;
   try{
-    const doc = await db.collection('profiles').doc(currentUser.uid).get();
+    const doc = (typeof window.c8ProfGet === 'function') ? await window.c8ProfGet(currentUser.uid, 0) : await db.collection('profiles').doc(currentUser.uid).get();
     const data = doc.exists ? doc.data() : {};
     followingSet = new Set(data.following || []);
     blockedSet = new Set(data.blocked || []);
@@ -10425,7 +10425,7 @@ function loadShowLastOnlineIfNeeded(profileUser){
   if(!profileUser || !profileUser.uid) return;
   if(profileUser.uid in profileSettingsCache) return;
   if(!FIREBASE_CONFIGURED || !db) return;
-  db.collection('profiles').doc(profileUser.uid).get().then(doc=>{
+  ((typeof window.c8ProfGet === 'function') ? window.c8ProfGet(profileUser.uid) : db.collection('profiles').doc(profileUser.uid).get()).then(doc=>{
     const data = (doc.exists && doc.data()) || {};
     profileSettingsCache[profileUser.uid] = !!data.showLastOnline;
     const currentlyViewed = viewedProfileUser || currentUser;
@@ -17708,6 +17708,28 @@ const UI_DICT_IT = {
   add(UI_DICT_AT, {"Pozvať": "Einladen", "Plocha": "Start", "Správy": "Nachrichten", "Pridať": "Hinzufügen"});
   add(UI_DICT_IT, {"Pozvať": "Invita", "Plocha": "Bacheca", "Správy": "Messaggi", "Pridať": "Aggiungi"});
 })();
+/* ---- preklady: zvýraznené príbehy ---- */
+(function(){
+  const add = (dict, map) => { Object.keys(map).forEach(k => { if(!Object.prototype.hasOwnProperty.call(dict, k)) dict[k] = map[k]; }); };
+  add(UI_DICT_EN, {"Nové": "New", "Ulož si príbehy natrvalo na profil": "Save stories to your profile for good", "Zatiaľ nemáš žiadne príbehy.": "You have no stories yet.", "Vyber príbehy (aj staršie z archívu):": "Choose stories (also older ones from the archive):", "Názov zvýraznenia": "Highlight name", "napr. Auto 🚗": "e.g. Car 🚗", "Uložiť": "Save", "Uložené na profil": "Saved to profile", "Nové zvýraznenie": "New highlight", "Ďalej": "Next", "Nepodarilo sa uložiť.": "Could not save.", "Upraviť zvýraznenie": "Edit highlight", "Uložiť názov": "Save name", "Pridať / odobrať príbehy": "Add / remove stories", "Vymazať zvýraznenie": "Delete highlight", "Zvýraznenie": "Highlight", "Vymazať toto zvýraznenie z profilu?": "Delete this highlight from your profile?", "Nepodarilo sa načítať.": "Could not load.", "Pridať do zvýraznených": "Add to highlights", "Nové zvýraznenie…": "New highlight…", "Hotovo": "Done", "Uložiť natrvalo na profil": "Save permanently to profile", "Na profil": "To profile", "Na profile": "On profile", "Upraviť": "Edit", "Odobrať": "Remove", "Odobrať tento príbeh zo zvýraznenia?": "Remove this story from the highlight?"});
+  add(UI_DICT_CZ, {"Nové": "Nové", "Ulož si príbehy natrvalo na profil": "Ulož si příběhy natrvalo na profil", "Zatiaľ nemáš žiadne príbehy.": "Zatím nemáš žádné příběhy.", "Vyber príbehy (aj staršie z archívu):": "Vyber příběhy (i starší z archivu):", "Názov zvýraznenia": "Název zvýraznění", "napr. Auto 🚗": "např. Auto 🚗", "Uložiť": "Uložit", "Uložené na profil": "Uloženo na profil", "Nové zvýraznenie": "Nové zvýraznění", "Ďalej": "Dále", "Nepodarilo sa uložiť.": "Nepodařilo se uložit.", "Upraviť zvýraznenie": "Upravit zvýraznění", "Uložiť názov": "Uložit název", "Pridať / odobrať príbehy": "Přidat / odebrat příběhy", "Vymazať zvýraznenie": "Smazat zvýraznění", "Zvýraznenie": "Zvýraznění", "Vymazať toto zvýraznenie z profilu?": "Smazat toto zvýraznění z profilu?", "Nepodarilo sa načítať.": "Nepodařilo se načíst.", "Pridať do zvýraznených": "Přidat do zvýrazněných", "Nové zvýraznenie…": "Nové zvýraznění…", "Hotovo": "Hotovo", "Uložiť natrvalo na profil": "Uložit natrvalo na profil", "Na profil": "Na profil", "Na profile": "Na profilu", "Upraviť": "Upravit", "Odobrať": "Odebrat", "Odobrať tento príbeh zo zvýraznenia?": "Odebrat tento příběh ze zvýraznění?"});
+  add(UI_DICT_PL, {"Nové": "Nowe", "Ulož si príbehy natrvalo na profil": "Zapisz relacje na stałe w profilu", "Zatiaľ nemáš žiadne príbehy.": "Nie masz jeszcze relacji.", "Vyber príbehy (aj staršie z archívu):": "Wybierz relacje (też starsze z archiwum):", "Názov zvýraznenia": "Nazwa wyróżnienia", "napr. Auto 🚗": "np. Auto 🚗", "Uložiť": "Zapisz", "Uložené na profil": "Zapisano w profilu", "Nové zvýraznenie": "Nowe wyróżnienie", "Ďalej": "Dalej", "Nepodarilo sa uložiť.": "Nie udało się zapisać.", "Upraviť zvýraznenie": "Edytuj wyróżnienie", "Uložiť názov": "Zapisz nazwę", "Pridať / odobrať príbehy": "Dodaj / usuń relacje", "Vymazať zvýraznenie": "Usuń wyróżnienie", "Zvýraznenie": "Wyróżnienie", "Vymazať toto zvýraznenie z profilu?": "Usunąć to wyróżnienie z profilu?", "Nepodarilo sa načítať.": "Nie udało się wczytać.", "Pridať do zvýraznených": "Dodaj do wyróżnionych", "Nové zvýraznenie…": "Nowe wyróżnienie…", "Hotovo": "Gotowe", "Uložiť natrvalo na profil": "Zapisz na stałe w profilu", "Na profil": "Do profilu", "Na profile": "W profilu", "Upraviť": "Edytuj", "Odobrať": "Usuń", "Odobrať tento príbeh zo zvýraznenia?": "Usunąć tę relację z wyróżnienia?"});
+  add(UI_DICT_HU, {"Nové": "Új", "Ulož si príbehy natrvalo na profil": "Mentsd el a történeteket a profilodra", "Zatiaľ nemáš žiadne príbehy.": "Még nincsenek történeteid.", "Vyber príbehy (aj staršie z archívu):": "Válassz történeteket (régebbieket is az archívumból):", "Názov zvýraznenia": "Kiemelés neve", "napr. Auto 🚗": "pl. Autó 🚗", "Uložiť": "Mentés", "Uložené na profil": "Mentve a profilra", "Nové zvýraznenie": "Új kiemelés", "Ďalej": "Tovább", "Nepodarilo sa uložiť.": "Nem sikerült menteni.", "Upraviť zvýraznenie": "Kiemelés szerkesztése", "Uložiť názov": "Név mentése", "Pridať / odobrať príbehy": "Történetek hozzáadása / eltávolítása", "Vymazať zvýraznenie": "Kiemelés törlése", "Zvýraznenie": "Kiemelés", "Vymazať toto zvýraznenie z profilu?": "Törlöd ezt a kiemelést a profilodról?", "Nepodarilo sa načítať.": "Nem sikerült betölteni.", "Pridať do zvýraznených": "Hozzáadás a kiemelésekhez", "Nové zvýraznenie…": "Új kiemelés…", "Hotovo": "Kész", "Uložiť natrvalo na profil": "Mentés véglegesen a profilra", "Na profil": "Profilra", "Na profile": "A profilon", "Upraviť": "Szerkesztés", "Odobrať": "Eltávolítás", "Odobrať tento príbeh zo zvýraznenia?": "Eltávolítod ezt a történetet a kiemelésből?"});
+  add(UI_DICT_DE, {"Nové": "Neu", "Ulož si príbehy natrvalo na profil": "Speichere Storys dauerhaft im Profil", "Zatiaľ nemáš žiadne príbehy.": "Du hast noch keine Storys.", "Vyber príbehy (aj staršie z archívu):": "Wähle Storys (auch ältere aus dem Archiv):", "Názov zvýraznenia": "Name des Highlights", "napr. Auto 🚗": "z. B. Auto 🚗", "Uložiť": "Speichern", "Uložené na profil": "Im Profil gespeichert", "Nové zvýraznenie": "Neues Highlight", "Ďalej": "Weiter", "Nepodarilo sa uložiť.": "Speichern fehlgeschlagen.", "Upraviť zvýraznenie": "Highlight bearbeiten", "Uložiť názov": "Namen speichern", "Pridať / odobrať príbehy": "Storys hinzufügen / entfernen", "Vymazať zvýraznenie": "Highlight löschen", "Zvýraznenie": "Highlight", "Vymazať toto zvýraznenie z profilu?": "Dieses Highlight aus dem Profil löschen?", "Nepodarilo sa načítať.": "Laden fehlgeschlagen.", "Pridať do zvýraznených": "Zu Highlights hinzufügen", "Nové zvýraznenie…": "Neues Highlight…", "Hotovo": "Fertig", "Uložiť natrvalo na profil": "Dauerhaft im Profil speichern", "Na profil": "Ins Profil", "Na profile": "Im Profil", "Upraviť": "Bearbeiten", "Odobrať": "Entfernen", "Odobrať tento príbeh zo zvýraznenia?": "Diese Story aus dem Highlight entfernen?"});
+  add(UI_DICT_AT, {"Nové": "Neu", "Ulož si príbehy natrvalo na profil": "Speichere Storys dauerhaft im Profil", "Zatiaľ nemáš žiadne príbehy.": "Du hast noch keine Storys.", "Vyber príbehy (aj staršie z archívu):": "Wähle Storys (auch ältere aus dem Archiv):", "Názov zvýraznenia": "Name des Highlights", "napr. Auto 🚗": "z. B. Auto 🚗", "Uložiť": "Speichern", "Uložené na profil": "Im Profil gespeichert", "Nové zvýraznenie": "Neues Highlight", "Ďalej": "Weiter", "Nepodarilo sa uložiť.": "Speichern fehlgeschlagen.", "Upraviť zvýraznenie": "Highlight bearbeiten", "Uložiť názov": "Namen speichern", "Pridať / odobrať príbehy": "Storys hinzufügen / entfernen", "Vymazať zvýraznenie": "Highlight löschen", "Zvýraznenie": "Highlight", "Vymazať toto zvýraznenie z profilu?": "Dieses Highlight aus dem Profil löschen?", "Nepodarilo sa načítať.": "Laden fehlgeschlagen.", "Pridať do zvýraznených": "Zu Highlights hinzufügen", "Nové zvýraznenie…": "Neues Highlight…", "Hotovo": "Fertig", "Uložiť natrvalo na profil": "Dauerhaft im Profil speichern", "Na profil": "Ins Profil", "Na profile": "Im Profil", "Upraviť": "Bearbeiten", "Odobrať": "Entfernen", "Odobrať tento príbeh zo zvýraznenia?": "Diese Story aus dem Highlight entfernen?"});
+  add(UI_DICT_IT, {"Nové": "Nuovo", "Ulož si príbehy natrvalo na profil": "Salva le storie per sempre sul profilo", "Zatiaľ nemáš žiadne príbehy.": "Non hai ancora storie.", "Vyber príbehy (aj staršie z archívu):": "Scegli le storie (anche più vecchie dall'archivio):", "Názov zvýraznenia": "Nome della storia in evidenza", "napr. Auto 🚗": "es. Auto 🚗", "Uložiť": "Salva", "Uložené na profil": "Salvato sul profilo", "Nové zvýraznenie": "Nuova storia in evidenza", "Ďalej": "Avanti", "Nepodarilo sa uložiť.": "Impossibile salvare.", "Upraviť zvýraznenie": "Modifica storia in evidenza", "Uložiť názov": "Salva nome", "Pridať / odobrať príbehy": "Aggiungi / rimuovi storie", "Vymazať zvýraznenie": "Elimina storia in evidenza", "Zvýraznenie": "In evidenza", "Vymazať toto zvýraznenie z profilu?": "Eliminare questa storia in evidenza dal profilo?", "Nepodarilo sa načítať.": "Impossibile caricare.", "Pridať do zvýraznených": "Aggiungi in evidenza", "Nové zvýraznenie…": "Nuova storia in evidenza…", "Hotovo": "Fatto", "Uložiť natrvalo na profil": "Salva per sempre sul profilo", "Na profil": "Sul profilo", "Na profile": "Sul profilo", "Upraviť": "Modifica", "Odobrať": "Rimuovi", "Odobrať tento príbeh zo zvýraznenia?": "Rimuovere questa storia dalla raccolta?"});
+})();
+/* ---- preklady: limit zvýraznených ---- */
+(function(){
+  const add = (dict, map) => { Object.keys(map).forEach(k => { if(!Object.prototype.hasOwnProperty.call(dict, k)) dict[k] = map[k]; }); };
+  add(UI_DICT_EN, {"Na profile môžeš mať uložené najviac 4 príbehy. Najprv nejaký odober.": "You can keep at most 4 stories on your profile. Remove one first.", "Na profile môžu byť najviac 4.": "At most 4 on your profile."});
+  add(UI_DICT_CZ, {"Na profile môžeš mať uložené najviac 4 príbehy. Najprv nejaký odober.": "Na profilu můžeš mít uložené nejvýš 4 příběhy. Nejdřív nějaký odeber.", "Na profile môžu byť najviac 4.": "Na profilu mohou být nejvýš 4."});
+  add(UI_DICT_PL, {"Na profile môžeš mať uložené najviac 4 príbehy. Najprv nejaký odober.": "W profilu możesz mieć najwyżej 4 relacje. Najpierw usuń którąś.", "Na profile môžu byť najviac 4.": "W profilu najwyżej 4."});
+  add(UI_DICT_HU, {"Na profile môžeš mať uložené najviac 4 príbehy. Najprv nejaký odober.": "A profilodon legfeljebb 4 történet lehet. Előbb távolíts el egyet.", "Na profile môžu byť najviac 4.": "A profilon legfeljebb 4."});
+  add(UI_DICT_DE, {"Na profile môžeš mať uložené najviac 4 príbehy. Najprv nejaký odober.": "Im Profil kannst du höchstens 4 Storys speichern. Entferne zuerst eine.", "Na profile môžu byť najviac 4.": "Höchstens 4 im Profil."});
+  add(UI_DICT_AT, {"Na profile môžeš mať uložené najviac 4 príbehy. Najprv nejaký odober.": "Im Profil kannst du höchstens 4 Storys speichern. Entferne zuerst eine.", "Na profile môžu byť najviac 4.": "Höchstens 4 im Profil."});
+  add(UI_DICT_IT, {"Na profile môžeš mať uložené najviac 4 príbehy. Najprv nejaký odober.": "Sul profilo puoi tenere al massimo 4 storie. Rimuovine prima una.", "Na profile môžu byť najviac 4.": "Al massimo 4 sul profilo."});
+})();
 function t(text){
   if(currentLang === 'en') return UI_DICT_EN.hasOwnProperty(text) ? UI_DICT_EN[text] : text;
   if(currentLang === 'cz') return UI_DICT_CZ.hasOwnProperty(text) ? UI_DICT_CZ[text] : text;
@@ -18630,21 +18652,24 @@ async function c8pvLoad(force){
 }
 function c8pvSum(daily, from, to){ let s = 0; for(let i = from; i < to; i++) s += (daily[i] || 0); return s; }
 async function c8pvRow(){
-  const row = document.getElementById('c8pv-row'); if(!row) return;
-  if(!c8pfOwn()){ row.classList.remove('show'); return; }
+  const row = (typeof c8hlEnsure === 'function') ? c8hlEnsure() : document.getElementById('c8pv-row'); if(!row) return;
+  try{ if(typeof c8hlRender === 'function') c8hlRender(); }catch(e){}
+  const vis = row.querySelector('.c8hl-vis'); if(!vis) return;
+  if(!c8pfOwn()){ vis.style.display = 'none'; const nb0 = row.querySelector(':scope > .new'); if(nb0) nb0.remove(); return; }
+  vis.style.display = '';
   row.classList.add('show');
   const isNew = (()=>{ try{ return localStorage.getItem('c8pv_seen') !== '1'; }catch(e){ return false; } })();
-  if(!row.innerHTML) row.innerHTML = '<span class="ic">👤</span><div><b>' + c8pvT('Návštevy profilu') + '</b><small>…</small></div><span class="ar">›</span>';
+  if(!vis.innerHTML) vis.innerHTML = '<span class="i">👤</span><b>…</b>';
   try{
     const d = await c8pvLoad();
-    const daily = d.daily || [];                 // index 0 = dnes, 1 = včera…
-    const cur = c8pvSum(daily, 0, 30), prev = c8pvSum(daily, 30, 60);
-    const last30 = daily.slice(0, 30).reverse();
-    row.innerHTML = (isNew ? '<span class="new">' + c8pvT('NOVÉ') + '</span>' : '')
-      + '<span class="ic">👤</span><div><b>' + cur + ' ' + c8pvWord(cur) + ' ' + c8pvT('profilu') + '</b><small>' + c8pvT('posledných 30 dní') + (c8pvDelta(cur, prev) ? ' · ' + c8pvDelta(cur, prev) : '') + '</small></div>'
-      + c8pvSpark(last30, 64, 26) + '<span class="ar">›</span>';
+    const daily = d.daily || [];
+    const cur = c8pvSum(daily, 0, 30), prev = c8pvSum(daily, 30, 60), df = cur - prev;
+    vis.innerHTML = '<span class="i">👤</span><b>' + cur + '</b>' + (df ? '<em class="' + (df < 0 ? 'dn' : '') + '">' + (df > 0 ? '▲+' + df : '▼' + df) + '</em>' : '');
+    vis.title = cur + ' ' + c8pvWord(cur) + ' ' + c8pvT('profilu') + ' · ' + c8pvT('posledných 30 dní');
+    const nb = row.querySelector(':scope > .new'); if(nb) nb.remove();
+    if(isNew) row.insertAdjacentHTML('afterbegin', '<span class="new">' + c8pvT('NOVÉ') + '</span>');
   }catch(e){
-    row.innerHTML = '<span class="ic">👤</span><div><b>' + c8pvT('Návštevy profilu') + '</b><small>' + c8pvT('Ťukni pre štatistiku') + '</small></div><span class="ar">›</span>';
+    vis.innerHTML = '<span class="i">👤</span><b>–</b>';
   }
 }
 function c8pvOpen(){
@@ -20083,7 +20108,7 @@ c8ApplyFriendsView();
     const c = holoCache[uid];
     if(!fresh && c && Date.now() - c.at < 60000) return c.h;
     try{
-      const s = await db.collection('profiles').doc(uid).get();
+      const s = (typeof window.c8ProfGet === 'function') ? await window.c8ProfGet(uid, fresh ? 0 : 60000) : await db.collection('profiles').doc(uid).get();
       const d = s.exists ? s.data() : null;
       const h = (d && d.hologram && (d.hologram.front || d.hologram.video)) ? d.hologram : null;
       holoCache[uid] = { h, at: Date.now() };
@@ -23319,9 +23344,13 @@ function c8botInfo(){
   function cleanupOwn(){
     const u = me(); if(!u || !hasDb() || cleanedFor === u.uid) return;
     cleanedFor = u.uid;
-    db.collection('stories').where('uid', '==', u.uid).get().then(snap=>{
+    db.collection('stories').where('uid', '==', u.uid).get().then(async snap=>{
       const now = Date.now();
-      snap.docs.forEach(d=>{ const x = d.data(); if(!(x.expiresAt > now)) d.ref.delete().catch(()=>{}); });
+      const old = snap.docs.filter(d=>{ const x = d.data(); return !(x.expiresAt > now); });
+      if(!old.length) return;
+      // najprv odložiť do archívu (aby sa dali neskôr pridať na profil), potom zmazať
+      try{ if(typeof window.c8hlArchive === 'function') await window.c8hlArchive(old.map(d=> Object.assign({ id: d.id }, d.data()))); }catch(e){ console.warn('Archív príbehov', e); }
+      old.forEach(d=> d.ref.delete().catch(()=>{}));
     }).catch(()=>{});
   }
   setInterval(subscribe, 1500);          // počká na prihlásenie / odhlásenie
@@ -23398,7 +23427,7 @@ function c8botInfo(){
     const u = me(); if(!u){ el.innerHTML = ''; spSig = ''; return; }
     const others = orderOthers();
     const mineOn = !!(byUid[u.uid] && byUid[u.uid].length);
-    let show = others.slice(0, 6);
+    let show = others.slice(0, 8);
     if(!show.length && mineOn) show = [u.uid];
     const sig = JSON.stringify([show.map(x=> x + (x !== u.uid && isSeen(x) ? 's' : '') + (profOf(x, (byUid[x] || [{}])[0]).photo || '')), others.length, mineOn]);
     if(sig === spSig){ fitPill(); return; } spSig = sig;
@@ -23847,13 +23876,15 @@ function c8botInfo(){
     return true;
   }
 
-  function openViewer(uid, queue){
-    const list = (byUid[uid] || []).slice();
+  function openViewer(uid, queue, opt){
+    const hl = (opt && opt.hl) ? opt.hl : null;
+    const list = (opt && Array.isArray(opt.list)) ? opt.list.slice() : (byUid[uid] || []).slice();
     if(!list.length) return;
     closeViewer();
     const u = me();
-    const own = !!(u && uid === u.uid);
-    let idx = own ? 0 : list.findIndex(s=> !(localSeen[s.id] || (u && Array.isArray(s.viewers) && s.viewers.indexOf(u.uid) >= 0)));
+    const mine = !!(u && uid === u.uid);
+    const own = !hl && mine;
+    let idx = hl ? Math.max(0, Math.min(list.length - 1, Number(opt.start) || 0)) : own ? 0 : list.findIndex(s=> !(localSeen[s.id] || (u && Array.isArray(s.viewers) && s.viewers.indexOf(u.uid) >= 0)));
     if(idx < 0) idx = 0;
     const p = profOf(uid, list[0]);
     const el = document.createElement('div');
@@ -23867,11 +23898,13 @@ function c8botInfo(){
       <div class="c8st-head">
         <div class="c8st-hav"></div>
         <div class="c8st-who"><b></b><span class="c8st-time"></span></div>
+        ${own ? `<button class="c8st-ib c8st-pin" title="${escapeHtml(T('Uložiť natrvalo na profil'))}">⭐ ${escapeHtml(T('Na profil'))}</button>` : ''}
         <button class="c8st-ib c8st-mute" aria-label="${escapeHtml(T('Zvuk'))}">🔊</button>
         <button class="c8st-ib c8st-x" aria-label="${escapeHtml(T('Zavrieť'))}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
       </div>
       <div class="c8st-tap l"></div><div class="c8st-tap r"></div>
-      ${own ? `<div class="c8st-foot"><span class="c8st-views">👁 <span class="c8st-vc">0</span> · ❤️ <span class="c8st-lc">0</span> · 💬 <span class="c8st-rc">0</span></span><button class="c8st-del">🗑️ ${escapeHtml(T('Zmazať'))}</button></div>`
+      ${hl ? (mine ? `<div class="c8st-foot"><span class="c8hl-t">⭐ ${escapeHtml(hl.title || '')}</span><button class="c8st-hled">✏️ ${escapeHtml(T('Upraviť'))}</button><button class="c8st-hlrm">🗑️ ${escapeHtml(T('Odobrať'))}</button></div>` : '')
+        : own ? `<div class="c8st-foot"><span class="c8st-views">👁 <span class="c8st-vc">0</span> · ❤️ <span class="c8st-lc">0</span> · 💬 <span class="c8st-rc">0</span></span><button class="c8st-del">🗑️ ${escapeHtml(T('Zmazať'))}</button></div>`
         : `<div class="c8st-dim"></div><div class="c8st-big">❤️</div><div class="c8st-toast"></div>
       <div class="c8st-react"><small>${escapeHtml(T('Rýchla reakcia'))}</small><div class="c8st-emos">${['😂','😮','😍','😢','👏','🔥','🎉','💯'].map(x=>`<button type="button" data-e="${x}">${x}</button>`).join('')}</div></div>
       <div class="c8st-rfoot"><input class="c8st-rin" type="text" maxlength="500" enterkeyhint="send" autocomplete="off" placeholder="${escapeHtml(T('Poslať správu…'))}">
@@ -23885,16 +23918,16 @@ function c8botInfo(){
     if(p.photo && /^https?:\/\//.test(p.photo)) hav.style.backgroundImage = `url("${String(p.photo).replace(/["\\]/g,'')}")`;
     else hav.textContent = (typeof initials === 'function') ? initials(p.name || '?') : '?';
     el.querySelector('.c8st-who b').textContent = p.name;
-    V = { el, video, list, idx, uid, own, raf: 0, paused: false, onKey: null, queue: Array.isArray(queue) ? queue.filter(x=> byUid[x] && byUid[x].length) : null };
+    V = { el, video, list, idx, uid, own, hl, raf: 0, paused: false, onKey: null, queue: Array.isArray(queue) ? queue.filter(x=> byUid[x] && byUid[x].length) : null };
 
-    const goProfile = ()=>{ if(!own && V && V.list[V.idx]) reactOnce(V.list[V.idx], 'profile'); const pu = { uid, name: p.name, photoURL: p.photo }; closeViewer(); if(own){ if(typeof openProfile === 'function') openProfile(); } else if(typeof openUserProfile === 'function') openUserProfile(pu); };
+    const goProfile = ()=>{ if(!own && !hl && V && V.list[V.idx]) reactOnce(V.list[V.idx], 'profile'); const pu = { uid, name: p.name, photoURL: p.photo }; closeViewer(); if(mine){ if(typeof openProfile === 'function') openProfile(); } else if(typeof openUserProfile === 'function') openUserProfile(pu); };
     hav.onclick = goProfile; el.querySelector('.c8st-who').onclick = goProfile;
     el.querySelector('.c8st-x').onclick = closeViewer;
     const muteBtn = el.querySelector('.c8st-mute');
     muteBtn.onclick = ()=>{ video.muted = !video.muted; muteBtn.textContent = video.muted ? '🔇' : '🔊'; };
     let lastTap = 0, tapT = null;
     const tapNav = (dir)=>{
-      if(own){ show(V.idx + dir); return; }
+      if(own || hl){ show(V.idx + dir); return; }
       const now = Date.now();
       if(now - lastTap < 300){ clearTimeout(tapT); lastTap = 0; likeIt(true); return; }   // dvojklik = páči sa
       lastTap = now;
@@ -23905,7 +23938,29 @@ function c8botInfo(){
     const pauseV = ()=>{ if(!V) return; V.paused = true; try{ video.pause(); }catch(_){} };
     const resumeV = ()=>{ if(!V) return; V.paused = false; if(video.style.display !== 'none') video.play().catch(()=>{}); };
     let likeIt = ()=>{};
-    if(!own){
+    if(hl && mine){
+      el.querySelector('.c8st-hled').onclick = ()=>{ const id = hl.id; closeViewer(); if(typeof window.c8hlEdit === 'function') window.c8hlEdit(id); };
+      el.querySelector('.c8st-hlrm').onclick = async ()=>{
+        const s = V.list[V.idx];
+        if(!confirm(T('Odobrať tento príbeh zo zvýraznenia?'))) return;
+        try{ await window.c8hlRemoveItem(hl.id, s.id); }catch(e){ alert(T('Nepodarilo sa uložiť.')); return; }
+        if(!V) return;
+        V.list.splice(V.idx, 1);
+        const bb = el.querySelectorAll('.c8st-bar'); if(bb[V.idx]) bb[V.idx].remove();
+        if(!V.list.length){ closeViewer(); return; }
+        show(Math.min(V.idx, V.list.length - 1));
+      };
+    }
+    if(own){
+      const pin = el.querySelector('.c8st-pin');
+      if(pin) pin.onclick = (e)=>{
+        e.stopPropagation();
+        V.paused = true; try{ video.pause(); }catch(_){}
+        if(typeof window.c8hlPin === 'function') window.c8hlPin(V.list[V.idx], ()=>{ if(!V) return; V.paused = false; if(video.style.display !== 'none') video.play().catch(()=>{}); if(V.updPin) V.updPin(); });
+      };
+      V.updPin = ()=>{ if(!pin || !V) return; const on = typeof window.c8hlIsPinned === 'function' && window.c8hlIsPinned(V.list[V.idx].id); pin.textContent = (on ? '⭐ ' + T('Na profile') : '⭐ ' + T('Na profil')); pin.style.background = on ? '#FDE68A' : '#fff'; };
+    }
+    if(!own && !hl){
       const heart = el.querySelector('.c8st-heart'), rin = el.querySelector('.c8st-rin'), send = el.querySelector('.c8st-send');
       const big = el.querySelector('.c8st-big'), toast = el.querySelector('.c8st-toast');
       let toastT = null, typing = false, sending = false;
@@ -24122,7 +24177,7 @@ function c8botInfo(){
 
     // preskočil = odišiel skôr, než príbeh skončil (rátame len cudzie príbehy)
     V.leave = ()=>{
-      const c = V && V.cur; if(!c || own) return; V.cur = null;
+      const c = V && V.cur; if(!c || own || V.hl) return; V.cur = null;
       const sec = typeof c.pos === 'number' ? c.pos : (Date.now() - c.at) / 1000;
       if(sec < c.len * 0.85) reactOnce(c.s, 'skip');
       react(c.s, 'watch', { sec: Math.min(c.len, Math.round(sec * 10) / 10) }).catch(()=>{});
@@ -24137,7 +24192,8 @@ function c8botInfo(){
       V.cur = { s, at: Date.now(), pos: 0, len: Math.min(MAX_SEC, Number(s.duration) || (s.type === 'photo' ? PHOTO_SEC : MAX_SEC)) };
       const bars = el.querySelectorAll('.c8st-bar i');
       bars.forEach((b, k)=> b.style.width = (k < i ? '100%' : '0'));
-      el.querySelector('.c8st-time').textContent = ago(s.createdAt) + ' · ' + leftTxt(s);
+      el.querySelector('.c8st-time').textContent = hl ? ('⭐ ' + (hl.title || '') + ' · ' + ago(s.createdAt)) : (ago(s.createdAt) + ' · ' + leftTxt(s));
+      if(V.updPin) V.updPin();
       if(own){
         const f = fresh(s), n = (x)=> Array.isArray(x) ? x.length : 0;
         const vc = el.querySelector('.c8st-vc'); if(vc) vc.textContent = n(f.viewers);
@@ -24146,7 +24202,7 @@ function c8botInfo(){
       } else if(V.updHeart) V.updHeart();
       const msg = el.querySelector('.c8st-msg'); msg.textContent = T('Načítavam...');
       cancelAnimationFrame(V.raf);
-      markSeen(s);
+      if(!hl) markSeen(s);
       // ---- FOTKA ----
       if(s.type === 'photo' || (!s.videoUrl && s.photoUrl)){
         try{ video.pause(); }catch(_){}
@@ -24197,11 +24253,338 @@ function c8botInfo(){
 
   // pre prípadné použitie z iných častí appky
   window.c8stOpen = openViewer;
+  window.c8stOpenList = (uid, list, hl, start)=> openViewer(uid, null, { list, hl, start });
   window.c8stAll = ()=> stories.slice();
   window.c8stAdd = openSheet;
 })();
 </script>
 <!-- =================== /C8 PRÍBEHY =================== -->
+<!-- =================== C8 ZVÝRAZNENÉ PRÍBEHY (na profile natrvalo) =================== -->
+<style id="c8hl-style">
+/* riadok Návštevy + zvýraznené príbehy – rovnako veľký ako pôvodný riadok Návštev */
+#c8pv-row.c8hl-row{cursor:default;padding:3px 8px;gap:6px;height:59px;min-height:59px;}
+#c8pv-row .c8hl-vis{flex:none;width:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;border:0;border-right:1.5px solid #D9D1FF;background:none;padding:0 6px 0 0;margin:0;cursor:pointer;font:inherit;color:#1E1B2E;line-height:1.1;align-self:stretch;}
+#c8pv-row .c8hl-vis .i{font-size:13px;}
+#c8pv-row .c8hl-vis b{font-size:14.5px;font-weight:800;display:block;}
+#c8pv-row .c8hl-vis em{font-style:normal;font-size:9.5px;font-weight:800;color:#1E8E4E;}
+#c8pv-row .c8hl-vis em.dn{color:#C2183F;}
+#c8pv-row .c8hl-list{flex:1;min-width:0;display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;align-items:center;align-self:stretch;}
+#c8pv-row .c8hl-list::-webkit-scrollbar{display:none;}
+#c8pv-row .c8hl-it{flex:none;width:44px;display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:none;padding:0;cursor:pointer;font:inherit;color:#374151;-webkit-touch-callout:none;user-select:none;}
+#c8pv-row .c8hl-c{width:37px;height:37px;border-radius:50%;padding:2px;background:conic-gradient(from 210deg,#C4B5FD,#8B5CF6,#C4B5FD);}
+#c8pv-row .c8hl-c i{display:flex;width:100%;height:100%;border-radius:50%;border:2px solid #EEEAFF;background:#C9BEFB center/cover no-repeat;align-items:center;justify-content:center;font-style:normal;color:#fff;font-weight:800;font-size:13px;}
+#c8pv-row .c8hl-it.add .c8hl-c{background:none;border:1.5px dashed #8B7FD6;padding:0;}
+#c8pv-row .c8hl-it.add .c8hl-c i{border:0;background:none;color:#6d5cff;font-size:20px;font-weight:600;}
+#c8pv-row .c8hl-n{font-size:9.5px;line-height:1.15;font-weight:700;max-width:44px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#c8pv-row .c8hl-empty{font-size:12px;color:#6b6290;font-weight:600;align-self:center;padding-left:2px;}
+/* spodné okná */
+.c8hl-sheet{position:fixed;inset:0;z-index:10070;background:rgba(10,10,20,.5);display:flex;align-items:flex-end;justify-content:center;}
+.c8hl-box{width:100%;max-width:520px;max-height:86vh;overflow-y:auto;background:var(--surface,#fff);color:var(--text,#111827);border-radius:22px 22px 0 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom));animation:c8stUp .2s ease-out;}
+.c8hl-box .gr{width:40px;height:4px;border-radius:3px;background:#D1D5DB;margin:0 auto 10px;}
+.c8hl-box h3{margin:0 0 10px;font-size:17px;display:flex;justify-content:space-between;align-items:center;}
+.c8hl-box h3 button{border:0;background:none;font-size:22px;color:#9CA3AF;cursor:pointer;}
+.c8hl-box p{margin:0 0 10px;font-size:13px;color:var(--text-dim,#6B7280);}
+.c8hl-row2{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line,#F0F1F5);font-size:14.5px;font-weight:600;cursor:pointer;}
+.c8hl-row2 i{width:42px;height:42px;border-radius:50%;flex:none;background:#E5E7EB center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:20px;color:#6d5cff;}
+.c8hl-row2 i.add{background:none;border:1.5px dashed #9aa;}
+.c8hl-row2 .ck{margin-left:auto;width:22px;height:22px;border-radius:50%;border:2px solid #C3C6CF;flex:none;}
+.c8hl-row2 .ck.on{background:#5B4CFF;border-color:#5B4CFF;box-shadow:inset 0 0 0 3px #fff;}
+.c8hl-in{width:100%;border:1.5px solid var(--line,#E5E7EB);border-radius:12px;padding:11px 12px;font:inherit;font-size:15px;color:inherit;background:var(--bg,#F6F7FB);outline:none;margin:4px 0 10px;}
+.c8hl-in:focus{border-color:#5B4CFF;}
+.c8hl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+.c8hl-g{position:relative;aspect-ratio:9/14;border-radius:10px;background:#1f2937 center/cover no-repeat;border:2.5px solid transparent;cursor:pointer;padding:0;}
+.c8hl-g.on{border-color:#5B4CFF;}
+.c8hl-g .ck{position:absolute;right:6px;top:6px;width:20px;height:20px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.25);}
+.c8hl-g.on .ck{background:#5B4CFF;}
+.c8hl-g small{position:absolute;left:5px;bottom:4px;color:#fff;font-size:10.5px;font-weight:700;text-shadow:0 1px 3px #000;}
+.c8hl-g .pl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;font-size:20px;text-shadow:0 1px 4px #000;}
+.c8hl-btn{width:100%;height:48px;border:0;border-radius:14px;background:#5B4CFF;color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.c8hl-btn:disabled{opacity:.5;}
+.c8hl-btn.sec{background:var(--bg,#F3F4F6);color:inherit;}
+.c8hl-btn.red{background:none;color:#DC2626;}
+.c8hl-em{text-align:center;color:#6B7280;font-size:14px;padding:18px 0;}
+/* tlačidlo ⭐ Na profil v príbehu */
+#c8st-viewer .c8st-pin{width:auto;padding:0 12px;height:34px;border-radius:17px;background:#fff;color:#111827;font-weight:700;font-size:13px;font-family:inherit;white-space:nowrap;margin-right:2px;}
+#c8st-viewer .c8st-foot .c8hl-t{flex:1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+</style>
+<script id="c8hl-script">
+/* ===== Zvýraznené príbehy: ukladajú sa do profiles/{uid}.highlights, archív do profiles/{uid}.storyArchive ===== */
+(function(){
+  const T = (x)=>{ try{ return typeof t === 'function' ? t(x) : x; }catch(e){ return x; } };
+  const E = (x)=> (typeof escapeHtml === 'function' ? escapeHtml(String(x == null ? '' : x)) : String(x == null ? '' : x));
+  const me = ()=>{ try{ return (currentUser && currentUser.uid) ? currentUser : null; }catch(e){ return null; } };
+  const hasDb = ()=> (typeof db !== 'undefined' && db);
+  const cache = {};
+  const ARCH_MAX = 80, ITEMS_MAX = 4, PROFILE_MAX = 4;   // na profile najviac 4 príbehy spolu
+  // jedno čítanie profilu zdieľajú: sledovaní/zablokovaní, hologram, „naposledy online“ aj zvýraznenia
+  const pcache = {}, pflight = {};
+  window.c8ProfGet = function(uid, maxAge){
+    if(maxAge == null) maxAge = 600000;              // 10 min
+    const c = pcache[uid];
+    if(c && Date.now() - c.at <= maxAge) return Promise.resolve(c.snap);
+    if(pflight[uid]) return pflight[uid];
+    pflight[uid] = db.collection('profiles').doc(uid).get().then(d=>{
+      const data = d.exists ? (d.data() || {}) : null;
+      const snap = { exists: !!d.exists, id: uid, data: ()=> data ? Object.assign({}, data) : undefined };
+      pcache[uid] = { at: Date.now(), snap, raw: data };
+      delete pflight[uid];
+      return snap;
+    }, e=>{ delete pflight[uid]; throw e; });
+    return pflight[uid];
+  };
+  const pmerge = (uid, patch)=>{ const c = pcache[uid]; if(c){ const raw = Object.assign({}, c.raw || {}, patch); c.raw = raw; c.snap = { exists: true, id: uid, data: ()=> Object.assign({}, raw) }; } };
+  const totalItems = (hl)=> hl.reduce((a, h)=> a + ((h.items || []).length), 0);
+  const limitMsg = ()=> alert(T('Na profile môžeš mať uložené najviac 4 príbehy. Najprv nejaký odober.'));
+  const nid = ()=> 'h' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+  function compact(s){
+    return { id: String(s.id), type: s.type === 'photo' || (!s.videoUrl && s.photoUrl) ? 'photo' : 'video', photoUrl: s.photoUrl || null, videoUrl: s.videoUrl || null,
+      trimStart: Number(s.trimStart) || 0, duration: Number(s.duration) || 0, createdAt: Number(s.createdAt) || Date.now() };
+  }
+  function thumb(s){
+    const cl = (u)=> typeof u === 'string' && u.indexOf('res.cloudinary.com') >= 0;
+    if((s.type === 'photo' || !s.videoUrl) && s.photoUrl)
+      return cl(s.photoUrl) && s.photoUrl.indexOf('/image/upload/') >= 0 ? s.photoUrl.replace('/image/upload/', '/image/upload/w_240,c_limit,f_auto,q_auto/') : s.photoUrl;
+    if(cl(s.videoUrl) && s.videoUrl.indexOf('/video/upload/') >= 0)
+      return s.videoUrl.replace('/video/upload/', '/video/upload/so_' + (Math.round(Number(s.trimStart) || 0) + 1) + ',w_240,c_limit,q_auto/').replace(/\.[a-z0-9]{2,5}(\?.*)?$/i, '.jpg');
+    return '';
+  }
+  const bg = (u)=> u && /^https?:\/\//.test(u) ? ` style="background-image:url('${String(u).replace(/['"\\()]/g, '')}')"` : '';
+
+  async function load(uid, force){
+    const c = cache[uid];
+    if(!force && c && Date.now() - c.at < 600000) return c;
+    if(!hasDb()) return { hl: [], arch: [] };
+    const d = await window.c8ProfGet(uid, force ? 0 : 600000);
+    const x = d.exists ? (d.data() || {}) : {};
+    const r = { at: Date.now(), hl: Array.isArray(x.highlights) ? x.highlights : [], arch: Array.isArray(x.storyArchive) ? x.storyArchive : [] };
+    cache[uid] = r;
+    return r;
+  }
+  async function save(patch){
+    const u = me(); if(!u || !hasDb()) throw new Error('db');
+    await db.collection('profiles').doc(u.uid).set(patch, { merge: true });
+    pmerge(u.uid, patch);
+    const c = cache[u.uid] || (cache[u.uid] = { at: Date.now(), hl: [], arch: [] });
+    if('highlights' in patch) c.hl = patch.highlights;
+    if('storyArchive' in patch) c.arch = patch.storyArchive;
+  }
+  const toast = (m)=>{ try{ if(typeof showToast === 'function') showToast(m); }catch(e){} };
+
+  // archív: vypršané vlastné príbehy sa pred zmazaním odložia (vidí ich len majiteľ v appke)
+  window.c8hlArchive = async function(list){
+    const u = me(); if(!u || !list || !list.length) return;
+    const c = await load(u.uid);
+    const arch = c.arch.slice(), have = new Set(arch.map(x=> x.id));
+    list.forEach(s=>{ if(s && (s.photoUrl || s.videoUrl) && !have.has(String(s.id))) arch.push(compact(s)); });
+    arch.sort((a, b)=> (b.createdAt || 0) - (a.createdAt || 0));
+    await save({ storyArchive: arch.slice(0, ARCH_MAX) });
+  };
+
+  /* ---------- riadok na profile ---------- */
+  function ensure(){
+    const row = document.getElementById('c8pv-row'); if(!row) return null;
+    if(row.tagName === 'BUTTON'){
+      const d = document.createElement('div'); d.id = 'c8pv-row'; d.className = row.className; row.replaceWith(d); return ensure();
+    }
+    if(!row.querySelector('.c8hl-list')){
+      row.classList.add('c8hl-row'); row.removeAttribute('onclick');
+      row.innerHTML = `<button type="button" class="c8hl-vis" onclick="c8pvOpen()" aria-label="${E(T('Návštevy profilu'))}"></button><div class="c8hl-list"></div>`;
+      const list = row.querySelector('.c8hl-list');
+      let pt = null, longed = false;
+      list.addEventListener('pointerdown', (e)=>{ const it = e.target.closest('.c8hl-it[data-h]'); longed = false; if(!it || viewedUser()) return; pt = setTimeout(()=>{ longed = true; try{ navigator.vibrate && navigator.vibrate(30); }catch(_){} editSheet(it.dataset.h); }, 550); });
+      ['pointerup','pointercancel','pointerleave'].forEach(ev=> list.addEventListener(ev, ()=> clearTimeout(pt)));
+      list.addEventListener('scroll', ()=> clearTimeout(pt), { passive: true });
+      list.addEventListener('contextmenu', (e)=>{ const it = e.target.closest('.c8hl-it[data-h]'); if(it && !viewedUser()){ e.preventDefault(); clearTimeout(pt); longed = true; editSheet(it.dataset.h); } });
+      list.addEventListener('click', (e)=>{
+        if(longed){ longed = false; return; }
+        const it = e.target.closest('.c8hl-it'); if(!it) return;
+        if(it.classList.contains('add')){ newSheet(); return; }
+        play(it.dataset.h);
+      });
+    }
+    return row;
+  }
+  window.c8hlEnsure = ensure;
+  const viewedUser = ()=>{ try{ return (typeof viewedProfileUser !== 'undefined' && viewedProfileUser) ? viewedProfileUser : null; }catch(e){ return null; } };
+  const profUid = ()=>{ const v = viewedUser(); const u = me(); return v ? v.uid : (u ? u.uid : null); };
+  let rSeq = 0;
+  window.c8hlRender = async function(){
+    const row = ensure(); if(!row) return;
+    const uid = profUid(); if(!uid) return;
+    const own = !viewedUser();
+    const seq = ++rSeq;
+    const list = row.querySelector('.c8hl-list');
+    const draw = (hl)=>{
+      if(seq !== rSeq) return;
+      row.classList.toggle('show', own || hl.length > 0);
+      row.querySelector('.c8hl-vis').style.display = own ? '' : 'none';
+      let h = own ? `<button type="button" class="c8hl-it add"><span class="c8hl-c"><i>＋</i></span><span class="c8hl-n">${E(T('Nové'))}</span></button>` : '';
+      h += hl.map(x=> `<button type="button" class="c8hl-it" data-h="${E(x.id)}" title="${E(x.title)}"><span class="c8hl-c"><i${bg(x.cover || (x.items && x.items[0] ? thumb(x.items[0]) : ''))}></i></span><span class="c8hl-n">${E(x.title || '⭐')}</span></button>`).join('');
+      if(own && !hl.length) h += `<span class="c8hl-empty">${E(T('Ulož si príbehy natrvalo na profil'))}</span>`;
+      list.innerHTML = h;
+    };
+    const c = cache[uid]; if(c) draw(c.hl);
+    try{ const r = await load(uid); draw(r.hl); }catch(e){ if(!c) draw([]); }
+  };
+
+  function play(hid, start){
+    const uid = profUid(); const c = cache[uid]; if(!c) return;
+    const h = c.hl.find(x=> x.id === hid); if(!h || !h.items || !h.items.length) return;
+    if(typeof window.c8stOpenList === 'function') window.c8stOpenList(uid, h.items.slice(), { id: h.id, title: h.title || '', owner: uid }, start || 0);
+  }
+
+  /* ---------- okná ---------- */
+  function sheet(html){
+    const w = document.createElement('div'); w.className = 'c8hl-sheet';
+    w.innerHTML = `<div class="c8hl-box" role="dialog"><div class="gr"></div>${html}</div>`;
+    w.addEventListener('click', (e)=>{ if(e.target === w || e.target.closest('[data-x]')) w.remove(); });
+    document.body.appendChild(w);
+    return w;
+  }
+  async function myItems(){
+    const u = me(); if(!u) return [];
+    const c = await load(u.uid).catch(()=> ({ arch: [] }));
+    const act = (typeof window.c8stAll === 'function' ? window.c8stAll() : []).filter(s=> s && s.uid === u.uid && (s.photoUrl || s.videoUrl)).map(compact);
+    const seen = new Set(), out = [];
+    act.concat(c.arch || []).forEach(s=>{ if(!seen.has(s.id)){ seen.add(s.id); out.push(s); } });
+    return out.sort((a, b)=> (b.createdAt || 0) - (a.createdAt || 0));
+  }
+  const dfmt = (ms)=>{ const d = new Date(ms); return d.getDate() + '. ' + (d.getMonth() + 1) + '.'; };
+  // výber príbehov (pre nové zvýraznenie alebo pridanie do existujúceho)
+  async function pick(title, btnText, preSel, done, maxSel){
+    const items = await myItems();
+    const sel = new Set(preSel || []);
+    if(maxSel == null) maxSel = PROFILE_MAX;
+    const w = sheet(`<h3>${E(title)}<button data-x="1">✕</button></h3><div class="c8hl-pick"></div>`);
+    const box = w.querySelector('.c8hl-pick');
+    if(!items.length){
+      box.innerHTML = `<div class="c8hl-em">${E(T('Zatiaľ nemáš žiadne príbehy.'))}</div><button class="c8hl-btn" data-add="1">⭕ ${E(T('Pridať príbeh'))}</button>`;
+      box.querySelector('[data-add]').onclick = ()=>{ w.remove(); if(typeof c8stAdd === 'function') c8stAdd(); };
+      return;
+    }
+    box.innerHTML = `<p>${E(T('Vyber príbehy (aj staršie z archívu):'))} <b>${E(T('Na profile môžu byť najviac 4.'))}</b></p><div class="c8hl-grid">${items.map(s=> `<button type="button" class="c8hl-g${sel.has(s.id) ? ' on' : ''}" data-id="${E(s.id)}"${bg(thumb(s))}><span class="ck"></span>${s.type === 'video' ? '<span class="pl">▶</span>' : ''}<small>${dfmt(s.createdAt)}</small></button>`).join('')}</div><button class="c8hl-btn" data-ok="1"></button>`;
+    const ok = box.querySelector('[data-ok]');
+    const upd = ()=>{ ok.disabled = !sel.size; ok.textContent = btnText + (sel.size ? ' (' + sel.size + ')' : ''); };
+    box.querySelectorAll('.c8hl-g').forEach(b=> b.onclick = ()=>{ const id = b.dataset.id; if(sel.has(id)) sel.delete(id); else { if(sel.size >= maxSel){ limitMsg(); return; } sel.add(id); } b.classList.toggle('on', sel.has(id)); upd(); });
+    ok.onclick = ()=>{ const chosen = items.filter(s=> sel.has(s.id)); w.remove(); done(chosen); };
+    upd();
+  }
+  function askTitle(def, cb){
+    const w = sheet(`<h3>${E(T('Názov zvýraznenia'))}<button data-x="1">✕</button></h3><input class="c8hl-in" maxlength="20" placeholder="${E(T('napr. Auto 🚗'))}" value="${E(def || '')}"><button class="c8hl-btn" data-ok="1">${E(T('Uložiť'))}</button>`);
+    const inp = w.querySelector('input'); setTimeout(()=> inp.focus(), 50);
+    const go = ()=>{ const v = inp.value.trim(); if(!v){ inp.focus(); return; } w.remove(); cb(v); };
+    w.querySelector('[data-ok]').onclick = go;
+    inp.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') go(); });
+  }
+  async function create(items, title){
+    const u = me(); if(!u) return;
+    const c = await load(u.uid);
+    const h = { id: nid(), title, cover: thumb(items[0]) || '', items: items.slice(0, ITEMS_MAX), at: Date.now() };
+    await save({ highlights: [h].concat(c.hl) });
+    toast('⭐ ' + T('Uložené na profil'));
+    window.c8hlRender();
+    return h;
+  }
+  async function newSheet(){
+    const u = me(); if(!u) return;
+    const c = await load(u.uid).catch(()=> ({ hl: [] }));
+    const free = PROFILE_MAX - totalItems(c.hl);
+    if(free <= 0){ limitMsg(); return; }
+    pick(T('Nové zvýraznenie'), T('Ďalej'), [], (items)=>{
+      askTitle('', (title)=>{ create(items, title).catch(()=> alert(T('Nepodarilo sa uložiť.'))); });
+    }, free);
+  }
+  async function editSheet(hid){
+    const u = me(); if(!u) return;
+    const c = await load(u.uid);
+    const h = c.hl.find(x=> x.id === hid); if(!h) return;
+    const w = sheet(`<h3>✏️ ${E(T('Upraviť zvýraznenie'))}<button data-x="1">✕</button></h3>
+      <input class="c8hl-in" maxlength="20" value="${E(h.title || '')}">
+      <button class="c8hl-btn" data-save="1">${E(T('Uložiť názov'))}</button>
+      <button class="c8hl-btn sec" data-add="1">➕ ${E(T('Pridať / odobrať príbehy'))}</button>
+      <button class="c8hl-btn red" data-del="1">🗑️ ${E(T('Vymazať zvýraznenie'))}</button>`);
+    const inp = w.querySelector('input');
+    w.querySelector('[data-save]').onclick = async ()=>{
+      const v = inp.value.trim(); if(!v) return;
+      const r = await load(u.uid);
+      await save({ highlights: r.hl.map(x=> x.id === hid ? Object.assign({}, x, { title: v }) : x) }).catch(()=> alert(T('Nepodarilo sa uložiť.')));
+      w.remove(); window.c8hlRender();
+    };
+    w.querySelector('[data-add]').onclick = ()=>{
+      w.remove();
+      pick(h.title || T('Zvýraznenie'), T('Uložiť'), (h.items || []).map(x=> x.id), async (items)=>{
+        const r = await load(u.uid);
+        // ponecháme pôvodné položky, ktoré už nie sú v archíve, ak ich používateľ neodznačil (nevidel ich)
+        await save({ highlights: r.hl.map(x=> x.id === hid ? Object.assign({}, x, { items: items.slice(0, ITEMS_MAX), cover: thumb(items[0]) || x.cover }) : x) }).catch(()=> alert(T('Nepodarilo sa uložiť.')));
+        window.c8hlRender();
+      }, PROFILE_MAX - (totalItems(c.hl) - (h.items || []).length));
+    };
+    w.querySelector('[data-del]').onclick = async ()=>{
+      if(!confirm(T('Vymazať toto zvýraznenie z profilu?'))) return;
+      const r = await load(u.uid);
+      await save({ highlights: r.hl.filter(x=> x.id !== hid) }).catch(()=> alert(T('Nepodarilo sa uložiť.')));
+      w.remove(); window.c8hlRender();
+    };
+  }
+  window.c8hlEdit = editSheet;
+  // ⭐ Na profil – z otvoreného vlastného príbehu
+  window.c8hlPin = async function(s, onClose){
+    const u = me(); if(!u || !s) return;
+    const item = compact(s);
+    let c; try{ c = await load(u.uid); }catch(e){ alert(T('Nepodarilo sa načítať.')); if(onClose) onClose(); return; }
+    const sel = new Set(c.hl.filter(h=> (h.items || []).some(x=> x.id === item.id)).map(h=> h.id));
+    const w = sheet(`<h3>⭐ ${E(T('Pridať do zvýraznených'))}<button data-x="1">✕</button></h3>
+      <div class="c8hl-row2" data-new="1"><i class="add">＋</i>${E(T('Nové zvýraznenie…'))}</div>
+      ${c.hl.map(h=> `<div class="c8hl-row2" data-h="${E(h.id)}"><i${bg(h.cover)}></i>${E(h.title || '⭐')}<span class="ck${sel.has(h.id) ? ' on' : ''}"></span></div>`).join('')}
+      <button class="c8hl-btn" data-ok="1">${E(T('Hotovo'))}</button>`);
+    const closeW = ()=>{ w.remove(); if(onClose) onClose(); };
+    w.addEventListener('click', (e)=>{ if(e.target === w || e.target.closest('[data-x]')){ if(onClose) onClose(); } });
+    w.querySelectorAll('.c8hl-row2[data-h]').forEach(r=> r.onclick = ()=>{ const id = r.dataset.h; if(sel.has(id)) sel.delete(id); else { if(full && !sel.size){ limitMsg(); return; } sel.add(id); } r.querySelector('.ck').classList.toggle('on', sel.has(id)); });
+    const already = c.hl.some(h=> (h.items || []).some(x=> x.id === item.id));
+    const full = !already && totalItems(c.hl) >= PROFILE_MAX;
+    w.querySelector('[data-new]').onclick = ()=>{
+      if(full){ limitMsg(); return; }
+      w.remove();
+      askTitle('', async (title)=>{ try{ await create([item], title); }catch(e){ alert(T('Nepodarilo sa uložiť.')); } if(onClose) onClose(); });
+    };
+    w.querySelector('[data-ok]').onclick = async ()=>{
+      try{
+        const r = await load(u.uid);
+        const hl = r.hl.map(h=>{
+          const has = (h.items || []).some(x=> x.id === item.id);
+          if(sel.has(h.id) && !has) return Object.assign({}, h, { items: [item].concat(h.items || []).slice(0, ITEMS_MAX), cover: h.cover || thumb(item) });
+          if(!sel.has(h.id) && has){ const items = (h.items || []).filter(x=> x.id !== item.id); return Object.assign({}, h, { items, cover: items.length ? (h.cover && items.some(x=> thumb(x) === h.cover) ? h.cover : thumb(items[0])) : h.cover }); }
+          return h;
+        }).filter(h=> h.items && h.items.length);
+        await save({ highlights: hl });
+        toast('⭐ ' + T('Uložené na profil'));
+        window.c8hlRender();
+      }catch(e){ alert(T('Nepodarilo sa uložiť.')); }
+      closeW();
+    };
+  };
+  // odobratie jedného príbehu zo zvýraznenia (z prehrávača)
+  window.c8hlRemoveItem = async function(hid, itemId){
+    const u = me(); if(!u) return false;
+    const r = await load(u.uid);
+    const hl = r.hl.map(h=>{
+      if(h.id !== hid) return h;
+      const items = (h.items || []).filter(x=> x.id !== itemId);
+      return Object.assign({}, h, { items, cover: items.length ? thumb(items[0]) : h.cover });
+    }).filter(h=> h.items && h.items.length);
+    await save({ highlights: hl });
+    window.c8hlRender();
+    return true;
+  };
+  window.c8hlIsPinned = (id)=>{ const u = me(); const c = u && cache[u.uid]; return !!(c && c.hl.some(h=> (h.items || []).some(x=> x.id === String(id)))); };
+  // pri prihlásení načítaj vlastné zvýraznenia (kvôli ⭐ v príbehoch)
+  let loadedFor = null;
+  setInterval(()=>{ const u = me(); if(u && loadedFor !== u.uid && hasDb() && pcache[u.uid]){ loadedFor = u.uid; load(u.uid).catch(()=>{}); } }, 3000);
+})();
+</script>
+<!-- =================== /C8 ZVÝRAZNENÉ PRÍBEHY =================== -->
+
 <!-- =================== C8 ŠTATISTIKY 2 (Prehľad · Obsah · Publikum) =================== -->
 <style id="c8s2-style">
 #c8s2{position:fixed;inset:0;z-index:95;background:#F1F2F6;color:#1E1B2E;display:none;overflow-y:auto;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
@@ -24909,5 +25292,76 @@ body.c8m-on #app main,body.c8m-on #app .main,body.c8m-on #app .layout{padding-bo
 
 
 
+<style id="c8h2-style">
+/* ===== telefón: nová hlavička – 1. riadok svetlomodrý (logo, 🔍, tlmočník, správy, zvonček, fotka),
+   2. riadok levanduľový (čas/dátum/meniny + príbehy), 3. riadok sekcie biele ===== */
+@media(max-width:900px){
+  #app .topbar.c8h{background:#fff;}
+  #app .c8h .c8h-top{position:relative;background:linear-gradient(135deg,#EAF4FF,#DCEBFF);padding:7px 10px 0;column-gap:7px;}
+  #app .c8h .brand{order:1;margin-right:0;min-width:0;}
+  #app .c8h .search-box{order:2;flex:0 0 36px;width:36px;height:36px;margin:0 auto 0 6px;padding:0;border-radius:50%;justify-content:center;background:#fff;border:1px solid rgba(91,76,255,.14);color:#4B5563;cursor:pointer;min-width:0;}
+  #app .c8h .search-box .c8h-sicon{width:17px;height:17px;}
+  #app .c8h .search-box input,#app .c8h .search-box .c8h-sx{display:none;}
+  #app .c8h .search-box:not(.open) .search-results{display:none !important;}
+  #app .c8h .c8h-tr{order:3;width:36px !important;height:36px !important;min-width:36px !important;background:#fff;border-color:rgba(91,76,255,.14);}
+  #app .c8h .c8h-tr svg{width:18px;height:18px;}
+  #app .c8h .c8h-icons{order:4;gap:7px !important;margin:0 !important;}
+  #app .c8h .messenger-btn,#app .c8h .notif-btn{width:36px !important;height:36px !important;min-width:36px !important;}
+  #app .c8h .messenger-btn svg,#app .c8h .notif-btn svg{width:19px !important;height:19px !important;}
+  #app .c8h .notif-btn{background:#fff;border:1px solid rgba(91,76,255,.14);}
+  #app .c8h .c8h-user{order:5;}
+  #app .c8h #user-avatar{width:38px !important;height:38px !important;font-size:15px !important;}
+  #app .c8h .c8h-br{display:none !important;}
+  #app .c8h .c8h-date{order:6;flex:0 0 calc(100% + 20px);margin:7px -10px 0;padding:4px 10px;height:auto;min-height:50px;gap:7px;background:linear-gradient(135deg,#F7F5FF,#EFEBFF);border-top:1px solid rgba(91,76,255,.12);border-bottom:1px solid rgba(91,76,255,.10);box-sizing:border-box;}
+  /* rozbalené vyhľadávanie cez celý horný riadok */
+  #app .c8h .c8h-top.c8h-sopen .search-box{position:absolute;left:10px;right:10px;top:7px;width:auto;height:38px;z-index:6;border-radius:19px;padding:0 4px 0 13px;justify-content:flex-start;gap:8px;cursor:text;box-shadow:0 4px 14px rgba(30,27,46,.12);}
+  #app .c8h .c8h-top.c8h-sopen .search-box input{display:block;flex:1;font-size:15px;}
+  #app .c8h .c8h-top.c8h-sopen .search-box .c8h-sx{display:flex;align-items:center;justify-content:center;flex:none;width:30px;height:30px;border-radius:50%;border:0;background:#F1F2F6;color:#4B5563;font-size:14px;cursor:pointer;padding:0;}
+  #app .c8h .c8h-top.c8h-sopen .search-results{top:calc(100% + 6px);left:0;width:100%;max-width:none;}
+}
+@media(max-width:370px){
+  #app .c8h .c8h-top{column-gap:5px;}
+  #app .c8h .c8h-icons{gap:5px !important;}
+  #app .c8h .brand{font-size:15px;}
+}
+</style>
+<script id="c8h2-script">
+/* telefón: 🔍 je len gulička – po ťuknutí sa rozbalí vyhľadávanie cez horný riadok, ✕ ho zavrie */
+(function(){
+  const box = document.querySelector('#app .c8h .search-box');
+  const top = box && box.closest('.c8h-top');
+  const inp = document.getElementById('user-search-input');
+  if(!box || !top || !inp) return;
+  const tr = s => (typeof t === 'function' ? t(s) : s);
+  const x = document.createElement('button');
+  x.type = 'button'; x.className = 'c8h-sx'; x.textContent = '✕'; x.setAttribute('aria-label', tr('Zavrieť'));
+  box.appendChild(x);
+  const mob = () => window.innerWidth <= 900;
+  const isOpen = () => top.classList.contains('c8h-sopen');
+  function open(){
+    if(!mob() || isOpen()) return;
+    top.classList.add('c8h-sopen'); box.classList.add('open');
+    try{ inp.focus(); }catch(_){}
+  }
+  function close(){
+    top.classList.remove('c8h-sopen'); box.classList.remove('open');
+    inp.value = '';
+    const r = document.getElementById('user-search-results');
+    if(r){ r.classList.remove('show'); }
+    try{ inp.blur(); }catch(_){}
+  }
+  window.c8hSearchClose = close;
+  box.addEventListener('click', e => {
+    if(e.target.closest('.c8h-sx')){ e.preventDefault(); e.stopPropagation(); close(); return; }
+    if(e.target.closest('.search-result-item')){ setTimeout(close, 60); return; }
+    open();
+  });
+  document.addEventListener('click', e => {
+    if(isOpen() && !box.contains(e.target) && !inp.value.trim()) close();
+  }, true);
+  inp.addEventListener('keydown', e => { if(e.key === 'Escape') close(); });
+  window.addEventListener('resize', () => { if(!mob() && isOpen()) close(); });
+})();
+</script>
 </body>
 </html>
