@@ -25532,8 +25532,21 @@ html body #c8pv-row .c8hl-it.add{margin-top:13px!important}
     setTimeout(()=> el.classList.remove('c8fx-h'), 1200);
     setTimeout(()=>{ box.remove(); delete el.dataset.c8fx; }, 2400);
   }
+  // keď prejdeš do inej sekcie (Bazár, Videá, Používatelia…) alebo na iný profil a vrátiš sa,
+  // efekt sa pri nepozretom príbehu prehrá znova (scrollovanie v tej istej sekcii ho neopakuje)
+  let ctx = '';
+  function context(){
+    let v = '', pu = '';
+    try{ const a = document.querySelector('#app .view.active'); v = a ? a.id : ''; }catch(_){}
+    try{ pu = (typeof viewedProfileUser !== 'undefined' && viewedProfileUser) ? viewedProfileUser.uid : ''; }catch(_){}
+    const full = document.body.classList.contains('c8v-full') ? 'v' : '';
+    const st = document.getElementById('c8st-viewer') ? 's' : '';
+    return v + '|' + pu + '|' + full + st;
+  }
   function scan(){
     try{
+      const c = context();
+      if(c !== ctx){ const wasViewer = ctx.endsWith('s'); ctx = c; if(!c.endsWith('s') && !wasViewer) done.clear(); }
       // telefón: guličky v hlavičke
       document.querySelectorAll('#c8sp .rg[data-u]:not(.s)').forEach(el=>{
         if(el.style.display === 'none') return;
