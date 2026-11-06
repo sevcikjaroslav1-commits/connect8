@@ -25477,6 +25477,18 @@ html body #c8pv-row .c8hl-it.add{margin-top:13px!important}
   /* rozbalené vyhľadávanie pri väčšom riadku */
   #app .c8h .c8h-top.c8h-sopen .search-box{width:auto!important;height:42px!important;min-width:0!important;flex-basis:auto!important;margin:0!important;top:6px;border-radius:21px;}
 }
+/* užšie telefóny (napr. iPhone 375–402 px): všetko v hornom riadku sa zmenší podľa šírky displeja, aby bolo v 1 riadku */
+@media(max-width:410px){
+  html #app .c8h .c8h-top{column-gap:1.3vw!important;}
+  html #app .c8h .brand{font-size:4.5vw!important;gap:1.3vw!important;white-space:nowrap;}
+  html #app .c8h .brand .dot{width:7.4vw!important;height:7.4vw!important;}
+  html #app .c8h .search-box{margin-left:1.5vw!important;}
+  html #app .c8h .search-box,html #app .c8h .c8h-tr,html #app .c8h .messenger-btn,html #app .c8h .notif-btn,html #app .c8h #user-avatar{width:10.2vw!important;height:10.2vw!important;min-width:10.2vw!important;flex-basis:10.2vw!important;}
+  html #app .c8h #user-avatar.c8st-ring{width:9.2vw!important;height:9.2vw!important;min-width:9.2vw!important;flex-basis:9.2vw!important;}
+  html #app .c8h .c8h-icons{gap:1.3vw!important;}
+  html #app .c8h .search-box .c8h-sicon{width:4.6vw;height:4.6vw;}
+  html #app .c8h .c8h-tr svg,html #app .c8h .messenger-btn svg,html #app .c8h .notif-btn svg{width:5vw!important;height:5vw!important;}
+}
 </style>
 </body>
 </html>
