@@ -25715,6 +25715,8 @@ html body #c8pv-row .c8hl-it.add{margin-top:13px!important}
 #users-grid.c8-list .user-card-call-row{grid-column:3;grid-row:1 / span 3;margin:0;}
 #users-grid:not(.c8-list) .c8fl-h, #users-grid:not(.c8-list) .c8fl-st{display:none;}
 #users-grid.c8-list .user-card{padding-left:6px;padding-right:6px;}
+#users-grid.c8-list .c8u-st{grid-column:2;align-self:start;margin:0;font-size:12px;}
+#users-grid.c8-list .user-card.c8-off .c8u-st{color:#9CA3AF;font-weight:500;}
 </style>
 <script id="c8uv-script">
 /* Používatelia: prepínač Ikonky / Zoznam (zoznam: online hore, potom nedávno a offline, podľa abecedy) */
@@ -25739,12 +25741,9 @@ function c8ApplyUsersView(){
   const stOf = c=>{ const u = uidOf(c); return (u && typeof getPresenceState === 'function') ? getPresenceState(u) : (c.querySelector('.status-dot.online') ? 'online' : 'offline'); };
   const nm = c=> ((c.querySelector('.user-card-name')||{}).textContent||'');
   cards.forEach(c=>{
-    let st = c.querySelector('.c8fl-st');
-    if(!st){ st = document.createElement('span'); st.className = 'c8fl-st'; const n = c.querySelector('.user-card-name'); if(n) n.after(st); }
+    // stav (Online / Offline) už vypisuje c8u-st – druhý riadok nepridávame
+    c.querySelectorAll('.c8fl-st').forEach(x=> x.remove());
     const s3 = stOf(c);
-    if(s3 === 'online') st.textContent = '● ' + tt('Online');
-    else if(s3 === 'away') st.textContent = ((typeof getPresenceAgo === 'function') ? getPresenceAgo(uidOf(c)) : '') || tt('Nedávno');
-    else st.textContent = tt('Offline');
     c.classList.toggle('c8-off', s3 === 'offline');
     c.classList.toggle('c8-away', s3 === 'away');
   });
