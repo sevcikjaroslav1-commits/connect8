@@ -4122,7 +4122,7 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
         <!-- POUŽÍVATELIA -->
         <section class="view" id="view-users">
           <button class="profile-back-btn" onclick="switchMode('feed')">← Späť do Feedu</button>
-          <div class="profile-section-title">🧑‍🤝‍🧑 Používatelia</div>
+          <div class="c8fv-bar"><div class="profile-section-title" style="margin:0">🧑‍🤝‍🧑 Používatelia</div><div class="c8fv-seg"><button type="button" id="c8uv-grid" onclick="c8SetUsersView('grid')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor"/></svg><span>Ikonky</span></button><button type="button" id="c8uv-list" onclick="c8SetUsersView('list')"><svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2" fill="currentColor"/><rect x="9" y="5" width="12" height="2.4" rx="1.2" fill="currentColor"/><circle cx="5" cy="12" r="2" fill="currentColor"/><rect x="9" y="11" width="12" height="2.4" rx="1.2" fill="currentColor"/><circle cx="5" cy="18" r="2" fill="currentColor"/><rect x="9" y="17" width="12" height="2.4" rx="1.2" fill="currentColor"/></svg><span>Zoznam</span></button></div></div>
           <div class="users-grid" id="users-grid"></div>
         </section>
 
@@ -25693,6 +25693,78 @@ html body #c8pv-row .c8hl-it.add{margin-top:13px!important}
     HU: typeof UI_DICT_HU !== 'undefined' ? UI_DICT_HU : null, DE: typeof UI_DICT_DE !== 'undefined' ? UI_DICT_DE : null, AT: typeof UI_DICT_AT !== 'undefined' ? UI_DICT_AT : null, IT: typeof UI_DICT_IT !== 'undefined' ? UI_DICT_IT : null };
   Object.keys(D).forEach(L=>{ const m = {}; K.forEach((k, i)=> m[k] = V[L][i]); add(D[L], m); });
 })();
+</script>
+
+<style id="c8uv-style">
+/* Používatelia: zoznam pod sebou (rovnako ako Priatelia) */
+#users-grid.c8-list{display:block;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 8px;max-width:640px;}
+#users-grid.c8-list .c8fl-h{font-size:12px;font-weight:700;color:var(--text-dim);padding:8px 6px 4px;text-transform:uppercase;letter-spacing:.4px;}
+#users-grid.c8-list .user-card{display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;column-gap:12px;row-gap:1px;align-items:center;text-align:left;padding:8px 6px;}
+#users-grid.c8-list .user-card-avatar-wrap{grid-row:1 / span 3;}
+#users-grid.c8-list .user-card .avatar{width:42px;height:42px;font-size:15px;}
+#users-grid.c8-list .status-dot{width:12px;height:12px;right:-1px;bottom:-1px;background:#C9CBD1;}
+#users-grid.c8-list .status-dot.online{background:#22C55E;}
+#users-grid.c8-list .status-dot.away{background:#F59E0B;}
+#users-grid.c8-list .user-card.c8-away .c8fl-st{color:#D97706;}
+#users-grid.c8-list .c8fl-st .ago{display:block;font-size:11px;font-weight:600;color:#D97706;}
+#users-grid.c8-list .user-card-name{grid-column:2;font-size:15px;align-self:end;}
+#users-grid.c8-list .c8fl-st{grid-column:2;font-size:12px;font-weight:600;color:#16A34A;align-self:start;}
+#users-grid.c8-list .user-card.c8-off .user-card-name{color:var(--text-dim);font-weight:500;}
+#users-grid.c8-list .user-card.c8-off .c8fl-st{color:#9CA3AF;font-weight:500;}
+#users-grid.c8-list .user-card-lastonline{grid-column:2;margin:0;}
+#users-grid.c8-list .user-card-call-row{grid-column:3;grid-row:1 / span 3;margin:0;}
+#users-grid:not(.c8-list) .c8fl-h, #users-grid:not(.c8-list) .c8fl-st{display:none;}
+#users-grid.c8-list .user-card{padding-left:6px;padding-right:6px;}
+</style>
+<script id="c8uv-script">
+/* Používatelia: prepínač Ikonky / Zoznam (zoznam: online hore, potom nedávno a offline, podľa abecedy) */
+let c8UsersView = 'grid';
+try{ c8UsersView = localStorage.getItem('c8_users_view') || 'grid'; }catch(e){}
+function c8SetUsersView(m){
+  c8UsersView = m;
+  try{ localStorage.setItem('c8_users_view', m); }catch(e){}
+  c8ApplyUsersView();
+}
+function c8ApplyUsersView(){
+  const g = document.getElementById('users-grid'); if(!g) return;
+  const list = c8UsersView === 'list';
+  const bg = document.getElementById('c8uv-grid'), bl = document.getElementById('c8uv-list');
+  if(bg) bg.classList.toggle('on', !list); if(bl) bl.classList.toggle('on', list);
+  g.classList.toggle('c8-list', list);
+  g.querySelectorAll(':scope > .c8fl-h').forEach(h=>h.remove());
+  const cards = [...g.querySelectorAll(':scope > .user-card')];
+  if(!cards.length) return;
+  const tt = (x)=> (typeof t === 'function' ? t(x) : x);
+  const uidOf = c=>{ const d = c.querySelector('[id^="status-dot-"]'); return d ? d.id.slice('status-dot-'.length) : ''; };
+  const stOf = c=>{ const u = uidOf(c); return (u && typeof getPresenceState === 'function') ? getPresenceState(u) : (c.querySelector('.status-dot.online') ? 'online' : 'offline'); };
+  const nm = c=> ((c.querySelector('.user-card-name')||{}).textContent||'');
+  cards.forEach(c=>{
+    let st = c.querySelector('.c8fl-st');
+    if(!st){ st = document.createElement('span'); st.className = 'c8fl-st'; const n = c.querySelector('.user-card-name'); if(n) n.after(st); }
+    const s3 = stOf(c);
+    if(s3 === 'online') st.textContent = '● ' + tt('Online');
+    else if(s3 === 'away') st.textContent = ((typeof getPresenceAgo === 'function') ? getPresenceAgo(uidOf(c)) : '') || tt('Nedávno');
+    else st.textContent = tt('Offline');
+    c.classList.toggle('c8-off', s3 === 'offline');
+    c.classList.toggle('c8-away', s3 === 'away');
+  });
+  if(!list) return;   // pri ikonkách ostáva pôvodné poradie
+  cards.sort((a,b)=> nm(a).localeCompare(nm(b),'sk'));
+  const on = cards.filter(c=>stOf(c)==='online'), aw = cards.filter(c=>stOf(c)==='away'), off = cards.filter(c=>stOf(c)==='offline');
+  const head = (txt)=>{ const h=document.createElement('div'); h.className='c8fl-h'; h.textContent=txt; return h; };
+  if(on.length){ g.appendChild(head(tt('Online') + ' (' + on.length + ')')); on.forEach(c=>g.appendChild(c)); }
+  if(aw.length){ g.appendChild(head(tt('Nedávno') + ' (' + aw.length + ')')); aw.forEach(c=>g.appendChild(c)); }
+  if(off.length){ g.appendChild(head(tt('Offline') + ' (' + off.length + ')')); off.forEach(c=>g.appendChild(c)); }
+}
+if(typeof renderUsersList === 'function'){
+  const _c8PrevRUL = renderUsersList;
+  renderUsersList = async function(){ const r = await _c8PrevRUL.apply(this, arguments); try{ c8ApplyUsersView(); }catch(e){} return r; };
+}
+if(typeof updateStatusDots === 'function'){
+  const _c8PrevUSD2 = updateStatusDots;
+  updateStatusDots = function(){ const r = _c8PrevUSD2.apply(this, arguments); try{ const v=document.getElementById('view-users'); if(v && v.classList.contains('active') && c8UsersView === 'list') c8ApplyUsersView(); }catch(e){} return r; };
+}
+c8ApplyUsersView();
 </script>
 </body>
 </html>
