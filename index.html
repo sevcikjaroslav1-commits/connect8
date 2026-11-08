@@ -3607,6 +3607,10 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
       <div class="c8l-item" id="c8l-followers" onclick="c8flOpen()">
         <span class="c8l-ic"><svg viewBox="0 0 24 24"><defs><linearGradient id="c8flg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EC4899"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs><circle cx="9" cy="8" r="4" fill="url(#c8flg)"/><path d="M1.5 20c.6-4 3.6-6.5 7.5-6.5s6.9 2.5 7.5 6.5z" fill="url(#c8flg)"/><path d="M19 9.2c-.9-1.4-3-1.2-3 .6 0 1.5 1.9 2.6 3 3.6 1.1-1 3-2.1 3-3.6 0-1.8-2.1-2-3-.6z" fill="#EC4899"/></svg></span><span class="label">Sledovatelia</span><span class="c8fl-cnt" id="c8fl-cnt-pc"></span>
       </div>
+      <!-- ElektroOnline Škola – len na PC (ľavý panel sa na telefóne nezobrazuje) -->
+      <div class="c8l-item" id="c8l-eskola" onclick="c8EskolaOpen()">
+        <span class="c8l-ic"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#13202E"/><path d="M13.2 4.5 6.8 13.4h4.9l-1 6.1 6.5-9h-4.9l.9-6z" fill="#F2B000"/></svg></span><span class="label">ElektroŠkola</span>
+      </div>
     <div class="c8g-card" id="c8g-pc" data-c8globe>
         <canvas class="c8g-canvas" role="img" aria-label="Zemeguľa s krajinami používateľov connect8"></canvas>
         <div class="c8g-cap">Connect8</div>
@@ -25784,25 +25788,11 @@ if(typeof updateStatusDots === 'function'){
 c8ApplyUsersView();
 </script>
 <!-- ===================== ElektroOnline Škola – bočná záložka ===================== -->
-<!-- Záložka vykúka z ľavého okraja (len v prihlásenej appke).
-     Klik alebo potiahnutie doprava = otvorí panel so školou (connect8.eu/elektroonline-skola).
-     Potiahnutie doľava = záložka sa skryje (zapamätá sa v prehliadači, 5 s sa dá vrátiť).
-     Znova zobraziť sa dá kedykoľvek zavolaním c8EskolaShow() – napr. z položky v menu. -->
+<!-- Položka "ElektroŠkola" je v ľavom paneli pod "Sledovatelia" (#c8l-eskola) – ľavý panel je viditeľný len na PC (od 1340 px),
+     na telefóne sa nezobrazuje. Klik = vysunie sa panel so školou (connect8.eu/elektroonline-skola). -->
 <style id="c8es-style">
-#c8es-tab{position:fixed;left:0;top:52%;z-index:9000;width:38px;height:168px;padding:10px 0 12px;border:0;border-radius:0 14px 14px 0;
-  background:#13202E;box-shadow:4px 6px 18px rgba(19,32,46,.35);display:none;flex-direction:column;align-items:center;gap:10px;cursor:pointer;
-  touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;font-family:inherit;overflow:hidden;
-  transform:translate(var(--c8es-dx,0px),-50%);transition:transform .25s ease,opacity .25s ease}
-#c8es-tab.on{display:flex}
-#c8es-tab.drag{transition:none}
-#c8es-tab::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:repeating-linear-gradient(-45deg,#F2B000 0 6px,#13202E 6px 12px)}
-#c8es-tab:focus-visible{outline:3px solid #F2B000;outline-offset:2px}
-.c8es-ico{width:26px;height:26px;border-radius:7px;background:#F2B000;display:flex;align-items:center;justify-content:center;flex:none}
-.c8es-txt{writing-mode:vertical-rl;transform:rotate(180deg);color:#F2F5F8;font-weight:800;font-size:13px;letter-spacing:.04em;white-space:nowrap}
-.c8es-txt b{color:#F2B000;font-weight:800}
-.c8es-grip{margin-top:auto;display:flex;flex-direction:column;gap:3px}
-.c8es-grip i{width:14px;height:2px;background:#5B6B7D;display:block}
 
+.c8es-ico{width:26px;height:26px;border-radius:7px;background:#F2B000;display:flex;align-items:center;justify-content:center;flex:none}
 #c8es-back{position:fixed;inset:0;z-index:10030;background:rgba(19,32,46,.55);opacity:0;pointer-events:none;transition:opacity .25s ease}
 #c8es-back.on{opacity:1;pointer-events:auto}
 #c8es-panel{position:fixed;left:0;top:0;bottom:0;width:min(1200px,calc(100vw - 34px));z-index:10031;background:#EEF1F4;
@@ -25819,19 +25809,9 @@ c8ApplyUsersView();
 #c8es-handle{position:fixed;top:52%;left:min(1200px,calc(100vw - 34px));z-index:10031;width:34px;height:120px;border:0;border-radius:0 12px 12px 0;
   background:#13202E;color:#F2F5F8;display:none;align-items:center;justify-content:center;cursor:pointer;transform:translateY(-50%)}
 #c8es-handle.on{display:flex}
-#c8es-toast{position:fixed;left:14px;right:14px;bottom:calc(20px + env(safe-area-inset-bottom,0px));max-width:420px;margin:0 auto;z-index:10032;
-  background:#13202E;color:#F2F5F8;border-radius:14px;padding:10px 10px 10px 16px;display:none;align-items:center;justify-content:space-between;
-  gap:10px;font-size:14px;box-shadow:0 10px 30px rgba(19,32,46,.35)}
-#c8es-toast.on{display:flex}
-#c8es-toast button{min-height:40px;padding:0 16px;border-radius:10px;border:0;background:#F2B000;color:#13202E;font:inherit;font-weight:800;cursor:pointer}
-@media (prefers-reduced-motion:reduce){#c8es-tab,#c8es-panel,#c8es-back{transition:none}}
+@media (prefers-reduced-motion:reduce){#c8es-panel,#c8es-back{transition:none}}
 </style>
 
-<button id="c8es-tab" type="button" aria-label="Otvoriť ElektroOnline Školu">
-  <span class="c8es-ico"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" fill="#13202E"/></svg></span>
-  <span class="c8es-txt">Elektro<b>Škola</b></span>
-  <span class="c8es-grip" aria-hidden="true"><i></i><i></i></span>
-</button>
 <div id="c8es-back"></div>
 <div id="c8es-panel" role="dialog" aria-label="ElektroOnline Škola" aria-hidden="true">
   <div class="c8es-head">
@@ -25849,28 +25829,15 @@ c8ApplyUsersView();
 <button id="c8es-handle" type="button" aria-label="Zavrieť ElektroOnline Školu">
   <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
 </button>
-<div id="c8es-toast" role="status"><span id="c8es-toast-txt">Záložka ElektroŠkola je skrytá</span><button type="button" id="c8es-undo">Vrátiť</button></div>
 
 <script id="c8es-script">
 (function(){
   const SKOLA_URL = '/elektroonline-skola';      // adresa školy na connect8.eu
-  const KEY = 'c8_eskola_hidden';                 // pamäť "záložka skrytá"
   const $ = id => document.getElementById(id);
-  const tab = $('c8es-tab'), panel = $('c8es-panel'), back = $('c8es-back'), handle = $('c8es-handle');
-  const frame = $('c8es-frame'), toast = $('c8es-toast'), app = $('app');
-  const tt = x => (typeof t === 'function' ? t(x) : x);   // preklad connect8, ak existuje
-  if(!tab || !panel) return;
+  const panel = $('c8es-panel'), back = $('c8es-back'), handle = $('c8es-handle'), frame = $('c8es-frame');
+  if(!panel) return;
+  let isOpen = false, pushed = false;
 
-  let hidden = false, isOpen = false, pushed = false, toastTimer = null;
-  try{ hidden = localStorage.getItem(KEY) === '1'; }catch(e){}
-
-  // záložka len v prihlásenej appke (#app je viditeľné)
-  const inApp = () => !!app && getComputedStyle(app).display !== 'none';
-  function refresh(){ tab.classList.toggle('on', inApp() && !hidden && !isOpen); }
-  if(app) new MutationObserver(refresh).observe(app, {attributes:true, attributeFilter:['style','class']});
-  refresh();
-
-  // ---- otvorenie / zatvorenie panela ----
   function open(){
     if(isOpen) return;
     if(!frame.getAttribute('src')) frame.setAttribute('src', SKOLA_URL);   // načíta sa až pri prvom otvorení
@@ -25878,8 +25845,7 @@ c8ApplyUsersView();
     panel.classList.add('on'); back.classList.add('on'); handle.classList.add('on');
     panel.setAttribute('aria-hidden', 'false');
     document.documentElement.style.overflow = 'hidden';
-    refresh();
-    try{ history.pushState({c8es:1}, ''); pushed = true; }catch(e){}       // tlačidlo Späť na mobile zavrie panel
+    try{ history.pushState({c8es:1}, ''); pushed = true; }catch(e){}       // tlačidlo Späť zavrie panel
     setTimeout(() => { try{ $('c8es-close').focus(); }catch(e){} }, 50);
   }
   function close(fromPop){
@@ -25888,7 +25854,6 @@ c8ApplyUsersView();
     panel.classList.remove('on'); back.classList.remove('on'); handle.classList.remove('on');
     panel.setAttribute('aria-hidden', 'true');
     document.documentElement.style.overflow = '';
-    refresh();
     if(pushed && !fromPop){ pushed = false; try{ history.back(); }catch(e){} } else pushed = false;
   }
   window.addEventListener('popstate', () => { if(isOpen) close(true); });
@@ -25896,56 +25861,7 @@ c8ApplyUsersView();
   $('c8es-close').addEventListener('click', () => close());
   handle.addEventListener('click', () => close());
   back.addEventListener('click', () => close());
-
-  // ---- skrytie / vrátenie záložky ----
-  function setHidden(v){
-    hidden = v;
-    try{ v ? localStorage.setItem(KEY, '1') : localStorage.removeItem(KEY); }catch(e){}
-    refresh();
-  }
-  function showToast(){
-    $('c8es-toast-txt').textContent = tt('Záložka ElektroŠkola je skrytá');
-    $('c8es-undo').textContent = tt('Vrátiť');
-    toast.classList.add('on');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove('on'), 5000);
-  }
-  $('c8es-undo').addEventListener('click', () => { toast.classList.remove('on'); setHidden(false); });
-  window.c8EskolaShow = () => setHidden(false);    // na neskoršie vrátenie záložky (napr. z menu)
-
-  // ---- ťahanie prstom / myšou ----
-  let sx = 0, dx = 0, dragging = false, moved = false;
-  const resetPos = () => { tab.style.setProperty('--c8es-dx', '0px'); tab.style.opacity = ''; };
-  tab.addEventListener('pointerdown', e => {
-    sx = e.clientX; dx = 0; dragging = true; moved = false;
-    tab.classList.add('drag');
-    try{ tab.setPointerCapture(e.pointerId); }catch(_){}
-  });
-  tab.addEventListener('pointermove', e => {
-    if(!dragging) return;
-    dx = e.clientX - sx;
-    if(Math.abs(dx) > 6) moved = true;
-    tab.style.setProperty('--c8es-dx', Math.min(dx, 24) + 'px');
-    tab.style.opacity = dx < 0 ? Math.max(.2, 1 + dx / 80) : 1;
-  });
-  function endDrag(cancelled){
-    if(!dragging) return;
-    dragging = false;
-    tab.classList.remove('drag');
-    if(cancelled){ resetPos(); return; }
-    if(!moved){ resetPos(); open(); return; }               // obyčajný klik / ťuk
-    if(dx < -30){                                            // potiahnuté doľava = skryť
-      tab.style.setProperty('--c8es-dx', '-60px'); tab.style.opacity = '0';
-      setTimeout(() => { resetPos(); setHidden(true); showToast(); }, 250);
-      return;
-    }
-    resetPos();
-    if(dx > 40) open();                                      // potiahnuté doprava = otvoriť
-  }
-  tab.addEventListener('pointerup', () => endDrag(false));
-  tab.addEventListener('pointercancel', () => endDrag(true));
-  // klávesnica (Enter / medzerník) – pri myši/prste rieši otvorenie pointerup
-  tab.addEventListener('click', e => { if(e.detail === 0) open(); });
+  window.c8EskolaOpen = open;                      // volá položka v ľavom paneli
 })();
 </script>
 <!-- =================== koniec: ElektroOnline Škola – bočná záložka =================== -->
