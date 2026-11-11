@@ -313,9 +313,12 @@ button,.tab,.btn,label{touch-action:manipulation}
   .topbar{padding:0 10px;gap:4px 10px;min-height:0}
   .brand{padding:8px 0}
   .brand-name b{font-size:17px}
-  .tabs{order:3;flex:1 1 100%;flex-wrap:nowrap;overflow-x:auto;padding:0 0 8px;scrollbar-width:none}
-  .tab{flex:0 0 auto;min-height:38px;padding:0 12px}
+  .tabs{order:3;flex:1 1 100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:2px 0 10px;overflow:visible}
+  .tab{flex-direction:column;justify-content:center;gap:5px;min-height:62px;padding:6px 2px;border-radius:10px;font-size:12.5px;min-width:0}
   .tab small{display:none}
+  .tab .tab-ic{width:30px;height:30px;border-radius:8px}
+  .tab .tab-ic svg{width:17px;height:17px}
+  .tab-label{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.1}
   .top-actions{margin-left:auto;padding:6px 0}
   .lang .lc{display:none}
   .lang button{padding:0 7px}
@@ -359,10 +362,10 @@ button,.tab,.btn,label{touch-action:manipulation}
 <header class="topbar">
   <div class="brand"><div class="logo" aria-hidden="true">C8</div><span class="brand-name"><b>Connect8</b><small>Office</small></span></div>
   <nav class="tabs" aria-label="Moduly">
-    <button class="tab active" data-mod="pero" style="--tc:#7FA2FF;--tf:#2F5BD3" aria-pressed="true"><span class="tab-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z M14 7l3 3 M4 20h7"/></svg></span>Písanie <small>Dokumenty</small></button>
-    <button class="tab" data-mod="mriezka" style="--tc:#5BCB8A;--tf:#1E7A46" aria-pressed="false"><span class="tab-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z M4 10h16M4 15h16M10 4v16"/></svg></span>Tabuľky <small>Výpočty</small></button>
-    <button class="tab" data-mod="stetec" style="--tc:#FF9F5A;--tf:#B4520A" aria-pressed="false"><span class="tab-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z M4 16l5-5 4 4 2.5-2.5L20 17 M15.5 8.5h.01"/></svg></span>Obrázky <small>Kreslenie</small></button>
-    <button class="tab" data-mod="3d" style="--tc:#B497FF;--tf:#6A3FC8" aria-pressed="false"><span class="tab-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z M12 12l8-4.5 M12 12v9 M12 12L4 7.5"/></svg></span>3D Tvorca <small>Modely STL</small></button>
+    <button class="tab active" data-mod="pero" style="--tc:#7FA2FF;--tf:#2F5BD3" aria-pressed="true"><span class="tab-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z M14 7l3 3 M4 20h7"/></svg></span><span class="tab-label">Písanie</span> <small>Dokumenty</small></button>
+    <button class="tab" data-mod="mriezka" style="--tc:#5BCB8A;--tf:#1E7A46" aria-pressed="false"><span class="tab-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z M4 10h16M4 15h16M10 4v16"/></svg></span><span class="tab-label">Tabuľky</span> <small>Výpočty</small></button>
+    <button class="tab" data-mod="stetec" style="--tc:#FF9F5A;--tf:#B4520A" aria-pressed="false"><span class="tab-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z M4 16l5-5 4 4 2.5-2.5L20 17 M15.5 8.5h.01"/></svg></span><span class="tab-label">Obrázky</span> <small>Kreslenie</small></button>
+    <button class="tab" data-mod="3d" style="--tc:#B497FF;--tf:#6A3FC8" aria-pressed="false"><span class="tab-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z M12 12l8-4.5 M12 12v9 M12 12L4 7.5"/></svg></span><span class="tab-label">3D Tvorca</span> <small>Modely STL</small></button>
   </nav>
   <div class="top-actions">
     <div class="lang" role="group" aria-label="Jazyk">
