@@ -107,18 +107,44 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stro
 input[type=range]{accent-color:var(--acc);width:100%}
 
 /* Pero */
-.pero-main{flex:1 1 auto;min-width:0;overflow:auto;padding:28px 24px 48px}
-.page{max-width:794px;min-height:1000px;margin:0 auto;background:#fff;padding:64px 72px;border-radius:2px;box-shadow:0 1px 3px rgba(20,23,31,.08),0 10px 30px rgba(20,23,31,.06);font-family:'Source Serif 4',Georgia,serif;font-size:16px;line-height:1.65;color:var(--tx);outline:none}
-.page h1{font:700 30px/1.2 Inter,sans-serif;letter-spacing:-.01em;margin:0 0 12px}
-.page h2{font:600 20px/1.3 Inter,sans-serif;margin:22px 0 8px}
-.page h3{font:600 17px/1.3 Inter,sans-serif;margin:18px 0 6px}
-.page p{margin:0 0 12px}
-.page blockquote{margin:12px 0;padding:6px 16px;border-left:3px solid #BFCFF4;color:var(--tx2);font-style:italic}
-.page table{border-collapse:collapse;width:100%;font:14px Inter,sans-serif;margin:10px 0}
-.page th,.page td{border:1px solid var(--line2);padding:8px 10px;text-align:left;vertical-align:top}
-.page th{background:#F1F3F6;font-weight:600}
+.pero-main{flex:1 1 auto;min-width:0;overflow:auto;padding:28px 24px 48px;background:#E9EBEF}
+.sheet{position:relative;max-width:794px;min-height:1123px;margin:0 auto;background:#fff;padding:0 95px;box-sizing:border-box;border-radius:2px;box-shadow:0 1px 3px rgba(20,23,31,.10),0 10px 30px rgba(20,23,31,.08)}
+.page{min-height:1123px;padding:95px 0;box-sizing:border-box;font-family:Calibri,Carlito,'Segoe UI',Arial,sans-serif;font-size:12pt;line-height:1.4;color:var(--tx);outline:none;overflow-wrap:break-word}
+.page h1{font-size:22pt;font-weight:700;line-height:1.2;margin:0 0 10px}
+.page h2{font-size:15pt;font-weight:700;line-height:1.25;margin:18px 0 8px}
+.page h3{font-size:13pt;font-weight:700;line-height:1.3;margin:14px 0 6px}
+.page p{margin:0 0 10px}
+.page ul,.page ol{margin:0 0 10px;padding-left:1.25cm}
+.page blockquote{margin:10px 0 10px 1.25cm;padding:0;color:var(--tx2);font-style:italic}
+.page table{border-collapse:collapse;width:100%;margin:10px 0}
+.page th,.page td{border:1px solid #9AA1AE;padding:4px 8px;text-align:left;vertical-align:top}
+.page th{background:#F1F3F6;font-weight:700}
 .page img{max-width:100%;height:auto}
 .page a{color:#2F5BD3}
+.page hr.pagebreak{border:0;border-top:2px dashed #9DB4EE;margin:22px 0;height:0;overflow:visible;position:relative}
+.page hr.pagebreak::after{content:'Zalomenie strany';position:absolute;left:50%;top:-9px;transform:translateX(-50%);background:#fff;padding:0 8px;font:600 10px Inter,sans-serif;color:#1E3F99;letter-spacing:.04em}
+.hf{position:absolute;left:95px;right:95px;display:none;font-family:Calibri,Carlito,Arial,sans-serif;font-size:10pt;color:#5B6270}
+.sheet.show-hf .hf{display:block}
+.hf-head{top:30px}
+.hf-foot{bottom:28px}
+.hf-ed{min-height:20px;padding:3px 6px;border:1px dashed #C9D3E8;border-radius:4px;outline:none}
+.hf-ed:focus{border-color:#2F5BD3;background:#F7F9FE}
+.hf-ed p{margin:0}
+.hf-ed:empty::before{content:attr(data-ph);color:#9AA1AE}
+.pnum{display:none;text-align:center;margin-top:4px;font:600 10pt Calibri,Arial,sans-serif;color:#2F5BD3}
+.sheet.pnums .pnum{display:block}
+html[lang=en] .page hr.pagebreak::after{content:'Page break'}
+.pg-guide{position:absolute;left:0;right:0;height:0;border-top:2px dashed #C9D3E8;pointer-events:none}
+.pg-guide span{position:absolute;right:10px;top:-10px;background:#E8EEFB;color:#1E3F99;font:600 10px Inter,sans-serif;padding:2px 8px;border-radius:999px}
+dialog.preview-dlg{width:min(980px,96vw);height:92vh;max-height:92vh;padding:0;display:none;flex-direction:column}
+dialog.preview-dlg[open]{display:flex}
+.prev-head{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.prev-head h2{margin:0;font-size:16px;flex:1 1 auto}
+.prev-tabs{display:flex;gap:4px;padding:3px;border-radius:8px;background:#F1F3F6}
+.prev-tabs button{height:32px;padding:0 12px;border:0;border-radius:6px;background:transparent;font:500 13px Inter,sans-serif;color:var(--tx2);cursor:pointer}
+.prev-tabs button.active{background:#fff;color:#1E3F99;font-weight:600;box-shadow:0 1px 2px rgba(20,23,31,.12)}
+.prev-body{flex:1 1 auto;overflow:auto;background:#E3E5EA}
+.prev-body .docx-wrapper{background:#E3E5EA;padding:24px 12px}
 .outline-list{display:flex;flex-direction:column;gap:2px}
 .outline-list button{display:block;width:100%;text-align:left;padding:7px 8px;border:0;border-radius:6px;background:transparent;color:var(--tx);font:13px Inter,sans-serif;cursor:pointer}
 .outline-list button:hover{background:#E8EEFB;color:#1E3F99}
@@ -148,7 +174,14 @@ input[type=range]{accent-color:var(--acc);width:100%}
 .mz-fill{position:absolute;display:none;width:9px;height:9px;background:#1E7A46;border:1.5px solid #fff;box-sizing:content-box;cursor:crosshair;z-index:6;touch-action:none}
 .mz-fillprev{position:absolute;display:none;border:2px dashed #1E7A46;pointer-events:none;box-sizing:border-box;z-index:5}
 .mz-editor{position:absolute;display:none;z-index:7;border:2px solid #1E7A46;padding:0 6px;font:13px Inter,sans-serif;color:var(--tx);background:#fff;box-sizing:border-box;outline:none;box-shadow:0 4px 14px rgba(20,23,31,.15)}
-@media (pointer:coarse){.mz-fill{width:16px;height:16px;margin:-3px 0 0 -3px}}
+@media (pointer:coarse){
+  .mz-fill{width:18px;height:18px;margin:-5px 0 0 -5px;border-radius:50%}
+  .mz-grid td{height:36px}
+  .mz-grid thead th{height:30px}
+  .mz-editor,.formula,.namebox{font-size:16px}
+  .namebox{width:92px}
+  .mz-scroll{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+}
 .sheet-tabs{display:flex;align-items:stretch;gap:2px;padding:0 8px;background:#F1F3F6;border-top:1px solid var(--line2);flex:0 0 auto;overflow-x:auto}
 .sheet-tabs button{height:34px;padding:0 16px;border:0;background:transparent;color:var(--tx2);font:500 13px Inter,sans-serif;cursor:pointer;white-space:nowrap}
 .sheet-tabs button.active{background:#fff;color:#145431;font-weight:600;box-shadow:inset 0 -2px 0 #1E7A46}
@@ -253,11 +286,13 @@ dialog.wide{width:min(640px,94vw);max-height:92vh}
 
 /* Tlač dokumentu do PDF */
 @media print{
-  body.printing .app>*:not(#mod-pero){display:none!important}
+  body.printing .app>*:not(#mod-pero),body.printing #toast{display:none!important}
   body.printing #mod-pero>*:not(.work){display:none!important}
-  body.printing .side,body.printing .tab{display:none!important}
-  body.printing .app,body.printing .work,body.printing .pero-main{display:block;height:auto;overflow:visible;padding:0}
-  body.printing .page{box-shadow:none;padding:0;max-width:none;min-height:0}
+  body.printing .side,body.printing .tab,body.printing .hf,body.printing #peroGuides{display:none!important}
+  body.printing .app,body.printing .work,body.printing .pero-main{display:block;height:auto;overflow:visible;padding:0;background:#fff}
+  body.printing .sheet{box-shadow:none;padding:0;max-width:none;min-height:0;zoom:1!important}
+  body.printing .page{padding:0;min-height:0}
+  body.printing .page hr.pagebreak{break-after:page;border:0;margin:0;visibility:hidden}
   @page{size:A4;margin:2.5cm}
 }
 
@@ -302,7 +337,11 @@ button,.tab,.btn,label{touch-action:manipulation}
   .side .ptabs{margin:0 -16px}
   #sheetBackdrop.show{display:block;position:fixed;inset:0;background:rgba(20,23,31,.35);z-index:39}
   .pero-main{padding:12px 8px 32px}
-  .page{padding:28px 20px;min-height:0}
+  .sheet{padding:0 18px;min-height:0}
+  .page{padding:28px 0;min-height:0}
+  .hf{left:18px;right:18px}
+  .sheet.show-hf .page{padding:64px 0 76px}
+  #peroGuides{display:none}
   .page h1{font-size:24px}
   .ps-stage{padding:8px}
   .vp-hint{display:none}
@@ -311,13 +350,7 @@ button,.tab,.btn,label{touch-action:manipulation}
   .status>div{gap:10px}
   .fbar{padding:6px 8px}
   .namebox{width:60px}
-  /* všetky 4 moduly viditeľné naraz: ikonka nad názvom */
-  .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;overflow:visible;padding:0 0 8px}
-  .tab{flex-direction:column;justify-content:center;gap:3px;min-height:54px;padding:5px 2px;font-size:12px;line-height:1.1;text-align:center;white-space:nowrap;min-width:0}
-  .tab-ic{width:24px;height:24px}
-  .tab-ic svg{width:15px;height:15px}
 }
-@media (max-width:340px){.tab{font-size:11px}}
 </style>
 </head>
 <body>
@@ -350,10 +383,13 @@ button,.tab,.btn,label{touch-action:manipulation}
 <section id="mod-pero" class="module active" aria-label="Písanie – dokumenty">
   <div class="menubar">
     <button class="btn" id="peroNew"><span data-ic="plus"></span>Nový</button>
-    <button class="btn" id="peroOpenBtn"><span data-ic="folder"></span>Otvoriť…</button>
-    <input type="file" id="peroOpen" accept=".html,.htm,.txt,.doc" hidden>
+    <button class="btn" id="peroOpenBtn" title="Otvoriť dokument Word (.docx), HTML alebo text"><span data-ic="folder"></span>Otvoriť…</button>
+    <input type="file" id="peroOpen" accept=".docx,.html,.htm,.txt,.doc" hidden>
     <button class="btn" id="peroSave" title="Uložiť (Ctrl+S)"><span data-ic="save"></span>Uložiť</button>
     <button class="btn" id="peroSaveAs" title="Uložiť ako (Ctrl+Shift+S)">Uložiť ako…</button>
+    <span aria-hidden="true" style="width:1px;height:22px;background:var(--line);margin:0 4px"></span>
+    <button class="btn" id="peroPreview" title="Presne tak, ako dokument uvidí Word"><span data-ic="eye"></span>Náhľad</button>
+    <button class="btn" id="peroPrint" title="Tlačiť (Ctrl+P)"><span data-ic="print"></span>Tlačiť</button>
     <div class="spacer"></div>
     <input id="peroTitle" class="title-inp" value="Údržba 3D tlačiarne" aria-label="Názov dokumentu">
     <span class="saved" id="peroSaved"><span data-ic="check"></span><span>Uložené</span></span>
@@ -364,17 +400,24 @@ button,.tab,.btn,label{touch-action:manipulation}
       <button class="btn icon" data-cmd="redo" aria-label="Znova" title="Znova (Ctrl+Y)"><span data-ic="redo"></span></button>
     </div><span class="grp-label">História</span></div>
     <div class="grp"><div class="grp-row">
-      <select id="peroFont" class="inp" aria-label="Písmo" style="min-width:150px">
-        <option value="Source Serif 4">Source Serif 4</option>
-        <option value="Inter">Inter</option>
+      <select id="peroFont" class="inp" aria-label="Písmo" style="min-width:140px">
+        <option value="Calibri">Calibri</option>
+        <option value="Cambria">Cambria</option>
         <option value="Arial">Arial</option>
-        <option value="Georgia">Georgia</option>
         <option value="Times New Roman">Times New Roman</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Tahoma">Tahoma</option>
+        <option value="Segoe UI">Segoe UI</option>
+        <option value="Garamond">Garamond</option>
         <option value="Courier New">Courier New</option>
+        <option value="Inter">Inter</option>
+        <option value="Source Serif 4">Source Serif 4</option>
       </select>
-      <select id="peroSize" class="inp" aria-label="Veľkosť písma">
-        <option value="1">8</option><option value="2">10</option><option value="3" selected>12</option>
-        <option value="4">14</option><option value="5">18</option><option value="6">24</option><option value="7">36</option>
+      <select id="peroSize" class="inp" aria-label="Veľkosť písma (body)">
+        <option>8</option><option>9</option><option>10</option><option>11</option><option selected>12</option>
+        <option>14</option><option>16</option><option>18</option><option>20</option><option>24</option>
+        <option>28</option><option>32</option><option>36</option><option>48</option><option>72</option>
       </select>
       <button class="btn icon" data-cmd="bold" aria-label="Tučné" title="Tučné (Ctrl+B)"><b style="font-size:15px">B</b></button>
       <button class="btn icon" data-cmd="italic" aria-label="Kurzíva" title="Kurzíva (Ctrl+I)"><i style="font:italic 16px Georgia,serif">I</i></button>
@@ -390,9 +433,15 @@ button,.tab,.btn,label{touch-action:manipulation}
       <button class="btn icon" data-cmd="justifyFull" aria-label="Zarovnať do bloku" title="Zarovnať do bloku"><span data-ic="alignJ"></span></button>
       <button class="btn icon" data-cmd="insertUnorderedList" aria-label="Odrážky" title="Odrážky"><span data-ic="ul"></span></button>
       <button class="btn icon" data-cmd="insertOrderedList" aria-label="Číslovanie" title="Číslovanie"><span data-ic="ol"></span></button>
+      <button class="btn icon" id="peroOutdent" aria-label="Zmenšiť odsadenie" title="Zmenšiť odsadenie"><span data-ic="outdent"></span></button>
+      <button class="btn icon" id="peroIndent" aria-label="Zväčšiť odsadenie" title="Zväčšiť odsadenie"><span data-ic="indent"></span></button>
+      <select id="peroLine" class="inp" aria-label="Riadkovanie" title="Riadkovanie">
+        <option value="1">1,0</option><option value="1.15">1,15</option><option value="1.4" selected>1,4</option>
+        <option value="1.5">1,5</option><option value="2">2,0</option>
+      </select>
     </div><span class="grp-label">Odsek</span></div>
     <div class="grp"><div class="grp-row">
-      <select id="peroBlock" class="inp" aria-label="Štýl odseku" style="min-width:130px">
+      <select id="peroBlock" class="inp" aria-label="Štýl odseku" style="min-width:120px">
         <option value="p">Normálny</option>
         <option value="h1">Nadpis 1</option>
         <option value="h2">Nadpis 2</option>
@@ -405,9 +454,14 @@ button,.tab,.btn,label{touch-action:manipulation}
       <input type="file" id="peroImg" accept="image/*" hidden>
       <button class="btn" id="peroTable"><span data-ic="table"></span>Tabuľka</button>
       <button class="btn" id="peroLink"><span data-ic="link"></span>Odkaz</button>
+      <button class="btn" id="peroPageBreak" title="Ďalší text začne na novej strane"><span data-ic="pagebreak"></span>Zalomenie strany</button>
     </div><span class="grp-label">Vložiť</span></div>
     <div class="grp"><div class="grp-row">
-      <button class="btn soft" id="peroExportDoc"><span data-ic="download"></span>Word (.doc)</button>
+      <button class="btn" id="peroHF" aria-pressed="false"><span data-ic="headfoot"></span>Hlavička a päta</button>
+      <label class="check" style="padding:0 6px"><input type="checkbox" id="peroPageNums">Čísla strán</label>
+    </div><span class="grp-label">Strana</span></div>
+    <div class="grp"><div class="grp-row">
+      <button class="btn soft" id="peroExportDocx"><span data-ic="download"></span>Word (.docx)</button>
       <button class="btn outline" id="peroExportPdf"><span data-ic="print"></span>PDF</button>
     </div><span class="grp-label">Export</span></div>
   </div>
@@ -420,46 +474,64 @@ button,.tab,.btn,label{touch-action:manipulation}
       <div class="card">
         <span class="cap">Dokument</span>
         <div class="kv"><span>Formát</span><span>A4, na výšku</span></div>
+        <div class="kv"><span>Okraje</span><span>2,5 cm</span></div>
+        <div class="kv"><span>Strany</span><span id="peroPages2">1</span></div>
         <div class="kv"><span>Slová</span><span id="peroWords2">0</span></div>
-        <div class="kv"><span>Ukladanie</span><span>v tomto prehliadači</span></div>
       </div>
     </aside>
     <main class="pero-main" id="peroMain">
-      <article id="peroPage" class="page" contenteditable="true" spellcheck="true" aria-label="Text dokumentu">
-        <h1>Údržba 3D tlačiarne</h1>
-        <p>Pravidelná údržba predĺži životnosť tlačiarne a zníži počet nepodarených výtlačkov. Tento zoznam slúži ako rýchla pomôcka pred tlačou aj pri mesačnej kontrole.</p>
-        <h2>Pred každou tlačou</h2>
-        <ul>
-          <li>Očistiť tlačovú podložku izopropylalkoholom.</li>
-          <li>Skontrolovať, či je filament suchý a voľne sa odvíja.</li>
-          <li>Sledovať prvú vrstvu počas prvých minút tlače.</li>
-        </ul>
-        <h2>Raz za mesiac</h2>
-        <ol>
-          <li>Vyčistiť trysku a skontrolovať, či z nej nekvapká materiál.</li>
-          <li>Premazať lineárne vedenia a skrutky osí.</li>
-          <li>Skontrolovať napnutie remeňov.</li>
-        </ol>
-        <h2>Záznam údržby</h2>
-        <table>
-          <thead><tr><th>Dátum</th><th>Úkon</th><th>Poznámka</th></tr></thead>
-          <tbody>
-            <tr><td></td><td>Čistenie trysky</td><td></td></tr>
-            <tr><td></td><td>Napnutie remeňov</td><td></td></tr>
-          </tbody>
-        </table>
-        <p><br></p>
-      </article>
+      <div class="sheet" id="peroSheet">
+        <div class="hf hf-head"><div id="peroHeader" class="hf-ed" contenteditable="true" data-ph="Hlavička – kliknite a píšte" aria-label="Hlavička"></div></div>
+        <article id="peroPage" class="page" contenteditable="true" spellcheck="true" aria-label="Text dokumentu">
+          <h1>Údržba 3D tlačiarne</h1>
+          <p>Pravidelná údržba predĺži životnosť tlačiarne a zníži počet nepodarených výtlačkov. Tento zoznam slúži ako rýchla pomôcka pred tlačou aj pri mesačnej kontrole.</p>
+          <h2>Pred každou tlačou</h2>
+          <ul>
+            <li>Očistiť tlačovú podložku izopropylalkoholom.</li>
+            <li>Skontrolovať, či je filament suchý a voľne sa odvíja.</li>
+            <li>Sledovať prvú vrstvu počas prvých minút tlače.</li>
+          </ul>
+          <h2>Raz za mesiac</h2>
+          <ol>
+            <li>Vyčistiť trysku a skontrolovať, či z nej nekvapká materiál.</li>
+            <li>Premazať lineárne vedenia a skrutky osí.</li>
+            <li>Skontrolovať napnutie remeňov.</li>
+          </ol>
+          <h2>Záznam údržby</h2>
+          <table>
+            <thead><tr><th>Dátum</th><th>Úkon</th><th>Poznámka</th></tr></thead>
+            <tbody>
+              <tr><td><br></td><td>Čistenie trysky</td><td><br></td></tr>
+              <tr><td><br></td><td>Napnutie remeňov</td><td><br></td></tr>
+            </tbody>
+          </table>
+          <p><br></p>
+        </article>
+        <div class="hf hf-foot"><div id="peroFooter" class="hf-ed" contenteditable="true" data-ph="Päta – kliknite a píšte" aria-label="Päta"></div><div class="pnum" id="peroPnum" aria-hidden="true">1</div></div>
+        <div id="peroGuides" aria-hidden="true"></div>
+      </div>
     </main>
   </div>
   <footer class="status">
-    <div><span id="peroWords">Slová: 0</span><span id="peroChars">Znaky: 0</span></div>
+    <div><span id="peroPages">Strany: 1</span><span id="peroWords">Slová: 0</span><span id="peroChars">Znaky: 0</span></div>
     <div>
       <button class="zbtn" id="peroZoomOut" aria-label="Oddialiť">−</button>
       <span id="peroZoomVal">100 %</span>
       <button class="zbtn" id="peroZoomIn" aria-label="Priblížiť">+</button>
     </div>
   </footer>
+
+  <dialog id="peroPrevDlg" class="preview-dlg" aria-labelledby="peroPrevTitle">
+    <div class="prev-head">
+      <h2 id="peroPrevTitle">Náhľad dokumentu</h2>
+      <div class="prev-tabs" role="tablist">
+        <button type="button" class="active" data-prev="current" role="tab">Aktuálny dokument</button>
+        <button type="button" data-prev="original" role="tab" id="peroPrevOrigTab">Pôvodný súbor .docx</button>
+      </div>
+      <button class="btn small outline" id="peroPrevClose" type="button">Zavrieť</button>
+    </div>
+    <div class="prev-body" id="peroPrevBody"></div>
+  </dialog>
 </section>
 
 <!-- ================= MRIEŽKA ================= -->
@@ -797,7 +869,7 @@ button,.tab,.btn,label{touch-action:manipulation}
             <h3>Nainštalujte aplikáciu KIRI Engine</h3>
             <p class="help">Bezplatná aplikácia, ktorá z fotiek z telefónu vytvorí 3D model. Funguje na iPhone aj Androide.</p>
             <div class="store-row">
-              <a class="btn outline" id="scanPlay" href="https://play.google.com/store/apps/details?id=com.kiriengine.app" target="_blank" rel="noopener">Google Play (Android)</a>
+              <a class="btn outline" id="scanPlay" href="https://play.google.com/store/apps/details?id=com.kiri.kiriengine" target="_blank" rel="noopener">Google Play (Android)</a>
               <a class="btn outline" id="scanApple" href="https://apps.apple.com/app/id1577127142" target="_blank" rel="noopener">App Store (iPhone)</a>
             </div>
             <div class="qr-box" id="scanQrBox">
@@ -925,6 +997,10 @@ const ICONS = {
   slice: 'M4 8h16 M4 12h16 M4 16h16',
   scan: 'M4 8V5a1 1 0 0 1 1-1h3 M16 4h3a1 1 0 0 1 1 1v3 M20 16v3a1 1 0 0 1-1 1h-3 M8 20H5a1 1 0 0 1-1-1v-3 M7 12h10',
   save: 'M5 4h11l3 3v13H5z M8 4v5h7V4 M8 20v-6h8v6',
+  indent: 'M4 5h16M10 10h10M10 14h10M4 19h16 M4 9l3 3-3 3',
+  outdent: 'M4 5h16M10 10h10M10 14h10M4 19h16 M7 9l-3 3 3 3',
+  pagebreak: 'M6 3v5h12V3 M6 21v-5h12v5 M3 12h3M9 12h2M14 12h2M19 12h2',
+  headfoot: 'M5 3h14v18H5z M8 7h8 M8 17h8 M8 11h8',
   cut: 'M6 9a3 3 0 1 0 0-6a3 3 0 1 0 0 6z M6 21a3 3 0 1 0 0-6a3 3 0 1 0 0 6z M8.1 7.6L20 18 M8.1 16.4L20 6',
   paste: 'M9 3h6v3H9z M7 4.5H5V21h14V4.5h-2 M9 12h6 M9 16h4',
   sortAsc: 'M7 4v16M3 16l4 4 4-4 M14 6h3M14 11h5M14 16h7',
@@ -1079,23 +1155,75 @@ function showModule(id) {
 $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset.mod)));
 
 /* =====================================================================
-   PERO – textový editor
+   PERO – textový editor (Písanie)
    ===================================================================== */
 (function () {
   const page = $('#peroPage');
+  const sheetEl = $('#peroSheet');
+  const headerEd = $('#peroHeader');
+  const footerEd = $('#peroFooter');
   const title = $('#peroTitle');
   const savedEl = $('#peroSaved span:last-child');
+  const CONTENT_H = 933;
   let savedRange = null;
+  let activeEd = page;
   let zoom = 1;
   let saveTimer = null;
+  let pageNums = false;
+  let originalDocx = null;
+  let fileHandle = null, fileKind = 'html';
 
-  const stored = load('dielna.pero');
-  if (stored && typeof stored.html === 'string') {
-    page.innerHTML = sanitize(stored.html);
-    title.value = stored.title || 'Dokument';
+  /* --- knižnice (načítajú sa až keď treba) --- */
+  const CDN = {
+    mammoth: 'https://cdn.jsdelivr.net/npm/mammoth@1.13.0/mammoth.browser.min.js',
+    jszip: 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+    docx: 'https://cdn.jsdelivr.net/npm/docx@9.15.3/dist/index.iife.js',
+    docxMath: 'https://cdn.jsdelivr.net/npm/docx@9.15.3/dist/math.iife.js',
+    docxHtml: 'https://cdn.jsdelivr.net/npm/docx@9.15.3/dist/html.iife.js',
+    preview: 'https://cdn.jsdelivr.net/npm/docx-preview@0.4.1/dist/docx-preview.min.js'
+  };
+  let chain = Promise.resolve();
+  function addScript(src) {
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = res;
+      s.onerror = () => rej(new Error('lib'));
+      document.head.appendChild(s);
+    });
   }
-  try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
+  function serial(fn) { const p = chain.then(fn); chain = p.catch(() => {}); return p; }
+  const once = {};
+  function lib(name, fn) {
+    if (!once[name]) once[name] = fn().catch((e) => { once[name] = null; throw e; });
+    return once[name];
+  }
+  const needMammoth = () => lib('mammoth', () => serial(async () => { if (!window.mammoth) await addScript(CDN.mammoth); return window.mammoth; }));
+  const needZip = () => lib('zip', () => serial(async () => { if (!window.JSZip) await addScript(CDN.jszip); return window.JSZip; }));
+  const needDocx = () => lib('docx', () => serial(async () => {
+    const prev = window.docx;
+    window.docx = undefined;
+    await addScript(CDN.docx);
+    const D = window.docx;
+    await addScript(CDN.docxMath);
+    await addScript(CDN.docxHtml);
+    const H = window.docxHtml;
+    window.docx = prev;
+    if (!D || !H) throw new Error('lib');
+    return { D: D, H: H };
+  }));
+  const needPreview = () => lib('preview', () => needZip().then(() => serial(async () => {
+    const prev = window.docx;
+    window.docx = undefined;
+    await addScript(CDN.preview);
+    const P = window.docx;
+    window.docx = prev;
+    if (!P || !P.renderAsync) throw new Error('lib');
+    return P;
+  })));
+  const LIB_ERR = 'Knižnicu pre Word sa nepodarilo načítať. Skontrolujte pripojenie na internet.';
 
+  /* --- obnovenie uloženej práce --- */
   function sanitize(html) {
     const doc = new DOMParser().parseFromString('<body>' + html + '</body>', 'text/html');
     doc.querySelectorAll('script,style,iframe,object,embed,link,meta').forEach((n) => n.remove());
@@ -1107,14 +1235,25 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     });
     return doc.body.innerHTML;
   }
+  const stored = load('dielna.pero');
+  if (stored && typeof stored.html === 'string') {
+    page.innerHTML = sanitize(stored.html);
+    title.value = stored.title || 'Dokument';
+    headerEd.innerHTML = sanitize(stored.header || '');
+    footerEd.innerHTML = sanitize(stored.footer || '');
+    pageNums = !!stored.pageNums;
+  }
+  try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
 
+  /* --- výber a príkazy --- */
+  [page, headerEd, footerEd].forEach((ed) => ed.addEventListener('focus', () => { activeEd = ed; }));
   function saveSel() {
     const s = window.getSelection();
-    if (s.rangeCount && page.contains(s.getRangeAt(0).commonAncestorContainer)) savedRange = s.getRangeAt(0).cloneRange();
+    if (s.rangeCount && activeEd.contains(s.getRangeAt(0).commonAncestorContainer)) savedRange = s.getRangeAt(0).cloneRange();
   }
   function restoreSel() {
-    page.focus();
-    if (savedRange) {
+    activeEd.focus();
+    if (savedRange && activeEd.contains(savedRange.commonAncestorContainer)) {
       const s = window.getSelection();
       s.removeAllRanges();
       s.addRange(savedRange);
@@ -1127,16 +1266,60 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     updateState();
     changed();
   }
-
   $$('#peroRibbon [data-cmd]').forEach((b) => {
     b.addEventListener('mousedown', (e) => e.preventDefault());
     b.addEventListener('click', () => cmd(b.dataset.cmd));
   });
+  $$('#peroRibbon button:not([data-cmd])').forEach((b) => b.addEventListener('mousedown', (e) => e.preventDefault()));
   $('#peroFont').addEventListener('change', (e) => cmd('fontName', e.target.value));
-  $('#peroSize').addEventListener('change', (e) => cmd('fontSize', e.target.value));
+  $('#peroSize').addEventListener('change', (e) => {
+    const pt = e.target.value;
+    restoreSel();
+    document.execCommand('fontSize', false, '7');
+    activeEd.querySelectorAll('font[size="7"]').forEach((f) => {
+      const sp = document.createElement('span');
+      sp.style.fontSize = pt + 'pt';
+      while (f.firstChild) sp.appendChild(f.firstChild);
+      f.replaceWith(sp);
+    });
+    activeEd.querySelectorAll('[style*="xxx-large"]').forEach((el) => { el.style.fontSize = pt + 'pt'; });
+    saveSel(); changed();
+  });
   $('#peroBlock').addEventListener('change', (e) => cmd('formatBlock', '<' + e.target.value + '>'));
   $('#peroColor').addEventListener('input', (e) => cmd('foreColor', e.target.value));
   $('#peroHilite').addEventListener('input', (e) => cmd('hiliteColor', e.target.value));
+
+  const BLOCKS = 'p,h1,h2,h3,h4,h5,h6,li,blockquote,div,pre';
+  function selectedBlocks() {
+    restoreSel();
+    const s = window.getSelection();
+    if (!s.rangeCount) return [];
+    const r = s.getRangeAt(0);
+    let blocks = Array.from(activeEd.querySelectorAll(BLOCKS)).filter((b) => r.intersectsNode(b) && !b.querySelector(BLOCKS));
+    if (!blocks.length) {
+      document.execCommand('formatBlock', false, '<p>');
+      const n = window.getSelection().anchorNode;
+      const el = n && (n.nodeType === 1 ? n : n.parentElement);
+      const b = el && el.closest(BLOCKS);
+      if (b && activeEd.contains(b)) blocks = [b];
+    }
+    return blocks;
+  }
+  $('#peroLine').addEventListener('change', (e) => {
+    selectedBlocks().forEach((b) => { b.style.lineHeight = e.target.value; });
+    saveSel(); changed();
+  });
+  function indent(step) {
+    selectedBlocks().forEach((b) => {
+      if (b.tagName === 'LI') { document.execCommand(step > 0 ? 'indent' : 'outdent'); return; }
+      const cur = parseFloat(b.style.marginLeft) || 0;
+      const v = Math.max(0, Math.round((cur + step * 1.25) * 100) / 100);
+      b.style.marginLeft = v ? v + 'cm' : '';
+    });
+    saveSel(); changed();
+  }
+  $('#peroIndent').addEventListener('click', () => indent(1));
+  $('#peroOutdent').addEventListener('click', () => indent(-1));
 
   $('#peroImgBtn').addEventListener('click', () => { saveSel(); $('#peroImg').click(); });
   $('#peroImg').addEventListener('change', (e) => {
@@ -1147,109 +1330,79 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     r.readAsDataURL(f);
     e.target.value = '';
   });
-  $('#peroTable').addEventListener('mousedown', (e) => e.preventDefault());
   $('#peroTable').addEventListener('click', () => {
     let h = '<table><thead><tr><th>Stĺpec 1</th><th>Stĺpec 2</th><th>Stĺpec 3</th></tr></thead><tbody>';
     for (let i = 0; i < 2; i++) h += '<tr><td><br></td><td><br></td><td><br></td></tr>';
     h += '</tbody></table><p><br></p>';
     cmd('insertHTML', h);
   });
-  $('#peroLink').addEventListener('mousedown', (e) => e.preventDefault());
   $('#peroLink').addEventListener('click', () => {
     saveSel();
     const url = prompt('Adresa odkazu:', 'https://');
     if (url && !/^\s*javascript:/i.test(url)) cmd('createLink', url);
   });
-
-  $('#peroNew').addEventListener('click', () => {
-    if (!confirm('Vytvoriť nový prázdny dokument? Aktuálny text sa prepíše.')) return;
-    page.innerHTML = '<h1>Nový dokument</h1><p><br></p>';
-    title.value = 'Nový dokument';
-    fileHandle = null;
-    changed();
-    page.focus();
-  });
-  let fileHandle = null;
-  const HTML_TYPES = [{ description: 'Dokument Connect8 Office (HTML)', accept: { 'text/html': ['.html', '.htm'] } }];
-  function decodeText(s) {
-    const ta = document.createElement('textarea');
-    ta.innerHTML = s;
-    return ta.value;
-  }
-  function loadDoc(f, h) {
-    const r = new FileReader();
-    r.onload = () => {
-      const txt = String(r.result);
-      if (/\.txt$/i.test(f.name)) {
-        page.innerHTML = txt.split(/\r?\n\r?\n/).map((p) => '<p>' + escapeHtml(p).replace(/\r?\n/g, '<br>') + '</p>').join('');
-        fileHandle = null;
-      } else {
-        const m = txt.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-        page.innerHTML = sanitize(m ? m[1] : txt);
-        fileHandle = /\.html?$/i.test(f.name) ? h : null;
-      }
-      const tm = txt.match(/<title>([\s\S]*?)<\/title>/i);
-      title.value = tm && tm[1].trim() ? decodeText(tm[1].trim()) : f.name.replace(/\.[^.]+$/, '');
-      changed();
-      toast('Dokument „' + f.name + '“ je otvorený.');
-    };
-    r.readAsText(f);
-  }
-  $('#peroOpenBtn').addEventListener('click', () => openFileDialog(
-    [{ description: 'Dokument (HTML, DOC, TXT)', accept: { 'text/html': ['.html', '.htm'], 'application/msword': ['.doc'], 'text/plain': ['.txt'] } }],
-    $('#peroOpen'), loadDoc));
-
-  function docHtml() {
-    const t = escapeHtml(title.value || 'Dokument');
-    const css = 'body{max-width:794px;margin:40px auto;padding:0 24px;font-family:Georgia,serif;font-size:16px;line-height:1.65;color:#1B1F27}h1,h2,h3{font-family:Arial,sans-serif}table{border-collapse:collapse;width:100%}th,td{border:1px solid #D5D8DE;padding:6px 10px;text-align:left}img{max-width:100%}';
-    return '<!doctype html>\n<html lang="sk">\n<head>\n<meta charset="utf-8">\n<meta name="generator" content="Connect8 Office Pero">\n<title>' + t + '</title>\n<style>' + css + '</style>\n</head>\n<body>\n' + page.innerHTML + '\n</body>\n</html>\n';
-  }
-  async function fileSave(asNew) {
-    save();
-    const name = safeName(title.value, 'dokument') + '.html';
-    const h = await saveFile(new Blob([docHtml()], { type: 'text/html' }), name, HTML_TYPES, asNew ? null : fileHandle);
-    if (h) fileHandle = h;
-  }
-  $('#peroSave').addEventListener('click', () => fileSave(false));
-  $('#peroSaveAs').addEventListener('click', () => fileSave(true));
-  Dielna.savers.pero = { save: () => fileSave(false), saveAs: () => fileSave(true) };
-
-  $('#peroExportDoc').addEventListener('click', () => {
-    const t = escapeHtml(title.value || 'Dokument');
-    const css = 'body{font-family:Georgia,serif;font-size:12pt;line-height:1.5}h1,h2,h3{font-family:Arial,sans-serif}table{border-collapse:collapse}th,td{border:1px solid #999;padding:4pt 6pt}';
-    const html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>" + t + '</title><style>' + css + '</style></head><body>' + page.innerHTML + '</body></html>';
-    saveFile(new Blob(['﻿', html], { type: 'application/msword' }), safeName(title.value, 'dokument') + '.doc',
-      [{ description: 'Dokument Word', accept: { 'application/msword': ['.doc'] } }], null);
-  });
-  $('#peroExportPdf').addEventListener('click', () => {
-    document.body.classList.add('printing');
-    const prev = document.title;
-    document.title = title.value || 'dokument';
-    setTimeout(() => {
-      window.print();
-      document.body.classList.remove('printing');
-      document.title = prev;
-    }, 50);
-    toast('V okne tlače vyberte „Uložiť ako PDF“.');
+  $('#peroPageBreak').addEventListener('click', () => {
+    if (activeEd !== page) { activeEd = page; savedRange = null; }
+    cmd('insertHTML', '<hr class="pagebreak"><p><br></p>');
   });
 
-  function updateState() {
-    $$('#peroRibbon [data-cmd]').forEach((b) => {
-      const c = b.dataset.cmd;
-      if (['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull', 'insertUnorderedList', 'insertOrderedList'].includes(c)) {
-        let on = false;
-        try { on = document.queryCommandState(c); } catch (e) {}
-        b.classList.toggle('on', on);
-        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  /* --- hlavička, päta, číslovanie strán --- */
+  function hfVisible() { return sheetEl.classList.contains('show-hf'); }
+  function setHF(on) {
+    sheetEl.classList.toggle('show-hf', on);
+    $('#peroHF').classList.toggle('on', on);
+    $('#peroHF').setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function syncPageNums() {
+    $('#peroPageNums').checked = pageNums;
+    sheetEl.classList.toggle('pnums', pageNums);
+    if (pageNums && !hfVisible()) setHF(true);
+  }
+  $('#peroHF').addEventListener('click', () => { setHF(!hfVisible()); if (hfVisible()) headerEd.focus(); });
+  $('#peroPageNums').addEventListener('change', (e) => { pageNums = e.target.checked; syncPageNums(); changed(); });
+  headerEd.addEventListener('input', changed);
+  footerEd.addEventListener('input', changed);
+  setHF(!!(headerEd.textContent.trim() || footerEd.textContent.trim()) || pageNums);
+  syncPageNums();
+
+  /* --- strany: vodiace čiary --- */
+  function pageStarts() {
+    const starts = [0];
+    let start = 0;
+    const kids = Array.from(page.children);
+    kids.forEach((el) => {
+      const top = el.offsetTop - page.offsetTop - parseFloat(getComputedStyle(page).paddingTop);
+      const bottom = top + el.offsetHeight;
+      if (el.matches('hr.pagebreak')) { start = bottom; starts.push(start); return; }
+      if (bottom - start > CONTENT_H) {
+        if (top > start) { start = top; starts.push(start); }
+        while (bottom - start > CONTENT_H) { start += CONTENT_H; starts.push(start); }
       }
     });
-    try {
-      const blk = (document.queryCommandValue('formatBlock') || 'p').toLowerCase().replace(/[<>]/g, '');
-      const sel = $('#peroBlock');
-      sel.value = ['h1', 'h2', 'h3', 'blockquote'].includes(blk) ? blk : 'p';
-    } catch (e) {}
+    return starts;
+  }
+  function layoutPages() {
+    const box = $('#peroGuides');
+    box.innerHTML = '';
+    const starts = pageStarts();
+    const padTop = parseFloat(getComputedStyle(page).paddingTop);
+    const base = page.offsetTop + padTop;
+    starts.slice(1).forEach((s, i) => {
+      const g = document.createElement('div');
+      g.className = 'pg-guide';
+      g.style.top = (base + s - 8) + 'px';
+      const t = document.createElement('span');
+      t.textContent = 'Strana ' + (i + 2);
+      g.appendChild(t);
+      box.appendChild(g);
+    });
+    const n = starts.length;
+    $('#peroPages').textContent = 'Strany: ' + n;
+    $('#peroPages2').textContent = String(n);
+    return n;
   }
 
+  /* --- osnova a počty --- */
   function outline() {
     const box = $('#peroOutline');
     box.innerHTML = '';
@@ -1273,32 +1426,301 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     $('#peroWords2').textContent = String(words);
     $('#peroChars').textContent = 'Znaky: ' + t.length;
   }
+  function updateState() {
+    $$('#peroRibbon [data-cmd]').forEach((b) => {
+      const c = b.dataset.cmd;
+      if (['bold', 'italic', 'underline', 'strikeThrough', 'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull', 'insertUnorderedList', 'insertOrderedList'].includes(c)) {
+        let on = false;
+        try { on = document.queryCommandState(c); } catch (e) {}
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+    });
+    try {
+      const blk = (document.queryCommandValue('formatBlock') || 'p').toLowerCase().replace(/[<>]/g, '');
+      $('#peroBlock').value = ['h1', 'h2', 'h3', 'blockquote'].includes(blk) ? blk : 'p';
+    } catch (e) {}
+  }
+
+  /* --- ukladanie v prehliadači --- */
+  function state() { return { v: 2, title: title.value, html: page.innerHTML, header: headerEd.innerHTML, footer: footerEd.innerHTML, pageNums: pageNums }; }
   function save() {
-    const ok = store('dielna.pero', { title: title.value, html: page.innerHTML });
+    const ok = store('dielna.pero', state());
     savedEl.textContent = ok ? 'Uložené' : 'Nedá sa uložiť (príliš veľký súbor)';
   }
   function changed() {
     savedEl.textContent = 'Ukladá sa…';
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => { save(); outline(); counts(); }, 700);
+    saveTimer = setTimeout(() => { save(); outline(); counts(); layoutPages(); }, 600);
   }
   window.peroSave = save;
-
   page.addEventListener('input', changed);
   title.addEventListener('input', changed);
   document.addEventListener('selectionchange', () => {
     if (currentModule !== 'pero') return;
     const s = window.getSelection();
-    if (s.rangeCount && page.contains(s.anchorNode)) { saveSel(); updateState(); }
+    if (s.rangeCount && activeEd.contains(s.anchorNode)) { saveSel(); updateState(); }
   });
   page.addEventListener('click', (e) => {
     const a = e.target.closest('a');
     if (a && (e.ctrlKey || e.metaKey)) window.open(a.href, '_blank', 'noopener');
   });
 
+  /* --- export do Wordu (.docx) --- */
+  const DOCX_TYPES = [{ description: 'Dokument Word', accept: { 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'] } }];
+  const HTML_TYPES = [{ description: 'Dokument Connect8 Office (HTML)', accept: { 'text/html': ['.html', '.htm'] } }];
+  const DOC_CSS = 'table{border-collapse:collapse}th,td{border:1px solid #9AA1AE;padding:4px 8px;vertical-align:top}th{background:#F1F3F6;font-weight:bold}blockquote{margin-left:1.25cm;font-style:italic}';
+  function bodyHtml() {
+    const c = page.cloneNode(true);
+    c.querySelectorAll('hr.pagebreak').forEach((hr) => {
+      let next = hr.nextElementSibling;
+      if (!next) { next = document.createElement('p'); hr.after(next); }
+      next.style.pageBreakBefore = 'always';
+      next.style.breakBefore = 'page';
+      hr.remove();
+    });
+    return c.innerHTML;
+  }
+  async function buildDocx() {
+    const L = await needDocx();
+    const D = L.D, H = L.H;
+    const opt = { stylesheet: DOC_CSS, maxImageWidth: 605 };
+    const body = H.htmlToContent(bodyHtml(), opt);
+    const headKids = headerEd.textContent.trim() ? H.htmlToContent(headerEd.innerHTML, opt) : [];
+    const footKids = footerEd.textContent.trim() ? H.htmlToContent(footerEd.innerHTML, opt).slice() : [];
+    if (pageNums) footKids.push(new D.Paragraph({ alignment: D.AlignmentType.CENTER, children: [new D.TextRun({ children: [D.PageNumber.CURRENT] })] }));
+    const section = {
+      properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1418, bottom: 1418, left: 1418, right: 1418, header: 708, footer: 708 } } },
+      children: body.length ? body : [new D.Paragraph('')]
+    };
+    if (headKids.length) section.headers = { default: new D.Header({ children: headKids }) };
+    if (footKids.length) section.footers = { default: new D.Footer({ children: footKids }) };
+    const doc = new D.Document({
+      creator: 'Connect8 Office',
+      title: title.value || 'Dokument',
+      styles: {
+        default: {
+          document: { run: { font: 'Calibri', size: 24 }, paragraph: { spacing: { after: 160, line: 336 } } },
+          heading1: { run: { font: 'Calibri', size: 44, bold: true, color: '1B1F27' }, paragraph: { spacing: { before: 240, after: 120 } } },
+          heading2: { run: { font: 'Calibri', size: 30, bold: true, color: '1B1F27' }, paragraph: { spacing: { before: 240, after: 100 } } },
+          heading3: { run: { font: 'Calibri', size: 26, bold: true, color: '1B1F27' }, paragraph: { spacing: { before: 200, after: 80 } } }
+        }
+      },
+      sections: [section]
+    });
+    return D.Packer.toBlob(doc);
+  }
+  async function exportDocx(handle) {
+    let blob;
+    try { blob = await buildDocx(); } catch (e) { toast(LIB_ERR); return null; }
+    return saveFile(blob, safeName(title.value, 'dokument') + '.docx', DOCX_TYPES, handle || null);
+  }
+  $('#peroExportDocx').addEventListener('click', () => exportDocx(null));
+
+  /* --- otvorenie .docx --- */
+  async function readHeaderFooter(buf) {
+    const res = { header: '', footer: '', pn: false };
+    try {
+      const Z = await needZip();
+      const zip = await Z.loadAsync(buf);
+      const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+      const attr = (el, n) => el.getAttributeNS(W, n) || el.getAttribute('w:' + n) || '';
+      async function conv(name) {
+        const xml = await zip.file(name).async('string');
+        const d = new DOMParser().parseFromString(xml, 'application/xml');
+        let pn = false;
+        const out = [];
+        Array.from(d.getElementsByTagNameNS(W, 'p')).forEach((p) => {
+          let hasPage = false;
+          Array.from(p.getElementsByTagNameNS(W, 'instrText')).forEach((t) => { if (/\bPAGE\b/.test(t.textContent)) hasPage = true; });
+          Array.from(p.getElementsByTagNameNS(W, 'fldSimple')).forEach((f) => { if (/\bPAGE\b/.test(attr(f, 'instr'))) hasPage = true; });
+          let txt = Array.from(p.getElementsByTagNameNS(W, 't')).map((t) => t.textContent).join('');
+          if (hasPage) {
+            pn = true;
+            txt = txt.replace(/(Strana|Page|Str\.)?\s*\d+\s*((z|of|\/)\s*\d+)?/gi, ' ').replace(/\s+/g, ' ').trim();
+            if (/^(Strana|Page|Str\.?|Seite|Stránka)?\s*(č\.)?\s*[:.\-–]?\s*((z|of|\/)\s*)?$/i.test(txt)) txt = '';
+          }
+          if (!txt.trim()) return;
+          const jc = p.getElementsByTagNameNS(W, 'jc')[0];
+          const al = jc ? attr(jc, 'val') : '';
+          const map = { center: 'center', right: 'right', end: 'right', both: 'justify' };
+          out.push('<p' + (map[al] ? ' style="text-align:' + map[al] + '"' : '') + '>' + escapeHtml(txt) + '</p>');
+        });
+        return { html: out.join(''), pn: pn };
+      }
+      const names = Object.keys(zip.files).sort();
+      for (const n of names.filter((x) => /^word\/header\d*\.xml$/.test(x))) {
+        const r = await conv(n);
+        res.pn = res.pn || r.pn;
+        if (r.html && !res.header) res.header = r.html;
+      }
+      for (const n of names.filter((x) => /^word\/footer\d*\.xml$/.test(x))) {
+        const r = await conv(n);
+        res.pn = res.pn || r.pn;
+        if (r.html && !res.footer) res.footer = r.html;
+      }
+    } catch (e) { /* hlavička a päta sú nepovinné */ }
+    return res;
+  }
+  async function openDocx(f, h) {
+    let M;
+    try { M = await needMammoth(); } catch (e) { toast(LIB_ERR); return; }
+    const buf = await f.arrayBuffer();
+    try {
+      const out = await M.convertToHtml({ arrayBuffer: buf.slice(0) }, {
+        styleMap: ["br[type='page'] => hr.pagebreak", 'u => u', 'strike => s', "p[style-name='Title'] => h1:fresh", "p[style-name='Subtitle'] => h2:fresh", "p[style-name='Quote'] => blockquote:fresh", "p[style-name='Intense Quote'] => blockquote:fresh"]
+      });
+      page.innerHTML = sanitize(out.value) || '<p><br></p>';
+    } catch (e) {
+      toast('Súbor „' + f.name + '“ sa nepodarilo načítať.');
+      return;
+    }
+    const hf = await readHeaderFooter(buf.slice(0));
+    headerEd.innerHTML = hf.header;
+    footerEd.innerHTML = hf.footer;
+    pageNums = hf.pn;
+    syncPageNums();
+    setHF(!!(hf.header || hf.footer || hf.pn));
+    originalDocx = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    title.value = f.name.replace(/\.[^.]+$/, '');
+    fileHandle = h;
+    fileKind = 'docx';
+    changed();
+    toast('Dokument „' + f.name + '“ je otvorený. Presný vzhľad originálu nájdete v Náhľade.', 5000);
+  }
+  function decodeText(s) {
+    const ta = document.createElement('textarea');
+    ta.innerHTML = s;
+    return ta.value;
+  }
+  function loadDoc(f, h) {
+    if (/\.docx$/i.test(f.name)) { openDocx(f, h); return; }
+    const r = new FileReader();
+    r.onload = () => {
+      const txt = String(r.result);
+      originalDocx = null;
+      if (/\.txt$/i.test(f.name)) {
+        page.innerHTML = txt.split(/\r?\n\r?\n/).map((p) => '<p>' + escapeHtml(p).replace(/\r?\n/g, '<br>') + '</p>').join('');
+        headerEd.innerHTML = ''; footerEd.innerHTML = ''; pageNums = false;
+        fileHandle = null; fileKind = 'html';
+      } else {
+        const m = txt.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+        const doc = new DOMParser().parseFromString('<body>' + (m ? m[1] : txt) + '</body>', 'text/html');
+        const hd = doc.querySelector('[data-c8-header]'), ft = doc.querySelector('[data-c8-footer]');
+        headerEd.innerHTML = hd ? sanitize(hd.innerHTML) : '';
+        footerEd.innerHTML = ft ? sanitize(ft.innerHTML) : '';
+        pageNums = !!(ft && ft.getAttribute('data-pagenums') === '1');
+        if (hd) hd.remove();
+        if (ft) ft.remove();
+        page.innerHTML = sanitize(doc.body.innerHTML) || '<p><br></p>';
+        fileHandle = /\.html?$/i.test(f.name) ? h : null;
+        fileKind = 'html';
+      }
+      syncPageNums();
+      setHF(!!(headerEd.textContent.trim() || footerEd.textContent.trim()) || pageNums);
+      const tm = txt.match(/<title>([\s\S]*?)<\/title>/i);
+      title.value = tm && tm[1].trim() ? decodeText(tm[1].trim()) : f.name.replace(/\.[^.]+$/, '');
+      changed();
+      toast('Dokument „' + f.name + '“ je otvorený.');
+    };
+    r.readAsText(f);
+  }
+  $('#peroOpenBtn').addEventListener('click', () => openFileDialog(
+    [{ description: 'Dokument (Word, HTML, TXT)', accept: {
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+      'text/html': ['.html', '.htm'], 'application/msword': ['.doc'], 'text/plain': ['.txt']
+    } }], $('#peroOpen'), loadDoc));
+
+  /* --- uloženie projektu --- */
+  function docHtml() {
+    const t = escapeHtml(title.value || 'Dokument');
+    const css = 'body{max-width:794px;margin:40px auto;padding:0 24px;font-family:Calibri,Carlito,Arial,sans-serif;font-size:12pt;line-height:1.4;color:#1B1F27}table{border-collapse:collapse;width:100%}th,td{border:1px solid #D5D8DE;padding:6px 10px;text-align:left}img{max-width:100%}hr.pagebreak{border:0;border-top:1px dashed #BFCFF4;break-after:page}[data-c8-header],[data-c8-footer]{color:#5B6270;font-size:10pt}';
+    const hd = headerEd.innerHTML.trim() ? '<div data-c8-header>' + headerEd.innerHTML + '</div>\n' : '';
+    const ft = footerEd.innerHTML.trim() || pageNums ? '\n<div data-c8-footer data-pagenums="' + (pageNums ? 1 : 0) + '">' + footerEd.innerHTML + '</div>' : '';
+    return '<!doctype html>\n<html lang="sk">\n<head>\n<meta charset="utf-8">\n<meta name="generator" content="Connect8 Office Pero">\n<title>' + t + '</title>\n<style>' + css + '</style>\n</head>\n<body>\n' + hd + page.innerHTML + ft + '\n</body>\n</html>\n';
+  }
+  async function fileSave(asNew) {
+    save();
+    if (fileKind === 'docx' && fileHandle && !asNew) {
+      const h = await exportDocx(fileHandle);
+      if (h) fileHandle = h;
+      return;
+    }
+    const h = await saveFile(new Blob([docHtml()], { type: 'text/html' }), safeName(title.value, 'dokument') + '.html', HTML_TYPES, asNew || fileKind !== 'html' ? null : fileHandle);
+    if (h) { fileHandle = h; fileKind = 'html'; }
+  }
+  $('#peroSave').addEventListener('click', () => fileSave(false));
+  $('#peroSaveAs').addEventListener('click', () => fileSave(true));
+  Dielna.savers.pero = { save: () => fileSave(false), saveAs: () => fileSave(true) };
+  $('#peroNew').addEventListener('click', () => {
+    if (!confirm('Vytvoriť nový prázdny dokument? Aktuálny text sa prepíše.')) return;
+    page.innerHTML = '<h1>Nový dokument</h1><p><br></p>';
+    headerEd.innerHTML = ''; footerEd.innerHTML = '';
+    pageNums = false; syncPageNums(); setHF(false);
+    title.value = 'Nový dokument';
+    fileHandle = null; fileKind = 'html'; originalDocx = null;
+    changed();
+    page.focus();
+  });
+
+  /* --- náhľad (presne ako vo Worde) --- */
+  const prevDlg = $('#peroPrevDlg');
+  let prevMode = 'current';
+  async function renderPreview() {
+    const body = $('#peroPrevBody');
+    body.innerHTML = '<p class="help" style="padding:24px;text-align:center">Pripravujem náhľad…</p>';
+    $$('.prev-tabs button').forEach((b) => b.classList.toggle('active', b.dataset.prev === prevMode));
+    $('#peroPrevOrigTab').style.display = originalDocx ? '' : 'none';
+    try {
+      const P = await needPreview();
+      const blob = prevMode === 'original' && originalDocx ? originalDocx : await buildDocx();
+      body.innerHTML = '';
+      await P.renderAsync(blob, body, null, { className: 'docx', inWrapper: true, breakPages: true, ignoreLastRenderedPageBreak: true, renderHeaders: true, renderFooters: true, experimental: true });
+    } catch (e) {
+      body.innerHTML = '';
+      const p = document.createElement('p');
+      p.className = 'help';
+      p.style.cssText = 'padding:24px;text-align:center';
+      p.textContent = LIB_ERR;
+      body.appendChild(p);
+    }
+  }
+  $('#peroPreview').addEventListener('click', () => { prevMode = 'current'; prevDlg.showModal(); renderPreview(); });
+  $$('.prev-tabs button').forEach((b) => b.addEventListener('click', () => { prevMode = b.dataset.prev; renderPreview(); }));
+  $('#peroPrevClose').addEventListener('click', () => prevDlg.close());
+
+  /* --- tlač a PDF --- */
+  function cssStr(s) { return '"' + String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\s+/g, ' ').trim() + '"'; }
+  function printDoc() {
+    let st = $('#peroPrintCss');
+    if (!st) { st = document.createElement('style'); st.id = 'peroPrintCss'; document.head.appendChild(st); }
+    const ht = headerEd.innerText.trim(), ft = footerEd.innerText.trim();
+    let css = '@media print{@page{size:A4;margin:2.5cm;';
+    if (ht) css += '@top-center{content:' + cssStr(ht) + ';font:10pt Calibri,Arial,sans-serif;color:#5B6270}';
+    const parts = [];
+    if (ft) parts.push(cssStr(ft));
+    if (pageNums) parts.push('counter(page)');
+    if (parts.length) css += '@bottom-center{content:' + parts.join(' "   " ') + ';font:10pt Calibri,Arial,sans-serif;color:#5B6270}';
+    css += '}}';
+    st.textContent = css;
+    document.body.classList.add('printing');
+    const prev = document.title;
+    document.title = title.value || 'dokument';
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove('printing');
+      document.title = prev;
+    }, 60);
+  }
+  $('#peroExportPdf').addEventListener('click', () => { printDoc(); toast('V okne tlače vyberte „Uložiť ako PDF“.'); });
+  $('#peroPrint').addEventListener('click', printDoc);
+  document.addEventListener('keydown', (e) => {
+    if (currentModule === 'pero' && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') { e.preventDefault(); printDoc(); }
+  });
+
   function setZoom(z) {
     zoom = Math.min(2, Math.max(0.5, Math.round(z * 10) / 10));
-    page.style.zoom = zoom;
+    sheetEl.style.zoom = zoom;
     $('#peroZoomVal').textContent = Math.round(zoom * 100) + ' %';
   }
   $('#peroZoomIn').addEventListener('click', () => setZoom(zoom + 0.1));
@@ -1306,6 +1728,10 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
 
   outline();
   counts();
+  document.addEventListener('dielna:module', (e) => { if (e.detail === 'pero') requestAnimationFrame(layoutPages); });
+  window.addEventListener('resize', () => { if (currentModule === 'pero') layoutPages(); });
+  window.addEventListener('load', layoutPages);
+  requestAnimationFrame(layoutPages);
 })();
 
 /* =====================================================================
@@ -1736,6 +2162,7 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     if (e.target === editor || e.target === fillHandle) return;
     const td = e.target.closest('td');
     if (!td) return;
+    if (e.pointerType === 'touch') return;
     const p = { r: +td.dataset.r, c: +td.dataset.c };
     const sameCell = !editing && anchor.r === p.r && anchor.c === p.c && focus.r === p.r && focus.c === p.c;
     if (editing) commitEdit();
@@ -1770,6 +2197,66 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     setSel({ r: +td.dataset.r, c: +td.dataset.c }, null, true);
     startEdit();
   });
+
+
+  /* --- dotyk: ťuknutie = výber, druhé ťuknutie = úprava, podržanie a ťahanie = výber oblasti --- */
+  let lp = null;
+  function edgeScroll(x, y) {
+    const r = scroller.getBoundingClientRect();
+    const m = 36, sp = 14;
+    if (y > r.bottom - m) scroller.scrollTop += sp; else if (y < r.top + 28 + m) scroller.scrollTop -= sp;
+    if (x > r.right - m) scroller.scrollLeft += sp; else if (x < r.left + 44 + m) scroller.scrollLeft -= sp;
+  }
+  wrap.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) { if (lp) { clearTimeout(lp.timer); lp = null; } return; }
+    const t = e.touches[0];
+    if (t.target === fillHandle || t.target === editor) return;
+    const td = t.target.closest ? t.target.closest('td') : null;
+    if (!td) return;
+    const cell = { r: +td.dataset.r, c: +td.dataset.c };
+    lp = { x: t.clientX, y: t.clientY, cell: cell, active: false, moved: false };
+    lp.timer = setTimeout(() => {
+      if (!lp || lp.moved) return;
+      lp.active = true;
+      if (editing) commitEdit();
+      setSel(cell, null, true);
+      if (navigator.vibrate) { try { navigator.vibrate(12); } catch (err) {} }
+    }, 420);
+  }, { passive: true });
+  wrap.addEventListener('touchmove', (e) => {
+    if (!lp) return;
+    const t = e.touches[0];
+    if (lp.active) {
+      e.preventDefault();
+      edgeScroll(t.clientX, t.clientY);
+      const p = cellFromPoint(t.clientX, t.clientY);
+      if (p && (p.r !== focus.r || p.c !== focus.c)) { focus = p; renderSel(); }
+      return;
+    }
+    if (Math.hypot(t.clientX - lp.x, t.clientY - lp.y) > 8) { lp.moved = true; clearTimeout(lp.timer); }
+  }, { passive: false });
+  wrap.addEventListener('touchend', (e) => {
+    if (!lp) return;
+    clearTimeout(lp.timer);
+    const was = lp;
+    lp = null;
+    if (was.active) { e.preventDefault(); return; }
+    if (was.moved || e.touches.length) return;
+    e.preventDefault();
+    const p = was.cell;
+    const same = !editing && anchor.r === p.r && anchor.c === p.c && focus.r === p.r && focus.c === p.c;
+    if (editing) commitEdit();
+    if (same) startEdit(); else setSel(p, null, true);
+  }, { passive: false });
+  wrap.addEventListener('touchcancel', () => { if (lp) { clearTimeout(lp.timer); lp = null; } });
+  if (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) {
+    document.addEventListener('dielna:module', (e) => {
+      if (e.detail !== 'mriezka') return;
+      let seen = false;
+      try { seen = localStorage.getItem('dielna.mzhint') === '1'; localStorage.setItem('dielna.mzhint', '1'); } catch (err) {}
+      if (!seen) toast('Tip: ťuknutím vyberiete bunku, ďalším ťuknutím ju upravíte. Podržte prst a ťahajte pre výber viacerých buniek.', 7000);
+    });
+  }
 
   /* --- ťahanie za roh (kopírovanie vzorcov) --- */
   let filling = null;
@@ -3503,6 +3990,17 @@ const EN = {
   'Počet zubov': 'Number of teeth', 'Modul (mm)': 'Module (mm)', 'Hrúbka (mm)': 'Thickness (mm)', 'Diera (mm)': 'Hole (mm)',
   'Zrušiť': 'Cancel', 'Vložiť koleso': 'Insert gear', 'Objekty a rozmery': 'Objects and dimensions', 'Nastavenia tlače': 'Print settings',
   'Otáčať pohľad': 'Rotate view',
+  'Tip: ťuknutím vyberiete bunku, ďalším ťuknutím ju upravíte. Podržte prst a ťahajte pre výber viacerých buniek.': 'Tip: tap to select a cell, tap again to edit it. Hold your finger and drag to select several cells.',
+  'Otvoriť dokument Word (.docx), HTML alebo text': 'Open a Word document (.docx), HTML or text', 'Náhľad': 'Preview',
+  'Presne tak, ako dokument uvidí Word': 'Exactly as Word will show the document', 'Tlačiť (Ctrl+P)': 'Print (Ctrl+P)',
+  'Veľkosť písma (body)': 'Font size (pt)', 'Zmenšiť odsadenie': 'Decrease indent', 'Zväčšiť odsadenie': 'Increase indent', 'Riadkovanie': 'Line spacing',
+  'Zalomenie strany': 'Page break', 'Ďalší text začne na novej strane': 'The following text starts on a new page',
+  'Hlavička a päta': 'Header & footer', 'Čísla strán': 'Page numbers', 'Strana': 'Page', 'Word (.docx)': 'Word (.docx)',
+  'Okraje': 'Margins', 'Strany': 'Pages', 'Hlavička': 'Header', 'Päta': 'Footer',
+  'Hlavička – kliknite a píšte': 'Header – click and type', 'Päta – kliknite a píšte': 'Footer – click and type',
+  'Náhľad dokumentu': 'Document preview', 'Aktuálny dokument': 'Current document', 'Pôvodný súbor .docx': 'Original .docx file',
+  'Pripravujem náhľad…': 'Preparing preview…', 'Dokument (Word, HTML, TXT)': 'Document (Word, HTML, TXT)', 'Dokument Word': 'Word document',
+  'Knižnicu pre Word sa nepodarilo načítať. Skontrolujte pripojenie na internet.': 'The Word library could not be loaded. Check your internet connection.',
   'Schránka': 'Clipboard', 'Kopírovať': 'Copy', 'Vystrihnúť': 'Cut', 'Prilepiť': 'Paste',
   'Kopírovať (Ctrl+C)': 'Copy (Ctrl+C)', 'Vystrihnúť (Ctrl+X)': 'Cut (Ctrl+X)', 'Prilepiť (Ctrl+V)': 'Paste (Ctrl+V)',
   'Zoradí riadky podľa stĺpca vybranej bunky': 'Sorts rows by the column of the selected cell', 'Vymazať obsah (Delete)': 'Clear contents (Delete)',
@@ -3593,6 +4091,9 @@ const EN_PATTERNS = [
   [/^Uložené do súboru „(.+)“\.$/, 'Saved to file “$1”.'],
   [/^Súbor „(.+)“ sa stiahol do priečinka Stiahnuté súbory\.$/, 'File “$1” was downloaded to your Downloads folder.'],
   [/^Dokument „(.+)“ je otvorený\.$/, 'Document “$1” is open.'],
+  [/^Strany: (\d+)$/, 'Pages: $1'],
+  [/^Strana (\d+)$/, 'Page $1'],
+  [/^Dokument „(.+)“ je otvorený\. Presný vzhľad originálu nájdete v Náhľade\.$/, 'Document “$1” is open. See the exact look of the original in Preview.'],
   [/^Zošit „(.+)“ je otvorený\.(.*)$/, (m, n, rest) => 'Workbook “' + n + '” is open.' + rest.split(/(?<=\.)\s+/).map((x) => x ? ' ' + (EN[x.trim()] || x.trim()) : '').join('')],
   [/^Súčet: (.+) · Priemer: (.+) · Počet: (\d+)$/, 'Sum: $1 · Average: $2 · Count: $3'],
   [/^Počet: (\d+)$/, 'Count: $1'],
