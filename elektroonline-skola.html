@@ -1,3 +1,9 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#13202E">
 <title>ElektroOnline Škola</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -230,8 +236,92 @@ footer .wrap{padding-block:28px;display:flex;flex-wrap:wrap;justify-content:spac
 .num.play.c3{background:var(--l3);border-color:var(--l3);color:var(--surface)}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+/* ===== TELEFÓN ===== */
+html{-webkit-text-size-adjust:100%}
+body{margin:0;overflow-x:hidden}
+@media (max-width:700px){
+  .top .wrap{gap:8px 10px;padding-block:8px 10px}
+  .brand{gap:8px}
+  .brand-mark{width:32px;height:32px}
+  .brand-mark svg{width:18px;height:18px}
+  .brand-name{font-size:19px}
+  .langs{order:2;gap:5px}
+  .lang-btn{min-height:34px;padding:4px 7px;font-size:0;gap:0}
+  .lang-btn svg{width:21px;height:14px}
+  .nav{order:3;flex:1 1 100%;flex-wrap:wrap;gap:6px}
+  .nav a{white-space:nowrap;font-size:13.5px;padding:7px 8px;flex:1 1 auto;text-align:center}
+  .hazard{height:6px}
+
+  .hero .wrap{gap:24px;padding-block:24px 32px}
+  .hero-text{gap:14px;flex-basis:100%}
+  .hero-fig{flex-basis:100%}
+  .hero p{font-size:16px}
+  .eyebrow{font-size:11.5px;letter-spacing:.08em}
+  .btns .btn{flex:1 1 auto;justify-content:center}
+  .facts{gap:18px}
+  .facts b{font-size:26px}
+
+  .section{padding-block:34px}
+  .section-head{margin-bottom:16px}
+  .section-head p{font-size:15.5px}
+  .levels{grid-template-columns:1fr;gap:12px}
+  .level{padding:18px;gap:10px}
+  .level h3{font-size:24px}
+  .how{grid-template-columns:1fr 1fr;gap:10px}
+  .how div{padding:14px}
+  .how b{font-size:15.5px}
+  .how span{font-size:14px}
+
+  .course-head{padding-block:22px 4px;gap:10px}
+  .course-head p{font-size:15.5px}
+  .lessons{grid-template-columns:1fr;gap:10px;padding-block:14px 36px}
+  .lesson-card{padding:13px;gap:12px}
+
+  /* lekcia: najprv obsah, zoznam lekcií až pod ním */
+  .lesson{gap:20px;padding-block:18px 36px}
+  .content{order:1;flex-basis:100%;gap:16px}
+  .side{order:2;flex-basis:100%}
+  .lead{font-size:16px}
+  .panel{padding:16px}
+  .panel h2{font-size:20px}
+  .box-warn,.box-note{padding:14px}
+  .placeholder{padding:18px}
+  .pager .btn{flex:1 1 100%;justify-content:center;text-align:center}
+  .opts{grid-template-columns:1fr}
+  .foto-ph{padding:14px;gap:10px}
+  .test-card{padding:18px;margin-bottom:36px}
+  .score{font-size:36px}
+
+  /* schémy: celé na šírku displeja (bez vodorovného posúvania) */
+  .sheet{padding:10px;border-radius:10px}
+  .sheet svg{min-width:0}
+  .legend{font-size:12px}
+
+  /* video prehrávač */
+  .player{gap:14px}
+  .vp-main{flex-basis:100%;border-radius:12px}
+  .vp-steps{flex-basis:100%;font-size:14.5px}
+  .big-play{padding:10px 16px;border-radius:12px;font-size:14px;gap:4px}
+  .big-play svg{width:26px;height:26px}
+  .caption{padding:10px 12px;font-size:15px;min-height:3.2em}
+  .controls{gap:6px;padding:8px}
+  .ctl{width:40px;height:40px}
+  .speed select{min-height:40px}
+  .card-over{padding:4%}
+  footer .wrap{padding-block:20px;font-size:13px}
+}
+@media (max-width:380px){
+  .brand-name{font-size:17px}
+  .lang-btn{padding:4px 5px}
+  .nav a{font-size:12.5px;padding:7px 6px}
+  .brand-mark{width:28px;height:28px}
+  .how{grid-template-columns:1fr}
+}
 </style>
 
+</head>
+<body>
 <header class="top">
   <div class="wrap">
     <a class="brand" href="#uvod" aria-label="ElektroOnline Škola – úvod">
@@ -1673,3 +1763,17 @@ app.addEventListener('click', e => {
 });
 route();
 </script>
+<script>
+/* telefón: aktívna záložka v menu sa posunie do zorného poľa */
+(function(){
+  function show(){
+    const a=document.querySelector('.nav a[aria-current="page"]'); if(!a) return;
+    const n=a.parentElement; if(n.scrollWidth<=n.clientWidth) return;
+    n.scrollTo({left:Math.max(0,a.offsetLeft-(n.clientWidth-a.offsetWidth)/2),behavior:'smooth'});
+  }
+  window.addEventListener('hashchange',()=>setTimeout(show,30));
+  setTimeout(show,60);
+})();
+</script>
+</body>
+</html>
