@@ -3463,6 +3463,20 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
           </span>
           <span class="invite-label">Financie</span>
         </button>
+        <button class="translator-financie-inline translator-eskola-inline" onclick="closeTranslatorModal();c8EskolaOpen()" title="ElektroOnline Škola">
+          <span class="invite-ring">
+            <span class="invite-ring-inner">
+              <svg viewBox="0 0 24 24"><path d="M13.2 2.5 5.5 13.4h5.6l-1.2 8.1 8.6-11.6h-5.7l.4-7.4z" fill="#F2B000" stroke="#13202E" stroke-width="1.4" stroke-linejoin="round"/></svg>
+            </span>
+          </span>
+          <span class="invite-label">ElektroŠkola</span>
+        </button>
+        <button class="translator-financie-inline translator-office-inline" onclick="closeTranslatorModal();c8OfficeOpen()" title="Connect8 Office">
+          <span class="invite-ring">
+            <span class="invite-ring-inner"><b class="c8of-ringtxt">C8</b></span>
+          </span>
+          <span class="invite-label">C8 Office</span>
+        </button>
         <button onclick="closeTranslatorModal()">✕</button>
       </div>
       <div class="translator-body" id="translator-body">
@@ -3610,6 +3624,10 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
       <!-- ElektroOnline Škola – len na PC (ľavý panel sa na telefóne nezobrazuje) -->
       <div class="c8l-item" id="c8l-eskola" onclick="c8EskolaOpen()">
         <span class="c8l-ic"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#13202E"/><path d="M13.2 4.5 6.8 13.4h4.9l-1 6.1 6.5-9h-4.9l.9-6z" fill="#F2B000"/></svg></span><span class="label">ElektroŠkola</span>
+      </div>
+      <!-- Connect8 Office – len na PC -->
+      <div class="c8l-item" id="c8l-office" onclick="c8OfficeOpen()">
+        <span class="c8l-ic"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#14171F"/><text x="12" y="15.6" text-anchor="middle" font-family="system-ui,Arial,sans-serif" font-weight="800" font-size="9.5" fill="#fff">C8</text><rect x="6" y="17.6" width="12" height="1.8" rx=".9" fill="#7FA2FF"/></svg></span><span class="label">Connect8 Office</span>
       </div>
     <div class="c8g-card" id="c8g-pc" data-c8globe>
         <canvas class="c8g-canvas" role="img" aria-label="Zemeguľa s krajinami používateľov connect8"></canvas>
@@ -25810,6 +25828,19 @@ c8ApplyUsersView();
   background:#13202E;color:#F2F5F8;display:none;align-items:center;justify-content:center;cursor:pointer;transform:translateY(-50%)}
 #c8es-handle.on{display:flex}
 @media (prefers-reduced-motion:reduce){#c8es-panel,#c8es-back{transition:none}}
+/* ElektroŠkola tlačidlo v Tlmočníku – tam, kde nie je ľavý panel (telefón, menší PC) */
+.translator-eskola-inline .invite-ring{background:conic-gradient(from 45deg,#F2B000,#13202E,#F2B000)}
+.translator-eskola-inline .invite-ring-inner{color:#13202E}
+.translator-eskola-inline .invite-ring-inner svg{width:22px;height:22px}
+.translator-office-inline .invite-ring{background:conic-gradient(from 45deg,#7FA2FF,#14171F,#7FA2FF)}
+.translator-office-inline .c8of-ringtxt{font:800 14px/1 system-ui,Arial,sans-serif;letter-spacing:-.03em;color:#14171F}
+@media(min-width:1340px){.translator-sheet-header .translator-eskola-inline,.translator-sheet-header .translator-office-inline{display:none!important}}
+/* na telefóne škola cez celú obrazovku, bez bočného úchytu */
+@media(max-width:900px){
+  #c8es-panel{width:100vw}
+  #c8es-handle,#c8es-handle.on{display:none!important}
+  .c8es-head{padding:8px 10px 8px 12px}
+}
 </style>
 
 <div id="c8es-back"></div>
@@ -25865,5 +25896,89 @@ c8ApplyUsersView();
 })();
 </script>
 <!-- =================== koniec: ElektroOnline Škola – bočná záložka =================== -->
+
+<!-- ===================== Connect8 Office – bočná záložka ===================== -->
+<!-- Položka "Connect8 Office" je v ľavom paneli pod "ElektroŠkola" (#c8l-office); na telefóne v Tlmočníku. Klik = vysunie sa panel s Office (connect8.eu/connect8-office). -->
+<style id="c8of-style">
+
+.c8of-ico{width:26px;height:26px;border-radius:7px;background:#fff;color:#14171F;font:800 12px/1 system-ui,sans-serif;letter-spacing:-.03em;display:flex;align-items:center;justify-content:center;flex:none}
+#c8of-back{position:fixed;inset:0;z-index:10030;background:rgba(19,32,46,.55);opacity:0;pointer-events:none;transition:opacity .25s ease}
+#c8of-back.on{opacity:1;pointer-events:auto}
+#c8of-panel{position:fixed;left:0;top:0;bottom:0;width:min(1400px,calc(100vw - 34px));z-index:10031;background:#F4F5F7;
+  box-shadow:10px 0 40px rgba(0,0,0,.35);transform:translateX(-105%);transition:transform .3s ease;display:flex;flex-direction:column;
+  padding-top:env(safe-area-inset-top,0px);visibility:hidden}
+#c8of-panel.on{transform:none;visibility:visible}
+.c8of-head{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#14171F;color:#F2F5F8}
+.c8of-title{flex:1;min-width:0;font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c8of-title b{color:#7FA2FF}
+.c8of-btn{min-width:40px;height:40px;padding:0 10px;border-radius:10px;border:1px solid #3B4A5C;background:transparent;color:#F2F5F8;
+  display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;text-decoration:none;font:inherit;font-size:13px;font-weight:700}
+.c8of-btn:hover{border-color:#93A0AF}
+#c8of-frame{flex:1;width:100%;border:0;background:#F4F5F7}
+#c8of-handle{position:fixed;top:52%;left:min(1400px,calc(100vw - 34px));z-index:10031;width:34px;height:120px;border:0;border-radius:0 12px 12px 0;
+  background:#14171F;color:#F2F5F8;display:none;align-items:center;justify-content:center;cursor:pointer;transform:translateY(-50%)}
+#c8of-handle.on{display:flex}
+@media (prefers-reduced-motion:reduce){#c8of-panel,#c8of-back{transition:none}}
+/* na telefóne Office cez celú obrazovku, bez bočného úchytu */
+@media(max-width:900px){
+  #c8of-panel{width:100vw}
+  #c8of-handle,#c8of-handle.on{display:none!important}
+  .c8of-head{padding:8px 10px 8px 12px}
+}
+</style>
+
+<div id="c8of-back"></div>
+<div id="c8of-panel" role="dialog" aria-label="Connect8 Office" aria-hidden="true">
+  <div class="c8of-head">
+    <span class="c8of-ico">C8</span>
+    <span class="c8of-title">Connect8 <b>Office</b></span>
+    <a class="c8of-btn" id="c8of-newtab" href="/connect8-office" target="_blank" rel="noopener" aria-label="Otvoriť v novom okne">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+    </a>
+    <button class="c8of-btn" id="c8of-close" type="button" aria-label="Zavrieť">
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <iframe id="c8of-frame" title="Connect8 Office" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
+</div>
+<button id="c8of-handle" type="button" aria-label="Zavrieť Connect8 Office">
+  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<script id="c8of-script">
+(function(){
+  const SKOLA_URL = '/connect8-office';          // adresa Office na connect8.eu
+  const $ = id => document.getElementById(id);
+  const panel = $('c8of-panel'), back = $('c8of-back'), handle = $('c8of-handle'), frame = $('c8of-frame');
+  if(!panel) return;
+  let isOpen = false, pushed = false;
+
+  function open(){
+    if(isOpen) return;
+    if(!frame.getAttribute('src')) frame.setAttribute('src', SKOLA_URL);   // načíta sa až pri prvom otvorení
+    isOpen = true;
+    panel.classList.add('on'); back.classList.add('on'); handle.classList.add('on');
+    panel.setAttribute('aria-hidden', 'false');
+    document.documentElement.style.overflow = 'hidden';
+    try{ history.pushState({c8of:1}, ''); pushed = true; }catch(e){}       // tlačidlo Späť zavrie panel
+    setTimeout(() => { try{ $('c8of-close').focus(); }catch(e){} }, 50);
+  }
+  function close(fromPop){
+    if(!isOpen) return;
+    isOpen = false;
+    panel.classList.remove('on'); back.classList.remove('on'); handle.classList.remove('on');
+    panel.setAttribute('aria-hidden', 'true');
+    document.documentElement.style.overflow = '';
+    if(pushed && !fromPop){ pushed = false; try{ history.back(); }catch(e){} } else pushed = false;
+  }
+  window.addEventListener('popstate', () => { if(isOpen) close(true); });
+  document.addEventListener('keydown', e => { if(isOpen && e.key === 'Escape') close(); });
+  $('c8of-close').addEventListener('click', () => close());
+  handle.addEventListener('click', () => close());
+  back.addEventListener('click', () => close());
+  window.c8OfficeOpen = open;                      // volá položka v ľavom paneli
+})();
+</script>
+<!-- =================== koniec: Connect8 Office – bočná záložka =================== -->
 </body>
 </html>
