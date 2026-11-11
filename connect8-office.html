@@ -749,7 +749,7 @@ button,.tab,.btn,label{touch-action:manipulation}
   <div class="ribbon">
     <div class="grp"><div class="grp-row">
       <button class="btn primary" id="t3OpenBtn"><span data-cic="folder"></span>Otvoriť STL</button>
-      <input type="file" id="t3Open" accept=".stl,.obj" multiple hidden>
+      <input type="file" id="t3Open" accept=".stl,.obj,.zip" multiple hidden>
       <button class="btn soft" id="t3Export2"><span data-cic="download"></span>Uložiť STL…</button>
     </div><span class="grp-label">Model</span></div>
     <div class="grp"><div class="grp-row">
@@ -907,8 +907,8 @@ button,.tab,.btn,label{touch-action:manipulation}
           <div class="step-body">
             <h3>Exportujte a nahrajte sken</h3>
             <p class="help">V aplikácii orežte okolie (stôl, podložku) a dajte Export vo formáte STL alebo OBJ. Potom sken nahrajte sem.</p>
-            <button class="btn ai-btn ai-scan" id="scanUpload" type="button"><span data-ic="folder"></span>Nahrať sken (STL / OBJ)</button>
-            <input type="file" id="scanFile" accept=".stl,.obj" hidden>
+            <button class="btn ai-btn ai-scan" id="scanUpload" type="button"><span data-ic="folder"></span>Nahrať sken (STL / OBJ / ZIP)</button>
+            <input type="file" id="scanFile" accept=".stl,.obj,.zip" hidden>
           </div>
         </div>
       </div>
@@ -4048,7 +4048,7 @@ const EN = {
   'Lesklé, priehľadné a čierne predmety jemne zmatnite, napr. kriedovým sprejom.': 'Lightly matte shiny, transparent or black objects, e.g. with chalk spray.',
   'Exportujte a nahrajte sken': 'Export and upload the scan',
   'V aplikácii orežte okolie (stôl, podložku) a dajte Export vo formáte STL alebo OBJ. Potom sken nahrajte sem.': 'In the app, crop away the surroundings (table, base) and export as STL or OBJ. Then upload the scan here.',
-  'Nahrať sken (STL / OBJ)': 'Upload scan (STL / OBJ)', 'Upravte sken': 'Adjust the scan',
+  'Nahrať sken (STL / OBJ / ZIP)': 'Upload scan (STL / OBJ / ZIP)', 'Upravte sken': 'Adjust the scan',
   'Sken mal neobvyklú veľkosť, preto sme ho zatiaľ upravili na 50 mm. Zadajte skutočný rozmer nižšie.': 'The scan had an unusual size, so it was set to 50 mm for now. Enter the real size below.',
   'Orientácia': 'Orientation', 'Prevrátiť dopredu': 'Tip forward', 'Prevrátiť nabok': 'Tip sideways', 'Otočiť o 90°': 'Rotate 90°',
   'Skutočná veľkosť': 'Real size',
@@ -4371,7 +4371,27 @@ gearDlg.addEventListener('close', () => {
 /* --- otvorenie STL --- */
 const loader = new STLLoader();
 const objLoader = new OBJLoader();
+function loadJsZip() {
+  if (window.JSZip) return Promise.resolve(window.JSZip);
+  return new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    sc.onload = () => (window.JSZip ? res(window.JSZip) : rej(new Error('lib')));
+    sc.onerror = () => rej(new Error('lib'));
+    document.head.appendChild(sc);
+  });
+}
+async function unzipModel(f) {
+  const Z = await loadJsZip();
+  const zip = await Z.loadAsync(await f.arrayBuffer());
+  const names = Object.keys(zip.files).filter((n) => !zip.files[n].dir && !/(^|\/)__MACOSX\//.test(n));
+  const pick = names.find((n) => /\.stl$/i.test(n)) || names.find((n) => /\.obj$/i.test(n));
+  if (!pick) throw new Error('nomodel');
+  const blob = await zip.file(pick).async('blob');
+  return new File([blob], pick.split('/').pop());
+}
 function readModel(f) {
+  if (/\.zip$/i.test(f.name)) return unzipModel(f).then(readModel);
   return new Promise((resolve, reject) => {
     const isObj = /\.obj$/i.test(f.name), isStl = /\.stl$/i.test(f.name);
     if (!isObj && !isStl) { reject(new Error('format')); return; }
@@ -4411,9 +4431,9 @@ function readModel(f) {
 }
 function openFiles(files) {
   Array.from(files).forEach((f) => {
-    if (!/\.(stl|obj)$/i.test(f.name)) { toast('„' + f.name + '“ nie je STL ani OBJ súbor.'); return; }
+    if (!/\.(stl|obj|zip)$/i.test(f.name)) { toast('„' + f.name + '“ nie je STL ani OBJ súbor.'); return; }
     readModel(f).then((g) => {
-      addObject(g, f.name.replace(/\.(stl|obj)$/i, ''));
+      addObject(g, f.name.replace(/\.(stl|obj|zip)$/i, ''));
       $('#t3FileName').textContent = f.name;
       fitView();
     }).catch(() => toast('Súbor „' + f.name + '“ sa nepodarilo načítať.'));
@@ -4754,9 +4774,9 @@ $('#scanFile').addEventListener('change', (e) => {
   const f = e.target.files[0];
   e.target.value = '';
   if (!f) return;
-  if (!/\.(stl|obj)$/i.test(f.name)) { toast('„' + f.name + '“ nie je STL ani OBJ súbor.'); return; }
+  if (!/\.(stl|obj|zip)$/i.test(f.name)) { toast('„' + f.name + '“ nie je STL ani OBJ súbor.'); return; }
   readModel(f).then((g) => {
-    const m = addObject(g, f.name.replace(/\.(stl|obj)$/i, ''));
+    const m = addObject(g, f.name.replace(/\.(stl|obj|zip)$/i, ''));
     const d = dimsOf(m);
     const max = Math.max(d.x, d.y, d.z);
     let auto = false;
