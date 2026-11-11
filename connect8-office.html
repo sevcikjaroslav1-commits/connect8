@@ -397,7 +397,7 @@ button,.tab,.btn,label{touch-action:manipulation}
     <button class="btn" id="peroNew"><span data-ic="plus"></span>Nový</button>
     <button class="btn" id="peroOpenBtn" title="Otvoriť dokument Word (.docx), HTML alebo text"><span data-ic="folder"></span>Otvoriť…</button>
     <input type="file" id="peroOpen" accept=".docx,.html,.htm,.txt,.doc" hidden>
-    <button class="btn" id="peroSave" title="Uložiť (Ctrl+S)"><span data-ic="save"></span>Uložiť</button>
+    <button class="btn" id="peroSave" title="Uložiť ako Word (.docx) (Ctrl+S)"><span data-ic="save"></span>Uložiť</button>
     <button class="btn" id="peroSaveAs" title="Uložiť ako (Ctrl+Shift+S)">Uložiť ako…</button>
     <span aria-hidden="true" style="width:1px;height:22px;background:var(--line);margin:0 4px"></span>
     <button class="btn" id="peroPreview" title="Presne tak, ako dokument uvidí Word"><span data-ic="eye"></span>Náhľad</button>
@@ -552,7 +552,7 @@ button,.tab,.btn,label{touch-action:manipulation}
     <button class="btn" id="mzNew"><span data-ic="plus"></span>Nový</button>
     <button class="btn" id="mzOpenBtn" title="Otvoriť zošit (.mriezka), Excel (.xlsx, .xls), OpenDocument (.ods) alebo CSV"><span data-ic="folder"></span>Otvoriť…</button>
     <input type="file" id="mzOpen" accept=".mriezka,.json,.xlsx,.xls,.ods,.csv,.txt" hidden>
-    <button class="btn" id="mzSaveBtn" title="Uložiť (Ctrl+S)"><span data-ic="save"></span>Uložiť</button>
+    <button class="btn" id="mzSaveBtn" title="Uložiť ako Excel (.xlsx) (Ctrl+S)"><span data-ic="save"></span>Uložiť</button>
     <button class="btn" id="mzSaveAsBtn" title="Uložiť ako (Ctrl+Shift+S)">Uložiť ako…</button>
     <span aria-hidden="true" style="width:1px;height:22px;background:var(--line);margin:0 4px"></span>
     <button class="btn" id="mzNewSheet">Nový hárok</button>
@@ -643,7 +643,7 @@ button,.tab,.btn,label{touch-action:manipulation}
     <button class="btn" id="psNew"><span data-ic="plus"></span>Nový</button>
     <button class="btn" id="psOpenBtn" title="Otvoriť kresbu (.stetec) alebo obrázok"><span data-ic="folder"></span>Otvoriť…</button>
     <input type="file" id="psOpen" accept=".stetec,.json,image/*" hidden>
-    <button class="btn" id="psSaveBtn" title="Uložiť kresbu aj s vrstvami (Ctrl+S)"><span data-ic="save"></span>Uložiť</button>
+    <button class="btn" id="psSaveBtn" title="Uložiť ako obrázok PNG (Ctrl+S)"><span data-ic="save"></span>Uložiť</button>
     <button class="btn" id="psSaveAsBtn" title="Uložiť ako (Ctrl+Shift+S)">Uložiť ako…</button>
     <button class="btn" id="psPrint" title="Tlačiť (Ctrl+P)"><span data-ic="print"></span>Tlačiť</button>
     <div class="spacer"></div>
@@ -739,8 +739,8 @@ button,.tab,.btn,label{touch-action:manipulation}
   <div class="menubar">
     <button class="btn" id="t3ProjOpen"><span data-cic="folder"></span>Otvoriť projekt…</button>
     <input type="file" id="t3ProjInput" accept=".3dtvorca,.json" hidden>
-    <button class="btn" id="t3ProjSave" title="Uložiť projekt (Ctrl+S)"><span data-cic="save"></span>Uložiť projekt</button>
-    <button class="btn" id="t3ProjSaveAs" title="Uložiť projekt ako (Ctrl+Shift+S)">Uložiť ako…</button>
+    <button class="btn" id="t3ProjSave" title="Uložiť ako STL (Ctrl+S)"><span data-cic="save"></span>Uložiť</button>
+    <button class="btn" id="t3ProjSaveAs" title="Uložiť ako STL do nového súboru (Ctrl+Shift+S)">Uložiť ako…</button>
     <span aria-hidden="true" style="width:1px;height:22px;background:var(--line);margin:0 4px"></span>
     <button class="btn" id="t3OpenBtn2"><span data-cic="addModel"></span>Pridať STL</button>
     <div class="spacer"></div>
@@ -1528,11 +1528,7 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     return saveFile(blob, safeName(title.value, 'dokument') + '.docx', DOCX_TYPES, handle || null);
   }
   $('#peroExportDocx').addEventListener('click', () => exportDocx(null));
-  Dielna.exporters = Dielna.exporters || {};
-  Dielna.exporters.pero = async () => {
-    const h = await exportDocx(fileKind === 'docx' ? fileHandle : null);
-    if (h) { fileHandle = h; fileKind = 'docx'; }
-  };
+
 
   /* --- otvorenie .docx --- */
   async function readHeaderFooter(buf) {
@@ -1658,13 +1654,8 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
   }
   async function fileSave(asNew) {
     save();
-    if (fileKind === 'docx' && fileHandle && !asNew) {
-      const h = await exportDocx(fileHandle);
-      if (h) fileHandle = h;
-      return;
-    }
-    const h = await saveFile(new Blob([docHtml()], { type: 'text/html' }), safeName(title.value, 'dokument') + '.html', HTML_TYPES, asNew || fileKind !== 'html' ? null : fileHandle);
-    if (h) { fileHandle = h; fileKind = 'html'; }
+    const h = await exportDocx(!asNew && fileKind === 'docx' ? fileHandle : null);
+    if (h) { fileHandle = h; fileKind = 'docx'; }
   }
   $('#peroSave').addEventListener('click', () => fileSave(false));
   $('#peroSaveAs').addEventListener('click', () => fileSave(true));
@@ -2705,14 +2696,7 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     saveFile(buildXlsx(X), safeName($('#mzTitle').value, 'zosit') + '.xlsx', XLSX_TYPES, null);
   }
   $('#mzExportXlsx').addEventListener('click', exportXlsx);
-  Dielna.exporters = Dielna.exporters || {};
-  Dielna.exporters.mriezka = async () => {
-    commitEdit();
-    let X;
-    try { X = await needXlsx(); } catch (e) { toast('Knižnicu pre Excel sa nepodarilo načítať. Skontrolujte pripojenie na internet.'); return; }
-    const h = await saveFile(buildXlsx(X), safeName($('#mzTitle').value, 'zosit') + '.xlsx', XLSX_TYPES, fileKind === 'xlsx' ? fileHandle : null);
-    if (h) { fileHandle = h; fileKind = 'xlsx'; }
-  };
+
 
   function importWorkbook(X, buf, f, h) {
     const wb = X.read(buf, { type: 'array', cellFormula: true, cellNF: true });
@@ -2846,16 +2830,10 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     commitEdit();
     M.title = $('#mzTitle').value;
     save();
-    if (fileKind === 'xlsx' && fileHandle && !asNew) {
-      let X;
-      try { X = await needXlsx(); } catch (e) { toast('Knižnicu pre Excel sa nepodarilo načítať. Skontrolujte pripojenie na internet.'); return; }
-      const h = await saveFile(buildXlsx(X), safeName(M.title, 'zosit') + '.xlsx', XLSX_TYPES, fileHandle);
-      if (h) fileHandle = h;
-      return;
-    }
-    const blob = new Blob([JSON.stringify({ app: 'dielna', type: 'mriezka', v: 1, title: M.title, sheets: M.sheets, cur: M.cur })], { type: 'application/json' });
-    const h = await saveFile(blob, safeName(M.title, 'zosit') + '.mriezka', BOOK_TYPES, asNew || fileKind !== 'mriezka' ? null : fileHandle);
-    if (h) { fileHandle = h; fileKind = 'mriezka'; }
+    let X;
+    try { X = await needXlsx(); } catch (e) { toast('Knižnicu pre Excel sa nepodarilo načítať. Skontrolujte pripojenie na internet.'); return; }
+    const h = await saveFile(buildXlsx(X), safeName(M.title, 'zosit') + '.xlsx', XLSX_TYPES, !asNew && fileKind === 'xlsx' ? fileHandle : null);
+    if (h) { fileHandle = h; fileKind = 'xlsx'; }
   }
   $('#mzSaveBtn').addEventListener('click', () => fileSave(false));
   $('#mzSaveAsBtn').addEventListener('click', () => fileSave(true));
@@ -3700,7 +3678,7 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     if (!m) { toast('Zadajte rozmer v tvare 1200 x 750.'); return; }
     newDoc(Math.min(4000, Math.max(16, +m[1])), Math.min(4000, Math.max(16, +m[2])));
     $('#psTitle').value = 'obrazok';
-    fileHandle = null;
+    fileHandle = null; pngHandle = null;
     scheduleSave();
   });
   function openImage(f) {
@@ -3789,15 +3767,13 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     ctx.drawImage(tmp, 0, 0);
     renderLayers(); scheduleSave();
   });
-  function exportImg(type) {
+  function exportImg(type, handle) {
     const c = composite(type === 'jpeg' ? '#FFFFFF' : null);
     const jpg = type === 'jpeg';
-    saveFile(dataUrlBlob(c.toDataURL('image/' + type, 0.92)), safeName($('#psTitle').value, 'obrazok') + (jpg ? '.jpg' : '.png'),
-      [{ description: jpg ? 'Obrázok JPG' : 'Obrázok PNG', accept: jpg ? { 'image/jpeg': ['.jpg', '.jpeg'] } : { 'image/png': ['.png'] } }], null);
+    return saveFile(dataUrlBlob(c.toDataURL('image/' + type, 0.92)), safeName($('#psTitle').value, 'obrazok') + (jpg ? '.jpg' : '.png'),
+      [{ description: jpg ? 'Obrázok JPG' : 'Obrázok PNG', accept: jpg ? { 'image/jpeg': ['.jpg', '.jpeg'] } : { 'image/png': ['.png'] } }], handle || null);
   }
   $('#psPng').addEventListener('click', () => exportImg('png'));
-  Dielna.exporters = Dielna.exporters || {};
-  Dielna.exporters.stetec = () => exportImg('png');
   $('#psJpg').addEventListener('click', () => exportImg('jpeg'));
 
   /* --- tlač --- */
@@ -3858,11 +3834,11 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
   window.psSave = save;
   const ART_TYPES = [{ description: 'Kresba Connect8 Office (s vrstvami)', accept: { 'application/json': ['.stetec'] } }];
   async function fileSave(asNew) {
-    const blob = new Blob([JSON.stringify(projectData())], { type: 'application/json' });
-    const h = await saveFile(blob, safeName($('#psTitle').value, 'obrazok') + '.stetec', ART_TYPES, asNew ? null : fileHandle);
-    if (h) fileHandle = h;
     save();
+    const h = await exportImg('png', asNew ? null : pngHandle);
+    if (h) pngHandle = h;
   }
+  let pngHandle = null;
   $('#psSaveBtn').addEventListener('click', () => fileSave(false));
   $('#psSaveAsBtn').addEventListener('click', () => fileSave(true));
   Dielna.savers.stetec = { save: () => fileSave(false), saveAs: () => fileSave(true) };
@@ -3910,8 +3886,8 @@ function updateSaveBtn(id) {
   $('#saveAll').title = f[1];
 }
 $('#saveAll').addEventListener('click', () => {
-  const ex = Dielna.exporters[currentModule];
-  if (ex) ex();
+  const s = Dielna.savers[currentModule];
+  if (s) s.save();
 });
 document.addEventListener('dielna:module', (e) => updateSaveBtn(e.detail));
 updateSaveBtn(currentModule);
@@ -4031,6 +4007,9 @@ const EN = {
   'Počet zubov': 'Number of teeth', 'Modul (mm)': 'Module (mm)', 'Hrúbka (mm)': 'Thickness (mm)', 'Diera (mm)': 'Hole (mm)',
   'Zrušiť': 'Cancel', 'Vložiť koleso': 'Insert gear', 'Objekty a rozmery': 'Objects and dimensions', 'Nastavenia tlače': 'Print settings',
   'Otáčať pohľad': 'Rotate view',
+  'Uložiť ako Word (.docx) (Ctrl+S)': 'Save as Word (.docx) (Ctrl+S)', 'Uložiť ako Excel (.xlsx) (Ctrl+S)': 'Save as Excel (.xlsx) (Ctrl+S)',
+  'Uložiť ako obrázok PNG (Ctrl+S)': 'Save as PNG image (Ctrl+S)', 'Uložiť ako STL (Ctrl+S)': 'Save as STL (Ctrl+S)',
+  'Uložiť ako STL do nového súboru (Ctrl+Shift+S)': 'Save as STL to a new file (Ctrl+Shift+S)',
   'Uložiť ako Word (.docx)': 'Save as Word (.docx)', 'Uložiť ako Excel (.xlsx)': 'Save as Excel (.xlsx)',
   'Uložiť ako obrázok (.png)': 'Save as image (.png)', 'Uložiť ako 3D model (.stl)': 'Save as 3D model (.stl)',
   'Tip: ťuknutím vyberiete bunku, ďalším ťuknutím ju upravíte. Podržte prst a ťahajte pre výber viacerých buniek.': 'Tip: tap to select a cell, tap again to edit it. Hold your finger and drag to select several cells.',
@@ -4679,13 +4658,17 @@ function exportStl() {
   group.updateMatrixWorld(true);
   const data = new STLExporter().parse(group, { binary: true });
   const name = (objects.length === 1 ? objects[0].name : 'connect8_modely').replace(/[\\/:*?"<>|]+/g, '-');
-  window.dielnaSaveFile(new Blob([data], { type: 'model/stl' }), name + '.stl',
-    [{ description: 'Model STL (PrusaSlicer)', accept: { 'model/stl': ['.stl'] } }], null);
+  return window.dielnaSaveFile(new Blob([data], { type: 'model/stl' }), name + '.stl',
+    [{ description: 'Model STL (PrusaSlicer)', accept: { 'model/stl': ['.stl'] } }], arguments[0] || null);
 }
-$('#t3Export').addEventListener('click', exportStl);
-$('#t3Export2').addEventListener('click', exportStl);
+let stlHandle = null;
+async function saveStl(asNew) {
+  const h = await exportStl(asNew ? null : stlHandle);
+  if (h) stlHandle = h;
+}
+$('#t3Export').addEventListener('click', () => saveStl(true));
+$('#t3Export2').addEventListener('click', () => saveStl(true));
 window.Dielna.exporters = window.Dielna.exporters || {};
-window.Dielna.exporters['3d'] = exportStl;
 
 
 /* --- AI skener --- */
@@ -4887,9 +4870,9 @@ function loadProject(f, h) {
   r.readAsText(f);
 }
 $('#t3ProjOpen').addEventListener('click', () => window.dielnaOpenFile(PROJ_TYPES, $('#t3ProjInput'), loadProject));
-$('#t3ProjSave').addEventListener('click', () => saveProject(false));
-$('#t3ProjSaveAs').addEventListener('click', () => saveProject(true));
-window.Dielna.savers['3d'] = { save: () => saveProject(false), saveAs: () => saveProject(true) };
+$('#t3ProjSave').addEventListener('click', () => saveStl(false));
+$('#t3ProjSaveAs').addEventListener('click', () => saveStl(true));
+window.Dielna.savers['3d'] = { save: () => saveStl(false), saveAs: () => saveStl(true) };
 
 /* --- veľkosť okna a vykresľovanie --- */
 function resize() {
