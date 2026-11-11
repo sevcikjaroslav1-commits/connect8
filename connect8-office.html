@@ -881,7 +881,7 @@ button,.tab,.btn,label{touch-action:manipulation}
             <h3>Nainštalujte aplikáciu KIRI Engine</h3>
             <p class="help">Bezplatná aplikácia, ktorá z fotiek z telefónu vytvorí 3D model. Funguje na iPhone aj Androide.</p>
             <div class="store-row">
-              <a class="btn outline" id="scanPlay" href="https://play.google.com/store/apps/details?id=com.kiri.kiriengine" target="_blank" rel="noopener">Google Play (Android)</a>
+              <a class="btn outline" id="scanPlay" href="https://play.google.com/store/apps/details?id=com.kiriengine.app" target="_blank" rel="noopener">Google Play (Android)</a>
               <a class="btn outline" id="scanApple" href="https://apps.apple.com/app/id1577127142" target="_blank" rel="noopener">App Store (iPhone)</a>
             </div>
             <div class="qr-box" id="scanQrBox">
@@ -4747,6 +4747,20 @@ function recenterGeom(m) {
   g.translate(-c.x, -c.y, -c.z);
   layFlat(m);
 }
+const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.kiriengine.app';
+$('#scanPlay').addEventListener('click', (e) => {
+  if (!isAndroid) return;
+  e.preventDefault();
+  const intent = 'intent://details?id=com.kiriengine.app#Intent;scheme=market;package=com.android.vending;S.browser_fallback_url=' + encodeURIComponent(PLAY_URL) + ';end';
+  let left = false;
+  const onHide = () => { if (document.visibilityState === 'hidden') left = true; };
+  document.addEventListener('visibilitychange', onHide);
+  try { window.location.href = intent; } catch (err) { /* nič */ }
+  setTimeout(() => {
+    document.removeEventListener('visibilitychange', onHide);
+    if (!left) { const w = window.open(PLAY_URL, '_blank', 'noopener'); if (!w) window.location.href = PLAY_URL; }
+  }, 1200);
+});
 $('#t3ScanBtn').addEventListener('click', openScan);
 $('#t3ScanBtn2').addEventListener('click', openScan);
 $('#scanClose').addEventListener('click', () => scanDlg.close());
