@@ -633,7 +633,12 @@ button,.tab,.btn,label{touch-action:manipulation}
   </div>
   <footer class="status">
     <div><span id="mzSheetInfo">Hárok 1 z 1</span><span>Pripravené</span></div>
-    <div><span id="mzStat"></span></div>
+    <div>
+      <span id="mzStat"></span>
+      <button class="zbtn" id="mzZoomOut" aria-label="Oddialiť">−</button>
+      <span id="mzZoomVal">100 %</span>
+      <button class="zbtn" id="mzZoomIn" aria-label="Priblížiť">+</button>
+    </div>
   </footer>
 </section>
 
@@ -1979,13 +1984,37 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     actTd.classList.add('act');
     renderInfo();
   }
+  let mzZoom = 1;
+  try { const z = parseFloat(localStorage.getItem('dielna.mzzoom')); if (z >= 0.5 && z <= 2) mzZoom = z; } catch (e) {}
+  function applyZoom(z, keepCenter) {
+    const old = mzZoom;
+    mzZoom = Math.min(2, Math.max(0.5, Math.round(z * 10) / 10));
+    const cx = (scroller.scrollLeft + scroller.clientWidth / 2) / old;
+    const cy = (scroller.scrollTop + scroller.clientHeight / 2) / old;
+    wrap.style.zoom = mzZoom;
+    $('#mzZoomVal').textContent = Math.round(mzZoom * 100) + ' %';
+    if (keepCenter) {
+      scroller.scrollLeft = cx * mzZoom - scroller.clientWidth / 2;
+      scroller.scrollTop = cy * mzZoom - scroller.clientHeight / 2;
+    }
+    try { localStorage.setItem('dielna.mzzoom', String(mzZoom)); } catch (e) {}
+  }
+  $('#mzZoomIn').addEventListener('click', () => applyZoom(mzZoom + 0.1, true));
+  $('#mzZoomOut').addEventListener('click', () => applyZoom(mzZoom - 0.1, true));
+  scroller.addEventListener('wheel', (e) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    applyZoom(mzZoom + (e.deltaY < 0 ? 0.1 : -0.1), true);
+  }, { passive: false });
   function scrollToCell(p) {
     const td = tds[p.r][p.c];
-    const left = td.offsetLeft - 44, top = td.offsetTop - 28;
-    if (left < scroller.scrollLeft) scroller.scrollLeft = left;
-    else if (td.offsetLeft + td.offsetWidth > scroller.scrollLeft + scroller.clientWidth) scroller.scrollLeft = td.offsetLeft + td.offsetWidth - scroller.clientWidth;
-    if (top < scroller.scrollTop) scroller.scrollTop = top;
-    else if (td.offsetTop + td.offsetHeight > scroller.scrollTop + scroller.clientHeight) scroller.scrollTop = td.offsetTop + td.offsetHeight - scroller.clientHeight;
+    const z = mzZoom;
+    const x1 = (td.offsetLeft - 44) * z, y1 = (td.offsetTop - 28) * z;
+    const x2 = (td.offsetLeft + td.offsetWidth) * z, y2 = (td.offsetTop + td.offsetHeight) * z;
+    if (x1 < scroller.scrollLeft) scroller.scrollLeft = x1;
+    else if (x2 > scroller.scrollLeft + scroller.clientWidth) scroller.scrollLeft = x2 - scroller.clientWidth;
+    if (y1 < scroller.scrollTop) scroller.scrollTop = y1;
+    else if (y2 > scroller.scrollTop + scroller.clientHeight) scroller.scrollTop = y2 - scroller.clientHeight;
   }
   function rangeLabel() {
     const g = range();
@@ -2882,6 +2911,7 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     }
   });
   window.addEventListener('resize', () => { if (currentModule === 'mriezka') renderSel(); });
+  applyZoom(mzZoom, false);
 })();
 
 /* =====================================================================
