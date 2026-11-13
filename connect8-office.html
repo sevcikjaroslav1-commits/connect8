@@ -657,6 +657,9 @@ button,.tab,.btn,label{touch-action:manipulation}
   </div>
   <div class="ribbon">
     <div class="grp"><div class="grp-row">
+      <button class="btn" id="psPaste" title="Prilepiť obrázok zo schránky (Ctrl+V)"><span data-ic="paste"></span>Prilepiť</button>
+    </div><span class="grp-label">Schránka</span></div>
+    <div class="grp"><div class="grp-row">
       <button class="btn icon" id="psUndo" aria-label="Späť" title="Späť (Ctrl+Z)"><span data-ic="undo"></span></button>
       <button class="btn icon" id="psRedo" aria-label="Znova" title="Znova (Ctrl+Y)"><span data-ic="redo"></span></button>
     </div><span class="grp-label">História</span></div>
@@ -1346,6 +1349,42 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     r.onload = () => cmd('insertImage', r.result);
     r.readAsDataURL(f);
     e.target.value = '';
+  });
+
+  /* --- prilepenie obrázka zo schránky (Ctrl+V) --- */
+  function shrinkImage(blob, done) {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const k = Math.min(1, 1240 / img.width);
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      let d = c.toDataURL('image/png');
+      if (d.length > 450000) {
+        const j = document.createElement('canvas');
+        j.width = c.width; j.height = c.height;
+        const jx = j.getContext('2d');
+        jx.fillStyle = '#FFFFFF'; jx.fillRect(0, 0, j.width, j.height); jx.drawImage(c, 0, 0);
+        d = j.toDataURL('image/jpeg', 0.86);
+      }
+      done(d);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); toast('Obrázok zo schránky sa nepodarilo vložiť.'); };
+    img.src = url;
+  }
+  document.addEventListener('paste', (e) => {
+    if (currentModule !== 'pero' || !e.clipboardData) return;
+    const ae = document.activeElement;
+    if (!ae || !(ae === page || ae === headerEd || ae === footerEd || page.contains(ae) || headerEd.contains(ae) || footerEd.contains(ae))) return;
+    const it = Array.from(e.clipboardData.items || []).find((i) => i.kind === 'file' && /^image\//.test(i.type));
+    if (!it || (e.clipboardData.getData('text/plain') || '').trim()) return;
+    const f = it.getAsFile();
+    if (!f) return;
+    e.preventDefault();
+    saveSel();
+    shrinkImage(f, (d) => cmd('insertImage', d));
   });
   $('#peroTable').addEventListener('click', () => {
     let h = '<table><thead><tr><th>Stĺpec 1</th><th>Stĺpec 2</th><th>Stĺpec 3</th></tr></thead><tbody>';
@@ -3847,6 +3886,69 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     else if (k === 'delete' || k === 'backspace') { e.preventDefault(); eraseSelection(); }
     else if (k === 'escape') clearSel();
     else if (!mod && k === 'x') swapColors();
+  });
+
+  /* --- prilepenie obrázka zo schránky (Ctrl+V) – ako v Paint.NET --- */
+  function pasteImage(blob) {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let iw = img.width, ih = img.height;
+      const k = Math.min(1, 4000 / Math.max(iw, ih));
+      iw = Math.round(iw * k); ih = Math.round(ih * k);
+      if (iw > P.w || ih > P.h) {
+        if (confirm('Prilepovaný obrázok (' + iw + ' × ' + ih + ' px) je väčší ako plátno (' + P.w + ' × ' + P.h + ' px).\n\nZväčšiť plátno?')) {
+          const nw = Math.max(P.w, iw), nh = Math.max(P.h, ih);
+          const bgFill = P.layers[0];
+          transformAll(nw, nh, (x, src) => {
+            if (src === bgFill.canvas) { x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, nw, nh); }
+            x.drawImage(src, 0, 0);
+          });
+        }
+      }
+      // ľavý horný roh viditeľnej časti plátna
+      let x = Math.round(Math.max(0, (stage.scrollLeft - 24) / P.zoom));
+      let y = Math.round(Math.max(0, (stage.scrollTop - 24) / P.zoom));
+      x = Math.max(0, Math.min(x, P.w - iw)); y = Math.max(0, Math.min(y, P.h - ih));
+      const l = makeLayer('Prilepené');
+      P.layers.splice(P.active + 1, 0, l);
+      P.active++;
+      renderStack();
+      pushUndo();
+      l.canvas.getContext('2d').drawImage(img, x, y, iw, ih);
+      const p = new Path2D();
+      p.rect(x, y, Math.min(iw, P.w - x), Math.min(ih, P.h - y));
+      selFromPath(p, { x: x, y: y, w: iw, h: ih });
+      P.tool = 'movepx';
+      renderTools(); renderLayers(); scheduleSave();
+      toast('Obrázok je prilepený do novej vrstvy – môžete ho posunúť myšou.', 3000);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); toast('Obrázok zo schránky sa nepodarilo vložiť.'); };
+    img.src = url;
+  }
+  document.addEventListener('paste', (e) => {
+    if (currentModule !== 'stetec') return;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+    const items = e.clipboardData ? Array.from(e.clipboardData.items || []) : [];
+    const it = items.find((i) => i.kind === 'file' && /^image\//.test(i.type));
+    e.preventDefault();
+    if (it) { const f = it.getAsFile(); if (f) { pasteImage(f); return; } }
+    toast('V schránke nie je obrázok. Skopírujte obrázok (Ctrl+C) a skúste znova.');
+  });
+  $('#psPaste').addEventListener('click', async () => {
+    if (navigator.clipboard && navigator.clipboard.read) {
+      try {
+        const list = await navigator.clipboard.read();
+        for (const ci of list) {
+          const t = ci.types.find((x) => /^image\//.test(x));
+          if (t) { pasteImage(await ci.getType(t)); return; }
+        }
+        toast('V schránke nie je obrázok.');
+        return;
+      } catch (err) { /* prehliadač nedovolil čítať schránku */ }
+    }
+    toast('Stlačte Ctrl+V (na Macu ⌘+V) priamo na plátne.', 3000);
   });
 
   /* --- ukladanie --- */
