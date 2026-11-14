@@ -1085,7 +1085,7 @@
   .comment-edit-box .post-text-edit-actions{margin-bottom:0;}
 
   /* ---------- MARKETPLACE ---------- */
-  .market-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .market-head{display:flex;justify-content:flex-end;align-items:center;margin-bottom:16px;}
   .market-head h2{margin:0;font-size:19px;}
   .sell-btn{background:#3B82F6;color:#fff;padding:9px 16px;border-radius:9px;font-weight:600;font-size:13px;}
   .market-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;}
@@ -3700,7 +3700,6 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
         <!-- MARKETPLACE -->
         <section class="view" id="view-market">
           <div class="market-head">
-            <h2>Marketplace</h2>
             <button class="sell-btn" onclick="toggleSellForm()">+ Pridaj inzerát</button>
           </div>
 
@@ -4154,14 +4153,14 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
 
         <!-- POUŽÍVATELIA -->
         <section class="view" id="view-users">
-          <button class="profile-back-btn" onclick="switchMode('feed')">← Späť do Feedu</button>
+          <button class="profile-back-btn" onclick="switchMode('feed')">← Späť na Plochu</button>
           <div class="c8fv-bar"><div class="profile-section-title" style="margin:0">🧑‍🤝‍🧑 Používatelia</div><div class="c8fv-seg"><button type="button" id="c8uv-grid" onclick="c8SetUsersView('grid')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor"/></svg><span>Ikonky</span></button><button type="button" id="c8uv-list" onclick="c8SetUsersView('list')"><svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2" fill="currentColor"/><rect x="9" y="5" width="12" height="2.4" rx="1.2" fill="currentColor"/><circle cx="5" cy="12" r="2" fill="currentColor"/><rect x="9" y="11" width="12" height="2.4" rx="1.2" fill="currentColor"/><circle cx="5" cy="18" r="2" fill="currentColor"/><rect x="9" y="17" width="12" height="2.4" rx="1.2" fill="currentColor"/></svg><span>Zoznam</span></button></div></div>
           <div class="users-grid" id="users-grid"></div>
         </section>
 
         <!-- PRIATELIA (SLEDOVANÍ POUŽÍVATELIA) -->
         <section class="view" id="view-friends">
-          <div class="c8fl-top"><button class="profile-back-btn" onclick="switchMode('feed')">← Späť do Feedu</button><button type="button" class="c8fl-btn" onclick="c8flOpen()"><svg viewBox="0 0 24 24"><defs><linearGradient id="c8flg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EC4899"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs><circle cx="9" cy="8" r="4" fill="url(#c8flg2)"/><path d="M1.5 20c.6-4 3.6-6.5 7.5-6.5s6.9 2.5 7.5 6.5z" fill="url(#c8flg2)"/><path d="M19 9.2c-.9-1.4-3-1.2-3 .6 0 1.5 1.9 2.6 3 3.6 1.1-1 3-2.1 3-3.6 0-1.8-2.1-2-3-.6z" fill="#EC4899"/></svg><span class="label">Sledovatelia</span><span class="c8fl-cnt" id="c8fl-cnt-tel"></span></button></div>
+          <div class="c8fl-top"><button class="profile-back-btn" onclick="switchMode('feed')">← Späť na Plochu</button><button type="button" class="c8fl-btn" onclick="c8flOpen()"><svg viewBox="0 0 24 24"><defs><linearGradient id="c8flg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EC4899"/><stop offset="1" stop-color="#8B5CF6"/></linearGradient></defs><circle cx="9" cy="8" r="4" fill="url(#c8flg2)"/><path d="M1.5 20c.6-4 3.6-6.5 7.5-6.5s6.9 2.5 7.5 6.5z" fill="url(#c8flg2)"/><path d="M19 9.2c-.9-1.4-3-1.2-3 .6 0 1.5 1.9 2.6 3 3.6 1.1-1 3-2.1 3-3.6 0-1.8-2.1-2-3-.6z" fill="#EC4899"/></svg><span class="label">Sledovatelia</span><span class="c8fl-cnt" id="c8fl-cnt-tel"></span></button></div>
           <div class="c8fv-bar"><div class="profile-section-title" style="margin:0">👥 Priatelia</div><div class="c8fv-seg"><button type="button" id="c8fv-grid" onclick="c8SetFriendsView('grid')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor"/><rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor"/><rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor"/></svg><span>Ikonky</span></button><button type="button" id="c8fv-list" onclick="c8SetFriendsView('list')"><svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2" fill="currentColor"/><rect x="9" y="5" width="12" height="2.4" rx="1.2" fill="currentColor"/><circle cx="5" cy="12" r="2" fill="currentColor"/><rect x="9" y="11" width="12" height="2.4" rx="1.2" fill="currentColor"/><circle cx="5" cy="18" r="2" fill="currentColor"/><rect x="9" y="17" width="12" height="2.4" rx="1.2" fill="currentColor"/></svg><span>Zoznam</span></button></div></div>
           <div class="users-grid" id="friends-grid"></div>
         </section>
@@ -20562,6 +20561,191 @@ c8ApplyFriendsView();
     const btn = e.target.closest && e.target.closest(SEL);
     if(btn) setTimeout(()=>{ const nb = document.querySelector('button[onclick="' + btn.getAttribute('onclick') + '"]'); if(nb && nb.matches(':hover')){ curBtn = null; show(nb); } }, 150);
   });
+})();
+</script>
+
+<style id="c8lr-style">
+/* Riadok „kto dal Páči sa“ pod príspevkom + zoznam (telefón aj PC) */
+.c8lr{display:flex;align-items:center;gap:8px;margin:10px 0 4px;padding:2px 0;background:none;cursor:pointer;font-size:13px;color:var(--text-dim,#4A4E66);-webkit-tap-highlight-color:transparent;user-select:none;}
+.c8lr[hidden]{display:none!important;}
+.c8lr-stk{display:flex;flex:none;}
+.c8lr-av{width:24px;height:24px;border-radius:50%;border:2px solid var(--card,#fff);margin-left:-8px;background:#E0E7FF center/cover no-repeat;color:#4F46E5;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10.5px;flex:none;}
+.c8lr-av:first-child{margin-left:0;}
+.c8lr-t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c8lr-t b{color:var(--text,#16182B);font-weight:700;}
+.c8lr-ch{color:#9A9DB3;font-weight:700;font-size:18px;line-height:1;flex:none;}
+.c8lr-bg{position:fixed;inset:0;z-index:10080;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s;}
+.c8lr-bg.on{opacity:1;}
+.c8lr-sh{width:100%;max-width:520px;max-height:72vh;background:var(--card,#fff);color:var(--text,#16182B);border-radius:22px 22px 0 0;padding:10px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;transform:translateY(100%);transition:transform .25s ease;box-shadow:0 -10px 30px rgba(20,20,60,.18);}
+.c8lr-bg.on .c8lr-sh{transform:none;}
+@media(min-width:901px){.c8lr-bg{align-items:center;}.c8lr-sh{border-radius:20px;max-width:420px;transform:translateY(20px);}}
+.c8lr-grab{width:44px;height:5px;border-radius:3px;background:#D6D3E8;margin:0 auto 10px;flex:none;}
+.c8lr-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex:none;}
+.c8lr-hd h3{font-size:18px;font-weight:800;flex:1;margin:0;}
+.c8lr-x{width:32px;height:32px;border-radius:50%;border:0;background:var(--bg,#F1F0F6);color:var(--text-dim,#6B6F86);font-weight:800;font-size:14px;cursor:pointer;}
+.c8lr-list{overflow:auto;-webkit-overflow-scrolling:touch;}
+.c8lr-row{display:flex;align-items:center;gap:12px;padding:9px 2px;border-bottom:1px solid var(--line,#F0EFF6);}
+.c8lr-row:last-child{border-bottom:0;}
+.c8lr-row .c8lr-av{width:42px;height:42px;font-size:16px;border:0;margin:0;cursor:pointer;}
+.c8lr-nm{flex:1;min-width:0;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+.c8lr-fb{flex:none;font-size:13px;font-weight:700;border-radius:999px;padding:7px 12px;border:1.5px solid transparent;background:var(--mode-feed,#5B4CFF);color:#fff;cursor:pointer;}
+.c8lr-fb.on{background:var(--card,#fff);color:var(--text-dim,#4A4E66);border-color:var(--border,#E1E0EA);}
+.c8lr-more,.c8lr-load{color:var(--text-dim,#6B7280);padding:10px 2px;font-size:13px;}
+</style>
+<script id="c8lr-script">
+(function(){
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function T(s){ try{ return (typeof t === 'function') ? t(s) : s; }catch(_){ return s; } }
+  const LD = {
+    en:{'a':'and','more':'and {n} others','Ty':'You','ty':'you','Načítavam…':'Loading…','hdr1':'1 person likes this','hdr':'{n} people like this'},
+    cz:{'a':'a','more':'a další {n}','Ty':'Ty','ty':'ty','Načítavam…':'Načítám…','hdr1':'Líbí se 1 člověku','hdr':'Líbí se {n} lidem'},
+    pl:{'a':'i','more':'i {n} innych','Ty':'Ty','ty':'ty','Načítavam…':'Wczytywanie…','hdr1':'Lubi to 1 osoba','hdr':'Lubi to {n} osób'},
+    hu:{'a':'és','more':'és további {n}','Ty':'Te','ty':'te','Načítavam…':'Betöltés…','hdr1':'1 embernek tetszik','hdr':'{n} embernek tetszik'},
+    de:{'a':'und','more':'und {n} weitere','Ty':'Du','ty':'du','Načítavam…':'Wird geladen…','hdr1':'1 Person gefällt das','hdr':'{n} Personen gefällt das'},
+    it:{'a':'e','more':'e altri {n}','Ty':'Tu','ty':'tu','Načítavam…':'Caricamento…','hdr1':'Piace a 1 persona','hdr':'Piace a {n} persone'}
+  };
+  LD.at = LD.de;
+  function L(k, d){ try{ const x = LD[currentLang]; if(x && x.hasOwnProperty(k)) return x[k]; }catch(_){} return d === undefined ? k : d; }
+  function moreTxt(n){ return L('more', 'a ďalší {n}').replace('{n}', n); }
+  function hdr(n){ return n === 1 ? L('hdr1', 'Páči sa 1 človeku') : L('hdr', 'Páči sa {n} ľuďom').replace('{n}', n); }
+  const cache = {}; let list = null, listAt = 0, listP = null;
+  async function allUsers(){
+    if(list && Date.now() - listAt < 60000) return list;
+    if(listP) return listP;
+    listP = (async () => {
+      try{ if(typeof loadAllUsersForSearch === 'function') list = await loadAllUsersForSearch(); }catch(_){}
+      listAt = Date.now(); listP = null; return list || [];
+    })();
+    return listP;
+  }
+  async function people(uids){
+    const byId = {}; (await allUsers() || []).forEach(u => { byId[u.id] = u; });
+    const out = [];
+    for(const uid of uids){
+      if(currentUser && uid === currentUser.uid){ out.push({ id: uid, me: true, name: currentUser.name || 'Ty', photo: currentUser.photoURL || currentUser.avatarPhoto || null }); continue; }
+      if(byId[uid]){ out.push(byId[uid]); continue; }
+      if(cache[uid]){ out.push(cache[uid]); continue; }
+      try{
+        const s = await db.collection('profiles').doc(uid).get();
+        const d = s.exists ? s.data() : {};
+        cache[uid] = { id: uid, name: d.name || 'Používateľ', photo: d.avatarPhoto || null };
+      }catch(_){ cache[uid] = { id: uid, name: 'Používateľ', photo: null }; }
+      out.push(cache[uid]);
+    }
+    return out;
+  }
+  // poradie: ty prvý, potom najnovšie lajky
+  function ordered(p){
+    const u = (typeof getLikedBy === 'function' ? getLikedBy(p) : (p.likedBy || [])).slice().reverse();
+    const me = currentUser && currentUser.uid;
+    if(me && u.includes(me)) return [me].concat(u.filter(x => x !== me));
+    return u;
+  }
+  function av(u, cls){
+    const init = esc((u.name || '?').trim().charAt(0).toUpperCase());
+    return u.photo ? '<span class="' + cls + '" style="background-image:url(\'' + esc(u.photo) + '\')"></span>' : '<span class="' + cls + '">' + init + '</span>';
+  }
+  function first(u){ return u.me ? L('Ty') : String(u.name || '').trim().split(/\s+/)[0] || 'Používateľ'; }
+  function text(ps, n){
+    const a = ps.map(first);
+    if(n === 1) return '<b>' + esc(a[0]) + '</b>';
+    if(n === 2) return '<b>' + esc(a[0]) + '</b> ' + L('a') + ' <b>' + esc(a[1]) + '</b>';
+    if(n === 3) return '<b>' + esc(a[0]) + ', ' + esc(a[1]) + '</b> ' + L('a') + ' <b>' + esc(a[2]) + '</b>';
+    return '<b>' + esc(a[0]) + ', ' + esc(a[1]) + '</b> ' + moreTxt(n - 2);
+  }
+  async function fill(row, p){
+    const uids = ordered(p);
+    const sig = uids.join(',');
+    if(row.dataset.sig === sig) return;
+    row.dataset.sig = sig;
+    if(!uids.length){ row.hidden = true; row.innerHTML = ''; return; }
+    row.hidden = false;
+    const ps = await people(uids.slice(0, 3));
+    if(row.dataset.sig !== sig) return;
+    row.innerHTML = '<span class="c8lr-stk">' + ps.map(u => av(u, 'c8lr-av')).join('') + '</span><span class="c8lr-t">👍 ' + text(ps, uids.length) + '</span><span class="c8lr-ch">›</span>';
+  }
+  function scan(){
+    document.querySelectorAll('.post-actions').forEach(act => {
+      const btn = act.querySelector('button[onclick^="toggleLike("]');
+      if(!btn) return;
+      const m = /^toggleLike\((\d+)\)/.exec(btn.getAttribute('onclick') || '');
+      const p = m && typeof findPostById === 'function' ? findPostById(Number(m[1])) : null;
+      if(!p) return;
+      let row = act.previousElementSibling;
+      if(!row || !row.classList.contains('c8lr')){
+        row = document.createElement('div');
+        row.className = 'c8lr'; row.hidden = true;
+        row.setAttribute('role', 'button');
+        act.parentNode.insertBefore(row, act);
+      }
+      if(row.dataset.pid !== String(p.id)){ row.dataset.pid = String(p.id); row.dataset.sig = ''; }
+      fill(row, p);
+    });
+  }
+  let pend = false;
+  function later(){ if(pend) return; pend = true; requestAnimationFrame(() => { pend = false; try{ scan(); }catch(_){} }); }
+  new MutationObserver(later).observe(document.body, { childList: true, subtree: true });
+  document.addEventListener('click', e => {
+    if(e.target.closest && e.target.closest('button[onclick^="toggleLike("]')) setTimeout(later, 60);
+  }, true);
+  later();
+
+  /* --- zoznam „Páči sa X ľuďom“ --- */
+  let bg = null;
+  function close(){
+    if(!bg) return;
+    const b = bg; bg = null;
+    b.classList.remove('on');
+    setTimeout(() => b.remove(), 250);
+  }
+  function fbHtml(uid){
+    const f = (typeof followingSet !== 'undefined') && followingSet.has(uid);
+    return '<button type="button" class="c8lr-fb' + (f ? ' on' : '') + '" data-f="' + esc(uid) + '">' + (f ? T('✓ Sledované') : T('+ Sledovať')) + '</button>';
+  }
+  async function open(p){
+    close();
+    const uids = ordered(p);
+    if(!uids.length) return;
+    bg = document.createElement('div');
+    bg.className = 'c8lr-bg';
+    bg.innerHTML = '<div class="c8lr-sh" role="dialog" aria-modal="true"><div class="c8lr-grab"></div><div class="c8lr-hd"><h3>👍 ' + esc(hdr(uids.length)) + '</h3><button type="button" class="c8lr-x" aria-label="Zavrieť">✕</button></div><div class="c8lr-list"><div class="c8lr-load">' + esc(L('Načítavam…')) + '</div></div></div>';
+    document.body.appendChild(bg);
+    const me = bg;
+    requestAnimationFrame(() => me.classList.add('on'));
+    bg.addEventListener('click', e => { if(e.target === me || e.target.closest('.c8lr-x')) close(); });
+    const MAX = 100;
+    const ps = await people(uids.slice(0, MAX));
+    if(bg !== me) return;
+    let h = '';
+    ps.forEach(u => {
+      h += '<div class="c8lr-row" data-uid="' + esc(u.id) + '">' + av(u, 'c8lr-av') + '<div class="c8lr-nm">' + esc(u.me ? (u.name + ' (' + L('ty') + ')') : u.name) + '</div>' + (u.me ? '' : fbHtml(u.id)) + '</div>';
+    });
+    if(uids.length > MAX) h += '<div class="c8lr-more">' + moreTxt(uids.length - MAX) + '</div>';
+    const box = me.querySelector('.c8lr-list');
+    box.innerHTML = h;
+    box.addEventListener('click', e => {
+      const fb = e.target.closest('.c8lr-fb');
+      if(fb){
+        const uid = fb.dataset.f;
+        if(typeof toggleFollow === 'function') toggleFollow(uid);
+        setTimeout(() => { fb.outerHTML = fbHtml(uid); }, 0);
+        return;
+      }
+      const row = e.target.closest('.c8lr-row');
+      if(!row || !(e.target.closest('.c8lr-av') || e.target.closest('.c8lr-nm'))) return;
+      const uid = row.dataset.uid; const u = ps.find(x => x.id === uid);
+      close();
+      if(currentUser && uid === currentUser.uid){ if(typeof openProfile === 'function') openProfile(); }
+      else if(typeof openUserProfile === 'function') openUserProfile({ uid: uid, name: u ? u.name : '', photoURL: u ? u.photo : null });
+    });
+  }
+  document.addEventListener('click', e => {
+    const row = e.target.closest && e.target.closest('.c8lr');
+    if(!row) return;
+    const p = typeof findPostById === 'function' ? findPostById(Number(row.dataset.pid)) : null;
+    if(p) open(p);
+  });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') close(); });
 })();
 </script>
 
