@@ -26208,7 +26208,7 @@ c8ApplyUsersView();
 .c8a-cnt{position:absolute;left:10px;top:10px;z-index:500;background:#fff;border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.12);pointer-events:none;}
 .c8a-upd{position:absolute;right:10px;top:10px;z-index:500;background:rgba(255,255,255,.92);border-radius:10px;padding:6px 9px;font-size:11px;font-weight:700;color:#6B6F86;pointer-events:none;}
 .c8a-msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:600;background:rgba(22,24,43,.86);color:#fff;border-radius:14px;padding:12px 16px;font-size:13.5px;font-weight:600;max-width:80%;text-align:center;display:none;}
-.c8a-list{flex:none;max-height:34vh;overflow:auto;background:var(--card,#fff);border-top:1px solid var(--border,#E6E4F2);padding:6px 12px calc(6px + env(safe-area-inset-bottom,0px));}
+.c8a-list{flex:none;max-height:24vh;transition:max-height .2s ease;overflow:auto;background:var(--card,#fff);border-top:1px solid var(--border,#E6E4F2);padding:6px 12px calc(6px + env(safe-area-inset-bottom,0px));}
 .c8a-lt{font-size:11.5px;font-weight:700;color:#6B6F86;letter-spacing:.06em;text-transform:uppercase;margin:6px 2px;}
 .c8a-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #F0EFF6;cursor:pointer;}
 .c8a-row:last-child{border-bottom:0;}
@@ -26244,7 +26244,21 @@ c8ApplyUsersView();
 .c8a-follow{background:#EEEBFF;color:#5B4CFF;}
 .c8a-follow.on{background:#5B4CFF;color:#fff;}
 .c8a-close{background:#F3F2F9;color:#4A4E66;}
+@media(max-width:899px){
+  .c8a-bar{padding:6px 10px;gap:6px;}
+  .c8a-seg button{padding:6px 0;}
+  .c8a-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -10px;padding:0 10px;}
+  .c8a-chips::-webkit-scrollbar{display:none;}
+  .c8a-chip{flex:none;}
+  .c8a-near{flex-wrap:nowrap;}
+  .c8a-place{min-width:0;padding:6px 9px;font-size:12.5px;}
+  .c8a-rad button{padding:5px 7px;font-size:12px;}
+  .c8a-top{padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:6px;}
+  .c8a-list.big{max-height:60vh;}
+}
+.c8a-lt{cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
 @media(min-width:900px){
+  .c8a-lt .tg{display:none;}
   .c8a-main{flex-direction:row;}
   .c8a-list{max-height:none;width:360px;border-top:0;border-left:1px solid var(--border,#E6E4F2);}
   .c8a-sheet{left:auto;right:16px;bottom:16px;width:380px;border-radius:20px;transform:translateX(120%);}
@@ -26297,6 +26311,7 @@ c8ApplyUsersView();
 
   let mode = ls.get('mode', 'sk'), radius = ls.get('r', 100), hidden = new Set(ls.get('hide', []));
   let map = null, layer = null, skPoly = null, meMk = null, circle = null;
+  let placeLabel = '';
   let me = null, placeKey = '', timer = null, tick = null, lastData = null, lastOk = 0, sel = null, follow = false, openFlag = false;
   const planes = new Map();
 
@@ -26378,9 +26393,10 @@ c8ApplyUsersView();
   async function placeName(){
     if(!me) return;
     const key = me.la.toFixed(2) + ',' + me.lo.toFixed(2);
-    if(key === placeKey) return; placeKey = key;
+    if(key === placeKey){ $('c8a-place').textContent = '📍 ' + (placeLabel || (me.la.toFixed(2) + ', ' + me.lo.toFixed(2))); return; }
+    placeKey = key; placeLabel = '';
     const cached = ls.get('place', null);
-    if(cached && cached.k === key){ $('c8a-place').textContent = '📍 ' + cached.n; return; }
+    if(cached && cached.k === key){ placeLabel = cached.n; $('c8a-place').textContent = '📍 ' + cached.n; return; }
     $('c8a-place').textContent = '📍 ' + me.la.toFixed(2) + ', ' + me.lo.toFixed(2);
     try{
       const lang = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'en' : 'sk';
@@ -26388,7 +26404,7 @@ c8ApplyUsersView();
       const d = await r.json(); const a = d.address || {};
       const town = a.city || a.town || a.village || a.municipality || a.county || '';
       const n = [town, a.country].filter(Boolean).join(', ');
-      if(n){ ls.set('place', { k:key, n:n }); $('c8a-place').textContent = '📍 ' + n; }
+      if(n){ placeLabel = n; ls.set('place', { k:key, n:n }); $('c8a-place').textContent = '📍 ' + n; }
     }catch(_){}
   }
   function showNear(){
@@ -26493,7 +26509,7 @@ c8ApplyUsersView();
     arr.forEach(p => { p.dd = ref ? dist(ref.la, ref.lo, p.a.la, p.a.lo) : null; });
     if(ref) arr.sort((x, y) => x.dd - y.dd); else arr.sort((x, y) => (y.a.al || 0) - (x.a.al || 0));
     const top = arr.slice(0, 40);
-    let h = '<div class="c8a-lt">' + (ref ? 'Zoradené podľa vzdialenosti od teba' : 'Lietadlá nad Slovenskom') + '</div>';
+    let h = '<div class="c8a-lt" data-tg="1"><span>' + (ref ? 'Zoradené podľa vzdialenosti od teba' : 'Lietadlá nad Slovenskom') + '</span><span class="tg">' + ($('c8a-list').classList.contains('big') ? '▼ menej' : '▲ viac') + '</span></div>';
     if(!top.length) h += '<div class="c8a-note">Práve tu nič nelieta – alebo lietadlá nevysielajú polohu.</div>';
     top.forEach((p, i) => {
       const a = p.a, near = ref && i === 0 && p.dd < 5;
@@ -26534,7 +26550,7 @@ c8ApplyUsersView();
     $('c8a-rad').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.r === radius));
     try{ await loadLeaflet(); }catch(_){ msg('Mapu sa nepodarilo načítať. Skontroluj internet.'); return; }
     if(!map){
-      map = L.map('c8a-map', { zoomControl:false, attributionControl:true, worldCopyJump:true });
+      map = L.map('c8a-map', { zoomControl:false, attributionControl:true, worldCopyJump:true, zoomSnap:0.25 });
       L.control.zoom({ position:'bottomright' }).addTo(map);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:18, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ✈️ ADS-B: adsb.lol, adsb.fi, airplanes.live' }).addTo(map);
       map.attributionControl.setPrefix(false);
@@ -26542,7 +26558,8 @@ c8ApplyUsersView();
       map.on('click', closeSheet);
       map.on('dragstart', () => { if(follow){ follow = false; fillSheet(); } });
     }
-    setTimeout(() => map.invalidateSize(), 60);
+    await new Promise(r => setTimeout(r, 120));
+    map.invalidateSize();
     setMode(mode);
     clearInterval(tick); tick = setInterval(step, 1000);
   }
@@ -26586,6 +26603,7 @@ c8ApplyUsersView();
   });
   function clearPlanesKeep(){ const d = lastData; clearPlanes(); lastData = d; }
   $('c8a-list').addEventListener('click', e => {
+    if(e.target.closest('[data-tg]')){ const L2 = $('c8a-list'); L2.classList.toggle('big'); const tg = L2.querySelector('.tg'); if(tg) tg.textContent = L2.classList.contains('big') ? '▼ menej' : '▲ viac'; setTimeout(() => map && map.invalidateSize(), 230); return; }
     const r = e.target.closest('.c8a-row'); if(!r) return;
     const p = planes.get(r.dataset.h); if(!p) return;
     openSheet(r.dataset.h); if(map) map.panTo(pos(p));
