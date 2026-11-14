@@ -26229,6 +26229,22 @@ c8ApplyUsersView();
 .c8a-sheet{position:absolute;left:0;right:0;bottom:0;z-index:1000;visibility:hidden;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(20,20,60,.18);transform:translateY(calc(100% + 40px));transition:transform .25s ease,visibility .25s;color:#16182B;}
 .c8a-sheet.on{transform:none;visibility:visible;}
 .c8a-grab{width:44px;height:5px;border-radius:3px;background:#D6D3E8;margin:0 auto 10px;}
+#c8air{overscroll-behavior:contain;}
+#c8air .leaflet-top.leaflet-right{top:40px;}
+.c8a-sheet{touch-action:pan-x;}
+.c8a-smini{display:none;align-items:center;gap:10px;}
+.c8a-sheet.mini{padding-top:8px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));}
+.c8a-sheet.mini .c8a-sfull{display:none;}
+.c8a-sheet.mini .c8a-smini{display:flex;}
+.c8a-smini .c8a-logo{width:40px;height:40px;}
+.c8a-smini .c8a-logo svg{width:30px;height:30px;}
+.c8a-smini .m{flex:1;min-width:0;}
+.c8a-smini b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c8a-smini span{display:block;font-size:12.5px;color:#4A4E66;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c8a-smini .live{color:#5B4CFF;font-weight:800;}
+.c8a-smini button{flex:none;border:0;border-radius:12px;height:40px;min-width:40px;padding:0 10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;}
+.c8a-smini .up{background:#EEEBFF;color:#5B4CFF;}
+.c8a-smini .stop{background:#F3F2F9;color:#4A4E66;}
 .c8a-fh{display:flex;align-items:center;gap:12px;}
 .c8a-logo{width:48px;height:48px;border-radius:12px;background:#F6F5FB;display:grid;place-items:center;flex:none;}
 .c8a-logo svg{width:36px;height:36px;}
@@ -26311,7 +26327,7 @@ c8ApplyUsersView();
 
   let mode = ls.get('mode', 'sk'), radius = ls.get('r', 100), hidden = new Set(ls.get('hide', []));
   let map = null, layer = null, skPoly = null, meMk = null, circle = null;
-  let placeLabel = '';
+  let placeLabel = '', mini = false, rootOB = '';
   let me = null, placeKey = '', timer = null, tick = null, lastData = null, lastOk = 0, sel = null, follow = false, openFlag = false;
   const planes = new Map();
 
@@ -26527,13 +26543,13 @@ c8ApplyUsersView();
     $('c8a-list').innerHTML = h;
   }
   function openSheet(h){
-    const old = sel; sel = h; follow = false;
+    const old = sel; sel = h; follow = false; mini = false;
     if(old && planes.has(old)) planes.get(old).mk.setIcon(icon(planes.get(old).a, false));
     if(planes.has(h)) planes.get(h).mk.setIcon(icon(planes.get(h).a, true));
     fillSheet(); $('c8a-sheet').classList.add('on');
   }
   function closeSheet(){
-    const old = sel; sel = null; follow = false;
+    const old = sel; sel = null; follow = false; mini = false;
     if(old && planes.has(old)) planes.get(old).mk.setIcon(icon(planes.get(old).a, false));
     $('c8a-sheet').classList.remove('on');
   }
@@ -26543,26 +26559,29 @@ c8ApplyUsersView();
     let vr = '— v hladine';
     if(a.gr) vr = 'na zemi'; else if(a.vr != null){ if(a.vr > 60) vr = '↗ stúpa'; else if(a.vr < -60) vr = '↘ klesá'; }
     const extra = [a.r && a.f ? a.r : '', a.t].filter(Boolean).join(' · ');
-    $('c8a-sheet').innerHTML = '<div class="c8a-grab"></div><div class="c8a-fh"><div class="c8a-logo" style="background:' + K.bg + '">' + svg(a.k, 36) + '</div><div><h3>' + esc(title(a)) + '</h3><span>' + esc(sub(a)) + '</span></div></div>'
+    const sh = $('c8a-sheet'); sh.classList.toggle('mini', mini);
+    const line = (a.gr ? 'na zemi' : fmtN(a.al) + ' m') + ' · ' + fmtN(a.sp) + ' km/h · ' + dirTxt(a.tr);
+    sh.innerHTML = '<div class="c8a-grab"></div><div class="c8a-smini"><div class="c8a-logo" style="background:' + K.bg + '">' + svg(a.k, 30) + '</div><div class="m"><b>' + esc(title(a)) + '</b><span>' + (follow ? '<i class="live" style="font-style:normal">● Sledujem · </i>' : '') + line + '</span></div><button type="button" class="up" data-act="up" aria-label="Detail">▲</button><button type="button" class="stop" data-act="close" aria-label="Zavrieť">✕</button></div><div class="c8a-sfull"><div class="c8a-fh"><div class="c8a-logo" style="background:' + K.bg + '">' + svg(a.k, 36) + '</div><div><h3>' + esc(title(a)) + '</h3><span>' + esc(sub(a)) + '</span></div></div>'
       + '<span class="c8a-tag" style="background:' + K.bg + ';color:' + K.c + '">' + K.tag + (extra ? ' · ' + esc(extra) : '') + '</span>'
       + '<div class="c8a-grid"><div><span>Výška</span><b>' + (a.gr ? 'na zemi' : fmtN(a.al) + ' m') + '</b></div><div><span>Rýchlosť</span><b>' + fmtN(a.sp) + ' km/h</b></div><div><span>Smer</span><b>' + dirTxt(a.tr) + '</b></div><div><span>Stúpa / klesá</span><b>' + vr + '</b></div></div>'
-      + '<div class="c8a-btns"><button type="button" class="c8a-follow' + (follow ? ' on' : '') + '" data-act="follow">📍 ' + (follow ? 'Sledujem' : 'Sledovať na mape') + '</button><button type="button" class="c8a-close" data-act="close">✕ Zavrieť</button></div>';
+      + '<div class="c8a-btns"><button type="button" class="c8a-follow' + (follow ? ' on' : '') + '" data-act="follow">📍 ' + (follow ? 'Sledujem' : 'Sledovať na mape') + '</button><button type="button" class="c8a-close" data-act="close">✕ Zavrieť</button></div></div>';
   }
 
   async function open(){
     const box = $('c8air');
     box.classList.add('on'); openFlag = true;
+    try{ rootOB = document.documentElement.style.overscrollBehaviorY; document.documentElement.style.overscrollBehaviorY = 'none'; document.body.style.overscrollBehaviorY = 'none'; }catch(_){}
     try{ history.pushState({ c8air:1 }, ''); }catch(_){}
     chips();
     $('c8a-rad').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.r === radius));
     try{ await loadLeaflet(); }catch(_){ msg('Mapu sa nepodarilo načítať. Skontroluj internet.'); return; }
     if(!map){
       map = L.map('c8a-map', { zoomControl:false, attributionControl:true, worldCopyJump:true, zoomSnap:0.25 });
-      L.control.zoom({ position:'bottomright' }).addTo(map);
+      L.control.zoom({ position:'topright' }).addTo(map);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:18, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ✈️ ADS-B: adsb.lol, adsb.fi, airplanes.live' }).addTo(map);
       map.attributionControl.setPrefix(false);
       layer = L.layerGroup().addTo(map);
-      map.on('click', closeSheet);
+      map.on('click', () => { if(follow && sel){ mini = true; fillSheet(); } else closeSheet(); });
       map.on('dragstart', () => { autoFit = false; if(follow){ follow = false; fillSheet(); } });
       map.getContainer().addEventListener('wheel', () => { autoFit = false; }, { passive:true });
       map.getContainer().addEventListener('touchstart', e => { if(e.touches && e.touches.length > 1) autoFit = false; }, { passive:true });
@@ -26578,6 +26597,7 @@ c8ApplyUsersView();
     if(!openFlag) return;
     openFlag = false; clearTimeout(timer); clearInterval(tick);
     closeSheet(); $('c8air').classList.remove('on');
+    try{ document.documentElement.style.overscrollBehaviorY = rootOB || ''; document.body.style.overscrollBehaviorY = ''; }catch(_){}
     if(!fromPop){ try{ if(history.state && history.state.c8air) history.back(); }catch(_){} }
   }
   window.c8AirOpen = open;
@@ -26619,10 +26639,22 @@ c8ApplyUsersView();
     const p = planes.get(r.dataset.h); if(!p) return;
     openSheet(r.dataset.h); if(map) map.panTo(pos(p));
   });
+  (function(){
+    const sh = $('c8a-sheet'); let y0 = null, moved = 0;
+    sh.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; moved = 0; }, { passive:true });
+    sh.addEventListener('touchmove', e => { if(y0 == null) return; moved = e.touches[0].clientY - y0; if(Math.abs(moved) > 6) e.preventDefault(); }, { passive:false });
+    sh.addEventListener('touchend', () => {
+      if(y0 == null) return; y0 = null;
+      if(moved > 40 && !mini){ mini = true; fillSheet(); }
+      else if(moved > 40 && mini && !follow){ closeSheet(); }
+      else if(moved < -40 && mini){ mini = false; fillSheet(); }
+    });
+  })();
   $('c8a-sheet').addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b) return;
     if(b.dataset.act === 'close') closeSheet();
-    if(b.dataset.act === 'follow'){ follow = !follow; fillSheet(); if(follow) step(); }
+    if(b.dataset.act === 'follow'){ follow = !follow; if(follow && window.innerWidth < 900) mini = true; fillSheet(); if(follow && map && planes.has(sel)){ autoFit = false; map.setView(pos(planes.get(sel)), Math.max(map.getZoom(), 9), { animate:true }); } }
+    if(b.dataset.act === 'up'){ mini = false; fillSheet(); }
   });
 })();
 </script>
