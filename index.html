@@ -26376,7 +26376,14 @@ c8ApplyUsersView();
     if(!map) return;
     if(circle){ map.removeLayer(circle); circle = null; }
     if(!skPoly) skPoly = L.polygon(SK, { color:'#5B4CFF', weight:2, fill:true, fillColor:'#5B4CFF', fillOpacity:.04, interactive:false }).addTo(map);
-    map.fitBounds([[47.73,16.83],[49.61,22.57]], { padding:[10,10] });
+    fitView();
+  }
+  let autoFit = true;
+  function fitView(){
+    if(!map) return;
+    autoFit = true;
+    if(mode === 'near' && circle) map.fitBounds(circle.getBounds(), { padding:[16,16], animate:false });
+    else map.fitBounds([[47.73,16.83],[49.61,22.57]], { padding:[10,10], animate:false });
   }
   function locate(){
     $('c8a-place').textContent = '📍 Zisťujem polohu…';
@@ -26414,7 +26421,7 @@ c8ApplyUsersView();
     circle = L.circle([me.la, me.lo], { radius: radius * 1000, color:'#5B4CFF', weight:1.6, dashArray:'6 5', fillColor:'#5B4CFF', fillOpacity:.05, interactive:false }).addTo(map);
     if(meMk) meMk.setLatLng([me.la, me.lo]);
     else meMk = L.marker([me.la, me.lo], { icon: L.divIcon({ className:'', html:'<div class="c8a-me"></div>', iconSize:[16,16], iconAnchor:[8,8] }), interactive:false, zIndexOffset:-100 }).addTo(map);
-    map.fitBounds(circle.getBounds(), { padding:[8,8] });
+    fitView();
   }
   function clearPlanes(){
     planes.forEach(p => { if(p.mk) layer.removeLayer(p.mk); if(p.tl) layer.removeLayer(p.tl); });
@@ -26556,7 +26563,11 @@ c8ApplyUsersView();
       map.attributionControl.setPrefix(false);
       layer = L.layerGroup().addTo(map);
       map.on('click', closeSheet);
-      map.on('dragstart', () => { if(follow){ follow = false; fillSheet(); } });
+      map.on('dragstart', () => { autoFit = false; if(follow){ follow = false; fillSheet(); } });
+      map.getContainer().addEventListener('wheel', () => { autoFit = false; }, { passive:true });
+      map.getContainer().addEventListener('touchstart', e => { if(e.touches && e.touches.length > 1) autoFit = false; }, { passive:true });
+      map.on('zoomstart', e => { if(e && e.originalEvent) autoFit = false; });
+      if(window.ResizeObserver){ let rzT = null; new ResizeObserver(() => { clearTimeout(rzT); rzT = setTimeout(() => { if(!openFlag) return; map.invalidateSize(); if(autoFit) fitView(); }, 80); }).observe(document.getElementById('c8a-map')); }
     }
     await new Promise(r => setTimeout(r, 120));
     map.invalidateSize();
