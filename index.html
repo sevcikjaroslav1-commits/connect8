@@ -3629,6 +3629,10 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
       <div class="c8l-item" id="c8l-office" onclick="c8OfficeOpen()">
         <span class="c8l-ic"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#14171F"/><text x="12" y="15.6" text-anchor="middle" font-family="system-ui,Arial,sans-serif" font-weight="800" font-size="9.5" fill="#fff">C8</text><rect x="6" y="17.6" width="12" height="1.8" rx=".9" fill="#7FA2FF"/></svg></span><span class="label">Connect8 Office</span>
       </div>
+      <!-- Lietadlá – mapa lietadiel naživo (len PC, ľavý panel) -->
+      <div class="c8l-item" id="c8l-air" onclick="c8AirOpen()">
+        <span class="c8l-ic"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#EAB308"/><g transform="translate(12,12) rotate(45) scale(.62)" fill="#fff"><path d="M0,-11 L2,-3 L10,2 L10,4 L2,2 L1.5,8 L4,10 L4,11.5 L0,10.5 L-4,11.5 L-4,10 L-1.5,8 L-2,2 L-10,4 L-10,2 L-2,-3 Z"/></g></svg></span><span class="label">Lietadlá</span>
+      </div>
     <div class="c8g-card" id="c8g-pc" data-c8globe>
         <canvas class="c8g-canvas" role="img" aria-label="Zemeguľa s krajinami používateľov connect8"></canvas>
         <div class="c8g-cap">Connect8</div>
@@ -23061,7 +23065,7 @@ function c8modDelWord(w){
 }
 
 /* =====================================================================
-   ROBOTÍK – AI dozorca sa ukáže každý 3. deň prihlásenia
+   ROBOTÍK – AI dozorca sa ukáže každému používateľovi iba raz
 ===================================================================== */
 /* ---------- Connect8 Bot – nastavenia v paneli ---------- */
 function c8botCardHtml(){
@@ -23184,18 +23188,26 @@ function c8botLocalDay(){
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 function c8botMaybeShow(){
+  // AI dozorca sa každému používateľovi ukáže iba raz (zapamätá sa v zariadení aj v profile)
   if(!currentUser || c8modConfig.robot === false) return;
-  const key = 'c8bot_' + currentUser.uid;
-  let st = {};
-  try{ st = JSON.parse(localStorage.getItem(key) || '{}') || {}; }catch(e){}
-  const day = c8botLocalDay();
-  if(st.last === day) return;              // dnes už započítané
-  st.last = day;
-  st.n = (st.n || 0) + 1;                  // ďalší deň s prihlásením
-  const show = st.n >= 3;                  // 1. nie, 2. nie, 3. áno
-  if(show) st.n = 0;
-  try{ localStorage.setItem(key, JSON.stringify(st)); }catch(e){}
-  if(show) setTimeout(c8botShow, 4000);
+  const uid = currentUser.uid, key = 'c8bot1_' + uid;
+  try{ if(localStorage.getItem(key)) return; }catch(e){}
+  const mark = () => {
+    try{ localStorage.setItem(key, '1'); }catch(e){}
+    try{ if(typeof db !== 'undefined' && db && FIREBASE_CONFIGURED) db.collection('profiles').doc(uid).set({ c8botSeen: true }, { merge: true }).catch(()=>{}); }catch(e){}
+  };
+  const go = () => { if(!currentUser || currentUser.uid !== uid) return; mark(); setTimeout(c8botShow, 4000); };
+  try{
+    if(typeof db !== 'undefined' && db && FIREBASE_CONFIGURED){
+      db.collection('profiles').doc(uid).get().then(snap => {
+        const d = snap && snap.exists ? snap.data() : {};
+        if(d && d.c8botSeen){ try{ localStorage.setItem(key, '1'); }catch(e){} return; }
+        go();
+      }).catch(() => go());
+      return;
+    }
+  }catch(e){}
+  go();
 }
 let c8botTimer = null;
 function c8botShow(){
@@ -26164,5 +26176,428 @@ c8ApplyUsersView();
 })();
 </script>
 <!-- =================== koniec: Connect8 Office – bočná záložka =================== -->
+
+<!-- ===================== Lietadlá (mapa lietadiel, ADS-B) ===================== -->
+<!-- Otvorí sa z ľavého menu (PC) alebo z Tlmočníka (telefón). Dáta: Worker c8-lietadla → airplanes.live -->
+<style id="c8air-style">
+#c8air{position:fixed;inset:0;z-index:10050;background:var(--bg,#F3F4F8);color:var(--text,#16182B);display:none;flex-direction:column;font-family:inherit;}
+#c8air.on{display:flex;}
+#c8air *{box-sizing:border-box;}
+.c8a-top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 8px;background:var(--card,#fff);border-bottom:1px solid var(--border,#E6E4F2);flex:none;}
+.c8a-back{width:36px;height:36px;border-radius:10px;border:0;background:#EEEBFF;color:#5B4CFF;font-weight:800;font-size:18px;cursor:pointer;flex:none;}
+.c8a-top h2{margin:0;font-size:19px;font-weight:800;flex:1;display:flex;align-items:center;gap:8px;}
+.c8a-live{font-size:11px;font-weight:800;color:#16A34A;background:#DCFCE7;padding:5px 9px;border-radius:999px;white-space:nowrap;}
+.c8a-live.err{color:#B45309;background:#FEF3C7;}
+.c8a-bar{background:var(--card,#fff);padding:8px 12px 8px;display:flex;flex-direction:column;gap:8px;flex:none;border-bottom:1px solid var(--border,#E6E4F2);}
+.c8a-seg{display:flex;gap:6px;background:#F3F2F9;border-radius:12px;padding:4px;}
+.c8a-seg button{flex:1;border:0;background:none;padding:8px 0;border-radius:9px;font-weight:700;font-size:13px;color:#6B6F86;cursor:pointer;font-family:inherit;}
+.c8a-seg button.on{background:#fff;color:#16182B;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.c8a-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.c8a-chip{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;background:#fff;border:1.5px solid #E6E4F2;border-radius:999px;padding:2px 9px 2px 4px;color:#33364D;cursor:pointer;font-family:inherit;}
+.c8a-chip.off{opacity:.38;background:#F3F2F9;}
+.c8a-chip svg{display:block;width:20px;height:20px;}
+.c8a-near{display:none;align-items:center;gap:8px;flex-wrap:wrap;}
+.c8a-near.on{display:flex;}
+.c8a-place{flex:1;min-width:150px;display:flex;align-items:center;gap:6px;background:#EEF6FF;border:1px solid #CFE3FB;color:#1E3A5F;border-radius:12px;padding:7px 10px;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c8a-rad{display:flex;gap:4px;}
+.c8a-rad button{border:1.5px solid #E6E4F2;background:#fff;border-radius:10px;padding:6px 9px;font-size:12.5px;font-weight:800;color:#4A4E66;cursor:pointer;font-family:inherit;}
+.c8a-rad button.on{background:#5B4CFF;border-color:#5B4CFF;color:#fff;}
+.c8a-main{flex:1;min-height:0;display:flex;flex-direction:column;}
+.c8a-mapw{position:relative;flex:1;min-height:200px;}
+#c8a-map{position:absolute;inset:0;background:#E9EEF8;}
+.c8a-cnt{position:absolute;left:10px;top:10px;z-index:500;background:#fff;border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.12);pointer-events:none;}
+.c8a-upd{position:absolute;right:10px;top:10px;z-index:500;background:rgba(255,255,255,.92);border-radius:10px;padding:6px 9px;font-size:11px;font-weight:700;color:#6B6F86;pointer-events:none;}
+.c8a-msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:600;background:rgba(22,24,43,.86);color:#fff;border-radius:14px;padding:12px 16px;font-size:13.5px;font-weight:600;max-width:80%;text-align:center;display:none;}
+.c8a-list{flex:none;max-height:34vh;overflow:auto;background:var(--card,#fff);border-top:1px solid var(--border,#E6E4F2);padding:6px 12px calc(6px + env(safe-area-inset-bottom,0px));}
+.c8a-lt{font-size:11.5px;font-weight:700;color:#6B6F86;letter-spacing:.06em;text-transform:uppercase;margin:6px 2px;}
+.c8a-row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid #F0EFF6;cursor:pointer;}
+.c8a-row:last-child{border-bottom:0;}
+.c8a-row.hl{background:#EEEBFF;border-radius:12px;border-bottom:0;}
+.c8a-row .ic{width:36px;height:36px;border-radius:10px;background:#F6F5FB;display:grid;place-items:center;flex:none;}
+.c8a-row .ic svg{width:26px;height:26px;display:block;}
+.c8a-row .m{flex:1;min-width:0;}
+.c8a-row b{font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c8a-row span{font-size:12px;color:#6B6F86;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c8a-row .r{text-align:right;font-size:12px;color:#6B6F86;font-weight:600;flex:none;}
+.c8a-row .r b{font-size:13px;color:#16182B;}
+.c8a-note{font-size:11px;color:#8A8DA3;line-height:1.4;padding:6px 2px 4px;}
+.c8a-ic{width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:transform .4s linear;}
+.c8a-ic svg{width:26px;height:26px;display:block;overflow:visible;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25));}
+.c8a-ic.sel svg{width:34px;height:34px;}
+.c8a-ic.sel{border-radius:50%;background:rgba(91,76,255,.18);}
+.c8a-me{width:16px;height:16px;border-radius:50%;background:#0EA5E9;border:3px solid #fff;box-shadow:0 0 0 7px rgba(14,165,233,.22);}
+.c8a-sheet{position:absolute;left:0;right:0;bottom:0;z-index:1000;visibility:hidden;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(20,20,60,.18);transform:translateY(calc(100% + 40px));transition:transform .25s ease,visibility .25s;color:#16182B;}
+.c8a-sheet.on{transform:none;visibility:visible;}
+.c8a-grab{width:44px;height:5px;border-radius:3px;background:#D6D3E8;margin:0 auto 10px;}
+.c8a-fh{display:flex;align-items:center;gap:12px;}
+.c8a-logo{width:48px;height:48px;border-radius:12px;background:#F6F5FB;display:grid;place-items:center;flex:none;}
+.c8a-logo svg{width:36px;height:36px;}
+.c8a-fh h3{margin:0;font-size:20px;font-weight:800;}
+.c8a-fh span{font-size:13px;color:#6B6F86;}
+.c8a-tag{display:inline-block;margin:10px 0;font-size:11.5px;font-weight:800;border-radius:999px;padding:4px 10px;}
+.c8a-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.c8a-grid div{border:1px solid #E6E4F2;border-radius:12px;padding:8px 11px;}
+.c8a-grid span{font-size:11px;color:#6B6F86;font-weight:600;display:block;}
+.c8a-grid b{font-size:15px;}
+.c8a-btns{margin-top:12px;display:flex;gap:8px;}
+.c8a-btns button{flex:1;border:0;border-radius:12px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;}
+.c8a-follow{background:#EEEBFF;color:#5B4CFF;}
+.c8a-follow.on{background:#5B4CFF;color:#fff;}
+.c8a-close{background:#F3F2F9;color:#4A4E66;}
+@media(min-width:900px){
+  .c8a-main{flex-direction:row;}
+  .c8a-list{max-height:none;width:360px;border-top:0;border-left:1px solid var(--border,#E6E4F2);}
+  .c8a-sheet{left:auto;right:16px;bottom:16px;width:380px;border-radius:20px;transform:translateX(120%);}
+  .c8a-sheet.on{transform:none;}
+  .c8a-bar{flex-direction:row;align-items:center;flex-wrap:wrap;}
+  .c8a-seg{width:320px;}
+}
+/* tlačidlo v profile pod „Vytvor životopis“ – rovnaké ako životopis, len žlté */
+.c8cv-btn.c8air-btn{border-color:#EAB308;background:rgba(250,204,21,.16);color:#A16207;}
+</style>
+<div id="c8air" role="dialog" aria-modal="true" aria-label="Lietadlá">
+  <div class="c8a-top">
+    <button type="button" class="c8a-back" id="c8a-back" aria-label="Späť">‹</button>
+    <h2>✈️ Lietadlá</h2>
+    <span class="c8a-live" id="c8a-live">● NAŽIVO</span>
+  </div>
+  <div class="c8a-bar">
+    <div class="c8a-seg" id="c8a-seg"><button type="button" data-m="sk" class="on">🇸🇰 Slovensko</button><button type="button" data-m="near">📍 Nad mnou</button></div>
+    <div class="c8a-near" id="c8a-near"><div class="c8a-place" id="c8a-place">📍 Zisťujem polohu…</div><div class="c8a-rad" id="c8a-rad"><button type="button" data-r="25">25 km</button><button type="button" data-r="50">50 km</button><button type="button" data-r="100" class="on">100 km</button></div></div>
+    <div class="c8a-chips" id="c8a-chips"></div>
+  </div>
+  <div class="c8a-main">
+    <div class="c8a-mapw">
+      <div id="c8a-map"></div>
+      <div class="c8a-cnt" id="c8a-cnt">✈️ …</div>
+      <div class="c8a-upd" id="c8a-upd"></div>
+      <div class="c8a-msg" id="c8a-msg"></div>
+      <div class="c8a-sheet" id="c8a-sheet"></div>
+    </div>
+    <div class="c8a-list" id="c8a-list"></div>
+  </div>
+</div>
+<script id="c8air-script">
+(function(){
+  const API = 'https://c8-lietadla.sevcikjaroslav1.workers.dev';
+  const REFRESH = 10000;
+  const SK = [[49.086,22.558],[48.825,22.281],[48.422,22.086],[48.32,21.872],[48.624,20.801],[48.563,20.474],[48.328,20.239],[48.203,19.769],[48.267,19.661],[48.111,19.174],[48.082,18.777],[47.881,18.697],[47.758,17.857],[47.867,17.488],[48.123,16.98],[48.47,16.88],[48.597,16.96],[48.817,17.102],[48.8,17.545],[48.903,17.886],[48.996,17.914],[49.044,18.105],[49.272,18.17],[49.315,18.4],[49.495,18.555],[49.496,18.853],[49.436,18.91],[49.572,19.321],[49.217,19.825],[49.431,20.416],[49.329,20.888],[49.47,21.608],[49.086,22.558]];
+  const KINDS = {
+    jet:   { n:'Dopravné',  c:'#1F2340', bg:'#EEF0FF', tag:'DOPRAVNÉ LIETADLO', s:'<path d="M0,-11 L2,-3 L10,2 L10,4 L2,2 L1.5,8 L4,10 L4,11.5 L0,10.5 L-4,11.5 L-4,10 L-1.5,8 L-2,2 L-10,4 L-10,2 L-2,-3 Z"/>' },
+    biz:   { n:'Súkromné',  c:'#2563EB', bg:'#EFF4FF', tag:'SÚKROMNÉ / MENŠIE TRYSKOVÉ', s:'<path d="M0,-10 L1.6,-3 L7,1.5 L7,3.2 L1.4,1.6 L1,6 L3.5,8.5 L3.5,9.8 L0,9 L-3.5,9.8 L-3.5,8.5 L-1,6 L-1.4,1.6 L-7,3.2 L-7,1.5 L-1.6,-3 Z"/>' },
+    ga:    { n:'Malé',      c:'#16A34A', bg:'#E8FBEF', tag:'MALÉ LIETADLO', s:'<path d="M-1.6,-8 L1.6,-8 L1.6,-3.5 L10.5,-3.5 L10.5,-0.5 L1.6,-0.5 L1,6 L4.5,6.5 L4.5,8.8 L-4.5,8.8 L-4.5,6.5 L-1,6 L-1.6,-0.5 L-10.5,-0.5 L-10.5,-3.5 L-1.6,-3.5 Z"/><rect x="-4" y="-10.4" width="8" height="1.6" rx=".8"/>' },
+    heli:  { n:'Vrtuľník',  c:'#EA580C', bg:'#FFF1E6', tag:'VRTUĽNÍK', side:true, s:'<rect x="-12" y="-10.5" width="20" height="1.8" rx=".9"/><rect x="-2.9" y="-9.2" width="1.6" height="3"/><path d="M-9.5,-1.5 C-9.5,-5.2 -6.5,-6.6 -3,-6.6 L1.5,-6.6 C3.4,-6.6 4.2,-5.2 4.2,-3.8 L4.2,1.2 C4.2,2.6 3.2,3.4 1.8,3.4 L-6.5,3.4 C-8.5,3.4 -9.5,1.4 -9.5,-1.5 Z"/><path d="M3.8,-4.6 L12,-3.6 L12,-2 L3.8,-1.4 Z"/><path d="M10.6,-3.4 L12.6,-8 L13.6,-8 L13.2,-2.2 Z"/><path d="M-8.6,-1.8 C-8.6,-4.4 -6.6,-5.4 -4.6,-5.4 L-4.6,-1.2 Z" fill="#FFE2CC" stroke="none"/><rect x="-8.5" y="6" width="12" height="1.4" rx=".7"/><rect x="-6.4" y="3.2" width="1.2" height="3.2"/><rect x="0.4" y="3.2" width="1.2" height="3.2"/>' },
+    glider:{ n:'Vetroň',    c:'#0891B2', bg:'#E0F7FB', tag:'VETROŇ', s:'<path d="M-1.2,-7 L1.2,-7 L1,-2.2 L14,-1.4 L14,0.2 L1,0.2 L0.7,8 L3.5,8.6 L3.5,9.8 L-3.5,9.8 L-3.5,8.6 L-0.7,8 L-1,0.2 L-14,0.2 L-14,-1.4 L-1,-2.2 Z"/>' },
+    mil:   { n:'Vojenské',  c:'#6B7280', bg:'#F3F4F6', tag:'VOJENSKÉ', s:'<path d="M0,-11 L2.5,-2 L9,4 L9,6 L2,4 L1.5,8 L4.5,10.5 L4.5,11.5 L0,10.5 L-4.5,11.5 L-4.5,10.5 L-1.5,8 L-2,4 L-9,6 L-9,4 L-2.5,-2 Z"/>' }
+  };
+  const ORDER = ['jet','biz','ga','heli','glider','mil'];
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const ls = { get(k, d){ try{ const v = localStorage.getItem('c8air.' + k); return v == null ? d : JSON.parse(v); }catch(_){ return d; } }, set(k, v){ try{ localStorage.setItem('c8air.' + k, JSON.stringify(v)); }catch(_){} } };
+
+  let mode = ls.get('mode', 'sk'), radius = ls.get('r', 100), hidden = new Set(ls.get('hide', []));
+  let map = null, layer = null, skPoly = null, meMk = null, circle = null;
+  let me = null, placeKey = '', timer = null, tick = null, lastData = null, lastOk = 0, sel = null, follow = false, openFlag = false;
+  const planes = new Map();
+
+  function svg(k, size, flip){
+    const K = KINDS[k] || KINDS.jet;
+    const tr = flip ? ' transform="scale(-1,1)"' : '';
+    return '<svg viewBox="-14 -14 28 28" width="' + (size || 26) + '" height="' + (size || 26) + '"><g' + tr + ' fill="' + K.c + '" stroke="#fff" stroke-width="1.1">' + K.s + '</g></svg>';
+  }
+  function inSK(la, lo){
+    let c = false;
+    for(let i = 0, j = SK.length - 1; i < SK.length; j = i++){
+      const [yi, xi] = SK[i], [yj, xj] = SK[j];
+      if((yi > la) !== (yj > la) && lo < (xj - xi) * (la - yi) / (yj - yi) + xi) c = !c;
+    }
+    return c;
+  }
+  function dist(a, b, c, d){
+    const R = 6371, r = Math.PI / 180, dl = (c - a) * r, dn = (d - b) * r;
+    const x = Math.sin(dl/2)**2 + Math.cos(a*r) * Math.cos(c*r) * Math.sin(dn/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+  function move(la, lo, brg, km){
+    const R = 6371, r = Math.PI / 180, d = km / R, t = brg * r, p1 = la * r, l1 = lo * r;
+    const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(t));
+    const l2 = l1 + Math.atan2(Math.sin(t) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+    return [p2 / r, l2 / r];
+  }
+  function dirTxt(tr){
+    if(tr == null) return '—';
+    const n = ['↑ sever','↗ severovýchod','→ východ','↘ juhovýchod','↓ juh','↙ juhozápad','← západ','↖ severozápad'];
+    return n[Math.round(((tr % 360) + 360) % 360 / 45) % 8];
+  }
+  function fmtN(n){ return n == null ? '—' : String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  function title(a){ return a.f || a.r || (a.h ? a.h.toUpperCase() : '?'); }
+  function sub(a){ return [a.o, a.d || a.t].filter(Boolean).join(' · ') || (KINDS[a.k] || KINDS.jet).n; }
+
+  let leafletP = null;
+  function loadLeaflet(){
+    if(window.L && L.map) return Promise.resolve();
+    if(leafletP) return leafletP;
+    leafletP = new Promise((res, rej) => {
+      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(css);
+      const s = document.createElement('script'); s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      s.onload = () => res(); s.onerror = () => { leafletP = null; rej(new Error('leaflet')); };
+      document.head.appendChild(s);
+    });
+    return leafletP;
+  }
+  function msg(t){ const m = $('c8a-msg'); m.textContent = t || ''; m.style.display = t ? 'block' : 'none'; }
+
+  function chips(){
+    $('c8a-chips').innerHTML = ORDER.map(k => '<button type="button" class="c8a-chip' + (hidden.has(k) ? ' off' : '') + '" data-k="' + k + '">' + svg(k, 20) + '<span>' + KINDS[k].n + '</span></button>').join('');
+  }
+  function setMode(m){
+    mode = m; ls.set('mode', m);
+    $('c8a-seg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+    $('c8a-near').classList.toggle('on', m === 'near');
+    clearPlanes(); closeSheet();
+    if(m === 'near') locate(); else { showSK(); refresh(); }
+  }
+  function showSK(){
+    if(!map) return;
+    if(circle){ map.removeLayer(circle); circle = null; }
+    if(!skPoly) skPoly = L.polygon(SK, { color:'#5B4CFF', weight:2, fill:true, fillColor:'#5B4CFF', fillOpacity:.04, interactive:false }).addTo(map);
+    map.fitBounds([[47.73,16.83],[49.61,22.57]], { padding:[10,10] });
+  }
+  function locate(){
+    $('c8a-place').textContent = '📍 Zisťujem polohu…';
+    if(!navigator.geolocation){ msg('Tento telefón nevie zistiť polohu.'); return; }
+    navigator.geolocation.getCurrentPosition(p => {
+      me = { la: p.coords.latitude, lo: p.coords.longitude };
+      placeName();
+      showNear(); refresh();
+    }, () => {
+      msg('Bez povolenia polohy nevieme ukázať lietadlá nad tebou. Povoľ polohu pre Connect8 v nastaveniach.');
+      $('c8a-place').textContent = '📍 Poloha nie je povolená';
+    }, { enableHighAccuracy:false, timeout:15000, maximumAge:120000 });
+  }
+  async function placeName(){
+    if(!me) return;
+    const key = me.la.toFixed(2) + ',' + me.lo.toFixed(2);
+    if(key === placeKey) return; placeKey = key;
+    const cached = ls.get('place', null);
+    if(cached && cached.k === key){ $('c8a-place').textContent = '📍 ' + cached.n; return; }
+    $('c8a-place').textContent = '📍 ' + me.la.toFixed(2) + ', ' + me.lo.toFixed(2);
+    try{
+      const lang = (typeof currentLang !== 'undefined' && currentLang === 'en') ? 'en' : 'sk';
+      const r = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=' + lang + '&lat=' + me.la + '&lon=' + me.lo);
+      const d = await r.json(); const a = d.address || {};
+      const town = a.city || a.town || a.village || a.municipality || a.county || '';
+      const n = [town, a.country].filter(Boolean).join(', ');
+      if(n){ ls.set('place', { k:key, n:n }); $('c8a-place').textContent = '📍 ' + n; }
+    }catch(_){}
+  }
+  function showNear(){
+    if(!map || !me) return;
+    if(skPoly){ map.removeLayer(skPoly); skPoly = null; }
+    if(circle) map.removeLayer(circle);
+    circle = L.circle([me.la, me.lo], { radius: radius * 1000, color:'#5B4CFF', weight:1.6, dashArray:'6 5', fillColor:'#5B4CFF', fillOpacity:.05, interactive:false }).addTo(map);
+    if(meMk) meMk.setLatLng([me.la, me.lo]);
+    else meMk = L.marker([me.la, me.lo], { icon: L.divIcon({ className:'', html:'<div class="c8a-me"></div>', iconSize:[16,16], iconAnchor:[8,8] }), interactive:false, zIndexOffset:-100 }).addTo(map);
+    map.fitBounds(circle.getBounds(), { padding:[8,8] });
+  }
+  function clearPlanes(){
+    planes.forEach(p => { if(p.mk) layer.removeLayer(p.mk); if(p.tl) layer.removeLayer(p.tl); });
+    planes.clear(); lastData = null; $('c8a-list').innerHTML = ''; $('c8a-cnt').textContent = '✈️ …';
+  }
+
+  async function refresh(){
+    clearTimeout(timer);
+    if(!openFlag) return;
+    if(document.hidden){ timer = setTimeout(refresh, REFRESH); return; }
+    if(mode === 'near' && !me){ timer = setTimeout(refresh, REFRESH); return; }
+    const url = mode === 'sk' ? API + '/sk' : API + '/near?lat=' + me.la.toFixed(4) + '&lon=' + me.lo.toFixed(4) + '&r=' + radius;
+    const forMode = mode;
+    try{
+      const r = await fetch(url, { cache:'no-store' });
+      if(!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      if(forMode !== mode || !openFlag) return;
+      lastOk = Date.now(); msg('');
+      $('c8a-live').classList.remove('err'); $('c8a-live').textContent = '● NAŽIVO';
+      apply(d);
+    }catch(e){
+      $('c8a-live').classList.add('err'); $('c8a-live').textContent = '● OFFLINE';
+      if(!lastData) msg('Lietadlá sa nepodarilo načítať. Skúsim znova o chvíľu…');
+    }
+    timer = setTimeout(refresh, REFRESH);
+  }
+  function visible(a){
+    if(hidden.has(a.k)) return false;
+    if(mode === 'sk') return inSK(a.la, a.lo);
+    return me && dist(me.la, me.lo, a.la, a.lo) <= radius;
+  }
+  function icon(a, selected){
+    const K = KINDS[a.k] || KINDS.jet;
+    const flip = K.side && a.tr != null && ((a.tr % 360) + 360) % 360 > 180;
+    const rot = K.side ? 0 : (a.tr || 0);
+    return L.divIcon({ className:'', html:'<div class="c8a-ic' + (selected ? ' sel' : '') + '" style="transform:rotate(' + rot + 'deg)">' + svg(a.k, selected ? 34 : 26, flip) + '</div>', iconSize:[30,30], iconAnchor:[15,15] });
+  }
+  function apply(d){
+    lastData = d;
+    const now = Date.now(), seen = new Set();
+    (d.ac || []).forEach(a => {
+      if(!a.h || !visible(a)) return;
+      seen.add(a.h);
+      let p = planes.get(a.h);
+      const t0 = (d.t || now) - (a.ag || 0) * 1000;
+      if(!p){
+        p = { a:a, t0:t0, trail:[] };
+        p.mk = L.marker([a.la, a.lo], { icon: icon(a, sel === a.h), keyboard:false, zIndexOffset: a.k === 'heli' ? 500 : 0 });
+        p.mk.on('click', () => openSheet(a.h));
+        layer.addLayer(p.mk);
+        planes.set(a.h, p);
+      } else {
+        const rotChanged = (p.a.tr !== a.tr) || (p.a.k !== a.k);
+        p.a = a; p.t0 = t0;
+        if(rotChanged) p.mk.setIcon(icon(a, sel === a.h));
+      }
+      p.trail.push([a.la, a.lo, now]);
+      p.trail = p.trail.filter(x => now - x[2] < 5 * 60000).slice(-40);
+      if(p.trail.length > 1){
+        const pts = p.trail.map(x => [x[0], x[1]]);
+        if(p.tl) p.tl.setLatLngs(pts);
+        else { p.tl = L.polyline(pts, { color:(KINDS[a.k] || KINDS.jet).c, weight:1.6, opacity:.45, dashArray:'3 4', interactive:false }); layer.addLayer(p.tl); }
+      }
+    });
+    planes.forEach((p, h) => { if(!seen.has(h)){ layer.removeLayer(p.mk); if(p.tl) layer.removeLayer(p.tl); planes.delete(h); if(sel === h) closeSheet(); } });
+    step();
+    counts(); list();
+    if(sel) fillSheet();
+  }
+  function pos(p){
+    const a = p.a;
+    if(a.gr || !a.sp || a.tr == null) return [a.la, a.lo];
+    const s = Math.min(60, Math.max(0, (Date.now() - p.t0) / 1000));
+    return move(a.la, a.lo, a.tr, a.sp / 3600 * s);
+  }
+  function step(){
+    planes.forEach(p => { p.mk.setLatLng(pos(p)); });
+    if(follow && sel && planes.has(sel) && map) map.panTo(pos(planes.get(sel)), { animate:true, duration:.8 });
+    if(lastOk) $('c8a-upd').textContent = 'pred ' + Math.max(0, Math.round((Date.now() - lastOk) / 1000)) + ' s';
+  }
+  function counts(){
+    let n = 0, h = 0; planes.forEach(p => { if(p.a.k === 'heli') h++; else n++; });
+    let t = '✈️ ' + n + (h ? ' · 🚁 ' + h : '');
+    if(mode === 'near') t += ' do ' + radius + ' km';
+    $('c8a-cnt').textContent = t;
+  }
+  function list(){
+    const arr = [];
+    planes.forEach(p => arr.push(p));
+    const ref = me;
+    arr.forEach(p => { p.dd = ref ? dist(ref.la, ref.lo, p.a.la, p.a.lo) : null; });
+    if(ref) arr.sort((x, y) => x.dd - y.dd); else arr.sort((x, y) => (y.a.al || 0) - (x.a.al || 0));
+    const top = arr.slice(0, 40);
+    let h = '<div class="c8a-lt">' + (ref ? 'Zoradené podľa vzdialenosti od teba' : 'Lietadlá nad Slovenskom') + '</div>';
+    if(!top.length) h += '<div class="c8a-note">Práve tu nič nelieta – alebo lietadlá nevysielajú polohu.</div>';
+    top.forEach((p, i) => {
+      const a = p.a, near = ref && i === 0 && p.dd < 5;
+      const right = ref ? '<b>' + (p.dd < 10 ? p.dd.toFixed(1).replace('.', ',') : Math.round(p.dd)) + ' km</b><br>' + (a.gr ? 'na zemi' : fmtN(a.al) + ' m') : '<b>' + (a.gr ? 'na zemi' : fmtN(a.al) + ' m') + '</b><br>' + fmtN(a.sp) + ' km/h';
+      h += '<div class="c8a-row' + (near ? ' hl' : '') + '" data-h="' + esc(a.h) + '"><div class="ic">' + svg(a.k, 26) + '</div><div class="m"><b>' + esc(title(a)) + '</b><span>' + (near ? 'práve nad tebou · ' : '') + esc(sub(a)) + '</span></div><div class="r">' + right + '</div></div>';
+    });
+    h += '<div class="c8a-note">Zobrazujú sa lietadlá, ktoré vysielajú ADS-B. Niektoré malé, vojenské lietadlá a vetrone nemusia byť viditeľné. Údaje: ' + esc((lastData && lastData.src) || 'ADS-B komunita') + '</div>';
+    $('c8a-list').innerHTML = h;
+  }
+  function openSheet(h){
+    const old = sel; sel = h; follow = false;
+    if(old && planes.has(old)) planes.get(old).mk.setIcon(icon(planes.get(old).a, false));
+    if(planes.has(h)) planes.get(h).mk.setIcon(icon(planes.get(h).a, true));
+    fillSheet(); $('c8a-sheet').classList.add('on');
+  }
+  function closeSheet(){
+    const old = sel; sel = null; follow = false;
+    if(old && planes.has(old)) planes.get(old).mk.setIcon(icon(planes.get(old).a, false));
+    $('c8a-sheet').classList.remove('on');
+  }
+  function fillSheet(){
+    const p = planes.get(sel); if(!p) return;
+    const a = p.a, K = KINDS[a.k] || KINDS.jet;
+    let vr = '— v hladine';
+    if(a.gr) vr = 'na zemi'; else if(a.vr != null){ if(a.vr > 60) vr = '↗ stúpa'; else if(a.vr < -60) vr = '↘ klesá'; }
+    const extra = [a.r && a.f ? a.r : '', a.t].filter(Boolean).join(' · ');
+    $('c8a-sheet').innerHTML = '<div class="c8a-grab"></div><div class="c8a-fh"><div class="c8a-logo" style="background:' + K.bg + '">' + svg(a.k, 36) + '</div><div><h3>' + esc(title(a)) + '</h3><span>' + esc(sub(a)) + '</span></div></div>'
+      + '<span class="c8a-tag" style="background:' + K.bg + ';color:' + K.c + '">' + K.tag + (extra ? ' · ' + esc(extra) : '') + '</span>'
+      + '<div class="c8a-grid"><div><span>Výška</span><b>' + (a.gr ? 'na zemi' : fmtN(a.al) + ' m') + '</b></div><div><span>Rýchlosť</span><b>' + fmtN(a.sp) + ' km/h</b></div><div><span>Smer</span><b>' + dirTxt(a.tr) + '</b></div><div><span>Stúpa / klesá</span><b>' + vr + '</b></div></div>'
+      + '<div class="c8a-btns"><button type="button" class="c8a-follow' + (follow ? ' on' : '') + '" data-act="follow">📍 ' + (follow ? 'Sledujem' : 'Sledovať na mape') + '</button><button type="button" class="c8a-close" data-act="close">✕ Zavrieť</button></div>';
+  }
+
+  async function open(){
+    const box = $('c8air');
+    box.classList.add('on'); openFlag = true;
+    try{ history.pushState({ c8air:1 }, ''); }catch(_){}
+    chips();
+    $('c8a-rad').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.r === radius));
+    try{ await loadLeaflet(); }catch(_){ msg('Mapu sa nepodarilo načítať. Skontroluj internet.'); return; }
+    if(!map){
+      map = L.map('c8a-map', { zoomControl:false, attributionControl:true, worldCopyJump:true });
+      L.control.zoom({ position:'bottomright' }).addTo(map);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:18, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ✈️ ADS-B: adsb.lol, adsb.fi, airplanes.live' }).addTo(map);
+      map.attributionControl.setPrefix(false);
+      layer = L.layerGroup().addTo(map);
+      map.on('click', closeSheet);
+      map.on('dragstart', () => { if(follow){ follow = false; fillSheet(); } });
+    }
+    setTimeout(() => map.invalidateSize(), 60);
+    setMode(mode);
+    clearInterval(tick); tick = setInterval(step, 1000);
+  }
+  function close(fromPop){
+    if(!openFlag) return;
+    openFlag = false; clearTimeout(timer); clearInterval(tick);
+    closeSheet(); $('c8air').classList.remove('on');
+    if(!fromPop){ try{ if(history.state && history.state.c8air) history.back(); }catch(_){} }
+  }
+  window.c8AirOpen = open;
+  // tlačidlo „✈️ Lietadlá“ v mojom profile pod „Vytvor životopis“
+  function airBtn(){
+    const cv = document.getElementById('c8cv-btn');
+    if(!cv || !cv.parentNode) return;
+    let b = document.getElementById('c8air-btn');
+    if(!b){ b = document.createElement('button'); b.type = 'button'; b.id = 'c8air-btn'; b.className = 'c8cv-btn c8air-btn'; b.onclick = open; }
+    if(b.previousElementSibling !== cv) cv.parentNode.insertBefore(b, cv.nextSibling);
+    b.textContent = '✈️ ' + ((typeof t === 'function') ? t('Lietadlá') : 'Lietadlá');
+    b.style.display = cv.style.display === 'none' ? 'none' : 'inline-flex';
+  }
+  try{
+    const _rp2 = window.renderProfile;
+    if(typeof _rp2 === 'function'){ window.renderProfile = renderProfile = function(){ try{ return _rp2.apply(this, arguments); } finally { try{ airBtn(); }catch(_){} } }; }
+  }catch(_){}
+  window.addEventListener('popstate', () => { if(openFlag) close(true); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && openFlag){ if(sel) closeSheet(); else close(); } });
+  document.addEventListener('visibilitychange', () => { if(!document.hidden && openFlag) refresh(); });
+  $('c8a-back').addEventListener('click', () => close());
+  $('c8a-seg').addEventListener('click', e => { const b = e.target.closest('button'); if(b && b.dataset.m !== mode) setMode(b.dataset.m); });
+  $('c8a-rad').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    radius = +b.dataset.r; ls.set('r', radius);
+    $('c8a-rad').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+    clearPlanes(); showNear(); refresh();
+  });
+  $('c8a-chips').addEventListener('click', e => {
+    const b = e.target.closest('.c8a-chip'); if(!b) return;
+    const k = b.dataset.k; if(hidden.has(k)) hidden.delete(k); else hidden.add(k);
+    ls.set('hide', [...hidden]); chips();
+    if(lastData){ clearPlanesKeep(); apply(lastData); }
+  });
+  function clearPlanesKeep(){ const d = lastData; clearPlanes(); lastData = d; }
+  $('c8a-list').addEventListener('click', e => {
+    const r = e.target.closest('.c8a-row'); if(!r) return;
+    const p = planes.get(r.dataset.h); if(!p) return;
+    openSheet(r.dataset.h); if(map) map.panTo(pos(p));
+  });
+  $('c8a-sheet').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    if(b.dataset.act === 'close') closeSheet();
+    if(b.dataset.act === 'follow'){ follow = !follow; fillSheet(); if(follow) step(); }
+  });
+})();
+</script>
+<!-- =================== koniec: Lietadlá =================== -->
+
 </body>
 </html>
