@@ -14190,20 +14190,40 @@ let camOff = false;
 let ringAudioCtx = null;
 let ringInterval = null;
 
+/* ---------- ZVONENIE PRI PRICHÁDZAJÚCOM HOVORE ----------
+   „Retro – z vedľajšej izby“: starý telefón so zvončekom, tlmený (ako keby
+   zvonil za dverami) – dve zazvonenia „brr-brr“, potom pauza, každé 3 s.
+   Vytvorené kódom (Web Audio), bez zvukového súboru. */
+function ringPluck(freq, t, dur, vol, dest){
+  const osc = ringAudioCtx.createOscillator();
+  const gain = ringAudioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(vol, t + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(gain).connect(dest);
+  osc.start(t);
+  osc.stop(t + dur);
+}
+
 function playRingBeep(){
   if(!ringAudioCtx) return;
-  const now = ringAudioCtx.currentTime;
-  [880, 660].forEach((freq, i)=>{
-    const osc = ringAudioCtx.createOscillator();
-    const gain = ringAudioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0, now + i*0.35);
-    gain.gain.linearRampToValueAtTime(0.25, now + i*0.35 + 0.03);
-    gain.gain.linearRampToValueAtTime(0, now + i*0.35 + 0.3);
-    osc.connect(gain).connect(ringAudioCtx.destination);
-    osc.start(now + i*0.35);
-    osc.stop(now + i*0.35 + 0.32);
+  const now = ringAudioCtx.currentTime + 0.02;
+  // tlmenie „za dverami“ = dolnopriepustný filter 900 Hz
+  const muffle = ringAudioCtx.createBiquadFilter();
+  muffle.type = 'lowpass';
+  muffle.frequency.value = 900;
+  muffle.Q.value = 0.7;
+  muffle.connect(ringAudioCtx.destination);
+  // dve zazvonenia po 0,45 s; každé = rýchle striedanie dvoch kovových tónov (údery kladivka)
+  [0, 0.6].forEach(start=>{
+    for(let k = 0; k * 0.045 < 0.45; k++){
+      const freq = k % 2 ? 1150 : 950;
+      const t = now + start + k * 0.045;
+      ringPluck(freq, t, 0.14, 0.3, muffle);
+      ringPluck(freq * 2.7, t, 0.05, 0.09, muffle);
+    }
   });
 }
 
@@ -14214,11 +14234,51 @@ function startRingtone(){
   }catch(e){ return; }
   stopRingtone();
   playRingBeep();
-  ringInterval = setInterval(playRingBeep, 1500);
+  ringInterval = setInterval(playRingBeep, 3000);
 }
 
 function stopRingtone(){
   if(ringInterval){ clearInterval(ringInterval); ringInterval = null; }
+  stopRingback(); // pri zavesení / prijatí stíchne aj vyzváňanie volajúceho
+}
+
+/* ---------- VYZVÁŇANIE PRE VOLAJÚCEHO ----------
+   Toto počuje ten, kto volá, kým druhý nezdvihne: „Klasické vyzváňanie“ –
+   tón 425 Hz na 1 s, potom 4 s ticho (ako u operátora). Vytvorené kódom,
+   bez zvukového súboru. Po 60 s stíchne samo (poistka). */
+let ringbackInterval = null;
+let ringbackTimeout = null;
+
+function playRingbackTone(){
+  if(!ringAudioCtx) return;
+  const t = ringAudioCtx.currentTime + 0.02;
+  const osc = ringAudioCtx.createOscillator();
+  const gain = ringAudioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = 425;
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(0.18, t + 0.02);
+  gain.gain.setValueAtTime(0.18, t + 0.95);
+  gain.gain.linearRampToValueAtTime(0, t + 1.0);
+  osc.connect(gain).connect(ringAudioCtx.destination);
+  osc.start(t);
+  osc.stop(t + 1.05);
+}
+
+function startRingback(){
+  try{
+    if(!ringAudioCtx) ringAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(ringAudioCtx.state === 'suspended') ringAudioCtx.resume().catch(()=>{});
+  }catch(e){ return; }
+  stopRingback();
+  playRingbackTone();
+  ringbackInterval = setInterval(playRingbackTone, 5000);
+  ringbackTimeout = setTimeout(stopRingback, 60000);
+}
+
+function stopRingback(){
+  if(ringbackInterval){ clearInterval(ringbackInterval); ringbackInterval = null; }
+  if(ringbackTimeout){ clearTimeout(ringbackTimeout); ringbackTimeout = null; }
 }
 
 function callDocRef(id){ return db.collection('calls').doc(id); }
@@ -14302,6 +14362,7 @@ async function startCall(user, type){
   }
 
   openCallScreen('Vytáčam...');
+  startRingback(); // volajúci počuje vyzváňanie, kým druhý nezdvihne
 
   pc = new RTCPeerConnection(RTC_CONFIG);
   localStream.getTracks().forEach(track=>pc.addTrack(track, localStream));
@@ -14336,6 +14397,7 @@ async function startCall(user, type){
   callDocUnsub = callDoc.onSnapshot(async doc=>{
     const d = doc.data();
     if(!d) return;
+    if(d.status !== 'ringing') stopRingback(); // zdvihol / odmietol / ukončil → vyzváňanie stíchne
     if(d.status === 'accepted' && d.answer && pc && !pc.currentRemoteDescription){
       await pc.setRemoteDescription(new RTCSessionDescription(d.answer));
       document.getElementById('call-status').textContent = 'Pripájam...';
@@ -21229,7 +21291,7 @@ c8ApplyFriendsView();
     try{
       if(keys.size && !lock && 'wakeLock' in navigator && document.visibilityState === 'visible'){
         lock = await navigator.wakeLock.request('screen');
-        lock.addEventListener('release', ()=>{ lock = null; });
+        lock.addEventListener('release', ()=>{ lock = null; if(keys.size) setTimeout(apply, 1000); }); // systém zámok zrušil počas hovoru → vyžiadaj znova
       } else if(!keys.size && lock){ const l = lock; lock = null; await l.release(); }
     }catch(_){ lock = null; }
     busy = false;
@@ -27015,6 +27077,262 @@ c8ApplyUsersView();
 })();
 </script>
 <!-- =================== koniec: Lietadlá =================== -->
+
+<!-- =================== Hovory: indikátor reči + zmenšený hovor =================== -->
+<style id="c8spk-style">
+  /* Farby indikátora reči:
+     oranžová = hovorí druhý človek (hlasový hovor, paličky aj vo videohovore)
+     fialová  = žiara okolo videa druhého človeka, keď hovorí
+     zelená   = hovoríš ty */
+  :root{ --c8spk-him:#FF8A1F; --c8spk-vid:#6C5CFF; --c8spk-me:#2EE07F; }
+
+  /* --- hlasový hovor: pulz okolo avatara druhého človeka --- */
+  #call-avatar-big{position:relative;transition:box-shadow .25s;}
+  #call-remote-audio-avatar.c8-talk #call-avatar-big{
+    animation:c8spkPulse 1.8s ease-out infinite;
+  }
+  @keyframes c8spkPulse{
+    0%  {box-shadow:0 0 0 4px var(--c8spk-him),0 0 22px 4px rgba(255,138,31,.55),0 0 0 4px rgba(255,138,31,.55);}
+    50% {box-shadow:0 0 0 4px var(--c8spk-him),0 0 34px 8px rgba(255,138,31,.75),0 0 0 26px rgba(255,138,31,.18);}
+    100%{box-shadow:0 0 0 4px var(--c8spk-him),0 0 22px 4px rgba(255,138,31,.55),0 0 0 44px rgba(255,138,31,0);}
+  }
+
+  /* paličky (ekvalizér) – spoločné pre všetky miesta */
+  .c8spk-bars{display:inline-flex;align-items:center;gap:3px;height:18px;}
+  .c8spk-bars i{display:block;width:3px;height:18px;border-radius:2px;background:currentColor;transform:scaleY(.25);}
+  .c8spk-on .c8spk-bars i{animation:c8spkBar .9s ease-in-out infinite;}
+  .c8spk-bars i:nth-child(2){animation-delay:.15s !important;}
+  .c8spk-bars i:nth-child(3){animation-delay:.3s !important;}
+  .c8spk-bars i:nth-child(4){animation-delay:.45s !important;}
+  .c8spk-bars i:nth-child(5){animation-delay:.6s !important;}
+  @keyframes c8spkBar{0%,100%{transform:scaleY(.25);}50%{transform:scaleY(1);}}
+
+  /* bublina „Hovorí…“ pod menom v hlasovom hovore */
+  .c8spk-pill{
+    display:none;align-items:center;gap:10px;margin-top:8px;padding:8px 16px;border-radius:999px;
+    background:rgba(255,138,31,.2);color:var(--c8spk-him);font-size:14px;font-weight:600;
+  }
+  .c8spk-pill span{color:#FFE2C7;}
+  #call-remote-audio-avatar.c8-talk .c8spk-pill{display:inline-flex;}
+
+  /* riadok „Ty“ v hlasovom hovore – zelený, keď hovoríš */
+  .c8spk-me{
+    position:absolute;left:16px;right:16px;bottom:96px;display:none;align-items:center;gap:12px;
+    padding:10px 14px;border-radius:18px;background:rgba(255,255,255,.07);border:1.5px solid transparent;
+    color:#fff;transition:background .2s,border-color .2s;z-index:2;max-width:480px;margin:0 auto;
+  }
+  .call-modal.c8spk-audio .c8spk-me{display:flex;}
+  .c8spk-me .c8spk-me-av{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;background:#4A3F2B;background-size:cover;background-position:center;}
+  .c8spk-me .c8spk-me-txt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .c8spk-me b{font-size:15px;}
+  .c8spk-me small{font-size:12px;font-weight:600;color:#A3A8C4;}
+  .c8spk-me .c8spk-bars{color:var(--c8spk-me);visibility:hidden;}
+  .c8spk-me .c8spk-mic{position:relative;width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.12);color:#fff;}
+  .c8spk-me.c8spk-on{background:rgba(46,224,127,.12);border-color:rgba(46,224,127,.55);animation:c8spkRow 1.4s ease-in-out infinite;}
+  .c8spk-me.c8spk-on small{color:#7DF0B0;}
+  .c8spk-me.c8spk-on .c8spk-bars{visibility:visible;}
+  .c8spk-me.c8spk-on .c8spk-mic{background:var(--c8spk-me);color:#0E2A1B;animation:c8spkMic 1.2s ease-out infinite;}
+  .c8spk-me.c8spk-muted small{color:#FF7AAE;}
+  @keyframes c8spkRow{0%,100%{box-shadow:0 0 6px rgba(46,224,127,.35);}50%{box-shadow:0 0 26px rgba(46,224,127,.6);}}
+  @keyframes c8spkMic{0%{box-shadow:0 0 0 0 rgba(46,224,127,.6);}100%{box-shadow:0 0 0 14px rgba(46,224,127,0);}}
+
+  /* --- videohovor: fialová žiara okolo videa druhého, zelený okraj tvojho okienka --- */
+  .c8spk-vglow{position:absolute;inset:0;pointer-events:none;display:none;z-index:1;}
+  .call-modal.c8spk-video.c8spk-him .c8spk-vglow{display:block;animation:c8spkGlow 1.4s ease-in-out infinite;}
+  @keyframes c8spkGlow{
+    0%,100%{box-shadow:inset 0 0 0 5px rgba(108,92,255,1),inset 0 0 48px rgba(108,92,255,.6);}
+    50%    {box-shadow:inset 0 0 0 3px rgba(108,92,255,.7),inset 0 0 14px rgba(108,92,255,.25);}
+  }
+  #call-local-video{transition:border-color .2s;}
+  .call-modal.c8spk-video.c8spk-meon #call-local-video{border:3px solid var(--c8spk-me);animation:c8spkPip 1.4s ease-in-out infinite;}
+  @keyframes c8spkPip{0%,100%{box-shadow:0 0 8px rgba(46,224,127,.45);}50%{box-shadow:0 0 30px rgba(46,224,127,.8);}}
+  .c8spk-vpills{position:absolute;left:16px;bottom:100px;display:none;flex-direction:column;align-items:flex-start;gap:8px;z-index:2;}
+  .call-modal.c8spk-video .c8spk-vpills{display:flex;}
+  .c8spk-vpill{display:none;align-items:center;gap:10px;padding:8px 16px 8px 12px;border-radius:999px;
+    background:rgba(16,20,42,.78);color:#fff;font-size:14px;font-weight:600;}
+  .c8spk-vpill.c8spk-on{display:inline-flex;}
+  .c8spk-vpill.him .c8spk-bars{color:var(--c8spk-him);}
+  .c8spk-vpill.me{border:1.5px solid rgba(46,224,127,.55);}
+  .c8spk-vpill.me .c8spk-bars{color:var(--c8spk-me);}
+  .c8spk-vpill.me span{color:#7DF0B0;}
+
+  /* --- tlačidlo zmenšiť hovor --- */
+  .c8spk-minbtn{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:14px;z-index:3;width:44px;height:44px;border-radius:50%;
+    background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+
+  /* --- zmenšený hovor: pás hore cez celú appku --- */
+  .c8spk-bar{
+    position:fixed;left:0;right:0;top:0;z-index:740;display:none;align-items:center;gap:12px;
+    padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:#10142A;color:#fff;cursor:pointer;
+    box-shadow:0 4px 18px rgba(0,0,0,.25);font-family:inherit;border:none;width:100%;text-align:left;
+  }
+  .c8spk-bar.show{display:flex;}
+  .c8spk-bar .c8spk-bar-av{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:800;background:#2A3160;background-size:cover;background-position:center;border:2px solid #5D6386;box-sizing:border-box;}
+  .c8spk-bar .c8spk-bar-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .c8spk-bar b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .c8spk-bar small{font-size:12px;font-weight:600;color:#A3A8C4;}
+  .c8spk-bar .c8spk-bars{height:22px;color:#5D6386;}
+  .c8spk-bar .c8spk-bars i{width:4px;height:22px;}
+  .c8spk-bar.him .c8spk-bars,.c8spk-bar.him small{color:var(--c8spk-him);}
+  .c8spk-bar.him .c8spk-bar-av{border-color:var(--c8spk-him);}
+  .c8spk-bar.me .c8spk-bars,.c8spk-bar.me small{color:var(--c8spk-me);}
+  .c8spk-bar.me .c8spk-bar-av{border-color:var(--c8spk-me);}
+</style>
+<script id="c8spk-script">
+/* Indikátor reči v hovore a videohovore:
+   - meria hlasitosť tvojho mikrofónu (localStream) a zvuku druhého človeka (call-remote-video.srcObject)
+     cez Web Audio AnalyserNode – nič sa nenahráva ani neposiela, len sa počíta hlasitosť v prehliadači
+   - podľa toho zapína triedy, ktoré spúšťajú animácie (oranžová / fialová / zelená)
+   - pridáva tlačidlo „zmenšiť hovor“ – hovor beží ďalej a hore sa ukáže pás s paličkami */
+(function(){
+  const modal = document.getElementById('call-modal');
+  const screen = modal && modal.querySelector('.call-screen');
+  const audioBox = document.getElementById('call-remote-audio-avatar');
+  const statusEl = document.getElementById('call-status');
+  const remoteVideo = document.getElementById('call-remote-video');
+  if(!modal || !screen || !audioBox || !statusEl || !remoteVideo) return;
+
+  const BARS = n => '<span class="c8spk-bars">' + '<i></i>'.repeat(n) + '</span>';
+  const MIC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10v1a7 7 0 0 0 14 0v-1"></path><path d="M12 18v4"></path></svg>';
+
+  // --- prvky, ktoré vložíme do existujúcej obrazovky hovoru ---
+  const pill = document.createElement('div');          // „Hovorí…“ pod menom (hlasový hovor)
+  pill.className = 'c8spk-pill c8spk-on';
+  pill.innerHTML = BARS(4) + '<span>Hovorí…</span>';
+  statusEl.insertAdjacentElement('afterend', pill);
+
+  const me = document.createElement('div');            // riadok „Ty“ (hlasový hovor)
+  me.className = 'c8spk-me';
+  me.innerHTML = '<div class="c8spk-me-av"></div><div class="c8spk-me-txt"><b>Ty</b><small>Mikrofón zapnutý</small></div>' + BARS(5) + '<div class="c8spk-mic">' + MIC + '</div>';
+  screen.appendChild(me);
+  const meLabel = me.querySelector('small');
+
+  const vglow = document.createElement('div');         // fialová žiara okolo videa
+  vglow.className = 'c8spk-vglow';
+  screen.appendChild(vglow);
+
+  const vpills = document.createElement('div');        // bubliny vo videohovore
+  vpills.className = 'c8spk-vpills';
+  vpills.innerHTML = '<div class="c8spk-vpill him">' + BARS(4) + '<span class="c8spk-vname">hovorí</span></div>'
+                   + '<div class="c8spk-vpill me">' + BARS(5) + '<span>Hovoríš…</span></div>';
+  screen.appendChild(vpills);
+  const vHim = vpills.querySelector('.him'), vMe = vpills.querySelector('.me'), vName = vpills.querySelector('.c8spk-vname');
+
+  const minBtn = document.createElement('button');     // zmenšiť hovor
+  minBtn.className = 'c8spk-minbtn';
+  minBtn.title = 'Zmenšiť hovor';
+  minBtn.setAttribute('aria-label', 'Zmenšiť hovor');
+  minBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>';
+  screen.appendChild(minBtn);
+
+  const bar = document.createElement('button');        // pás hore pri zmenšenom hovore
+  bar.className = 'c8spk-bar';
+  bar.setAttribute('aria-label', 'Späť do hovoru');
+  bar.innerHTML = '<div class="c8spk-bar-av"></div><div class="c8spk-bar-txt"><b></b><small></small></div>' + BARS(5);
+  document.body.appendChild(bar);
+  const barAv = bar.querySelector('.c8spk-bar-av'), barName = bar.querySelector('b'), barLabel = bar.querySelector('small');
+
+  let minimized = false;
+  minBtn.addEventListener('click', ()=>{ minimized = true; modal.classList.remove('show'); bar.classList.add('show'); });
+  bar.addEventListener('click', ()=>{ minimized = false; bar.classList.remove('show'); modal.classList.add('show'); });
+
+  // --- meranie hlasitosti ---
+  let ctx = null, remA = null, locA = null, remStream = null, locStream = null, timer = null;
+  let himOn = false, meOn = false, himLast = 0, meLast = 0, startTs = 0;
+  const HOLD = 350;        // ms – ako dlho ešte svieti po stíchnutí (aby to neblikalo)
+  const LIMIT = 0.018;     // prah hlasitosti (RMS); ak to bude príliš/málo citlivé, uprav toto číslo
+
+  function analyser(stream){
+    try{
+      if(!stream || !stream.getAudioTracks().length) return null;
+      if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if(ctx.state === 'suspended') ctx.resume().catch(()=>{});
+      const src = ctx.createMediaStreamSource(stream);
+      const an = ctx.createAnalyser(); an.fftSize = 512;
+      src.connect(an);                                 // NEpripájame do reproduktora – len meriame
+      return { an, src, buf: new Float32Array(an.fftSize) };
+    }catch(_){ return null; }
+  }
+  function level(a){
+    if(!a) return 0;
+    a.an.getFloatTimeDomainData(a.buf);
+    let s = 0; for(let i = 0; i < a.buf.length; i++) s += a.buf[i] * a.buf[i];
+    return Math.sqrt(s / a.buf.length);
+  }
+  function drop(a){ try{ a && a.src.disconnect(); }catch(_){} }
+
+  function tick(){
+    const now = Date.now();
+    // pripoj analyzér, keď sa objaví zvuk druhého / tvoj mikrofón
+    const rs = remoteVideo.srcObject;
+    if(rs !== remStream){ drop(remA); remStream = rs; remA = analyser(rs); if(rs && !startTs) startTs = now; }
+    const ls = (typeof localStream !== 'undefined') ? localStream : null;
+    if(ls !== locStream){ drop(locA); locStream = ls; locA = analyser(ls); }
+
+    const muted = (typeof micMuted !== 'undefined') && micMuted;
+    if(level(remA) > LIMIT) himLast = now;
+    if(!muted && level(locA) > LIMIT) meLast = now;
+    himOn = now - himLast < HOLD;
+    meOn = !muted && now - meLast < HOLD;
+    render(muted);
+  }
+
+  function render(muted){
+    const video = (typeof currentCallType !== 'undefined') && currentCallType === 'video';
+    const peer = (typeof currentCallPeer !== 'undefined' && currentCallPeer) ? currentCallPeer : null;
+    const first = peer && peer.name ? String(peer.name).split(' ')[0] : '';
+    modal.classList.toggle('c8spk-video', video);
+    modal.classList.toggle('c8spk-audio', !video);
+    modal.classList.toggle('c8spk-him', himOn);
+    modal.classList.toggle('c8spk-meon', meOn);
+    audioBox.classList.toggle('c8-talk', himOn && !video);
+
+    me.classList.toggle('c8spk-on', meOn);
+    me.classList.toggle('c8spk-muted', muted);
+    meLabel.textContent = muted ? 'Mikrofón stlmený' : (meOn ? 'Hovoríš…' : 'Mikrofón zapnutý');
+
+    vHim.classList.toggle('c8spk-on', himOn);
+    vMe.classList.toggle('c8spk-on', meOn);
+    vName.textContent = (first || 'Druhý') + ' hovorí';
+
+    bar.classList.toggle('him', himOn);
+    bar.classList.toggle('me', meOn && !himOn);
+    bar.classList.toggle('c8spk-on', himOn || meOn);
+    let t = '';
+    if(startTs){ const s = Math.floor((Date.now() - startTs) / 1000); t = ' · ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+    barName.textContent = (peer ? peer.name : 'Hovor') + t;
+    barLabel.textContent = (himOn ? (first || 'Druhý') + ' hovorí…' : meOn ? 'Hovoríš…' : 'Ťukni pre návrat do hovoru');
+  }
+
+  function start(){
+    stop();
+    startTs = 0; himLast = meLast = 0; minimized = false;
+    try{ if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)(); if(ctx.state === 'suspended') ctx.resume().catch(()=>{}); }catch(_){}
+    try{ applyProfileAvatar(me.querySelector('.c8spk-me-av'), currentUser); }catch(_){}
+    try{ applyProfileAvatar(barAv, currentCallPeer); }catch(_){}
+    timer = setInterval(tick, 60);
+  }
+  function stop(){
+    if(timer){ clearInterval(timer); timer = null; }
+    drop(remA); drop(locA); remA = locA = null; remStream = locStream = null;
+    himOn = meOn = false;
+    modal.classList.remove('c8spk-him', 'c8spk-meon');
+    audioBox.classList.remove('c8-talk');
+    me.classList.remove('c8spk-on'); vHim.classList.remove('c8spk-on'); vMe.classList.remove('c8spk-on');
+    bar.classList.remove('show'); minimized = false;
+  }
+
+  // napojenie na existujúce funkcie hovoru (rovnako ako c8wake-script)
+  try{
+    if(typeof openCallScreen === 'function'){ const o = openCallScreen; openCallScreen = function(){ const r = o.apply(this, arguments); start(); return r; }; }
+    if(typeof endCall === 'function'){ const e = endCall; endCall = function(){ stop(); return e.apply(this, arguments); }; }
+  }catch(_){}
+})();
+</script>
+<!-- =================== koniec: Hovory – indikátor reči =================== -->
 
 </body>
 </html>
