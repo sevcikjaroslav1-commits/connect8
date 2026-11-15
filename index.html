@@ -14400,7 +14400,8 @@ async function startCall(user, type){
     if(d.status !== 'ringing') stopRingback(); // zdvihol / odmietol / ukončil → vyzváňanie stíchne
     if(d.status === 'accepted' && d.answer && pc && !pc.currentRemoteDescription){
       await pc.setRemoteDescription(new RTCSessionDescription(d.answer));
-      document.getElementById('call-status').textContent = 'Pripájam...';
+      // „Pripájam...“ len kým sa spojenie naozaj nenadviaže (inak by tam ostalo počas celého hovoru)
+      if(pc && pc.connectionState !== 'connected') document.getElementById('call-status').textContent = 'Pripájam...';
     }
     if(d.status === 'declined'){
       document.getElementById('call-status').textContent = 'Hovor odmietnutý';
@@ -14489,6 +14490,8 @@ function setupPeerConnectionEvents(){
     }
   };
   pc.onconnectionstatechange = ()=>{
+    // hovor je spojený → zmaž „Vytáčam...“ / „Pripájam...“ pod menom
+    if(pc && pc.connectionState === 'connected') document.getElementById('call-status').textContent = '';
     if(pc && (pc.connectionState === 'disconnected' || pc.connectionState === 'failed')){
       endCall(true);
     }
@@ -27106,6 +27109,13 @@ c8ApplyUsersView();
   .c8spk-bars i:nth-child(4){animation-delay:.45s !important;}
   .c8spk-bars i:nth-child(5){animation-delay:.6s !important;}
   @keyframes c8spkBar{0%,100%{transform:scaleY(.25);}50%{transform:scaleY(1);}}
+  /* farba paličiek napevno (iné štýly appky ju inak prebili na svetlú) */
+  .c8spk-pill .c8spk-bars i,
+  .c8spk-vpill.him .c8spk-bars i,
+  .c8spk-bar.him .c8spk-bars i{background:#FF8A1F !important;}
+  .c8spk-me .c8spk-bars i,
+  .c8spk-vpill.me .c8spk-bars i,
+  .c8spk-bar.me .c8spk-bars i{background:#2EE07F !important;}
 
   /* bublina „Hovorí…“ pod menom v hlasovom hovore */
   .c8spk-pill{
@@ -27272,6 +27282,11 @@ c8ApplyUsersView();
     const ls = (typeof localStream !== 'undefined') ? localStream : null;
     if(ls !== locStream){ drop(locA); locStream = ls; locA = analyser(ls); }
 
+    // poistka: keď je spojenie hotové, pod menom už nemá svietiť „Pripájam...“
+    try{
+      const st = (typeof pc !== 'undefined' && pc) ? (pc.connectionState || pc.iceConnectionState) : '';
+      if((st === 'connected' || st === 'completed') && /Pripájam|Vytáčam/.test(statusEl.textContent)) statusEl.textContent = '';
+    }catch(_){}
     const muted = (typeof micMuted !== 'undefined') && micMuted;
     if(level(remA) > LIMIT) himLast = now;
     if(!muted && level(locA) > LIMIT) meLast = now;
