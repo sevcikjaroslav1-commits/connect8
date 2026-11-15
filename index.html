@@ -26206,6 +26206,10 @@ c8ApplyUsersView();
 .c8a-mapw{position:relative;flex:1;min-height:200px;}
 #c8a-map{position:absolute;inset:0;background:#E9EEF8;}
 .c8a-cnt{position:absolute;left:10px;top:10px;z-index:500;background:#fff;border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.12);pointer-events:none;}
+.c8a-cnt.pills{background:none;box-shadow:none;padding:0;right:92px;display:flex;flex-wrap:wrap;gap:5px;}
+.c8a-cnt .pl{display:flex;align-items:center;gap:3px;background:#fff;border-radius:10px;padding:3px 8px 3px 4px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.c8a-cnt .pl svg{display:block;width:20px;height:20px;}
+.c8a-cnt .pl.km{color:#6B6F86;font-weight:700;padding:3px 8px;}
 .c8a-upd{position:absolute;right:10px;top:10px;z-index:500;background:rgba(255,255,255,.92);border-radius:10px;padding:6px 9px;font-size:11px;font-weight:700;color:#6B6F86;pointer-events:none;}
 .c8a-msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:600;background:rgba(22,24,43,.86);color:#fff;border-radius:14px;padding:12px 16px;font-size:13.5px;font-weight:600;max-width:80%;text-align:center;display:none;}
 .c8a-list{flex:none;max-height:24vh;transition:max-height .2s ease;overflow:auto;background:var(--card,#fff);border-top:1px solid var(--border,#E6E4F2);padding:6px 12px calc(6px + env(safe-area-inset-bottom,0px));}
@@ -26488,7 +26492,7 @@ c8ApplyUsersView();
   }
   function clearPlanes(){
     planes.forEach(p => { if(p.mk) layer.removeLayer(p.mk); if(p.tl) layer.removeLayer(p.tl); });
-    planes.clear(); lastData = null; $('c8a-list').innerHTML = ''; $('c8a-cnt').textContent = '✈️ …';
+    planes.clear(); lastData = null; $('c8a-list').innerHTML = ''; $('c8a-cnt').classList.remove('pills'); $('c8a-cnt').textContent = '✈️ …';
   }
 
   async function refresh(){
@@ -26567,10 +26571,11 @@ c8ApplyUsersView();
     if(lastOk) $('c8a-upd').textContent = 'pred ' + Math.max(0, Math.round((Date.now() - lastOk) / 1000)) + ' s';
   }
   function counts(){
-    let n = 0, h = 0; planes.forEach(p => { if(p.a.k === 'heli') h++; else n++; });
-    let t = '✈️ ' + n + (h ? ' · 🚁 ' + h : '');
-    if(mode === 'near') t += ' do ' + radius + ' km';
-    $('c8a-cnt').textContent = t;
+    const c = {}; planes.forEach(p => { const k = KINDS[p.a.k] ? p.a.k : 'jet'; c[k] = (c[k] || 0) + 1; });
+    let h = ORDER.filter(k => c[k]).map(k => '<div class="pl" title="' + KINDS[k].n + '">' + svg(k, 20) + c[k] + '</div>').join('');
+    if(!h) h = '<div class="pl">' + svg('jet', 20) + '0</div>';
+    if(mode === 'near') h += '<div class="pl km">do ' + radius + ' km</div>';
+    const el = $('c8a-cnt'); el.classList.add('pills'); el.innerHTML = h;
   }
   function list(){
     const arr = [];
