@@ -3631,7 +3631,7 @@ body.c8v-full #view-video .video-comments-modal{position:fixed;}
       </div>
       <!-- Lietadlá – mapa lietadiel naživo (len PC, ľavý panel) -->
       <div class="c8l-item" id="c8l-air" onclick="c8AirOpen()">
-        <span class="c8l-ic"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#EAB308"/><g transform="translate(12,12) rotate(45) scale(.62)" fill="#fff"><path d="M0,-11 L2,-3 L10,2 L10,4 L2,2 L1.5,8 L4,10 L4,11.5 L0,10.5 L-4,11.5 L-4,10 L-1.5,8 L-2,2 L-10,4 L-10,2 L-2,-3 Z"/></g></svg></span><span class="label">Lietadlá</span>
+        <span class="c8l-ic"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#EAB308"/><g transform="translate(12,12) rotate(45) scale(.62)" fill="#fff"><path d="M0,-11 L2,-3 L10,2 L10,4 L2,2 L1.5,8 L4,10 L4,11.5 L0,10.5 L-4,11.5 L-4,10 L-1.5,8 L-2,2 L-10,4 L-10,2 L-2,-3 Z"/></g></svg></span><span class="label">Lietadlá<span class="c8l-ic2"><svg viewBox="-14 -14 28 28"><rect x="-12" y="-12" width="24" height="24" rx="6.5" fill="#2563EB"/><rect x="-6.2" y="-8.6" width="12.4" height="13.6" rx="3.2" fill="#fff"/><rect x="-4.3" y="-6.6" width="8.6" height="4.6" rx="1.2" fill="#2563EB"/><circle cx="-2.9" cy="1.6" r="1.25" fill="#2563EB"/><circle cx="2.9" cy="1.6" r="1.25" fill="#2563EB"/><path d="M-4.6,6.4 L-6.8,10 M4.6,6.4 L6.8,10" stroke="#fff" stroke-width="1.9" stroke-linecap="round" fill="none"/></svg></span>Vlaky</span>
       </div>
     <div class="c8g-card" id="c8g-pc" data-c8globe>
         <canvas class="c8g-canvas" role="img" aria-label="Zemeguľa s krajinami používateľov connect8"></canvas>
@@ -26228,6 +26228,8 @@ c8ApplyUsersView();
 .c8a-ic{width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:transform .4s linear;}
 .c8a-ic svg{width:26px;height:26px;display:block;overflow:visible;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25));}
 .c8a-ic.sel svg{width:34px;height:34px;}
+.c8a-tic svg{width:19px;height:19px;}
+.c8a-tic.sel svg{width:28px;height:28px;}
 .c8a-ic.sel{border-radius:50%;background:rgba(250,204,21,.45);box-shadow:0 0 0 2px #EAB308;}
 .c8a-me{width:16px;height:16px;border-radius:50%;background:#0EA5E9;border:3px solid #fff;box-shadow:0 0 0 7px rgba(14,165,233,.22);}
 .c8a-sheet{position:absolute;left:0;right:0;bottom:0;z-index:1000;visibility:hidden;background:#fff;border-radius:22px 22px 0 0;padding:10px 16px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(20,20,60,.18);transform:translateY(calc(100% + 40px));transition:transform .25s ease,visibility .25s;color:#16182B;}
@@ -26294,17 +26296,37 @@ c8ApplyUsersView();
   .c8a-bar{flex-direction:row;align-items:center;flex-wrap:wrap;}
   .c8a-seg{width:320px;}
 }
+.c8a-what{background:#F3F2F9;}
+.c8a-what button.on{background:#16182B;color:#fff;}
+.c8a-live.cp{color:#B45309;background:#FEF3C7;}
+.c8t-b{font-size:15px!important;letter-spacing:0!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.c8t-st{max-height:170px;overflow:auto;margin:4px 0 6px;padding:2px 4px 2px 24px;position:relative;}
+.c8t-s{position:relative;display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:4px 0;color:#9A9EB4;}
+.c8t-s:before{content:'';position:absolute;left:-17px;top:-4px;bottom:-4px;width:3px;background:#E6E4F2;}
+.c8t-s:first-child:before{top:50%;}
+.c8t-s:last-child:before{bottom:50%;}
+.c8t-s:after{content:'';position:absolute;left:-20px;top:50%;margin-top:-5px;width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid #C9C6DA;box-sizing:content-box;}
+.c8t-s.done{color:#4A4E66;}
+.c8t-s.done:before{background:#5B4CFF;}
+.c8t-s.done:after{background:#5B4CFF;border-color:#5B4CFF;}
+.c8t-s.now{color:#5B4CFF;font-weight:800;}
+.c8t-s.now:after{width:11px;height:11px;margin-top:-7.5px;left:-21px;border:3px solid #5B4CFF;}
+.c8t-note{font-size:11.5px;color:#92400E;background:#FFFBEB;border-radius:10px;padding:7px 10px;}
+@media(max-width:899px){ .c8t-st{max-height:104px;} }
+.c8l-ic2{display:inline-block;width:16px;height:16px;vertical-align:-3px;margin:0 3px 0 6px;}
+.c8l-ic2 svg{width:16px;height:16px;display:block;}
 /* tlačidlo v profile pod „Vytvor životopis“ – rovnaké ako životopis, len žlté */
 .c8cv-btn.c8air-btn{border-color:#EAB308;background:rgba(250,204,21,.16);color:#A16207;}
 </style>
 <div id="c8air" role="dialog" aria-modal="true" aria-label="Lietadlá">
   <div class="c8a-top">
     <button type="button" class="c8a-back" id="c8a-back" aria-label="Späť">‹</button>
-    <h2>✈️ Lietadlá</h2>
+    <h2 id="c8a-ttl">✈️ Lietadlá</h2>
     <span class="c8a-live" id="c8a-live">● NAŽIVO</span>
   </div>
   <div class="c8a-bar">
-    <div class="c8a-seg" id="c8a-seg"><button type="button" data-m="sk" class="on">🇸🇰 Slovensko</button><button type="button" data-m="near">📍 Nad mnou</button></div>
+    <div class="c8a-seg c8a-what" id="c8a-what"><button type="button" data-w="air" class="on">✈️ Lietadlá</button><button type="button" data-w="rail">🚆 Vlaky</button></div>
+    <div class="c8a-seg" id="c8a-seg"><button type="button" data-m="sk" class="on">🇸🇰 Slovensko</button><button type="button" data-m="near" id="c8a-nearbtn">📍 Nad mnou</button></div>
     <div class="c8a-near" id="c8a-near"><div class="c8a-place" id="c8a-place">📍 Zisťujem polohu…</div><div class="c8a-rad" id="c8a-rad"><button type="button" data-r="25">25 km</button><button type="button" data-r="50">50 km</button><button type="button" data-r="100" class="on">100 km</button></div></div>
     <div class="c8a-chips" id="c8a-chips"></div>
   </div>
@@ -26332,11 +26354,21 @@ c8ApplyUsersView();
     glider:{ n:'Vetroň',    c:'#0891B2', bg:'#E0F7FB', tag:'VETROŇ', s:'<path d="M-1.2,-7 L1.2,-7 L1,-2.2 L14,-1.4 L14,0.2 L1,0.2 L0.7,8 L3.5,8.6 L3.5,9.8 L-3.5,9.8 L-3.5,8.6 L-0.7,8 L-1,0.2 L-14,0.2 L-14,-1.4 L-1,-2.2 Z"/>' },
     mil:   { n:'Vojenské',  c:'#8B5A2B', bg:'#F6EDE3', tag:'VOJENSKÉ', s:'<path d="M0,-11 L2.5,-2 L9,4 L9,6 L2,4 L1.5,8 L4.5,10.5 L4.5,11.5 L0,10.5 L-4.5,11.5 L-4.5,10.5 L-1.5,8 L-2,4 L-9,6 L-9,4 L-2.5,-2 Z"/>' }
   };
+  const TRAIN = '<rect x="-6.2" y="-8.6" width="12.4" height="13.6" rx="3.2" fill="#fff"/><rect x="-4.3" y="-6.6" width="8.6" height="4.6" rx="1.2" fill="CC"/><circle cx="-2.9" cy="1.6" r="1.25" fill="CC"/><circle cx="2.9" cy="1.6" r="1.25" fill="CC"/><path d="M-4.6,6.4 L-6.8,10 M4.6,6.4 L6.8,10" stroke="#fff" stroke-width="1.9" stroke-linecap="round" fill="none"/>';
+  Object.assign(KINDS, {
+    os: { n:'Osobné',    c:'#16A34A', bg:'#E8FBEF', tag:'OSOBNÝ VLAK', rail:true },
+    rx: { n:'Rýchliky',  c:'#2563EB', bg:'#EFF4FF', tag:'RÝCHLIK', rail:true },
+    ic: { n:'IC / EC',   c:'#DC2626', bg:'#FEECEC', tag:'IC / EC', rail:true },
+    pr: { n:'Súkromné',  c:'#CA8A04', bg:'#FEF6D8', tag:'SÚKROMNÝ DOPRAVCA', rail:true }
+  });
   const ORDER = ['jet','biz','ga','heli','glider','mil'];
+  const ORDER_RAIL = ['os','rx','ic','pr'];
+  const ord = () => what === 'rail' ? ORDER_RAIL : ORDER;
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const ls = { get(k, d){ try{ const v = localStorage.getItem('c8air.' + k); return v == null ? d : JSON.parse(v); }catch(_){ return d; } }, set(k, v){ try{ localStorage.setItem('c8air.' + k, JSON.stringify(v)); }catch(_){} } };
 
+  let what = ls.get('what', 'air') === 'rail' ? 'rail' : 'air';
   let mode = ls.get('mode', 'sk'), radius = ls.get('r', 100), hidden = new Set(ls.get('hide', []));
   let map = null, layer = null, skPoly = null, meMk = null, circle = null;
   let placeLabel = '', mini = false, rootOB = '';
@@ -26345,6 +26377,7 @@ c8ApplyUsersView();
 
   function svg(k, size, flip){
     const K = KINDS[k] || KINDS.jet;
+    if(K.rail) return '<svg viewBox="-14 -14 28 28" width="' + (size || 26) + '" height="' + (size || 26) + '"><rect x="-12" y="-12" width="24" height="24" rx="6.5" fill="' + K.c + '" stroke="#fff" stroke-width="2"/>' + TRAIN.replace(/CC/g, K.c) + '</svg>';
     const tr = flip ? ' transform="scale(-1,1)"' : '';
     return '<svg viewBox="-14 -14 28 28" width="' + (size || 26) + '" height="' + (size || 26) + '"><g' + tr + ' fill="' + K.c + '" stroke="#fff" stroke-width="1.1">' + K.s + '</g></svg>';
   }
@@ -26373,8 +26406,8 @@ c8ApplyUsersView();
     return n[Math.round(((tr % 360) + 360) % 360 / 45) % 8];
   }
   function fmtN(n){ return n == null ? '—' : String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
-  function title(a){ return a.f || a.r || (a.h ? a.h.toUpperCase() : '?'); }
-  function sub(a){ return [a.o, a.d || a.t].filter(Boolean).join(' · ') || (KINDS[a.k] || KINDS.jet).n; }
+  function title(a){ if(a.rt) return (a.f + (a.nm ? ' ' + a.nm : '')).trim(); return a.f || a.r || (a.h ? a.h.toUpperCase() : '?'); }
+  function sub(a){ if(a.rt){ const ft = railFromTo(a); return ft[0] + ' → ' + ft[1]; } return [a.o, a.d || a.t].filter(Boolean).join(' · ') || (KINDS[a.k] || KINDS.jet).n; }
   // --- trasa letu (odkiaľ → kam) podľa volacieho znaku ---
   const routes = new Map();   // cs -> {st:'ld'|'ok'|'no', d}
   let regName = null; try{ regName = new Intl.DisplayNames(['sk'], { type:'region' }); }catch(_){}
@@ -26414,6 +26447,174 @@ c8ApplyUsersView();
     const r = routes.get((a.f || '').toUpperCase().replace(/[^A-Z0-9]/g, ''));
     return r && r.st === 'ok' && routeFits(r.d, a) ? apCode(r.d.from) + ' → ' + apCode(r.d.to) + ' · ' : '';
   }
+  // ================= VLAKY (poloha podľa cestovného poriadku ŽSR – GTFS, CC0) =================
+  let rail = null, railP = null, railMid = 0, railDay = '';
+  const RNAME = { os:'osobný vlak', rx:'rýchlik', ic:'IC / EC', pr:'súkromný dopravca' };
+  function csvLine(l){
+    const out = []; let cur = '', q = false;
+    for(let i = 0; i < l.length; i++){
+      const c = l[i];
+      if(q){ if(c === '"'){ if(l[i+1] === '"'){ cur += '"'; i++; } else q = false; } else cur += c; }
+      else if(c === '"') q = true; else if(c === ',' ){ out.push(cur); cur = ''; } else cur += c;
+    }
+    out.push(cur); return out;
+  }
+  function csvRows(txt, fn){
+    if(!txt) return;
+    const L = txt.replace(/^﻿/, '').split(/\r?\n/);
+    const h = csvLine(L[0]); const ix = {}; h.forEach((k, i) => ix[k.trim()] = i);
+    for(let i = 1; i < L.length; i++){ if(!L[i]) continue; const v = L[i].indexOf('"') < 0 ? L[i].split(',') : csvLine(L[i]); fn(v, ix); }
+  }
+  async function unzip(buf, names){
+    const u = new Uint8Array(buf), dv = new DataView(buf), td = new TextDecoder(), out = {};
+    let e = -1;
+    for(let i = u.length - 22; i >= Math.max(0, u.length - 70000); i--){ if(dv.getUint32(i, true) === 0x06054b50){ e = i; break; } }
+    if(e < 0) throw new Error('zip');
+    const n = dv.getUint16(e + 10, true); let o = dv.getUint32(e + 16, true);
+    for(let k = 0; k < n; k++){
+      const meth = dv.getUint16(o + 10, true), csz = dv.getUint32(o + 20, true);
+      const fl = dv.getUint16(o + 28, true), xl = dv.getUint16(o + 30, true), cl = dv.getUint16(o + 32, true), lo = dv.getUint32(o + 42, true);
+      const fn = td.decode(u.subarray(o + 46, o + 46 + fl)).split('/').pop();
+      o += 46 + fl + xl + cl;
+      if(names.indexOf(fn) < 0) continue;
+      const st = lo + 30 + dv.getUint16(lo + 26, true) + dv.getUint16(lo + 28, true);
+      const raw = u.subarray(st, st + csz);
+      if(meth === 0) out[fn] = td.decode(raw);
+      else out[fn] = await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+    }
+    return out;
+  }
+  const tSec = (s) => { if(!s) return null; const p = s.split(':'); return (+p[0]) * 3600 + (+p[1]) * 60 + (+(p[2] || 0)); };
+  function tCase(s){ return String(s || '').toLocaleLowerCase('sk').replace(/(^|[\s\-–(])(\S)/g, (m, a, b) => a + b.toLocaleUpperCase('sk')); }
+  function railKind(sn, ag){
+    if(ag && ag !== '0') return 'pr';
+    const p = (String(sn).split(' ')[0] || '').toUpperCase();
+    if(['IC','EC','EN','SC','RJ','RJX','ECE','NJ','EXPRES'].indexOf(p) >= 0) return 'ic';
+    if(['R','RR','RRR','EX','ZR'].indexOf(p) >= 0) return 'rx';
+    return 'os';
+  }
+  async function railLoad(){
+    if(rail) return rail;
+    if(railP) return railP;
+    railP = (async () => {
+      if(typeof DecompressionStream === 'undefined') throw new Error('nods');
+      const r = await fetch(API + '/vlaky');
+      if(!r.ok) throw new Error('http ' + r.status);
+      const f = await unzip(await r.arrayBuffer(), ['stops.txt','routes.txt','trips.txt','stop_times.txt','calendar.txt','calendar_dates.txt','agency.txt','feed_info.txt']);
+      const R = { sN:[], sLa:[], sLo:[], cal:new Map(), ex:new Map(), trips:[], end:'', start:'' };
+      const sIx = new Map();
+      csvRows(f['stops.txt'], (v, ix) => { const la = parseFloat(v[ix.stop_lat]), lo = parseFloat(v[ix.stop_lon]); if(!isFinite(la) || !isFinite(lo)) return; sIx.set(v[ix.stop_id], R.sN.length); R.sN.push(v[ix.stop_name]); R.sLa.push(la); R.sLo.push(lo); });
+      const ag = new Map(); csvRows(f['agency.txt'], (v, ix) => ag.set(v[ix.agency_id], v[ix.agency_name]));
+      const rt = new Map(); csvRows(f['routes.txt'], (v, ix) => rt.set(v[ix.route_id], { sn:v[ix.route_short_name] || '', ln:v[ix.route_long_name] || '', ag:v[ix.agency_id] || '0' }));
+      csvRows(f['calendar.txt'], (v, ix) => R.cal.set(v[ix.service_id], { d:['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(k => v[ix[k]] === '1'), s:v[ix.start_date], e:v[ix.end_date] }));
+      csvRows(f['calendar_dates.txt'], (v, ix) => { const s = v[ix.service_id]; if(!R.ex.has(s)) R.ex.set(s, new Map()); R.ex.get(s).set(v[ix.date], +v[ix.exception_type]); });
+      csvRows(f['feed_info.txt'], (v, ix) => { R.start = v[ix.feed_start_date] || ''; R.end = v[ix.feed_end_date] || ''; });
+      const tp = new Map();
+      csvRows(f['trips.txt'], (v, ix) => tp.set(v[ix.trip_id], { r:v[ix.route_id], s:v[ix.service_id], num:v[ix.trip_short_name] || '', st:[] }));
+      csvRows(f['stop_times.txt'], (v, ix) => { const t = tp.get(v[ix.trip_id]); const si = sIx.get(v[ix.stop_id]); if(!t || si == null) return; const a = tSec(v[ix.arrival_time]), d = tSec(v[ix.departure_time]); t.st.push([+v[ix.stop_sequence], si, a == null ? d : a, d == null ? a : d]); });
+      tp.forEach((t, id) => {
+        if(t.st.length < 2) return;
+        t.st.sort((x, y) => x[0] - y[0]);
+        const ro = rt.get(t.r) || { sn:'', ln:'', ag:'0' };
+        const sn = ro.sn || t.num;
+        R.trips.push({ id:id, s:t.s, k:railKind(sn, ro.ag), sn:sn, nm:tCase(ro.ln), op:ag.get(ro.ag) || '', S:t.st.map(x => x[1]), A:t.st.map(x => x[2]), D:t.st.map(x => x[3]), t0:t.st[0][3], t1:t.st[t.st.length - 1][2] });
+      });
+      rail = R; return R;
+    })();
+    try{ return await railP; } catch(e){ railP = null; throw e; }
+  }
+  function skParts(ms){
+    const p = {}; new Intl.DateTimeFormat('en-GB', { timeZone:'Europe/Bratislava', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit', weekday:'short', hourCycle:'h23' }).formatToParts(new Date(ms)).forEach(x => p[x.type] = x.value);
+    return { ymd:p.year + p.month + p.day, wd:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].indexOf(p.weekday), sec:(+p.hour) * 3600 + (+p.minute) * 60 + (+p.second) };
+  }
+  function svcOn(s, ymd, wd){
+    const ex = rail.ex.get(s); if(ex && ex.has(ymd)) return ex.get(ymd) === 1;
+    const c = rail.cal.get(s); return !!c && c.d[wd] && ymd >= c.s && ymd <= c.e;
+  }
+  const rNow = () => (Date.now() - railMid) / 1000;
+  function railValid(){ return !!rail && (!rail.end || rail.end >= railDay) && (!rail.start || rail.start <= railDay); }
+  function railActive(){
+    const now = Date.now(), td = skParts(now), yd = skParts(now - 86400000);
+    railMid = now - td.sec * 1000 - (now % 1000); railDay = td.ymd;
+    const sec = td.sec, out = [];
+    rail.trips.forEach(tr => {
+      [[0, td], [86400, yd]].forEach(([off, d]) => {
+        const t = sec + off;
+        if(t < tr.t0 || t > tr.t1) return;
+        if(!svcOn(tr.s, d.ymd, d.wd)) return;
+        const rt = { tr:tr, off:off }, P = railPos(rt);
+        out.push({ h:'t' + tr.id + '_' + off, k:tr.k, f:tr.sn, nm:tr.nm, op:tr.op, la:P.la, lo:P.lo, rt:rt });
+      });
+    });
+    return out;
+  }
+  function railPos(rt){
+    const tr = rt.tr, A = tr.A, D = tr.D, S = tr.S, n = S.length, t = rNow() + rt.off;
+    const at = (i) => ({ la:rail.sLa[S[i]], lo:rail.sLo[S[i]], st:i, nx:i, dw:true, sp:0 });
+    if(t <= D[0]) return at(0);
+    for(let i = 0; i < n - 1; i++){
+      if(t < A[i + 1]){
+        if(t <= D[i]) return at(i);
+        const dt = Math.max(1, A[i + 1] - D[i]), f = Math.min(1, Math.max(0, (t - D[i]) / dt));
+        const a1 = rail.sLa[S[i]], o1 = rail.sLo[S[i]], a2 = rail.sLa[S[i + 1]], o2 = rail.sLo[S[i + 1]];
+        return { la:a1 + (a2 - a1) * f, lo:o1 + (o2 - o1) * f, st:i, nx:i + 1, dw:false, sp:Math.round(dist(a1, o1, a2, o2) / (dt / 3600)) };
+      }
+    }
+    return at(n - 1);
+  }
+  const fmtT = (s) => { s = ((s % 86400) + 86400) % 86400; return String(Math.floor(s / 3600)).padStart(2, '0') + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0'); };
+  function railFromTo(a){ const tr = a.rt.tr; return [rail.sN[tr.S[0]], rail.sN[tr.S[tr.S.length - 1]]]; }
+  function railNext(a){ const P = railPos(a.rt), tr = a.rt.tr; return { P:P, name:rail.sN[tr.S[P.nx]], time:fmtT(P.dw ? tr.D[P.nx] : tr.A[P.nx]) }; }
+  async function railRefresh(){
+    clearTimeout(timer);
+    if(!openFlag || what !== 'rail') return;
+    if(mode === 'near' && !me){ timer = setTimeout(refresh, REFRESH); return; }
+    try{
+      if(!rail) msg('Načítavam cestovný poriadok vlakov…');
+      await railLoad();
+    }catch(e){
+      if(what !== 'rail') return;
+      msg(String(e && e.message) === 'nods' ? 'Tento prehliadač nevie načítať vlaky. Aktualizuj ho, prosím.' : 'Cestovný poriadok vlakov sa nepodarilo načítať. Skúsim znova o chvíľu…');
+      $('c8a-live').classList.add('err'); timer = setTimeout(refresh, 30000); return;
+    }
+    if(what !== 'rail' || !openFlag) return;
+    msg(''); lastOk = Date.now(); $('c8a-live').classList.remove('err');
+    const ac = railActive();
+    if(!railValid()) msg('Cestovný poriadok vlakov sa práve mení (nový grafikon). Skús to o pár dní.');
+    apply({ t:Date.now(), n:ac.length, src:'ŽSR', ac:ac });
+    timer = setTimeout(refresh, REFRESH);
+  }
+  function railRow(p, ref, near){
+    const a = p.a, N = railNext(a), ft = railFromTo(a);
+    const right = ref ? '<b>' + (p.dd < 10 ? p.dd.toFixed(1).replace('.', ',') : Math.round(p.dd)) + ' km</b><br>' + esc(N.name) : (N.P.dw ? 'stojí' : 'ďalej') + ' ' + esc(N.name) + '<br><b>' + N.time + '</b>';
+    return '<div class="c8a-row' + (near ? ' hl' : '') + '" data-h="' + esc(a.h) + '"><div class="ic">' + svg(a.k, 26) + '</div><div class="m"><b>' + esc(title(a)) + '</b><span>' + (near ? 'práve pri tebe · ' : '') + esc(ft[0] + ' → ' + ft[1]) + '</span></div><div class="r">' + right + '</div></div>';
+  }
+  let railScrollFor = '';
+  function railSheet(a, K){
+    const tr = a.rt.tr, N = railNext(a), P = N.P, n = tr.S.length, ft = railFromTo(a);
+    const sh = $('c8a-sheet'); sh.classList.toggle('mini', mini);
+    const spd = P.dw ? 'stojí v stanici' : '~' + P.sp + ' km/h';
+    const line = (P.dw ? 'v stanici ' : 'ďalej ') + esc(N.name) + ' ' + N.time + ' · ' + spd;
+    let st = '';
+    for(let i = 0; i < n; i++){
+      const cls = i < P.nx ? 'done' : (i === P.nx ? 'now' : '');
+      const tm = i === 0 ? tr.D[i] : (i === n - 1 || (i === P.nx && !P.dw) ? tr.A[i] : tr.D[i]);
+      st += '<div class="c8t-s ' + cls + '"><span>' + (cls === 'now' ? (P.dw ? '● ' : '→ ') : '') + esc(rail.sN[tr.S[i]]) + '</span><span>' + fmtT(tm) + '</span></div>';
+    }
+    const scrollKey = a.h + ':' + P.nx, keep = sh.querySelector('.c8t-st'), keepTop = keep ? keep.scrollTop : 0;
+    sh.innerHTML = '<div class="c8a-grab"></div><div class="c8a-smini"><div class="c8a-logo" style="background:' + K.bg + '">' + svg(a.k, 30) + '</div><div class="m"><b>' + esc(title(a)) + '</b><span>' + (follow ? '<i class="live" style="font-style:normal">● Sledujem · </i>' : '') + line + '</span></div><button type="button" class="up" data-act="up" aria-label="Detail">▲</button><button type="button" class="stop" data-act="close" aria-label="Zavrieť">✕</button></div>'
+      + '<div class="c8a-sfull"><div class="c8a-fh"><div class="c8a-logo" style="background:' + K.bg + '">' + svg(a.k, 36) + '</div><div><h3>' + esc(title(a)) + '</h3><span>' + esc([a.op, RNAME[a.k]].filter(Boolean).join(' · ')) + '</span></div></div>'
+      + '<span class="c8a-tag" style="background:' + K.bg + ';color:' + K.c + '">' + K.tag + ' · ' + esc(spd) + '</span>'
+      + '<div class="c8a-route"><div class="ap"><b class="c8t-b">' + esc(ft[0]) + '</b><span>odch. ' + fmtT(tr.D[0]) + '</span></div><div class="ar">🚆 →</div><div class="ap r"><b class="c8t-b">' + esc(ft[1]) + '</b><span>prích. ' + fmtT(tr.A[n - 1]) + '</span></div></div>'
+      + '<div class="c8t-st">' + st + '</div>'
+      + '<div class="c8t-note">🕒 Poloha podľa cestovného poriadku ŽSR. Meškanie sa nezobrazuje.</div>'
+      + '<div class="c8a-btns"><button type="button" class="c8a-follow' + (follow ? ' on' : '') + '" data-act="follow">📍 ' + (follow ? 'Sledujem' : 'Sledovať na mape') + '</button><button type="button" class="c8a-close" data-act="close">✕ Zavrieť</button></div></div>';
+    const box = sh.querySelector('.c8t-st');
+    if(box){
+      if(railScrollFor !== scrollKey){ railScrollFor = scrollKey; const cur = box.querySelector('.now'); if(cur) box.scrollTop = Math.max(0, cur.offsetTop - 34); }
+      else box.scrollTop = keepTop;
+    }
+  }
 
   let leafletP = null;
   function loadLeaflet(){
@@ -26430,7 +26631,7 @@ c8ApplyUsersView();
   function msg(t){ const m = $('c8a-msg'); m.textContent = t || ''; m.style.display = t ? 'block' : 'none'; }
 
   function chips(){
-    $('c8a-chips').innerHTML = ORDER.map(k => '<button type="button" class="c8a-chip' + (hidden.has(k) ? ' off' : '') + '" data-k="' + k + '">' + svg(k, 20) + '<span>' + KINDS[k].n + '</span></button>').join('');
+    $('c8a-chips').innerHTML = ord().map(k => '<button type="button" class="c8a-chip' + (hidden.has(k) ? ' off' : '') + '" data-k="' + k + '">' + svg(k, 20) + '<span>' + KINDS[k].n + '</span></button>').join('');
   }
   function setMode(m){
     mode = m; ls.set('mode', m);
@@ -26460,7 +26661,7 @@ c8ApplyUsersView();
       placeName();
       showNear(); refresh();
     }, () => {
-      msg('Bez povolenia polohy nevieme ukázať lietadlá nad tebou. Povoľ polohu pre Connect8 v nastaveniach.');
+      msg('Bez povolenia polohy nevieme ukázať, čo je okolo teba. Povoľ polohu pre Connect8 v nastaveniach.');
       $('c8a-place').textContent = '📍 Poloha nie je povolená';
     }, { enableHighAccuracy:false, timeout:15000, maximumAge:120000 });
   }
@@ -26492,25 +26693,27 @@ c8ApplyUsersView();
   }
   function clearPlanes(){
     planes.forEach(p => { if(p.mk) layer.removeLayer(p.mk); if(p.tl) layer.removeLayer(p.tl); });
-    planes.clear(); lastData = null; $('c8a-list').innerHTML = ''; $('c8a-cnt').classList.remove('pills'); $('c8a-cnt').textContent = '✈️ …';
+    planes.clear(); lastData = null; $('c8a-list').innerHTML = ''; $('c8a-cnt').classList.remove('pills'); $('c8a-cnt').textContent = what === 'rail' ? '🚆 …' : '✈️ …';
   }
 
   async function refresh(){
     clearTimeout(timer);
     if(!openFlag) return;
     if(document.hidden){ timer = setTimeout(refresh, REFRESH); return; }
+    if(what === 'rail') return railRefresh();
     if(mode === 'near' && !me){ timer = setTimeout(refresh, REFRESH); return; }
     const url = mode === 'sk' ? API + '/sk' : API + '/near?lat=' + me.la.toFixed(4) + '&lon=' + me.lo.toFixed(4) + '&r=' + radius;
-    const forMode = mode;
+    const forMode = mode, forWhat = what;
     try{
       const r = await fetch(url, { cache:'no-store' });
       if(!r.ok) throw new Error(r.status);
       const d = await r.json();
-      if(forMode !== mode || !openFlag) return;
+      if(forMode !== mode || forWhat !== what || !openFlag) return;
       lastOk = Date.now(); msg('');
       $('c8a-live').classList.remove('err'); $('c8a-live').textContent = '● NAŽIVO';
       apply(d);
     }catch(e){
+      if(forWhat !== what) return;
       $('c8a-live').classList.add('err'); $('c8a-live').textContent = '● OFFLINE';
       if(!lastData) msg('Lietadlá sa nepodarilo načítať. Skúsim znova o chvíľu…');
     }
@@ -26524,7 +26727,8 @@ c8ApplyUsersView();
   function icon(a, selected){
     const K = KINDS[a.k] || KINDS.jet;
     const flip = K.side && a.tr != null && ((a.tr % 360) + 360) % 360 > 180;
-    const rot = K.side ? 0 : (a.tr || 0);
+    const rot = (K.side || K.rail) ? 0 : (a.tr || 0);
+    if(K.rail) return L.divIcon({ className:'', html:'<div class="c8a-ic c8a-tic' + (selected ? ' sel' : '') + '">' + svg(a.k, selected ? 28 : 19) + '</div>', iconSize:[30,30], iconAnchor:[15,15] });
     return L.divIcon({ className:'', html:'<div class="c8a-ic' + (selected ? ' sel' : '') + '" style="transform:rotate(' + rot + 'deg)">' + svg(a.k, selected ? 34 : 26, flip) + '</div>', iconSize:[30,30], iconAnchor:[15,15] });
   }
   function apply(d){
@@ -26546,6 +26750,7 @@ c8ApplyUsersView();
         p.a = a; p.t0 = t0;
         if(rotChanged) p.mk.setIcon(icon(a, sel === a.h));
       }
+      if(a.rt) return;
       p.trail.push([a.la, a.lo, now]);
       p.trail = p.trail.filter(x => now - x[2] < 5 * 60000).slice(-40);
       if(p.trail.length > 1){
@@ -26561,6 +26766,7 @@ c8ApplyUsersView();
   }
   function pos(p){
     const a = p.a;
+    if(a.rt){ const P = railPos(a.rt); return [P.la, P.lo]; }
     if(a.gr || !a.sp || a.tr == null) return [a.la, a.lo];
     const s = Math.min(60, Math.max(0, (Date.now() - p.t0) / 1000));
     return move(a.la, a.lo, a.tr, a.sp / 3600 * s);
@@ -26568,12 +26774,13 @@ c8ApplyUsersView();
   function step(){
     planes.forEach(p => { p.mk.setLatLng(pos(p)); });
     if(follow && sel && planes.has(sel) && map) map.panTo(pos(planes.get(sel)), { animate:true, duration:.8 });
-    if(lastOk) $('c8a-upd').textContent = 'pred ' + Math.max(0, Math.round((Date.now() - lastOk) / 1000)) + ' s';
+    if(what === 'rail'){ if(rail && railMid) $('c8a-upd').textContent = 'teraz ' + fmtT(Math.floor(rNow())); }
+    else if(lastOk) $('c8a-upd').textContent = 'pred ' + Math.max(0, Math.round((Date.now() - lastOk) / 1000)) + ' s';
   }
   function counts(){
     const c = {}; planes.forEach(p => { const k = KINDS[p.a.k] ? p.a.k : 'jet'; c[k] = (c[k] || 0) + 1; });
-    let h = ORDER.filter(k => c[k]).map(k => '<div class="pl" title="' + KINDS[k].n + '">' + svg(k, 20) + c[k] + '</div>').join('');
-    if(!h) h = '<div class="pl">' + svg('jet', 20) + '0</div>';
+    let h = ord().filter(k => c[k]).map(k => '<div class="pl" title="' + KINDS[k].n + '">' + svg(k, 20) + c[k] + '</div>').join('');
+    if(!h) h = '<div class="pl">' + svg(ord()[0], 20) + '0</div>';
     if(mode === 'near') h += '<div class="pl km">do ' + radius + ' km</div>';
     const el = $('c8a-cnt'); el.classList.add('pills'); el.innerHTML = h;
   }
@@ -26582,16 +26789,20 @@ c8ApplyUsersView();
     planes.forEach(p => arr.push(p));
     const ref = me;
     arr.forEach(p => { p.dd = ref ? dist(ref.la, ref.lo, p.a.la, p.a.lo) : null; });
-    if(ref) arr.sort((x, y) => x.dd - y.dd); else arr.sort((x, y) => (y.a.al || 0) - (x.a.al || 0));
+    if(ref) arr.sort((x, y) => x.dd - y.dd);
+    else if(what === 'rail') arr.sort((x, y) => ({ ic:0, rx:1, pr:2, os:3 }[x.a.k] - { ic:0, rx:1, pr:2, os:3 }[y.a.k]) || String(x.a.f).localeCompare(String(y.a.f), 'sk', { numeric:true }));
+    else arr.sort((x, y) => (y.a.al || 0) - (x.a.al || 0));
     const top = arr.slice(0, 40);
-    let h = '<div class="c8a-lt" data-tg="1"><span>' + (ref ? 'Zoradené podľa vzdialenosti od teba' : 'Lietadlá nad Slovenskom') + '</span><span class="tg">' + ($('c8a-list').classList.contains('big') ? '▼ menej' : '▲ viac') + '</span></div>';
-    if(!top.length) h += '<div class="c8a-note">Práve tu nič nelieta – alebo lietadlá nevysielajú polohu.</div>';
+    let h = '<div class="c8a-lt" data-tg="1"><span>' + (ref ? 'Zoradené podľa vzdialenosti od teba' : (what === 'rail' ? 'Vlaky na Slovensku · ' + arr.length : 'Lietadlá nad Slovenskom')) + '</span><span class="tg">' + ($('c8a-list').classList.contains('big') ? '▼ menej' : '▲ viac') + '</span></div>';
+    if(!top.length) h += '<div class="c8a-note">' + (what === 'rail' ? 'Práve tu nejde žiadny vlak podľa cestovného poriadku.' : 'Práve tu nič nelieta – alebo lietadlá nevysielajú polohu.') + '</div>';
     top.forEach((p, i) => {
       const a = p.a, near = ref && i === 0 && p.dd < 5;
+      if(a.rt){ h += railRow(p, ref, ref && i === 0 && p.dd < 2); return; }
       const right = ref ? '<b>' + (p.dd < 10 ? p.dd.toFixed(1).replace('.', ',') : Math.round(p.dd)) + ' km</b><br>' + (a.gr ? 'na zemi' : fmtN(a.al) + ' m') : '<b>' + (a.gr ? 'na zemi' : fmtN(a.al) + ' m') + '</b><br>' + fmtN(a.sp) + ' km/h';
       h += '<div class="c8a-row' + (near ? ' hl' : '') + '" data-h="' + esc(a.h) + '"><div class="ic">' + svg(a.k, 26) + '</div><div class="m"><b>' + esc(title(a)) + '</b><span>' + (near ? 'práve nad tebou · ' : '') + esc(sub(a)) + '</span></div><div class="r">' + right + '</div></div>';
     });
-    h += '<div class="c8a-note">Zobrazujú sa lietadlá, ktoré vysielajú ADS-B. Niektoré malé, vojenské lietadlá a vetrone nemusia byť viditeľné. Údaje: ' + esc((lastData && lastData.src) || 'ADS-B komunita') + '</div>';
+    if(what === 'rail') h += '<div class="c8a-note">🕒 Poloha vlakov sa počíta z cestovného poriadku ŽSR (otvorené dáta, CC0). Meškanie, výluky a zrušené vlaky sa nezobrazujú – vlak môže byť v skutočnosti inde.</div>';
+    else h += '<div class="c8a-note">Zobrazujú sa lietadlá, ktoré vysielajú ADS-B. Niektoré malé, vojenské lietadlá a vetrone nemusia byť viditeľné. Údaje: ' + esc((lastData && lastData.src) || 'ADS-B komunita') + '</div>';
     $('c8a-list').innerHTML = h;
   }
   function openSheet(h){
@@ -26608,6 +26819,7 @@ c8ApplyUsersView();
   function fillSheet(){
     const p = planes.get(sel); if(!p) return;
     const a = p.a, K = KINDS[a.k] || KINDS.jet;
+    if(a.rt) return railSheet(a, K);
     let vr = '— v hladine';
     if(a.gr) vr = 'na zemi'; else if(a.vr != null){ if(a.vr > 60) vr = '↗ stúpa'; else if(a.vr < -60) vr = '↘ klesá'; }
     const extra = [a.r && a.f ? a.r : '', a.t].filter(Boolean).join(' · ');
@@ -26625,13 +26837,14 @@ c8ApplyUsersView();
     box.classList.add('on'); openFlag = true;
     try{ rootOB = document.documentElement.style.overscrollBehaviorY; document.documentElement.style.overscrollBehaviorY = 'none'; document.body.style.overscrollBehaviorY = 'none'; }catch(_){}
     try{ history.pushState({ c8air:1 }, ''); }catch(_){}
+    whatUI();
     chips();
     $('c8a-rad').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.r === radius));
     try{ await loadLeaflet(); }catch(_){ msg('Mapu sa nepodarilo načítať. Skontroluj internet.'); return; }
     if(!map){
       map = L.map('c8a-map', { zoomControl:false, attributionControl:true, worldCopyJump:true, zoomSnap:0.25 });
       L.control.zoom({ position:'topright' }).addTo(map);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:18, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ✈️ ADS-B: adsb.lol, adsb.fi, airplanes.live' }).addTo(map);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:18, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ✈️ ADS-B: adsb.lol, adsb.fi, airplanes.live · 🚆 cestovný poriadok © ŽSR (CC0)' }).addTo(map);
       map.attributionControl.setPrefix(false);
       layer = L.layerGroup().addTo(map);
       map.on('click', () => { if(follow && sel){ mini = true; fillSheet(); } else closeSheet(); });
@@ -26653,6 +26866,21 @@ c8ApplyUsersView();
     try{ document.documentElement.style.overscrollBehaviorY = rootOB || ''; document.body.style.overscrollBehaviorY = ''; }catch(_){}
     if(!fromPop){ try{ if(history.state && history.state.c8air) history.back(); }catch(_){} }
   }
+  function whatUI(){
+    $('c8a-what').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.w === what));
+    $('c8a-ttl').textContent = what === 'rail' ? '🚆 Vlaky' : '✈️ Lietadlá';
+    const lv = $('c8a-live'); lv.classList.remove('err'); lv.classList.toggle('cp', what === 'rail'); lv.textContent = what === 'rail' ? '🕒 PODĽA CP' : '● NAŽIVO';
+    $('c8air').setAttribute('aria-label', what === 'rail' ? 'Vlaky' : 'Lietadlá');
+    $('c8a-upd').textContent = '';
+    $('c8a-nearbtn').textContent = what === 'rail' ? '📍 Okolo mňa' : '📍 Nad mnou';
+  }
+  function setWhat(w){
+    if(w === what) return;
+    clearTimeout(timer); what = w; ls.set('what', w);
+    closeSheet(); clearPlanes(); lastOk = 0; msg('');
+    whatUI(); chips();
+    refresh();
+  }
   window.c8AirOpen = open;
   // tlačidlo „✈️ Lietadlá“ v mojom profile pod „Vytvor životopis“
   function airBtn(){
@@ -26661,7 +26889,7 @@ c8ApplyUsersView();
     let b = document.getElementById('c8air-btn');
     if(!b){ b = document.createElement('button'); b.type = 'button'; b.id = 'c8air-btn'; b.className = 'c8cv-btn c8air-btn'; b.onclick = open; }
     if(b.previousElementSibling !== cv) cv.parentNode.insertBefore(b, cv.nextSibling);
-    b.textContent = '✈️ ' + ((typeof t === 'function') ? t('Lietadlá') : 'Lietadlá');
+    b.textContent = '✈️ ' + ((typeof t === 'function') ? t('Lietadlá') : 'Lietadlá') + ' 🚆 ' + ((typeof t === 'function') ? t('Vlaky') : 'Vlaky');
     b.style.display = cv.style.display === 'none' ? 'none' : 'inline-flex';
   }
   try{
@@ -26672,6 +26900,7 @@ c8ApplyUsersView();
   document.addEventListener('keydown', e => { if(e.key === 'Escape' && openFlag){ if(sel) closeSheet(); else close(); } });
   document.addEventListener('visibilitychange', () => { if(!document.hidden && openFlag) refresh(); });
   $('c8a-back').addEventListener('click', () => close());
+  $('c8a-what').addEventListener('click', e => { const b = e.target.closest('button'); if(b) setWhat(b.dataset.w); });
   $('c8a-seg').addEventListener('click', e => { const b = e.target.closest('button'); if(b && b.dataset.m !== mode) setMode(b.dataset.m); });
   $('c8a-rad').addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b) return;
