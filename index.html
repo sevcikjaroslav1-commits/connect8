@@ -26548,15 +26548,88 @@ c8ApplyUsersView();
     });
     return out;
   }
+  // --- koľajnice z OpenStreetMap: vlak ide po trati, nie rovno vzduchom ---
+  let trk = null, trkP = null, trkFail = 0;
+  const trkSnap = new Map(), trkPath = new Map();
+  function trkLoad(){
+    if(trk || trkP || Date.now() - trkFail < 120000) return;
+    trkP = (async () => {
+      const r = await fetch(API + '/trate');
+      if(!r.ok) throw new Error('http ' + r.status);
+      const d = await r.json();
+      const id2 = new Map(), la = [], lo = [], adj = [];
+      const nodeIx = (id, a, o) => { let i = id2.get(id); if(i == null){ i = la.length; id2.set(id, i); la.push(a); lo.push(o); adj.push([]); } return i; };
+      (d.elements || []).forEach(w => {
+        const g = w.geometry, ns = w.nodes; if(!g || !ns || g.length !== ns.length) return;
+        let prev = -1;
+        for(let k = 0; k < g.length; k++){
+          if(!g[k]) { prev = -1; continue; }
+          const i = nodeIx(ns[k], g[k].lat, g[k].lon);
+          if(prev >= 0 && prev !== i){ const w2 = dist(la[prev], lo[prev], la[i], lo[i]); adj[prev].push(i, w2); adj[i].push(prev, w2); }
+          prev = i;
+        }
+      });
+      const grid = new Map(), G = 0.02;
+      for(let i = 0; i < la.length; i++){ const k = Math.floor(la[i] / G) + ':' + Math.floor(lo[i] / G); let c = grid.get(k); if(!c){ c = []; grid.set(k, c); } c.push(i); }
+      trk = { la:la, lo:lo, adj:adj, grid:grid, G:G };
+    })();
+    trkP.catch(() => { trkFail = Date.now(); }).then(() => { trkP = null; });
+  }
+  function trkNear(s){
+    if(trkSnap.has(s)) return trkSnap.get(s);
+    const a = rail.sLa[s], o = rail.sLo[s], G = trk.G, gy = Math.floor(a / G), gx = Math.floor(o / G);
+    let best = -1, bd = 1.5;
+    for(let y = -1; y <= 1; y++) for(let x = -1; x <= 1; x++){
+      const c = trk.grid.get((gy + y) + ':' + (gx + x)); if(!c) continue;
+      for(const i of c){ const d = dist(a, o, trk.la[i], trk.lo[i]); if(d < bd){ bd = d; best = i; } }
+    }
+    trkSnap.set(s, best); return best;
+  }
+  function trkRoute(s1, s2){
+    const key = s1 + '>' + s2;
+    if(trkPath.has(key)) return trkPath.get(key);
+    let res = null;
+    const A = trkNear(s1), B = trkNear(s2);
+    if(A >= 0 && B >= 0 && A !== B){
+      const lim = dist(rail.sLa[s1], rail.sLo[s1], rail.sLa[s2], rail.sLo[s2]) * 2.2 + 4;
+      const D = new Map([[A, 0]]), P = new Map(), h = [[0, A]], done = new Set();
+      const push = (x) => { h.push(x); let i = h.length - 1; while(i > 0){ const p = (i - 1) >> 1; if(h[p][0] <= h[i][0]) break; [h[p], h[i]] = [h[i], h[p]]; i = p; } };
+      const pop = () => { const t = h[0], l = h.pop(); if(h.length){ h[0] = l; let i = 0; for(;;){ const a = 2 * i + 1, b = a + 1; let m = i; if(a < h.length && h[a][0] < h[m][0]) m = a; if(b < h.length && h[b][0] < h[m][0]) m = b; if(m === i) break; [h[m], h[i]] = [h[i], h[m]]; i = m; } } return t; };
+      let n = 0;
+      while(h.length && n++ < 60000){
+        const [d, u] = pop(); if(done.has(u)) continue; done.add(u);
+        if(u === B) break;
+        if(d > lim) break;
+        const ad = trk.adj[u];
+        for(let k = 0; k < ad.length; k += 2){ const v = ad[k], nd = d + ad[k + 1]; if(nd < (D.has(v) ? D.get(v) : Infinity)){ D.set(v, nd); P.set(v, u); push([nd, v]); } }
+      }
+      if(done.has(B)){
+        const pts = []; let u = B; while(u !== undefined){ pts.push(u); if(u === A) break; u = P.get(u); }
+        pts.reverse();
+        const cum = [0]; for(let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + dist(trk.la[pts[i - 1]], trk.lo[pts[i - 1]], trk.la[pts[i]], trk.lo[pts[i]]));
+        res = { p:pts, c:cum, L:cum[cum.length - 1] };
+      }
+    }
+    trkPath.set(key, res); return res;
+  }
+  function trkAt(r, f){
+    const t = f * r.L, c = r.c; let lo2 = 0, hi = c.length - 1;
+    while(hi - lo2 > 1){ const m = (lo2 + hi) >> 1; if(c[m] <= t) lo2 = m; else hi = m; }
+    const seg = c[hi] - c[lo2] || 1, q = Math.min(1, Math.max(0, (t - c[lo2]) / seg));
+    const i = r.p[lo2], j = r.p[hi];
+    return [trk.la[i] + (trk.la[j] - trk.la[i]) * q, trk.lo[i] + (trk.lo[j] - trk.lo[i]) * q];
+  }
   function railPos(rt){
     const tr = rt.tr, A = tr.A, D = tr.D, S = tr.S, n = S.length, t = rNow() + rt.off;
-    const at = (i) => ({ la:rail.sLa[S[i]], lo:rail.sLo[S[i]], st:i, nx:i, dw:true, sp:0 });
+    const at = (i) => { if(trk){ const k = trkNear(S[i]); if(k >= 0) return { la:trk.la[k], lo:trk.lo[k], st:i, nx:i, dw:true, sp:0 }; } return { la:rail.sLa[S[i]], lo:rail.sLo[S[i]], st:i, nx:i, dw:true, sp:0 }; };
     if(t <= D[0]) return at(0);
     for(let i = 0; i < n - 1; i++){
       if(t < A[i + 1]){
         if(t <= D[i]) return at(i);
         const dt = Math.max(1, A[i + 1] - D[i]), f = Math.min(1, Math.max(0, (t - D[i]) / dt));
         const a1 = rail.sLa[S[i]], o1 = rail.sLo[S[i]], a2 = rail.sLa[S[i + 1]], o2 = rail.sLo[S[i + 1]];
+        const R = trk ? trkRoute(S[i], S[i + 1]) : null;
+        if(R){ const q = trkAt(R, f); return { la:q[0], lo:q[1], st:i, nx:i + 1, dw:false, sp:Math.round(R.L / (dt / 3600)) }; }
         return { la:a1 + (a2 - a1) * f, lo:o1 + (o2 - o1) * f, st:i, nx:i + 1, dw:false, sp:Math.round(dist(a1, o1, a2, o2) / (dt / 3600)) };
       }
     }
@@ -26578,6 +26651,7 @@ c8ApplyUsersView();
       $('c8a-live').classList.add('err'); timer = setTimeout(refresh, 30000); return;
     }
     if(what !== 'rail' || !openFlag) return;
+    trkLoad();
     msg(''); lastOk = Date.now(); $('c8a-live').classList.remove('err');
     const ac = railActive();
     if(!railValid()) msg('Cestovný poriadok vlakov sa práve mení (nový grafikon). Skús to o pár dní.');
@@ -26844,7 +26918,7 @@ c8ApplyUsersView();
     if(!map){
       map = L.map('c8a-map', { zoomControl:false, attributionControl:true, worldCopyJump:true, zoomSnap:0.25 });
       L.control.zoom({ position:'topright' }).addTo(map);
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:18, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ✈️ ADS-B: adsb.lol, adsb.fi, airplanes.live · 🚆 cestovný poriadok © ŽSR (CC0)' }).addTo(map);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:18, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ✈️ ADS-B: adsb.lol, adsb.fi, airplanes.live · 🚆 cestovný poriadok © ŽSR (CC0), trate © OpenStreetMap' }).addTo(map);
       map.attributionControl.setPrefix(false);
       layer = L.layerGroup().addTo(map);
       map.on('click', () => { if(follow && sel){ mini = true; fillSheet(); } else closeSheet(); });
