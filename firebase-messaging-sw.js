@@ -3,7 +3,7 @@
 // Presne tento názov súboru ("firebase-messaging-sw.js") a presne
 // v koreňovom priečinku vyžaduje Firebase - nedá sa premenovať ani
 // presunúť inam. Stará sa o zobrazenie upozornenia (napr. na
-// prichádzajúci hovor), keď appka nie je práve otvorená na obrazovke.
+// prichádzajúci hovor alebo novú správu), keď appka nie je práve otvorená na obrazovke.
 // ============================================================
 
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
@@ -33,17 +33,21 @@ messaging.onBackgroundMessage((payload) => {
     icon: 'icon-192.png',
     badge: 'icon-192.png',
     tag: data.tag || 'connect8-notification',
+    renotify: data.type === 'message', // nová správa od toho istého človeka znova pípne
     data: data, // napr. { type:'call', callId:'...' } - použije sa nižšie pri kliknutí
     requireInteraction: data.type === 'call' // hovor nezmizne samo, kým naň nezareaguješ
   };
-  self.registration.showNotification(title, options);
+  return self.registration.showNotification(title, options);
 });
 
 // Klik na upozornenie (napr. "Prijať") - otvorí/zameria appku.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const data = event.notification.data || {};
-  const targetUrl = self.registration.scope + 'index.html' + (data.callId ? ('#call=' + data.callId) : '');
+  // správa -> otvor rovno chat s tým človekom; hovor -> ako doteraz
+  const targetUrl = (data.type === 'message' && data.link)
+    ? data.link
+    : self.registration.scope + 'index.html' + (data.callId ? ('#call=' + data.callId) : '');
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
