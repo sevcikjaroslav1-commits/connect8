@@ -10177,13 +10177,14 @@ async function sendVoiceMessage(blob, durationSeconds){
     // samotný chat dokument s poľom participants, až potom môže appka
     // pridať správu do podkolekcie messages (viď komentár v sendChatMessage).
     await upsertChatDoc(chatRef, otherUid, currentChatUser.name, '🎤 Hlasová správa');
-    await chatRef.collection('messages').add({
+    const c8vRef = await chatRef.collection('messages').add({
       senderId: currentUser.uid,
       type: 'voice',
       audioUrl: url,
       duration: durationSeconds,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    if(c8vRef && typeof c8pushMsg === 'function') c8pushMsg(chatRef.id, c8vRef.id);
     await chatRef.update({ ['unread.' + otherUid]: firebase.firestore.FieldValue.increment(1) });
   }catch(e){
     console.error('Chyba pri odosielaní hlasovej správy:', e);
@@ -22894,7 +22895,20 @@ async function c8modSend(payload){
     }).catch(()=>{});
   }catch(e){}
 }
-function c8modMsg(chatId, msgId){ if(chatId && msgId) c8modSend({ kind: 'message', chatId, msgId }); }
+function c8modMsg(chatId, msgId){ if(chatId && msgId){ c8modSend({ kind: 'message', chatId, msgId }); c8pushMsg(chatId, msgId); } }
+// Upozornenie do telefónu druhému človeku (Worker overí, že správu naozaj poslal tento používateľ).
+// Na Androide sa vďaka nemu ukáže aj bodka na ikonke Connect8.
+async function c8pushMsg(chatId, msgId){
+  try{
+    if(!chatId || !msgId || typeof auth === 'undefined' || !auth || !auth.currentUser) return;
+    const idToken = await auth.currentUser.getIdToken();
+    fetch(C8MOD_URL + '/push', {
+      method: 'POST', keepalive: true,
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + idToken },
+      body: JSON.stringify({ type: 'message', chatId, msgId })
+    }).catch(()=>{});
+  }catch(e){}
+}
 // Upozornenia na lajk komentára / odpoveď v komentároch – zapisuje ich Worker
 // (overí, že lajk/komentár naozaj existuje), takže netreba meniť pravidlá databázy.
 async function c8notify(payload){
@@ -27490,6 +27504,45 @@ html body #view-profile.c8pd-on #c8pv-row,html body #view-profile.c8pd-on #c8pv-
 })();
 </script>
 <!-- =================== koniec: Môj profil – počítač =================== -->
+
+<script id="c8push-script">
+/* Otvorenie chatu z upozornenia (connect8.eu/?chat=UID) + zmazanie upozornení
+   od človeka, ktorého chat práve otvoríš (zmizne aj bodka na ikonke). */
+(function(){
+  function clearChatNotifs(uid){
+    try{
+      if(!uid || !('serviceWorker' in navigator)) return;
+      navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => {
+        if(r.getNotifications) r.getNotifications({ tag: 'c8chat-' + uid }).then(ns => ns.forEach(n => n.close())).catch(()=>{});
+      })).catch(()=>{});
+    }catch(e){}
+  }
+  if(typeof openChatWithUser === 'function'){
+    const orig = openChatWithUser;
+    window.openChatWithUser = openChatWithUser = function(user){
+      try{ clearChatNotifs(user && user.uid); }catch(e){}
+      return orig.apply(this, arguments);
+    };
+  }
+  let want = null;
+  try{ want = new URLSearchParams(location.search).get('chat'); }catch(e){}
+  if(!want || !/^[A-Za-z0-9_-]{1,128}$/.test(want)) return;
+  try{ const u = new URL(location.href); u.searchParams.delete('chat'); history.replaceState(null, '', u.pathname + u.search + u.hash); }catch(e){}
+  let tries = 0;
+  const t = setInterval(async () => {
+    tries++;
+    if(tries > 60){ clearInterval(t); return; }
+    if(typeof currentUser === 'undefined' || !currentUser || !currentUser.uid || typeof db === 'undefined' || !db) return;
+    clearInterval(t);
+    if(want === currentUser.uid) return;
+    try{
+      const d = await db.collection('profiles').doc(want).get();
+      const p = d.exists ? d.data() : {};
+      openChatWithUser({ uid: want, name: p.name || 'Používateľ', photoURL: p.avatarPhoto || p.photoURL || null });
+    }catch(e){}
+  }, 500);
+})();
+</script>
 
 </body>
 </html>
