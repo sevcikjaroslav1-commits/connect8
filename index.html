@@ -26270,6 +26270,12 @@ c8ApplyUsersView();
 .c8a-main{flex:1;min-height:0;display:flex;flex-direction:column;}
 .c8a-mapw{position:relative;flex:1;min-height:200px;}
 #c8a-map{position:absolute;inset:0;background:#E9EEF8;}
+/* zbalené zdroje mapy: malé „i“ v rohu, po ťuknutí sa rozbalí */
+#c8a-map .c8a-attr{cursor:pointer;border-radius:12px;margin:0 8px 8px 0;transition:all .2s;}
+#c8a-map .c8a-attr:not(.open){font-size:0;width:24px;height:24px;padding:0;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 1px 4px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;}
+#c8a-map .c8a-attr:not(.open) *{display:none;}
+#c8a-map .c8a-attr:not(.open)::before{content:'i';font-size:13px;font-weight:700;font-style:italic;font-family:Georgia,serif;color:#1B2440;}
+#c8a-map .c8a-attr.open{font-size:10px;max-width:calc(100% - 24px);padding:4px 8px;background:rgba(255,255,255,.92);}
 .c8a-cnt{position:absolute;left:10px;top:10px;z-index:500;background:#fff;border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.12);pointer-events:none;}
 .c8a-cnt.pills{background:none;box-shadow:none;padding:0;right:92px;display:flex;flex-wrap:wrap;gap:5px;}
 .c8a-cnt .pl{display:flex;align-items:center;gap:3px;background:#fff;border-radius:10px;padding:3px 8px 3px 4px;font-size:13px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.12);}
@@ -26985,6 +26991,14 @@ c8ApplyUsersView();
       L.control.zoom({ position:'topright' }).addTo(map);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:18, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · ✈️ ADS-B: adsb.lol, adsb.fi, airplanes.live · 🚆 cestovný poriadok © ŽSR (CC0), trate © OpenStreetMap' }).addTo(map);
       map.attributionControl.setPrefix(false);
+      // Zdroje (OpenStreetMap, ADS-B…) – licencia vyžaduje ich uvedenie, preto ich nemažeme úplne:
+      // po otvorení mapy sa ukážu na 5 s a potom sa zbalia do malého „i“ v rohu; ťuknutím sa zobrazia znova.
+      (function(){
+        const ac = map.attributionControl.getContainer();
+        ac.classList.add('c8a-attr', 'open');
+        setTimeout(() => ac.classList.remove('open'), 5000);
+        ac.addEventListener('click', e => { if(e.target.tagName !== 'A'){ e.stopPropagation(); ac.classList.toggle('open'); } });
+      })();
       layer = L.layerGroup().addTo(map);
       map.on('click', () => { if(follow && sel){ mini = true; fillSheet(); } else closeSheet(); });
       map.on('dragstart', () => { autoFit = false; if(follow){ follow = false; fillSheet(); } });
@@ -27348,6 +27362,123 @@ c8ApplyUsersView();
 })();
 </script>
 <!-- =================== koniec: Hovory – indikátor reči =================== -->
+
+<!-- =================== Môj profil – nové usporiadanie na POČÍTAČI (telefón sa nemení) =================== -->
+<style id="c8pd-style">
+/* Platí len keď má #view-profile triedu .c8pd-on = vlastný profil a šírka okna nad 760 px */
+#view-profile.c8pd-on .c8pd-back{display:block;margin:0 0 10px;}
+#view-profile.c8pd-on .c8pd-card{background:var(--card,#fff);border:1px solid var(--line,#E6E8F0);border-radius:24px;overflow:hidden;margin:0 0 16px;}
+#view-profile.c8pd-on .c8pd-cover{height:96px;background:#E9E6FF;}
+#view-profile.c8pd-on .c8pd-body{display:flex;flex-wrap:wrap;gap:24px;padding:0 28px 24px;align-items:flex-start;}
+/* ľavá časť karty: fotka, meno, počty, vizitka, naposledy online */
+#view-profile.c8pd-on .c8pd-body .profile-header{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:14px;margin:0;}
+#view-profile.c8pd-on .c8pd-body .profile-avatar-wrap{margin-top:-60px;}
+#view-profile.c8pd-on .c8pd-body .profile-avatar{width:120px !important;height:120px !important;font-size:38px !important;border:5px solid var(--card,#fff);box-sizing:border-box;}
+#view-profile.c8pd-on .c8pd-body .profile-name{font-size:32px;font-weight:800;letter-spacing:-.5px;line-height:1.15;}
+#view-profile.c8pd-on .c8pd-body .profile-stats{font-size:15px;margin-top:6px;}
+#view-profile.c8pd-on .c8pd-body .vizitka-btn{margin-top:14px;}
+#view-profile.c8pd-on .c8pd-body .last-online-row{margin-top:10px;}
+/* pravá časť karty: Hologram, Moja poloha, Vytvor životopis, Lietadlá · Vlaky a pod nimi Pozvať */
+#view-profile.c8pd-on .c8pd-side{flex:0 1 220px;min-width:190px;display:flex;flex-direction:column;gap:8px;padding-top:18px;}
+#view-profile.c8pd-on .c8pd-side .c8tr-col{width:100%;gap:8px;}
+#view-profile.c8pd-on .c8pd-side .c8tr-col > *{width:100%;box-sizing:border-box;min-height:40px;}
+#view-profile.c8pd-on .c8pd-side .profile-invite-btn{margin:0 !important;display:flex !important;flex-direction:row !important;align-items:center;justify-content:center;gap:8px;width:100%;
+  box-sizing:border-box;min-height:40px;border:1.5px solid #E4C6F0;border-radius:12px;padding:5px 10px;background:var(--card,#fff);}
+#view-profile.c8pd-on .c8pd-side .profile-invite-btn .invite-ring{transform:scale(.62);margin:-8px -6px;}
+#view-profile.c8pd-on .c8pd-side .profile-invite-btn .invite-label{display:block;font-size:14px;font-weight:700;}
+/* riadok „kto videl profil (23) + príbehy“ a karty Všetko/Reels/Videá/Fotky pod kartou profilu */
+#view-profile.c8pd-on #c8pv-row{margin:0 0 14px;}
+#view-profile.c8pd-on #c8pt-row{margin:0 0 14px;}
+</style>
+<script id="c8pd-script">
+/* Na počítači (šírka nad 760 px) a len vo VLASTNOM profile poskladá hlavičku do jednej karty:
+   [fialový pás] → vľavo fotka, meno, počty, vizitka, naposledy online
+                 → vpravo Hologram, Moja poloha, Vytvor životopis, Lietadlá · Vlaky a pod nimi Pozvať
+   pod kartou: karty Všetko/Reels/Videá/Fotky, potom riadok „kto videl profil + príbehy“.
+   Prvky sa iba PRESÚVAJÚ (nič sa nekopíruje), takže všetky ich funkcie fungujú ďalej.
+   Pri prechode na telefón alebo na cudzí profil sa všetko vráti presne na pôvodné miesto. */
+(function(){
+  const marks = [];           // pôvodné miesta presunutých prvkov
+  let card = null, side = null, top = null;
+
+  function mark(el){
+    if(!el || !el.parentNode) return;
+    const m = document.createElement('span'); m.className = 'c8pd-mark'; m.style.display = 'none';
+    el.parentNode.insertBefore(m, el);
+    marks.push([el, m]);
+  }
+  function revert(){
+    const view = document.getElementById('view-profile');
+    if(!view || !view.classList.contains('c8pd-on')) return;
+    for(let i = marks.length - 1; i >= 0; i--){
+      let [el, m] = marks[i];
+      // Hologram medzitým mohol byť zabalený do stĺpca tlačidiel → vráť celý stĺpec
+      if(el.id === 'c8holo-btn' && el.parentNode && el.parentNode.classList && el.parentNode.classList.contains('c8tr-col')) el = el.parentNode;
+      if(m.parentNode){ m.parentNode.insertBefore(el, m); m.remove(); }
+    }
+    marks.length = 0;
+    const back = document.getElementById('profile-back-btn'); if(back) back.classList.remove('c8pd-back');
+    if(card){ card.remove(); card = null; side = null; }
+    if(top){ top.style.display = ''; top = null; }
+    view.classList.remove('c8pd-on');
+  }
+  function own(){ try{ return !viewedProfileUser && !!currentUser; }catch(e){ return false; } }
+  function apply(){
+    const view = document.getElementById('view-profile'); if(!view) return;
+    if(!own() || window.innerWidth <= 760){ revert(); return; }
+    if(view.classList.contains('c8pd-on')) return;
+    const header = view.querySelector('.profile-header');
+    const back = document.getElementById('profile-back-btn');
+    const col = view.querySelector('.c8tr-col');
+    const inv = document.getElementById('profile-invite-btn');
+    const pv = document.getElementById('c8pv-row');
+    const tabs = document.getElementById('c8pt-row');
+    top = view.querySelector('.c8holo-toprow');
+    if(!header || !back) return;
+
+    card = document.createElement('div'); card.className = 'c8pd-card';
+    card.innerHTML = '<div class="c8pd-cover"></div><div class="c8pd-body"></div>';
+    const body = card.querySelector('.c8pd-body');
+    side = document.createElement('div'); side.className = 'c8pd-side';
+
+    mark(back); mark(header);
+    view.insertBefore(back, header);           // „← Späť na Plochu“ nad kartu
+    back.classList.add('c8pd-back');
+    view.insertBefore(card, header);
+    body.appendChild(header);
+    body.appendChild(side);
+    adopt();
+    // pod kartou: najprv Všetko/Reels/Videá/Fotky, potom riadok „kto videl profil + príbehy“
+    if(tabs){ mark(tabs); card.parentNode.insertBefore(tabs, card.nextSibling); }
+    if(pv){ mark(pv); (tabs || card).parentNode.insertBefore(pv, (tabs || card).nextSibling); }
+    view.classList.add('c8pd-on');
+    // tlačidlá v stĺpci (Moja poloha, životopis, Lietadlá) pridávajú iné skripty aj neskôr → dozbieraj ich
+    [300, 1200, 3000].forEach(ms => setTimeout(adopt, ms));
+  }
+  function adopt(){
+    const view = document.getElementById('view-profile');
+    if(!side || !view || !view.classList.contains('c8pd-on') && !card) return;
+    const col = view.querySelector('.c8tr-col');
+    const holo = document.getElementById('c8holo-btn');
+    const inv = document.getElementById('profile-invite-btn');
+    if(col){ if(!side.contains(col)){ mark(col); side.insertBefore(col, side.firstChild); } }
+    else if(holo && !side.contains(holo)){ mark(holo); side.insertBefore(holo, side.firstChild); }
+    if(inv && !side.contains(inv)){ mark(inv); side.appendChild(inv); }   // Pozvať vždy pod Lietadlá · Vlaky
+    else if(inv && side.lastElementChild !== inv) side.appendChild(inv);
+    if(top) top.style.display = [...top.children].every(c => c.classList.contains('c8pd-mark')) ? 'none' : '';
+  }
+
+  // napojenie na existujúce rozloženie profilu (c8pfLayout sa volá po každom otvorení profilu)
+  try{
+    if(typeof c8pfLayout === 'function'){
+      const orig = c8pfLayout;
+      c8pfLayout = function(){ revert(); const r = orig.apply(this, arguments); try{ apply(); }catch(e){} return r; };
+    }
+  }catch(e){}
+  window.addEventListener('resize', ()=>{ clearTimeout(apply._t); apply._t = setTimeout(()=>{ try{ c8pfLayout(); }catch(e){} }, 180); });
+})();
+</script>
+<!-- =================== koniec: Môj profil – počítač =================== -->
 
 </body>
 </html>
