@@ -27092,7 +27092,7 @@ c8ApplyUsersView();
   /* --- hlasový hovor: pulz okolo avatara druhého človeka --- */
   #call-avatar-big{position:relative;transition:box-shadow .25s;}
   #call-remote-audio-avatar.c8-talk #call-avatar-big{
-    animation:c8spkPulse 1.8s ease-out infinite;
+    box-shadow:0 0 0 4px var(--c8spk-him); /* oranžový kruh okolo fotky – svieti, nepulzuje */
   }
   @keyframes c8spkPulse{
     0%  {box-shadow:0 0 0 4px var(--c8spk-him),0 0 22px 4px rgba(255,138,31,.55),0 0 0 4px rgba(255,138,31,.55);}
@@ -27100,7 +27100,7 @@ c8ApplyUsersView();
     100%{box-shadow:0 0 0 4px var(--c8spk-him),0 0 22px 4px rgba(255,138,31,.55),0 0 0 44px rgba(255,138,31,0);}
   }
 
-  /* paličky (ekvalizér) – spoločné pre všetky miesta */
+  /* paličky (ekvalizér) – spoločné pre všetky miesta; ako jediné sa hýbu */
   .c8spk-bars{display:inline-flex;align-items:center;gap:3px;height:18px;}
   .c8spk-bars i{display:block;width:3px;height:18px;border-radius:2px;background:currentColor;transform:scaleY(.25);}
   .c8spk-on .c8spk-bars i{animation:c8spkBar .9s ease-in-out infinite;}
@@ -27140,23 +27140,23 @@ c8ApplyUsersView();
   .c8spk-me .c8spk-bars{color:var(--c8spk-me);visibility:hidden;}
   .c8spk-me .c8spk-mic{position:relative;width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
     background:rgba(255,255,255,.12);color:#fff;}
-  .c8spk-me.c8spk-on{background:rgba(46,224,127,.12);border-color:rgba(46,224,127,.55);animation:c8spkRow 1.4s ease-in-out infinite;}
+  .c8spk-me.c8spk-on{background:rgba(46,224,127,.12);border-color:rgba(46,224,127,.55);}
   .c8spk-me.c8spk-on small{color:#7DF0B0;}
   .c8spk-me.c8spk-on .c8spk-bars{visibility:visible;}
-  .c8spk-me.c8spk-on .c8spk-mic{background:var(--c8spk-me);color:#0E2A1B;animation:c8spkMic 1.2s ease-out infinite;}
+  .c8spk-me.c8spk-on .c8spk-mic{background:var(--c8spk-me);color:#0E2A1B;}
   .c8spk-me.c8spk-muted small{color:#FF7AAE;}
   @keyframes c8spkRow{0%,100%{box-shadow:0 0 6px rgba(46,224,127,.35);}50%{box-shadow:0 0 26px rgba(46,224,127,.6);}}
   @keyframes c8spkMic{0%{box-shadow:0 0 0 0 rgba(46,224,127,.6);}100%{box-shadow:0 0 0 14px rgba(46,224,127,0);}}
 
   /* --- videohovor: fialová žiara okolo videa druhého, zelený okraj tvojho okienka --- */
   .c8spk-vglow{position:absolute;inset:0;pointer-events:none;display:none;z-index:1;}
-  .call-modal.c8spk-video.c8spk-him .c8spk-vglow{display:block;animation:c8spkGlow 1.4s ease-in-out infinite;}
+  .call-modal.c8spk-video.c8spk-him .c8spk-vglow{display:block;box-shadow:inset 0 0 0 4px #6C5CFF,inset 0 0 36px rgba(108,92,255,.5);} /* svieti, nepulzuje */
   @keyframes c8spkGlow{
     0%,100%{box-shadow:inset 0 0 0 5px rgba(108,92,255,1),inset 0 0 48px rgba(108,92,255,.6);}
     50%    {box-shadow:inset 0 0 0 3px rgba(108,92,255,.7),inset 0 0 14px rgba(108,92,255,.25);}
   }
   #call-local-video{transition:border-color .2s;}
-  .call-modal.c8spk-video.c8spk-meon #call-local-video{border:3px solid var(--c8spk-me);animation:c8spkPip 1.4s ease-in-out infinite;}
+  .call-modal.c8spk-video.c8spk-meon #call-local-video{border:3px solid var(--c8spk-me);box-shadow:0 0 18px rgba(46,224,127,.6);}
   @keyframes c8spkPip{0%,100%{box-shadow:0 0 8px rgba(46,224,127,.45);}50%{box-shadow:0 0 30px rgba(46,224,127,.8);}}
   .c8spk-vpills{position:absolute;left:16px;bottom:100px;display:none;flex-direction:column;align-items:flex-start;gap:8px;z-index:2;}
   .call-modal.c8spk-video .c8spk-vpills{display:flex;}
