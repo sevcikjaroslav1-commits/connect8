@@ -27369,9 +27369,9 @@ c8ApplyUsersView();
 #view-profile.c8pd-on .c8pd-back{display:block;margin:0 0 10px;}
 #view-profile.c8pd-on .c8pd-card{background:var(--card,#fff);border:1px solid var(--line,#E6E8F0);border-radius:24px;overflow:hidden;margin:0 0 16px;}
 #view-profile.c8pd-on .c8pd-cover{height:96px;background:#E9E6FF;}
-#view-profile.c8pd-on .c8pd-body{display:flex;flex-wrap:wrap;gap:24px;padding:0 28px 24px;align-items:flex-start;}
+#view-profile.c8pd-on .c8pd-body{display:grid!important;grid-template-columns:minmax(0,1fr) 210px;gap:24px;padding:0 28px 24px;align-items:start;} /* tlačidlá vždy vpravo vedľa mena */
 /* ľavá časť karty: fotka, meno, počty, vizitka, naposledy online */
-#view-profile.c8pd-on .c8pd-body .profile-header{flex:1 1 320px;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:14px;margin:0;}
+#view-profile.c8pd-on .c8pd-body .profile-header{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:14px;margin:0;}
 #view-profile.c8pd-on .c8pd-body .profile-avatar-wrap{margin-top:-60px;}
 #view-profile.c8pd-on .c8pd-body .profile-avatar{width:120px !important;height:120px !important;font-size:38px !important;border:5px solid var(--card,#fff);box-sizing:border-box;}
 #view-profile.c8pd-on .c8pd-body .profile-name{font-size:32px;font-weight:800;letter-spacing:-.5px;line-height:1.15;}
@@ -27379,7 +27379,7 @@ c8ApplyUsersView();
 #view-profile.c8pd-on .c8pd-body .vizitka-btn{margin-top:14px;}
 #view-profile.c8pd-on .c8pd-body .last-online-row{margin-top:10px;}
 /* pravá časť karty: Hologram, Moja poloha, Vytvor životopis, Lietadlá · Vlaky a pod nimi Pozvať */
-#view-profile.c8pd-on .c8pd-side{flex:0 1 220px;min-width:190px;display:flex;flex-direction:column;gap:8px;padding-top:18px;}
+#view-profile.c8pd-on .c8pd-side{min-width:0;display:flex;flex-direction:column;gap:8px;padding-top:18px;}
 #view-profile.c8pd-on .c8pd-side .c8tr-col{width:100%;gap:8px;}
 #view-profile.c8pd-on .c8pd-side .c8tr-col > *{width:100%;box-sizing:border-box;min-height:40px;}
 #view-profile.c8pd-on .c8pd-side .profile-invite-btn{margin:0 !important;display:flex !important;flex-direction:row !important;align-items:center;justify-content:center;gap:8px;width:100%;
@@ -27387,8 +27387,18 @@ c8ApplyUsersView();
 #view-profile.c8pd-on .c8pd-side .profile-invite-btn .invite-ring{transform:scale(.62);margin:-8px -6px;}
 #view-profile.c8pd-on .c8pd-side .profile-invite-btn .invite-label{display:block;font-size:14px;font-weight:700;}
 /* riadok „kto videl profil (23) + príbehy“ a karty Všetko/Reels/Videá/Fotky pod kartou profilu */
-#view-profile.c8pd-on #c8pv-row{margin:0 0 14px;}
 #view-profile.c8pd-on #c8pt-row{margin:0 0 14px;}
+/* riadok „kto videl profil + príbehy“ ako biela karta na celú šírku */
+html body #view-profile.c8pd-on #c8pv-row,html body #view-profile.c8pd-on #c8pv-row.c8hl-row{
+  width:100%!important;box-sizing:border-box!important;margin:0 0 16px!important;background:var(--card,#fff)!important;
+  border:1px solid var(--line,#E6E8F0)!important;border-radius:20px!important;padding:14px 18px!important;height:auto!important;min-height:0!important;gap:16px!important;}
+/* pripomienky (STK, PZP, Daň…) na celú šírku v jednom riadku */
+#view-profile.c8pd-on .pduty-row{max-width:none;width:100%;gap:10px;margin:0 0 16px;}
+#view-profile.c8pd-on .pduty-btn{min-height:70px;border-radius:14px;font-size:13px;}
+/* zapisovací kalendár ako biela karta na celú šírku, nižšie políčka dní */
+#view-profile.c8pd-on .pcal-card{max-width:none;width:100%;box-sizing:border-box;background:var(--card,#fff);border:1px solid var(--line,#E6E8F0);border-radius:20px;padding:20px;margin:0 0 16px;}
+#view-profile.c8pd-on .pcal-grid{gap:6px;}
+#view-profile.c8pd-on .pcal-day{aspect-ratio:auto;height:42px;background:#FAFBFD;border-color:#EEF0F6;font-size:14px;}
 </style>
 <script id="c8pd-script">
 /* Na počítači (šírka nad 760 px) a len vo VLASTNOM profile poskladá hlavičku do jednej karty:
