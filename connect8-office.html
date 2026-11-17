@@ -5126,10 +5126,26 @@ loop();
    - samostatne otvorený Office: telefón → ponuka zdieľania, počítač → súbor sa stiahne a otvorí sa mail / WhatsApp */
 (function(){
   function host(){ try{ return (window.parent && window.parent !== window && window.parent.c8Share) ? window.parent.c8Share : null; }catch(_){ return null; } }
+  const isPhone = () => { try{ return matchMedia('(pointer:coarse)').matches; }catch(_){ return false; } };
+  // telefón bez Connect8: okno hneď, súbor sa pripraví, odošle sa ďalším ťuknutím
+  function phoneSheet(get){
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(15,17,30,.5);display:flex;align-items:flex-end';
+    ov.innerHTML = '<div style="background:#fff;width:100%;border-radius:20px 20px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));font-family:inherit"><div style="display:flex;align-items:center;gap:10px"><b style="font-size:17px;flex:1">📤 Odoslať súbor</b><button data-x style="width:32px;height:32px;border-radius:50%;border:0;background:#F1F3F7">✕</button></div><p data-s style="font-size:13px;color:#6B6F86;margin:6px 0 12px">⏳ Pripravujem súbor…</p><button data-go disabled style="width:100%;border:0;border-radius:14px;padding:13px;font-weight:800;font-size:15px;background:#5B4CFF;color:#fff;opacity:.5">Vybrať aplikáciu (Gmail, WhatsApp…)</button></div>';
+    document.body.appendChild(ov);
+    let closed = false;
+    ov.addEventListener('click', (e) => { if (e.target === ov || e.target.closest('[data-x]')) { closed = true; ov.remove(); } });
+    get().then((f) => {
+      if (closed) return;
+      const file = new File([f.blob], f.name, { type: f.blob.type || 'application/octet-stream' });
+      const s = ov.querySelector('[data-s]'), go = ov.querySelector('[data-go]');
+      if (!(navigator.canShare && navigator.canShare({ files: [file] }))) { s.textContent = 'Tento telefón nevie zdieľať súbor – stiahol sa, prilož ho ručne.'; download(f.blob, f.name); return; }
+      s.textContent = '📄 ' + f.name;
+      go.disabled = false; go.style.opacity = '1';
+      go.onclick = async () => { try { await navigator.share({ files: [file], title: f.name }); ov.remove(); } catch (e) { if (e && e.name === 'AbortError') { ov.remove(); return; } s.textContent = '❌ Zdieľanie sa nepodarilo: ' + (e && e.message || e); } };
+    }).catch(() => { if (!closed) ov.querySelector('[data-s]').textContent = '❌ Súbor sa nepodarilo pripraviť. Skontrolujte internet a skúste znova.'; });
+  }
   async function local(ch, f){
-    const file = new File([f.blob], f.name, { type: f.blob.type || 'application/octet-stream' });
-    const phone = (() => { try{ return matchMedia('(pointer:coarse)').matches; }catch(_){ return false; } })();
-    if(phone && navigator.canShare && navigator.canShare({ files:[file] })){ try{ await navigator.share({ files:[file], title:f.name }); }catch(_){} return; }
     if(ch === 'c8'){ toast('Posielanie cez Connect8 funguje, keď otvoríš Office priamo v Connect8 (ľavé menu → Connect8 Office).', 6000); return; }
     download(f.blob, f.name);
     if(ch === 'wa') window.open('https://web.whatsapp.com/', '_blank');
@@ -5142,6 +5158,8 @@ loop();
     if(!get) return;
     const ch = b.dataset.sh, H = host();
     if(H){ H.send(ch, get); return; }
+    if(ch !== 'c8' && isPhone() && navigator.share){ phoneSheet(get); return; }
+    toast('⏳ Pripravujem súbor…');
     let f; try{ f = await get(); }catch(_){ toast('Súbor sa nepodarilo pripraviť. Skontrolujte pripojenie na internet.'); return; }
     local(ch, f);
   });
