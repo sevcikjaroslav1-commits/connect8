@@ -289,6 +289,13 @@ dialog.wide{width:min(640px,94vw);max-height:92vh}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* Tlač dokumentu do PDF */
+.shb{white-space:nowrap}
+#peroPrint>[data-ic],#psPrint>[data-ic]{color:#2563EB}
+.shrow{display:none;gap:4px;padding:6px 10px;background:#fff;border-bottom:1px solid var(--line);align-items:center}
+.shrow b{font-size:12px;color:#6B6F86;font-weight:600;margin-right:2px}
+.shrow .shb{flex:1;justify-content:center}
+@media (max-width:900px){ .menubar .shb,.menubar .shsep{display:none!important} .shrow{display:flex} }
+@media print{ .shrow{display:none!important} }
 @media print{
   body.printing .app>*:not(#mod-pero),body.printing #toast{display:none!important}
   body.printing #mod-pero>*:not(.work){display:none!important}
@@ -402,10 +409,12 @@ button,.tab,.btn,label{touch-action:manipulation}
     <span aria-hidden="true" style="width:1px;height:22px;background:var(--line);margin:0 4px"></span>
     <button class="btn" id="peroPreview" title="Presne tak, ako dokument uvidí Word"><span data-ic="eye"></span>Náhľad</button>
     <button class="btn" id="peroPrint" title="Tlačiť (Ctrl+P)"><span data-ic="print"></span>Tlačiť</button>
+    <span class="shsep" aria-hidden="true" style="width:1px;height:22px;background:var(--line);margin:0 4px"></span><button class="btn shb" data-sh="mail" data-mod="pero" title="Poslať – Mail"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#EA580C" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Mail</button><button class="btn shb" data-sh="c8" data-mod="pero" title="Poslať – Connect8"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#5B4CFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Connect8</button><button class="btn shb" data-sh="wa" data-mod="pero" title="Poslať – WhatsApp"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#16A34A" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.8-1.1-4.6-4-4.8-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.4z"/></svg>WhatsApp</button>
     <div class="spacer"></div>
     <input id="peroTitle" class="title-inp" value="Údržba 3D tlačiarne" aria-label="Názov dokumentu">
     <span class="saved" id="peroSaved"><span data-ic="check"></span><span>Uložené</span></span>
   </div>
+  <div class="shrow"><b>Poslať:</b><button class="btn shb" data-sh="mail" data-mod="pero" title="Poslať – Mail"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#EA580C" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Mail</button><button class="btn shb" data-sh="c8" data-mod="pero" title="Poslať – Connect8"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#5B4CFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Connect8</button><button class="btn shb" data-sh="wa" data-mod="pero" title="Poslať – WhatsApp"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#16A34A" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.8-1.1-4.6-4-4.8-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.4z"/></svg>WhatsApp</button></div>
   <div class="ribbon" id="peroRibbon">
     <div class="grp"><div class="grp-row">
       <button class="btn icon" data-cmd="undo" aria-label="Späť" title="Späť (Ctrl+Z)"><span data-ic="undo"></span></button>
@@ -556,10 +565,12 @@ button,.tab,.btn,label{touch-action:manipulation}
     <button class="btn" id="mzSaveAsBtn" title="Uložiť ako (Ctrl+Shift+S)">Uložiť ako…</button>
     <span aria-hidden="true" style="width:1px;height:22px;background:var(--line);margin:0 4px"></span>
     <button class="btn" id="mzNewSheet">Nový hárok</button>
+    <span class="shsep" aria-hidden="true" style="width:1px;height:22px;background:var(--line);margin:0 4px"></span><button class="btn shb" data-sh="mail" data-mod="mriezka" title="Poslať – Mail"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#EA580C" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Mail</button><button class="btn shb" data-sh="c8" data-mod="mriezka" title="Poslať – Connect8"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#5B4CFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Connect8</button><button class="btn shb" data-sh="wa" data-mod="mriezka" title="Poslať – WhatsApp"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#16A34A" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.8-1.1-4.6-4-4.8-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.4z"/></svg>WhatsApp</button>
     <div class="spacer"></div>
     <input id="mzTitle" class="title-inp" value="Môj zošit" aria-label="Názov zošita">
     <span class="saved"><span data-ic="check"></span><span>Ukladá sa automaticky</span></span>
   </div>
+  <div class="shrow"><b>Poslať:</b><button class="btn shb" data-sh="mail" data-mod="mriezka" title="Poslať – Mail"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#EA580C" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Mail</button><button class="btn shb" data-sh="c8" data-mod="mriezka" title="Poslať – Connect8"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#5B4CFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Connect8</button><button class="btn shb" data-sh="wa" data-mod="mriezka" title="Poslať – WhatsApp"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#16A34A" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.8-1.1-4.6-4-4.8-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.4z"/></svg>WhatsApp</button></div>
   <div class="ribbon">
     <div class="grp"><div class="grp-row">
       <button class="btn icon" id="mzUndo" aria-label="Späť" title="Späť (Ctrl+Z)"><span data-ic="undo"></span></button>
@@ -651,10 +662,12 @@ button,.tab,.btn,label{touch-action:manipulation}
     <button class="btn" id="psSaveBtn" title="Uložiť ako obrázok PNG (Ctrl+S)"><span data-ic="save"></span>Uložiť</button>
     <button class="btn" id="psSaveAsBtn" title="Uložiť ako (Ctrl+Shift+S)">Uložiť ako…</button>
     <button class="btn" id="psPrint" title="Tlačiť (Ctrl+P)"><span data-ic="print"></span>Tlačiť</button>
+    <span class="shsep" aria-hidden="true" style="width:1px;height:22px;background:var(--line);margin:0 4px"></span><button class="btn shb" data-sh="mail" data-mod="stetec" title="Poslať – Mail"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#EA580C" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Mail</button><button class="btn shb" data-sh="c8" data-mod="stetec" title="Poslať – Connect8"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#5B4CFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Connect8</button><button class="btn shb" data-sh="wa" data-mod="stetec" title="Poslať – WhatsApp"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#16A34A" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.8-1.1-4.6-4-4.8-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.4z"/></svg>WhatsApp</button>
     <div class="spacer"></div>
     <input id="psTitle" class="title-inp" value="obrazok" aria-label="Názov obrázka">
     <span class="saved" id="psDims">1200 × 750 px</span>
   </div>
+  <div class="shrow"><b>Poslať:</b><button class="btn shb" data-sh="mail" data-mod="stetec" title="Poslať – Mail"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#EA580C" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>Mail</button><button class="btn shb" data-sh="c8" data-mod="stetec" title="Poslať – Connect8"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#5B4CFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Connect8</button><button class="btn shb" data-sh="wa" data-mod="stetec" title="Poslať – WhatsApp"><svg viewBox="0 0 24 24" width="17" height="17" style="color:#16A34A" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.4-.7-2.8-1.1-4.6-4-4.8-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.4z"/></svg>WhatsApp</button></div>
   <div class="ribbon">
     <div class="grp"><div class="grp-row">
       <button class="btn" id="psPaste" title="Prilepiť obrázok zo schránky (Ctrl+V)"><span data-ic="paste"></span>Prilepiť</button>
@@ -1704,6 +1717,8 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
   $('#peroSave').addEventListener('click', () => fileSave(false));
   $('#peroSaveAs').addEventListener('click', () => fileSave(true));
   Dielna.savers.pero = { save: () => fileSave(false), saveAs: () => fileSave(true) };
+  Dielna.share = Dielna.share || {};
+  Dielna.share.pero = async () => { save(); return { blob: await buildDocx(), name: safeName(title.value, 'dokument') + '.docx' }; };
   $('#peroNew').addEventListener('click', () => {
     if (!confirm('Vytvoriť nový prázdny dokument? Aktuálny text sa prepíše.')) return;
     page.innerHTML = '<h1>Nový dokument</h1><p><br></p>';
@@ -2904,6 +2919,8 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
     if (h) { fileHandle = h; fileKind = 'xlsx'; }
   }
   $('#mzSaveBtn').addEventListener('click', () => fileSave(false));
+  Dielna.share = Dielna.share || {};
+  Dielna.share.mriezka = async () => { commitEdit(); M.title = $('#mzTitle').value; save(); const X = await needXlsx(); return { blob: buildXlsx(X), name: safeName(M.title, 'zosit') + '.xlsx' }; };
   $('#mzSaveAsBtn').addEventListener('click', () => fileSave(true));
   $('#mzNew').addEventListener('click', () => {
     if (!confirm('Vytvoriť nový prázdny zošit? Aktuálne údaje sa prepíšu.')) return;
@@ -3982,6 +3999,8 @@ $$('.tab').forEach((t) => t.addEventListener('click', () => showModule(t.dataset
   $('#psSaveBtn').addEventListener('click', () => fileSave(false));
   $('#psSaveAsBtn').addEventListener('click', () => fileSave(true));
   Dielna.savers.stetec = { save: () => fileSave(false), saveAs: () => fileSave(true) };
+  Dielna.share = Dielna.share || {};
+  Dielna.share.stetec = async () => { save(); return { blob: dataUrlBlob(composite(null).toDataURL('image/png')), name: safeName($('#psTitle').value, 'obrazok') + '.png' }; };
   $('#psTitle').addEventListener('input', scheduleSave);
 
   function applyProject(d) {
@@ -5057,6 +5076,34 @@ addObject(gearGeometry(18, 3, 8, 5), 'ozubene_koleso_18z');
 setView('iso');
 resize();
 loop();
+</script>
+<script id="sh-script">
+/* Poslať: Mail · Connect8 · WhatsApp
+   - Office otvorený v Connect8 (bočný panel): všetko zariadi Connect8 – telefón → ponuka zdieľania so súborom,
+     počítač → odkaz platný 14 dní, Connect8 → výber človeka a súbor do chatu
+   - samostatne otvorený Office: telefón → ponuka zdieľania, počítač → súbor sa stiahne a otvorí sa mail / WhatsApp */
+(function(){
+  function host(){ try{ return (window.parent && window.parent !== window && window.parent.c8Share) ? window.parent.c8Share : null; }catch(_){ return null; } }
+  async function local(ch, f){
+    const file = new File([f.blob], f.name, { type: f.blob.type || 'application/octet-stream' });
+    const phone = (() => { try{ return matchMedia('(pointer:coarse)').matches; }catch(_){ return false; } })();
+    if(phone && navigator.canShare && navigator.canShare({ files:[file] })){ try{ await navigator.share({ files:[file], title:f.name }); }catch(_){} return; }
+    if(ch === 'c8'){ toast('Posielanie cez Connect8 funguje, keď otvoríš Office priamo v Connect8 (ľavé menu → Connect8 Office).', 6000); return; }
+    download(f.blob, f.name);
+    if(ch === 'wa') window.open('https://web.whatsapp.com/', '_blank');
+    else location.href = 'mailto:?subject=' + encodeURIComponent(f.name) + '&body=' + encodeURIComponent('Dobrý deň,\n\nposielam dokument ' + f.name + ' (v prílohe).\n');
+    toast('Súbor ' + f.name + ' sa stiahol – prilož ho ' + (ch === 'wa' ? 'do WhatsAppu' : 'do mailu') + '.', 6000);
+  }
+  document.addEventListener('click', async (e) => {
+    const b = e.target.closest('.shb'); if(!b) return;
+    const get = window.Dielna && Dielna.share && Dielna.share[b.dataset.mod];
+    if(!get) return;
+    const ch = b.dataset.sh, H = host();
+    if(H){ H.send(ch, get); return; }
+    let f; try{ f = await get(); }catch(_){ toast('Súbor sa nepodarilo pripraviť. Skontrolujte pripojenie na internet.'); return; }
+    local(ch, f);
+  });
+})();
 </script>
 </body>
 </html>
