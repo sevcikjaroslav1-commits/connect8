@@ -290,6 +290,8 @@ dialog.wide{width:min(640px,94vw);max-height:92vh}
 
 /* Tlač dokumentu do PDF */
 .shb{white-space:nowrap}
+.shb svg{flex:none;width:17px;height:17px;min-width:17px}
+@media (max-width:900px){ .shrow .shb{gap:5px;padding-left:4px;padding-right:4px;min-width:0} .shrow .shb svg{width:19px;height:19px;min-width:19px} }
 #peroPrint svg.i,#psPrint svg.i,#mzPrint svg.i{color:#2563EB;stroke:#2563EB}
 #peroSave svg.i,#mzSaveBtn svg.i,#psSaveBtn svg.i{color:#0D9488;stroke:#0D9488}
 .shrow{display:none;gap:4px;padding:6px 10px;background:#fff;border-bottom:1px solid var(--line);align-items:center}
