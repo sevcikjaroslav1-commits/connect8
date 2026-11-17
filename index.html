@@ -27327,7 +27327,7 @@ c8ApplyUsersView();
 
   const vpills = document.createElement('div');        // bubliny vo videohovore
   vpills.className = 'c8spk-vpills';
-  vpills.innerHTML = '<div class="c8spk-vpill him">' + BARS(4) + '<span class="c8spk-vname">hovorí</span></div>'
+  vpills.innerHTML = '<div class="c8spk-vpill him">' + BARS(5) + '<span class="c8spk-vname">hovorí</span></div>'
                    + '<div class="c8spk-vpill me">' + BARS(5) + '<span>Hovoríš…</span></div>';
   screen.appendChild(vpills);
   const vHim = vpills.querySelector('.him'), vMe = vpills.querySelector('.me'), vName = vpills.querySelector('.c8spk-vname');
@@ -27954,6 +27954,23 @@ html body #view-profile.c8pd-on #c8pv-row,html body #view-profile.c8pd-on #c8pv-
 .c8ch-pb{background:#fff;color:#16182B;border-radius:22px;padding:22px;max-width:380px;text-align:center;font-family:inherit}
 .c8ch-pb h3{margin:6px 0;font-size:19px}.c8ch-pb p{font-size:14px;color:#4A4E66;line-height:1.5;margin:0 0 14px}
 .c8ch-pb button{width:100%;border:0;border-radius:14px;padding:12px;font-weight:800;font-size:15px;background:#5B4CFF;color:#fff;cursor:pointer;font-family:inherit}
+</style>
+
+<style id="c8spk2-style">
+/* Videohovor bez rámikov: len paličky, keď niekto hovorí.
+   Zelené (ty) pod tvojím okienkom vpravo hore, oranžové (druhý) vľavo dole – rovnako veľké. */
+.call-modal.c8spk-video .c8spk-vglow{display:none!important;}
+.call-modal.c8spk-video #call-local-video,
+.call-modal.c8spk-video.c8spk-meon #call-local-video{border:0!important;box-shadow:none!important;animation:none!important;}
+.call-modal.c8spk-video .c8spk-vpills{position:static;display:block;}
+.call-modal.c8spk-video .c8spk-vpill{position:absolute;z-index:3;display:none;justify-content:center;align-items:center;gap:0;
+  width:110px;height:26px;padding:0;border:0!important;border-radius:999px;background:rgba(0,0,0,.38);box-shadow:none;backdrop-filter:blur(4px);}
+.call-modal.c8spk-video .c8spk-vpill.c8spk-on{display:flex;}
+.call-modal.c8spk-video .c8spk-vpill > span:not(.c8spk-bars){display:none!important;}
+.call-modal.c8spk-video .c8spk-vpill .c8spk-bars{gap:3px;height:16px;}
+.call-modal.c8spk-video .c8spk-vpill .c8spk-bars i{width:3px;height:16px;}
+.call-modal.c8spk-video .c8spk-vpill.me{top:calc(16px + env(safe-area-inset-top,0px) + 156px);right:16px;}
+.call-modal.c8spk-video .c8spk-vpill.him{left:16px;bottom:100px;}
 </style>
 </body>
 </html>
