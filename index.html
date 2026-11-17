@@ -27794,17 +27794,46 @@ html body #view-profile.c8pd-on #c8pv-row,html body #view-profile.c8pd-on #c8pv-
   /* ---------- hlavná funkcia ---------- */
   // channel: 'print' | 'mail' | 'wa' | 'c8';  getFile: async () => ({ blob, name })
   // telefón: okno sa ukáže hneď, súbor sa pripraví a odošle sa ďalším ťuknutím (telefón to vyžaduje)
+  // Chrome na Androide vie zdieľať ako súbor len niektoré typy (PDF, obrázky, video, text…).
+  // Word a Excel nie – tie pošleme ako odkaz (platí 14 dní).
+  const FILE_OK = ['pdf','png','jpg','jpeg','webp','gif','bmp','txt','csv','mp3','mp4','m4a','wav','webm','ogg'];
   async function phoneSend(getFile){
     const ov = sheet(`<div class="c8sh-hd"><h3>📤 Odoslať súbor</h3><button class="c8sh-x" data-x>✕</button></div><p class="c8sh-sub" data-s>⏳ Pripravujem súbor…</p><button class="c8sh-go" data-go disabled>Vybrať aplikáciu (Gmail, WhatsApp…)</button>`);
     let closed = false; ov.querySelector('[data-x]').onclick = () => { closed = true; ov.remove(); };
+    const st = ov.querySelector('[data-s]'), go = ov.querySelector('[data-go]');
     let f;
-    try{ f = await getFile(); }catch(e){ ov.querySelector('[data-s]').textContent = '❌ Súbor sa nepodarilo pripraviť. Skontroluj internet a skús znova.'; return; }
+    try{ f = await getFile(); }catch(e){ st.textContent = '❌ Súbor sa nepodarilo pripraviť. Skontroluj internet a skús znova.'; return; }
     if(closed || !f || !f.blob) return;
     const file = new File([f.blob], f.name, { type: f.blob.type || 'application/octet-stream' });
-    if(!(navigator.canShare && navigator.canShare({ files:[file] }))){ ov.remove(); return viaLink('mail', f.blob, f.name); }
-    ov.querySelector('[data-s]').textContent = '📄 ' + f.name + ' · ' + fmtSize(f.blob.size);
-    const go = ov.querySelector('[data-go]'); go.disabled = false;
-    go.onclick = async () => { try{ await navigator.share({ files:[file], title: f.title || f.name }); ov.remove(); }catch(e){ if(e && e.name === 'AbortError'){ ov.remove(); return; } ov.querySelector('[data-s]').textContent = '❌ Zdieľanie sa nepodarilo: ' + (e && e.message || e); } };
+    let payload = null;
+    if(FILE_OK.includes(extOf(f.name)) && navigator.canShare && navigator.canShare({ files:[file] })){
+      payload = { files:[file], title: f.title || f.name };
+      st.textContent = '📄 ' + f.name + ' · ' + fmtSize(f.blob.size) + ' · pošle sa ako príloha';
+    }else{
+      st.textContent = '⏳ Nahrávam ' + f.name + '…';
+      try{
+        const L = await makeLink(f.blob, f.name);
+        const until = L.expiresAt ? ' (odkaz platí do ' + fmtDate(L.expiresAt) + ')' : '';
+        payload = { title: f.name, text: 'Posielam ti dokument ' + f.name + ' 📄\n' + L.link + until };
+        st.textContent = '📄 ' + f.name + ' · pošle sa ako odkaz' + (L.expiresAt ? ' (platí 14 dní)' : '');
+      }catch(e){ st.textContent = '❌ Dokument sa nepodarilo nahrať: ' + (e && e.message || e); return; }
+    }
+    if(closed) return;
+    go.disabled = false;
+    go.onclick = async () => {
+      try{ await navigator.share(payload); ov.remove(); }
+      catch(e){
+        if(e && e.name === 'AbortError'){ ov.remove(); return; }
+        if(payload.files){   // súbor telefón nevzal → skús odkaz
+          st.textContent = '⏳ Posielam radšej ako odkaz…'; go.disabled = true;
+          try{ const L = await makeLink(f.blob, f.name); payload = { title: f.name, text: 'Posielam ti dokument ' + f.name + ' 📄\n' + L.link + (L.expiresAt ? ' (odkaz platí do ' + fmtDate(L.expiresAt) + ')' : '') };
+            st.textContent = '📄 ' + f.name + ' · pošle sa ako odkaz (platí 14 dní) – ťukni znova'; go.disabled = false; }
+          catch(err){ st.textContent = '❌ Nepodarilo sa: ' + (err && err.message || err); }
+          return;
+        }
+        st.textContent = '❌ Zdieľanie sa nepodarilo: ' + (e && e.message || e);
+      }
+    };
   }
   async function send(channel, getFile){
     if((channel === 'mail' || channel === 'wa') && isPhone() && navigator.share) return phoneSend(getFile);
