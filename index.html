@@ -27793,7 +27793,21 @@ html body #view-profile.c8pd-on #c8pv-row,html body #view-profile.c8pd-on #c8pv-
 
   /* ---------- hlavná funkcia ---------- */
   // channel: 'print' | 'mail' | 'wa' | 'c8';  getFile: async () => ({ blob, name })
+  // telefón: okno sa ukáže hneď, súbor sa pripraví a odošle sa ďalším ťuknutím (telefón to vyžaduje)
+  async function phoneSend(getFile){
+    const ov = sheet(`<div class="c8sh-hd"><h3>📤 Odoslať súbor</h3><button class="c8sh-x" data-x>✕</button></div><p class="c8sh-sub" data-s>⏳ Pripravujem súbor…</p><button class="c8sh-go" data-go disabled>Vybrať aplikáciu (Gmail, WhatsApp…)</button>`);
+    let closed = false; ov.querySelector('[data-x]').onclick = () => { closed = true; ov.remove(); };
+    let f;
+    try{ f = await getFile(); }catch(e){ ov.querySelector('[data-s]').textContent = '❌ Súbor sa nepodarilo pripraviť. Skontroluj internet a skús znova.'; return; }
+    if(closed || !f || !f.blob) return;
+    const file = new File([f.blob], f.name, { type: f.blob.type || 'application/octet-stream' });
+    if(!(navigator.canShare && navigator.canShare({ files:[file] }))){ ov.remove(); return viaLink('mail', f.blob, f.name); }
+    ov.querySelector('[data-s]').textContent = '📄 ' + f.name + ' · ' + fmtSize(f.blob.size);
+    const go = ov.querySelector('[data-go]'); go.disabled = false;
+    go.onclick = async () => { try{ await navigator.share({ files:[file], title: f.title || f.name }); ov.remove(); }catch(e){ if(e && e.name === 'AbortError'){ ov.remove(); return; } ov.querySelector('[data-s]').textContent = '❌ Zdieľanie sa nepodarilo: ' + (e && e.message || e); } };
+  }
   async function send(channel, getFile){
+    if((channel === 'mail' || channel === 'wa') && isPhone() && navigator.share) return phoneSend(getFile);
     let f;
     try{ f = await getFile(); }catch(e){ toast('❌ Súbor sa nepodarilo pripraviť', 4000); return; }
     if(!f || !f.blob) return;
