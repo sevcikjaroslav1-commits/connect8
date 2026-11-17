@@ -5139,7 +5139,8 @@ loop();
       if (closed) return;
       const file = new File([f.blob], f.name, { type: f.blob.type || 'application/octet-stream' });
       const s = ov.querySelector('[data-s]'), go = ov.querySelector('[data-go]');
-      if (!(navigator.canShare && navigator.canShare({ files: [file] }))) { s.textContent = 'Tento telefón nevie zdieľať súbor – stiahol sa, prilož ho ručne.'; download(f.blob, f.name); return; }
+      const okExt = ['pdf','png','jpg','jpeg','webp','gif','txt','csv'].includes((f.name.split('.').pop() || '').toLowerCase());
+      if (!okExt || !(navigator.canShare && navigator.canShare({ files: [file] }))) { s.textContent = 'Tento typ súboru telefón nevie poslať ako prílohu – stiahol sa, prilož ho ručne. (V Connect8 sa pošle ako odkaz.)'; download(f.blob, f.name); return; }
       s.textContent = '📄 ' + f.name;
       go.disabled = false; go.style.opacity = '1';
       go.onclick = async () => { try { await navigator.share({ files: [file], title: f.name }); ov.remove(); } catch (e) { if (e && e.name === 'AbortError') { ov.remove(); return; } s.textContent = '❌ Zdieľanie sa nepodarilo: ' + (e && e.message || e); } };
