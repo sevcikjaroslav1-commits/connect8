@@ -8853,22 +8853,54 @@ function formatChatMsgTime(ts){
   return { short, full };
 }
 
-function subscribeToChatMessages(){
+/* Správy sa po 30 dňoch automaticky mažú (Worker c8-moderator).
+   Pri otvorení chatu sa načíta posledných 20 správ, staršie cez „Načítať staršie“. */
+const C8CH_KEEP_DAYS = 30, C8CH_PAGE = 20;
+let c8chLimit = C8CH_PAGE, c8chKeepScroll = null;
+function c8chLoadOlder(){
+  const c = document.getElementById('chat-messages');
+  c8chKeepScroll = c ? c.scrollHeight - c.scrollTop : null;
+  c8chLimit += C8CH_PAGE;
+  subscribeToChatMessages(true);
+}
+function c8chNotice(){
+  try{
+    const k = 'c8ch30_' + (currentUser && currentUser.uid || '');
+    if(localStorage.getItem(k)) return;
+    localStorage.setItem(k, '1');
+    const tr = (typeof t === 'function') ? t : (x => x);
+    const ov = document.createElement('div'); ov.className = 'c8ch-pop';
+    ov.innerHTML = '<div class="c8ch-pb"><div style="font-size:40px">🕒</div><h3>' + tr('Správy sa mažú po 30 dňoch') + '</h3><p>' + tr('Kvôli súkromiu Connect8 automaticky a natrvalo maže správy, fotky a hlasové správy staršie ako 30 dní. Nedajú sa obnoviť.') + '<br><br>' + tr('Dôležité veci si ulož inam.') + '</p><button type="button">' + tr('Rozumiem') + '</button></div>';
+    ov.querySelector('button').onclick = () => ov.remove();
+    document.body.appendChild(ov);
+  }catch(e){}
+}
+function subscribeToChatMessages(keepLimit){
   if(chatMessagesUnsub){ chatMessagesUnsub(); chatMessagesUnsub = null; } if(typeof c8rrStop==='function') c8rrStop();
   const container = document.getElementById('chat-messages');
-  container.innerHTML = '<div class="profile-empty">Načítavam správy...</div>';
+  if(!keepLimit){ c8chLimit = C8CH_PAGE; c8chKeepScroll = null; container.innerHTML = '<div class="profile-empty">Načítavam správy...</div>'; c8chNotice(); }
   c8rrWatch();
+  const tr0 = (typeof t === 'function') ? t : (x => x);
 
   chatMessagesUnsub = db.collection('chats').doc(currentChatId).collection('messages')
-    .orderBy('createdAt', 'asc')
+    .orderBy('createdAt', 'desc').limit(c8chLimit)
     .onSnapshot(snap=>{
       container.innerHTML = '';
       c8rrMine = [];
       if(snap.empty){
-        container.innerHTML = '<div class="profile-empty">Zatiaľ žiadne správy. Napíš prvú!</div>';
+        container.innerHTML = '<div class="c8ch-info">🕒 ' + tr0('Správy staršie ako 30 dní sa automaticky mažú') + '</div><div class="profile-empty">Zatiaľ žiadne správy. Napíš prvú!</div>';
         return;
       }
-      snap.forEach(doc=>{
+      const info = document.createElement('div'); info.className = 'c8ch-info';
+      info.textContent = '🕒 ' + tr0('Správy staršie ako 30 dní sa automaticky mažú');
+      container.appendChild(info);
+      if(snap.size >= c8chLimit){
+        const more = document.createElement('button'); more.type = 'button'; more.className = 'c8ch-more';
+        more.textContent = '⬆ ' + tr0('Načítať staršie');
+        more.onclick = c8chLoadOlder;
+        container.appendChild(more);
+      }
+      snap.docs.slice().reverse().forEach(doc=>{
         const m = doc.data();
         const mine = m.senderId === currentUser.uid;
         if(m.modHidden === true && !mine && !currentUserIsAdmin) return; // skryté AI dozorcom
@@ -8916,11 +8948,23 @@ function subscribeToChatMessages(){
         const tInfo = formatChatMsgTime(m.createdAt);
         tEl.textContent = tInfo.short;
         tEl.title = tInfo.full;
-        container.appendChild(tEl);
+        // kedy sa správa zmaže (po 30 dňoch)
+        const cMs = c8rrMs(m.createdAt);
+        if(cMs){
+          const delAt = cMs + C8CH_KEEP_DAYS * 86400000, left = delAt - Date.now(), dd = new Date(delAt);
+          tEl.title = tInfo.full + ' · ' + tr0('zmaže sa') + ' ' + dd.getDate() + '.' + (dd.getMonth() + 1) + '.';
+          if(left < 3 * 86400000){
+            const days = Math.max(0, Math.ceil(left / 86400000));
+            const ex = document.createElement('div'); ex.className = 'c8ch-exp ' + (mine ? 'mine' : 'theirs');
+            ex.textContent = '⏳ ' + (days <= 0 ? tr0('zmaže sa dnes') : tr0('zmaže sa o') + ' ' + days + ' ' + (days === 1 ? tr0('deň') : tr0('dni')));
+            container.appendChild(tEl); container.appendChild(ex);
+          } else container.appendChild(tEl);
+        } else container.appendChild(tEl);
         if(mine) c8rrMine.push({ el: tEl, base: tInfo.short, ts: c8rrMs(m.createdAt) });
       });
       c8rrUpdate();
-      container.scrollTop = container.scrollHeight;
+      if(c8chKeepScroll != null){ container.scrollTop = container.scrollHeight - c8chKeepScroll; c8chKeepScroll = null; }
+      else container.scrollTop = container.scrollHeight;
       // Ak je chat otvorený a prídu nové správy pre mňa, hneď ich označím ako prečítané
       markChatAsRead();
     }, err=>{
@@ -27899,5 +27943,16 @@ html body #view-profile.c8pd-on #c8pv-row,html body #view-profile.c8pd-on #c8pv-
 </script>
 <!-- =================== koniec: Posielanie dokumentov =================== -->
 
+
+<style id="c8ch-style">
+.c8ch-info{align-self:center;margin:6px auto 4px;background:#EEEBFF;color:#4338CA;border-radius:12px;padding:6px 12px;font-size:12px;text-align:center;max-width:92%}
+.c8ch-more{display:block;margin:6px auto;background:#fff;border:1px solid #E3E1F0;border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:700;color:#5B4CFF;cursor:pointer;font-family:inherit}
+.c8ch-exp{font-size:10.5px;color:#B45309;margin:-2px 6px 6px}
+.c8ch-exp.mine{text-align:right}
+.c8ch-pop{position:fixed;inset:0;z-index:100080;background:rgba(15,17,30,.5);display:flex;align-items:center;justify-content:center;padding:18px}
+.c8ch-pb{background:#fff;color:#16182B;border-radius:22px;padding:22px;max-width:380px;text-align:center;font-family:inherit}
+.c8ch-pb h3{margin:6px 0;font-size:19px}.c8ch-pb p{font-size:14px;color:#4A4E66;line-height:1.5;margin:0 0 14px}
+.c8ch-pb button{width:100%;border:0;border-radius:14px;padding:12px;font-weight:800;font-size:15px;background:#5B4CFF;color:#fff;cursor:pointer;font-family:inherit}
+</style>
 </body>
 </html>
