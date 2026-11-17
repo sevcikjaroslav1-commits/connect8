@@ -19579,70 +19579,6 @@ c8ApplyFriendsView();
     const x0 = Math.cos(la) * Math.sin(lo), y0 = Math.sin(la), z0 = Math.cos(la) * Math.cos(lo);
     return { x: x0, y: y0 * Math.cos(t) - z0 * Math.sin(t), z: y0 * Math.sin(t) + z0 * Math.cos(t) };
   };
-  /* ---------- Stanice na zemeguli: ISS, Tiangong, Hubble ----------
-     Obiehajú zrýchlene (jeden obeh ISS ≈ 37 s), výšky sú pre viditeľnosť zväčšené.
-     Sklony dráh sú skutočné: ISS 51,6°, Tiangong 41,5°, Hubble 28,5°. */
-  const C8ST_SPEED = 150;                     // koľkokrát rýchlejšie ako v skutočnosti
-  const C8ST_RE = 6371, C8ST_MU = 398600.4418;
-  const C8ST = [
-    { name:'ISS',      color:'#38BDF8', alt:420, inc:51.64, raan:20,  ph:0.0, vis:1.13 },
-    { name:'Tiangong', color:'#F87171', alt:390, inc:41.5,  raan:140, ph:2.1, vis:1.11 },
-    { name:'Hubble',   color:'#F59E0B', alt:535, inc:28.5,  raan:260, ph:4.2, vis:1.16 }
-  ].map(s=>{ const a = C8ST_RE + s.alt; s.n = Math.sqrt(C8ST_MU / (a * a * a)); return s; });
-  const C8ST_T0 = Date.now();
-  // poloha na dráhe (uhol th) → zemepisná dĺžka/šírka pri aktuálnom natočení Zeme
-  function c8stGeo(s, th, earthDeg){
-    const d = Math.PI / 180, i = s.inc * d, O = s.raan * d;
-    const x = Math.cos(O) * Math.cos(th) - Math.sin(O) * Math.cos(i) * Math.sin(th);
-    const y = Math.sin(O) * Math.cos(th) + Math.cos(O) * Math.cos(i) * Math.sin(th);
-    const z = Math.sin(i) * Math.sin(th);
-    const lat = Math.asin(z) / d;
-    let lon = Math.atan2(y, x) / d - earthDeg;
-    lon = ((lon + 540) % 360) - 180;
-    return [lon, lat];
-  }
-  C8Globe.prototype.drawStations = function(ctx, cx, cy, R, now){
-    const t = (Date.now() - C8ST_T0) / 1000 * C8ST_SPEED;     // simulovaný čas (s)
-    const earthDeg = (t * 7.2921159e-5 * 180 / Math.PI) % 360;
-    const self = this;
-    const toScreen = (lon, lat, k)=>{ const p = self.proj(lon, lat); return { x: cx + R * k * p.x, y: cy - R * k * p.y, z: p.z, out: Math.hypot(p.x, p.y) * k > 1 }; };
-    const front = [];
-    C8ST.forEach(s=>{
-      // dráha – vpredu výraznejšia, za zemeguľou len tam, kde ju nezakrýva
-      let prev = null;
-      ctx.lineWidth = 1.1;
-      for(let k = 0; k <= 128; k++){
-        const g = c8stGeo(s, k / 128 * 2 * Math.PI, earthDeg), q = toScreen(g[0], g[1], s.vis);
-        const hidden = q.z < 0 && !q.out;
-        if(prev && !hidden && !prev.hidden){
-          ctx.strokeStyle = s.color; ctx.globalAlpha = q.z >= 0 ? 0.75 : 0.25;
-          ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(q.x, q.y); ctx.stroke();
-        }
-        prev = { x: q.x, y: q.y, hidden };
-      }
-      ctx.globalAlpha = 1;
-      const g = c8stGeo(s, s.ph + s.n * t, earthDeg), q = toScreen(g[0], g[1], s.vis);
-      if(q.z < 0 && !q.out) return;                              // je za zemeguľou
-      if(q.z < 0){                                                 // za okrajom zemegule – len slabá bodka bez menovky
-        ctx.globalAlpha = 0.35; ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(q.x, q.y, 3, 0, 7); ctx.fill(); ctx.globalAlpha = 1; return;
-      }
-      front.push({ s, q });
-    });
-    front.forEach(({ s, q })=>{
-      ctx.save(); ctx.shadowColor = s.color; ctx.shadowBlur = 12;
-      ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 7); ctx.fill(); ctx.restore();
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, 7); ctx.stroke();
-      // menovka
-      ctx.font = '700 10px "Space Grotesk", system-ui, sans-serif';
-      const tw = ctx.measureText(s.name).width, bw = tw + 10, bh = 15;
-      let bx = q.x + 7, by = q.y - bh / 2;
-      if(bx + bw > (this.cv.clientWidth || 260) - 2) bx = q.x - 7 - bw;
-      ctx.fillStyle = 'rgba(15,23,42,0.82)'; rr(ctx, bx, by, bw, bh, 4); ctx.fill();
-      ctx.strokeStyle = s.color; ctx.lineWidth = 1; rr(ctx, bx, by, bw, bh, 4); ctx.stroke();
-      ctx.fillStyle = s.color; ctx.textBaseline = 'middle'; ctx.fillText(s.name, bx + 5, by + bh / 2 + 0.5);
-      ctx.globalAlpha = 1;
-    });
-  };
   C8Globe.prototype.frame = function(){
     const cv = this.cv, S = cv.clientWidth || 260, dpr = Math.min(2, window.devicePixelRatio || 1);
     if(cv.width !== Math.round(S * dpr)){ cv.width = Math.round(S * dpr); cv.height = Math.round(S * dpr); }
@@ -19737,7 +19673,6 @@ c8ApplyFriendsView();
       ctx.globalAlpha = 1;
       this.hits.push({ cc: v.cc, x: pos.x, y: pos.y, w, h, px: v.x, py: v.y });
     }
-    this.drawStations(ctx, cx, cy, R, now); // ISS, Tiangong, Hubble
   };
 
   function boot(){
