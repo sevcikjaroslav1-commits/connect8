@@ -26475,12 +26475,29 @@ c8ApplyUsersView();
 .c8l-ic2 svg{width:16px;height:16px;display:block;}
 /* tlačidlo v profile pod „Vytvor životopis“ – rovnaké ako životopis, len žlté */
 .c8cv-btn.c8air-btn{border-color:#EAB308;background:rgba(250,204,21,.16);color:#A16207;}
+/* žlté tlačidlo „Drony“ v hlavičke Lietadiel → otvorí appku DroneScannerVagabund */
+.c8a-drone{flex:none;display:inline-flex;align-items:center;gap:5px;border:0;border-radius:999px;background:#FACC15;color:#422006;font-weight:800;font-size:12.5px;padding:7px 12px;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(161,98,7,.35);white-space:nowrap;}
+.c8a-drone:active{transform:scale(.97);}
+.c8a-dinfo{position:absolute;inset:0;z-index:2000;background:rgba(22,24,43,.45);display:none;align-items:center;justify-content:center;padding:20px;}
+.c8a-dinfo.on{display:flex;}
+.c8a-dbox{background:#fff;color:#16182B;border-radius:20px;padding:18px;max-width:360px;width:100%;box-shadow:0 10px 30px rgba(20,20,60,.25);}
+.c8a-dbox h3{margin:0 0 8px;font-size:18px;font-weight:800;}
+.c8a-dbox p{margin:0 0 14px;font-size:14px;line-height:1.45;color:#4A4E66;}
+.c8a-dbox button{width:100%;border:0;border-radius:12px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;background:#F3F2F9;color:#4A4E66;}
 </style>
 <div id="c8air" role="dialog" aria-modal="true" aria-label="Lietadlá">
   <div class="c8a-top">
     <button type="button" class="c8a-back" id="c8a-back" aria-label="Späť">‹</button>
     <h2 id="c8a-ttl">✈️ Lietadlá</h2>
+    <button type="button" class="c8a-drone" id="c8a-drone" aria-label="Otvoriť appku DroneScannerVagabund">🛸 Drony</button>
     <span class="c8a-live" id="c8a-live">● NAŽIVO</span>
+  </div>
+  <div class="c8a-dinfo" id="c8a-dinfo" role="dialog" aria-modal="true" aria-label="DroneScannerVagabund">
+    <div class="c8a-dbox">
+      <h3>🛸 DroneScannerVagabund</h3>
+      <p>Skener dronov funguje len ako appka pre Android. Zachytí drony okolo teba cez Bluetooth a Wi-Fi a ukáže aj pilota. Na Androide ťukni na <b>Drony</b> a appka sa otvorí, alebo ťa presmeruje na Google Play.</p>
+      <button type="button" id="c8a-dinfo-ok">Rozumiem</button>
+    </div>
   </div>
   <div class="c8a-bar">
     <div class="c8a-seg c8a-what" id="c8a-what"><button type="button" data-w="air" class="on">✈️ Lietadlá</button><button type="button" data-w="rail">🚆 Vlaky</button></div>
@@ -27140,6 +27157,18 @@ c8ApplyUsersView();
   document.addEventListener('keydown', e => { if(e.key === 'Escape' && openFlag){ if(sel) closeSheet(); else close(); } });
   document.addEventListener('visibilitychange', () => { if(!document.hidden && openFlag) refresh(); });
   $('c8a-back').addEventListener('click', () => close());
+  // 🛸 Drony → otvorí appku DroneScannerVagabund (Android), inak Google Play / info
+  $('c8a-drone').addEventListener('click', () => {
+    const PKG = 'eu.connect8.vagabund';
+    const PLAY = 'https://play.google.com/store/apps/details?id=' + PKG;
+    if(/Android/i.test(navigator.userAgent)){
+      location.href = 'intent://open#Intent;scheme=vagabund;package=' + PKG + ';S.browser_fallback_url=' + encodeURIComponent(PLAY) + ';end';
+    } else {
+      $('c8a-dinfo').classList.add('on');
+    }
+  });
+  $('c8a-dinfo-ok').addEventListener('click', () => $('c8a-dinfo').classList.remove('on'));
+  $('c8a-dinfo').addEventListener('click', e => { if(e.target.id === 'c8a-dinfo') $('c8a-dinfo').classList.remove('on'); });
   $('c8a-what').addEventListener('click', e => { const b = e.target.closest('button'); if(b) setWhat(b.dataset.w); });
   $('c8a-seg').addEventListener('click', e => { const b = e.target.closest('button'); if(b && b.dataset.m !== mode) setMode(b.dataset.m); });
   $('c8a-rad').addEventListener('click', e => {
